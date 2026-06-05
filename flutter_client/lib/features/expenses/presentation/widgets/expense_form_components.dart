@@ -129,6 +129,7 @@ class ExpenseTypeOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -138,7 +139,7 @@ class ExpenseTypeOption extends StatelessWidget {
           child: AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 200),
             style: TextStyle(
-              color: isSelected ? Colors.white : AppColors.textSecondary,
+              color: isSelected ? Colors.white : theme.textSecondary,
               fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
               fontSize: 16,
               letterSpacing: isSelected ? -0.2 : 0,
@@ -167,17 +168,20 @@ class ExpenseActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: theme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.divider.withValues(alpha: 0.85)),
+          border: Border.all(color: theme.border.withValues(alpha: 0.85)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
+              color: theme.shadowBase.withValues(
+                alpha: theme.isDarkMode ? 0.18 : 0.02,
+              ),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -188,8 +192,8 @@ class ExpenseActionTile extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: theme.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -202,8 +206,8 @@ class ExpenseActionTile extends StatelessWidget {
                 Expanded(
                   child: Text(
                     value,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: theme.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                     overflow: TextOverflow.ellipsis,

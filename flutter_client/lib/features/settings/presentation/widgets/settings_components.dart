@@ -759,6 +759,27 @@ class SettingsPremiumCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
+    final gradientColors = theme.isDarkMode
+        ? [
+            AppColors.accentGold.withValues(alpha: isPremium ? 0.18 : 0.12),
+            theme.elevatedSurface,
+          ]
+        : isPremium
+            ? [
+                const Color(0xFFFFF3C4),
+                const Color(0xFFFFFBEB),
+              ]
+            : [
+                const Color(0xFFFFF7DF),
+                const Color(0xFFFFFEF8),
+              ];
+    final premiumTextColor =
+        theme.isDarkMode ? theme.textPrimary : const Color(0xFF92400E);
+    final premiumMutedColor = theme.isDarkMode
+        ? theme.textSecondary
+        : const Color(0xFFB45309).withValues(alpha: 0.8);
+    final goldAccent =
+        theme.isDarkMode ? AppColors.accentGold : const Color(0xFFD97706);
 
     return Material(
       color: Colors.transparent,
@@ -769,23 +790,15 @@ class SettingsPremiumCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: isPremium
-                  ? [
-                      const Color(0xFFFFF3C4),
-                      const Color(0xFFFFFBEB),
-                    ]
-                  : [
-                      const Color(0xFFFFF7DF),
-                      const Color(0xFFFFFEF8),
-                    ],
+              colors: gradientColors,
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: isPremium
-                  ? const Color(0xFFF5C451).withValues(alpha: 0.55)
-                  : const Color(0xFFF4D58A).withValues(alpha: 0.42),
+              color: AppColors.accentGold.withValues(
+                alpha: theme.isDarkMode ? 0.24 : (isPremium ? 0.55 : 0.42),
+              ),
               width: 1,
             ),
             boxShadow: [
@@ -809,16 +822,16 @@ class SettingsPremiumCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isPremium
                           ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
-                          : const Color(0xFFF4C64E).withValues(alpha: 0.16),
+                          : AppColors.accentGold.withValues(
+                              alpha: theme.isDarkMode ? 0.12 : 0.16,
+                            ),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
                       isPremium
                           ? Icons.auto_awesome_rounded
                           : Icons.star_outline_rounded,
-                      color: isPremium
-                          ? const Color(0xFFB45309)
-                          : const Color(0xFFD97706),
+                      color: isPremium ? goldAccent : goldAccent,
                       size: 19,
                     ),
                   ),
@@ -835,7 +848,7 @@ class SettingsPremiumCard extends StatelessWidget {
                             fontSize: 15,
                             fontWeight: FontWeight.w900,
                             color: isPremium
-                                ? const Color(0xFF92400E)
+                                ? premiumTextColor
                                 : theme.textPrimary,
                           ),
                         ),
@@ -848,7 +861,7 @@ class SettingsPremiumCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             color: isPremium
-                                ? const Color(0xFFB45309).withValues(alpha: 0.8)
+                                ? premiumMutedColor
                                 : theme.textSecondary,
                             fontWeight: FontWeight.w600,
                           ),
@@ -859,9 +872,7 @@ class SettingsPremiumCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Icon(
                     Icons.chevron_right_rounded,
-                    color: isPremium
-                        ? const Color(0xFFB45309)
-                        : const Color(0xFFD97706),
+                    color: goldAccent,
                     size: 24,
                   ),
                 ],
@@ -897,22 +908,31 @@ class SettingsPremiumFeatureChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textColor =
+        theme.isDarkMode ? theme.textPrimary : const Color(0xFF92400E);
+    final iconColor =
+        theme.isDarkMode ? AppColors.accentGold : const Color(0xFFB45309);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.45),
+        color: theme.isDarkMode
+            ? AppColors.accentGold.withValues(alpha: 0.10)
+            : Colors.white.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
+          color: AppColors.accentGold.withValues(
+            alpha: theme.isDarkMode ? 0.20 : 0.18,
+          ),
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.check_rounded,
             size: 13,
-            color: Color(0xFFB45309),
+            color: iconColor,
           ),
           const SizedBox(width: 6),
           ConstrainedBox(
@@ -920,10 +940,10 @@ class SettingsPremiumFeatureChip extends StatelessWidget {
             child: Text(
               text,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF92400E),
+                color: textColor,
               ),
             ),
           ),
@@ -943,22 +963,27 @@ class SettingsPremiumFeatureItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final accent =
+        theme.isDarkMode ? AppColors.accentGold : const Color(0xFFB45309);
+    final textColor =
+        theme.isDarkMode ? theme.textSecondary : const Color(0xFF92400E);
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.check_circle_outline_rounded,
             size: 14,
-            color: Color(0xFFB45309),
+            color: accent,
           ),
           const SizedBox(width: 8),
           Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF92400E),
+              color: textColor,
             ),
           ),
         ],

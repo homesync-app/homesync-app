@@ -1249,8 +1249,6 @@
   "settingsParentModeApprovalOffSubtitle": "Tasks are credited as soon as they're completed.",
   "settingsParentModeApprovalChildrenOnlyTitle": "Kids and teens only",
   "settingsParentModeApprovalChildrenOnlySubtitle": "Adults complete directly; everyone else needs approval.",
-  "settingsParentModeApprovalAllTitle": "All members",
-  "settingsParentModeApprovalAllSubtitle": "Every completion goes through your OK before paying coins.",
   "settingsParentModeApprovalPerMemberTitle": "Per member",
   "settingsParentModeApprovalPerMemberSubtitle": "You pick exactly who needs approval in the list below.",
   "settingsParentModeInboxIdle": "Approval inbox",
@@ -1266,6 +1264,9 @@
   },
   "settingsParentModeMemberView": "Per-member view",
   "settingsParentModeWeeklySummary": "Weekly summary",
+  "settingsParentModeAllowanceTitle": "Allowances",
+  "settingsParentModeAllowanceSubtitle": "Let adults send money to minors for their personal finances, separate from shared expenses.",
+  "settingsParentModeAllowanceCta": "Send allowance",
   "settingsParentModePerMemberEmpty": "No other members in the household yet.",
   "settingsParentModeSaveError": "We couldn't save the change: {message}",
   "@settingsParentModeSaveError": {
@@ -1884,6 +1885,26 @@
   "expensesFormHeaderEditExpense": "Edit Expense",
   "expensesFormHeaderNewIncome": "New Income",
   "expensesFormHeaderNewExpense": "New Expense",
+  "allowanceEntryTitle": "Send allowance to a minor",
+  "allowanceSheetTitle": "Send allowance",
+  "allowanceSheetSubtitle": "Move money from your personal balance to a minor's balance. It will not count as a shared expense.",
+  "allowanceRecipientLabel": "To",
+  "allowanceAmountLabel": "Amount",
+  "allowanceNoteHint": "Optional note, e.g. June allowance",
+  "allowanceSubmitButton": "Send allowance",
+  "allowanceNoRecipients": "There are no teens in this household with personal finances enabled. Children cannot receive allowances because they do not have access to Finances. If needed, update their role from Members in household settings.",
+  "allowanceRecipientRequired": "Choose who should receive the allowance.",
+  "allowanceAmountInvalid": "Enter a valid amount.",
+  "allowanceSendGenericError": "We couldn't send the allowance.",
+  "allowanceSentSnack": "Allowance sent.",
+  "allowanceSendError": "Error sending allowance: {error}",
+  "@allowanceSendError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "expensesFormSelectCategoryTitle": "Select category",
   "expensesFormAutoTitleSupermarketShopping": "Grocery shopping",
   "expensesFormShoppingSynced": "{count, plural, =1{1 item purchased} other{{count} items purchased}}",

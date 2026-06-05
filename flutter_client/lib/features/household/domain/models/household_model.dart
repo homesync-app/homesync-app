@@ -15,7 +15,7 @@ class HouseholdModel {
   final String? splitRatioAnchorId;
   final DateTime? createdAt;
 
-  /// Sprint 1 Modo Padres: 'off' | 'all' | 'children_only' | 'per_member'.
+  /// Sprint 1 Modo Padres: 'off' | 'children_only' | 'per_member'.
   /// La RPC `complete_task_transaction` lee esto del lado servidor; en el
   /// cliente lo usamos para mostrar el toggle correcto en settings.
   final String taskApprovalMode;

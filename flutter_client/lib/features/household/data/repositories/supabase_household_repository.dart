@@ -462,13 +462,25 @@ class SupabaseHouseholdRepository
         final householdMember = await _requireCurrentHouseholdMembership();
         await _client
             .from(AppConstants.tableHouseholdMembers)
-            .update({'member_type': type})
+            .update({
+              'member_type': type,
+              'display_role': _displayRoleForMemberType(type),
+            })
             .eq('user_id', userId)
             .eq('household_id', householdMember['household_id']);
       },
       context: 'SupabaseHouseholdRepository.updateMemberType',
       isOnline: _isOnline,
     );
+  }
+
+  String _displayRoleForMemberType(String type) {
+    return switch (type) {
+      'guardian' => 'Tutor/a',
+      'teen' => 'Adolescente',
+      'child' => 'Chico/a',
+      _ => 'Padre/Madre',
+    };
   }
 
   @override

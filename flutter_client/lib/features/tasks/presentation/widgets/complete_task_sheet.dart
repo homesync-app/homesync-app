@@ -5,6 +5,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
@@ -273,14 +274,15 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       firstDate: DateTime.now().subtract(const Duration(days: 30)),
       lastDate: DateTime.now(),
       builder: (context, child) {
+        final theme = context.theme;
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.textPrimary,
-            ),
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+                  primary: AppColors.primary,
+                  onPrimary: Colors.white,
+                  surface: theme.surface,
+                  onSurface: theme.textPrimary,
+                ),
           ),
           child: child!,
         );
@@ -295,9 +297,9 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         builder: (context, child) {
           return Theme(
             data: Theme.of(context).copyWith(
-              colorScheme: const ColorScheme.light(
-                primary: AppColors.primary,
-              ),
+              colorScheme: Theme.of(context).colorScheme.copyWith(
+                    primary: AppColors.primary,
+                  ),
             ),
             child: child!,
           );
@@ -364,9 +366,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   }
 
   Widget _buildBody(List<TaskModel> tasks, List<CategoryModel> categories) {
+    final theme = context.theme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
         boxShadow: [
           BoxShadow(
@@ -387,7 +390,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                   width: 48,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
+                    color: theme.divider,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -407,11 +410,11 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                           Text(
                             AppLocalizations.of(context)
                                 .completeTaskHeaderTitle,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w900,
                               letterSpacing: -0.5,
-                              color: Color(0xFF0F172A),
+                              color: theme.textPrimary,
                             ),
                           ),
                         ],
@@ -422,10 +425,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                         child: Text(
                           AppLocalizations.of(context)
                               .completeTaskHeaderSubtitle,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF64748B),
+                            color: theme.textSecondary,
                             height: 1.35,
                           ),
                         ),
@@ -477,7 +480,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 if (_selectedTaskIds.isNotEmpty && !_isLoading)
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.98),
+                      color: theme.surface.withValues(alpha: 0.98),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.05),
@@ -498,7 +501,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                               ? null
                               : _submitCompletedTasks,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.textPrimary,
+                            backgroundColor: theme.primary,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             elevation: 0,
@@ -701,6 +704,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
+    final theme = context.theme;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -710,10 +714,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.white,
+          color: isSelected ? AppColors.primary : theme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFEAEFF5),
+            color: isSelected ? AppColors.primary : theme.border,
             width: 1.5,
           ),
           boxShadow: isSelected
@@ -731,7 +735,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+              color: isSelected ? Colors.white : theme.textMuted,
               size: 18,
             ),
             const SizedBox(width: 10),
@@ -743,7 +747,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 style: TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 14,
-                  color: isSelected ? Colors.white : const Color(0xFF64748B),
+                  color: isSelected ? Colors.white : theme.textSecondary,
                 ),
               ),
             ),
@@ -754,6 +758,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   }
 
   Widget _buildCategoryAndSearch(List<CategoryModel> categories) {
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -761,12 +766,14 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.surface,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+              border: Border.all(color: theme.border, width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
+                  color: theme.shadowBase.withValues(
+                    alpha: theme.isDarkMode ? 0.18 : 0.02,
+                  ),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -775,16 +782,20 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
             child: TextField(
               controller: _searchController,
               onChanged: (val) => setState(() => _searchQuery = val),
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: theme.textPrimary,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
               decoration: InputDecoration(
                 hintText: AppLocalizations.of(context).completeTaskSearchHint,
                 hintStyle: TextStyle(
-                  color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
+                  color: theme.textMuted.withValues(alpha: 0.8),
                 ),
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.search_rounded,
                   size: 22,
-                  color: Color(0xFF64748B),
+                  color: theme.textSecondary,
                 ),
                 border: InputBorder.none,
                 contentPadding:
@@ -991,6 +1002,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   }
 
   Widget _buildTaskSelectionItem(TaskModel task, Color catColor) {
+    final theme = context.theme;
     final isSelected = _selectedTaskIds.contains(task.id);
     return GestureDetector(
       onTap: () {
@@ -1004,10 +1016,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.05)
-              : Colors.white,
+              : theme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFF1F5F9),
+            color: isSelected ? AppColors.primary : theme.border,
             width: 1.5,
           ),
         ),
@@ -1017,7 +1029,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
               isSelected
                   ? Icons.check_circle_rounded
                   : Icons.radio_button_unchecked_rounded,
-              color: isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
+              color: isSelected ? AppColors.primary : theme.textMuted,
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -1027,18 +1039,17 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color:
-                      isSelected ? AppColors.primary : const Color(0xFF1E293B),
+                  color: isSelected ? AppColors.primary : theme.textPrimary,
                 ),
               ),
             ),
             if (task.xpReward > 0)
               Text(
                 '${task.xpReward} XP',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textMuted,
+                  color: theme.textMuted,
                 ),
               ),
           ],

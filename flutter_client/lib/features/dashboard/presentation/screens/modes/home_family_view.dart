@@ -175,8 +175,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final currentMember =
         members.where((m) => m.userId == currentUserId).firstOrNull;
     final showDate = currentMember?.isChild ?? false;
-    final showProgress =
-        (currentMember?.isTeen ?? false) || (currentMember?.isChild ?? false);
+    final showProgress = currentMember?.isTeen ?? false;
     final coins =
         balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
     final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
@@ -375,27 +374,42 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final firstName =
         currentMember?.displayName ?? t.homeFamilyChildFallbackName;
     final caps = ref.watch(householdCapabilitiesProvider);
+    final heroGradient = theme.isDarkMode
+        ? const [
+            Color(0xFF332720),
+            Color(0xFF282321),
+            Color(0xFF1F2A27),
+          ]
+        : const [
+            Color(0xFFFFF2DF),
+            Color(0xFFFFF8F0),
+            Color(0xFFEAF7F4),
+          ];
+    final heroBorder = theme.isDarkMode
+        ? AppColors.primary.withValues(alpha: 0.18)
+        : const Color(0xFFFFD7B3);
+    final iconWellColor = theme.isDarkMode
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.74);
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFFFF2DF),
-            Color(0xFFFFF8F0),
-            Color(0xFFEAF7F4),
-          ],
+          colors: heroGradient,
         ),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFFFD7B3)),
+        border: Border.all(color: heroBorder),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF08B49).withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            color: theme.isDarkMode
+                ? Colors.black.withValues(alpha: 0.22)
+                : const Color(0xFFF08B49).withValues(alpha: 0.08),
+            blurRadius: theme.isDarkMode ? 18 : 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -408,7 +422,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.74),
+                  color: iconWellColor,
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: const Icon(
@@ -1121,10 +1135,13 @@ class _ChildHeroMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final fillColor = theme.isDarkMode
+        ? Colors.white.withValues(alpha: 0.06)
+        : Colors.white.withValues(alpha: 0.74);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.74),
+        color: fillColor,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: color.withValues(alpha: 0.12)),
       ),

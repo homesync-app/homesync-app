@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
@@ -76,6 +77,7 @@ class _ExpenseDetailSheetContentState
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     final expense = _expense;
     final accentColor = CategoryMapping.getSmartExpenseDisplayColor(
@@ -114,9 +116,9 @@ class _ExpenseDetailSheetContentState
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      decoration: BoxDecoration(
+        color: theme.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: SafeArea(
         top: false,
@@ -127,7 +129,7 @@ class _ExpenseDetailSheetContentState
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.divider,
+                color: theme.divider,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -145,8 +147,8 @@ class _ExpenseDetailSheetContentState
                             : (expense.isSettlement
                                 ? t.expensesDetailHeaderSettlement
                                 : t.expensesDetailHeaderExpense),
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: theme.textSecondary,
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
@@ -156,8 +158,8 @@ class _ExpenseDetailSheetContentState
                           'EEEE, d MMMM',
                           Localizations.localeOf(context).toString(),
                         ).format(expense.paidAt),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: theme.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                         ),
@@ -180,9 +182,9 @@ class _ExpenseDetailSheetContentState
                         ),
                       Container(
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
+                          color: theme.surface,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.divider),
+                          border: Border.all(color: theme.border),
                         ),
                         child: IconButton(
                           tooltip: t.commonEdit,
@@ -224,10 +226,10 @@ class _ExpenseDetailSheetContentState
                         vertical: 24,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: theme.surface,
                         borderRadius: BorderRadius.circular(28),
                         border: Border.all(
-                          color: AppColors.divider.withValues(alpha: 0.5),
+                          color: theme.border.withValues(alpha: 0.5),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -260,10 +262,10 @@ class _ExpenseDetailSheetContentState
                                   displayTitle,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
+                                    color: theme.textPrimary,
                                     letterSpacing: -0.3,
                                   ),
                                 ).animateEntrance(delay: 250),
@@ -278,7 +280,9 @@ class _ExpenseDetailSheetContentState
                               fontWeight: FontWeight.w900,
                               color: expense.isIncome
                                   ? AppColors.success
-                                  : const Color(0xFF1E3A8A),
+                                  : (theme.isDarkMode
+                                      ? theme.textPrimary
+                                      : const Color(0xFF1E3A8A)),
                               letterSpacing: -1.0,
                             ),
                           ).animateScaleIn(delay: 300),
@@ -314,10 +318,10 @@ class _ExpenseDetailSheetContentState
                         alignment: Alignment.centerLeft,
                         child: Text(
                           t.expensesDetailNoteLabel,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: theme.textPrimary,
                           ),
                         ),
                       ),
@@ -326,15 +330,15 @@ class _ExpenseDetailSheetContentState
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
+                          color: theme.surface,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.divider),
+                          border: Border.all(color: theme.border),
                         ),
                         child: Text(
                           expense.description!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.textSecondary,
+                            color: theme.textSecondary,
                             height: 1.5,
                           ),
                         ),
@@ -346,15 +350,15 @@ class _ExpenseDetailSheetContentState
                         alignment: Alignment.centerLeft,
                         child: Text(
                           t.expensesDetailPurchasedItems,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: theme.textPrimary,
                           ),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      _buildReceiptView(expense.description!),
+                      _buildReceiptView(context, expense.description!),
                       const SizedBox(height: 24),
                     ] else if (expense.description != null &&
                         expense.description!.contains('\n')) ...[
@@ -362,15 +366,15 @@ class _ExpenseDetailSheetContentState
                         alignment: Alignment.centerLeft,
                         child: Text(
                           t.expensesDetailLabel,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: theme.textPrimary,
                           ),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      _buildReceiptView(expense.description!),
+                      _buildReceiptView(context, expense.description!),
                       const SizedBox(height: 24),
                     ],
                     if (expense.splits != null &&
@@ -380,19 +384,19 @@ class _ExpenseDetailSheetContentState
                         alignment: Alignment.centerLeft,
                         child: Text(
                           t.expensesDetailSplitLabel,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: theme.textPrimary,
                           ),
                         ),
                       ),
                       const SizedBox(height: 12),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: theme.surface,
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: AppColors.divider),
+                          border: Border.all(color: theme.border),
                         ),
                         child: Column(
                           children: expense.splits!.map((split) {
@@ -426,8 +430,8 @@ class _ExpenseDetailSheetContentState
                                     )
                                   : Text(
                                       t.expensesDetailTheirPartLabel,
-                                      style: const TextStyle(
-                                        color: AppColors.textMuted,
+                                      style: TextStyle(
+                                        color: theme.textMuted,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -437,7 +441,7 @@ class _ExpenseDetailSheetContentState
                                   fontWeight: FontWeight.w900,
                                   fontSize: 16,
                                   color: isPayer
-                                      ? AppColors.textPrimary
+                                      ? theme.textPrimary
                                       : const Color(0xFFF97316),
                                 ),
                               ),
@@ -497,7 +501,8 @@ class _ExpenseDetailSheetContentState
     );
   }
 
-  static Widget _buildReceiptView(String text) {
+  static Widget _buildReceiptView(BuildContext context, String text) {
+    final theme = context.theme;
     final lines = text.split(RegExp(r'\n'));
     final items = lines
         .map((e) => e.trim().replaceAll(RegExp(r'^[-*â€¢]\s*'), ''))
@@ -517,9 +522,10 @@ class _ExpenseDetailSheetContentState
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color:
+            theme.isDarkMode ? theme.surfaceContainer : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -542,8 +548,8 @@ class _ExpenseDetailSheetContentState
                   Expanded(
                     child: Text(
                       item,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: theme.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         height: 1.35,
@@ -555,7 +561,7 @@ class _ExpenseDetailSheetContentState
               if (!isLast) ...[
                 const SizedBox(height: 8),
                 Divider(
-                  color: AppColors.divider.withValues(alpha: 0.5),
+                  color: theme.divider.withValues(alpha: 0.5),
                   height: 1,
                 ),
                 const SizedBox(height: 12),

@@ -2697,18 +2697,6 @@ abstract class AppLocalizations {
   /// **'Los adultos completan directo; los demás requieren aprobación.'**
   String get settingsParentModeApprovalChildrenOnlySubtitle;
 
-  /// No description provided for @settingsParentModeApprovalAllTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Todos los miembros'**
-  String get settingsParentModeApprovalAllTitle;
-
-  /// No description provided for @settingsParentModeApprovalAllSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Cualquier completion pasa por tu OK antes de pagar coins.'**
-  String get settingsParentModeApprovalAllSubtitle;
-
   /// No description provided for @settingsParentModeApprovalPerMemberTitle.
   ///
   /// In es, this message translates to:
@@ -2744,6 +2732,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Resumen de la semana'**
   String get settingsParentModeWeeklySummary;
+
+  /// No description provided for @settingsParentModeAllowanceTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Mesadas'**
+  String get settingsParentModeAllowanceTitle;
+
+  /// No description provided for @settingsParentModeAllowanceSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Permití dar plata a menores para sus finanzas personales, separado de los gastos compartidos.'**
+  String get settingsParentModeAllowanceSubtitle;
+
+  /// No description provided for @settingsParentModeAllowanceCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Dar mesada'**
+  String get settingsParentModeAllowanceCta;
 
   /// No description provided for @settingsParentModePerMemberEmpty.
   ///
@@ -4934,6 +4940,84 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Nuevo Gasto'**
   String get expensesFormHeaderNewExpense;
+
+  /// No description provided for @allowanceEntryTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Dar mesada a un menor'**
+  String get allowanceEntryTitle;
+
+  /// No description provided for @allowanceSheetTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Dar mesada'**
+  String get allowanceSheetTitle;
+
+  /// No description provided for @allowanceSheetSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Transferís plata desde tu balance personal al de un menor. No entra en los gastos compartidos.'**
+  String get allowanceSheetSubtitle;
+
+  /// No description provided for @allowanceRecipientLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Para'**
+  String get allowanceRecipientLabel;
+
+  /// No description provided for @allowanceAmountLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Monto'**
+  String get allowanceAmountLabel;
+
+  /// No description provided for @allowanceNoteHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Nota opcional, ej: Mesada de junio'**
+  String get allowanceNoteHint;
+
+  /// No description provided for @allowanceSubmitButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar mesada'**
+  String get allowanceSubmitButton;
+
+  /// No description provided for @allowanceNoRecipients.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay adolescentes en el hogar con finanzas personales activas. Los chicos no pueden recibir mesadas porque no tienen acceso a Finanzas. Si corresponde, cambiá su rol desde Miembros en la configuración del hogar.'**
+  String get allowanceNoRecipients;
+
+  /// No description provided for @allowanceRecipientRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegí a quién darle la mesada.'**
+  String get allowanceRecipientRequired;
+
+  /// No description provided for @allowanceAmountInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresá un monto válido.'**
+  String get allowanceAmountInvalid;
+
+  /// No description provided for @allowanceSendGenericError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo enviar la mesada.'**
+  String get allowanceSendGenericError;
+
+  /// No description provided for @allowanceSentSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'Mesada enviada.'**
+  String get allowanceSentSnack;
+
+  /// No description provided for @allowanceSendError.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al enviar la mesada: {error}'**
+  String allowanceSendError(String error);
 
   /// No description provided for @expensesFormSelectCategoryTitle.
   ///

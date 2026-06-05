@@ -23,6 +23,7 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
@@ -500,6 +501,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           member['user_id'] == currentUserId && member['role'] == 'owner',
     );
     final isAdminQaUser = ref.watch(adminProvider).isAdminUser;
+    final currentMember = ref.watch(currentMemberProvider);
+    final canManageMemberRoles =
+        (currentMember?.canManageHousehold ?? false) || isAdminQaUser;
 
     // Determinar si mostrar el toggle según tipo de hogar
     // Family NO puede ocultar tareas, los demás SÍ pueden
@@ -511,6 +515,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       members: _members,
       currentUserId: currentUserId,
       isAdminQaUser: isAdminQaUser,
+      canManageMemberRoles: canManageMemberRoles,
+      allowCurrentUserRoleEdit: _householdType != 'family',
       roleLabelBuilder: _getMemberRoleLabel,
       onEditRole: _updateMemberRole,
       onRemoveMember: _confirmRemoveMember,
@@ -855,6 +861,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _updateMemberRole(Map<String, dynamic> member) async {
+    if (_householdType == 'family') {
+      await _updateFamilyMemberType(member);
+      return;
+    }
+
     final theme = context.theme;
     final userId = member['user_id'];
     final currentLabel = member['display_role'] ?? '';
@@ -972,6 +983,180 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _updateFamilyMemberType(Map<String, dynamic> member) async {
+    final t = AppLocalizations.of(context);
+    final theme = context.theme;
+    final userId = member['user_id'] as String?;
+    if (userId == null || userId.isEmpty) return;
+
+    final userData = (member['users'] is Map) ? member['users'] as Map : {};
+    final name = (userData['full_name'] as String?) ??
+        (userData['email'] as String?)?.split('@').first ??
+        t.settingsHouseholdMemberFallbackName;
+    final currentType = _memberTypeFromRaw(member['member_type'] as String?);
+
+    final selected = await showModalBottomSheet<MemberType>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+        decoration: BoxDecoration(
+          color: theme.background,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                t.membersRolePickerTitle(name),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: theme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                t.membersRolePickerSubtitle,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: theme.textSecondary,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 16),
+              for (final type in MemberType.values)
+                _buildMemberTypeOption(type, currentType, theme, t),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (selected == null || selected == currentType) return;
+
+    try {
+      setState(() => _isLoading = true);
+      final repo = ref.read(householdRepositoryProvider);
+      final result = await repo.updateMemberType(userId, selected.name);
+
+      result.fold(
+        (failure) => throw failure,
+        (_) {
+          if (mounted) {
+            setState(() {
+              member['member_type'] = selected.name;
+              member['display_role'] = _memberTypeLabel(selected, t);
+            });
+            ref.invalidate(householdMembersProvider);
+            ref.invalidate(currentHouseholdProvider);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(t.membersRoleUpdated),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.membersRoleUpdateError(e.toString())),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _buildMemberTypeOption(
+    MemberType type,
+    MemberType currentType,
+    AppThemeColors theme,
+    AppLocalizations t,
+  ) {
+    final isCurrent = type == currentType;
+    final subtitle = switch (type) {
+      MemberType.parent ||
+      MemberType.guardian =>
+        t.membersRoleParentGuardianDesc,
+      MemberType.teen => t.membersRoleTeenDesc,
+      MemberType.child => t.membersRoleChildDesc,
+    };
+
+    return InkWell(
+      onTap: () => Navigator.pop(context, type),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isCurrent
+              ? theme.primary.withValues(alpha: 0.08)
+              : theme.surfaceContainer,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isCurrent
+                ? theme.primary.withValues(alpha: 0.4)
+                : theme.divider.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _memberTypeLabel(type, t),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      color: theme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isCurrent)
+              Icon(Icons.check_rounded, color: theme.primary, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  MemberType _memberTypeFromRaw(String? rawType) {
+    return MemberType.values.firstWhere(
+      (value) => value.name == rawType,
+      orElse: () => MemberType.parent,
+    );
+  }
+
+  String _memberTypeLabel(MemberType type, AppLocalizations t) {
+    return switch (type) {
+      MemberType.parent => t.membersRoleParent,
+      MemberType.guardian => t.membersRoleGuardian,
+      MemberType.teen => t.membersRoleTeen,
+      MemberType.child => t.membersRoleChild,
+    };
   }
 
   void _showEditHouseholdMenu() {

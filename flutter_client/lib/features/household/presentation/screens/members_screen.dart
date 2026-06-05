@@ -47,7 +47,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     final currentMember =
         members.where((m) => m.userId == currentUserId).firstOrNull;
     final isChild = currentMember?.isChild ?? false;
-    final canEditRoles = currentMember?.isAdmin ?? false;
+    final canEditRoles = currentMember?.canManageHousehold ?? false;
 
     return ListView(
       physics:
@@ -61,6 +61,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                 entry.value,
                 theme,
                 canEditRoles: canEditRoles,
+                currentUserId: currentUserId,
               ).animateStaggered(entry.key),
             ),
         const SizedBox(height: 16),
@@ -99,11 +100,12 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     MemberModel member,
     AppThemeColors theme, {
     required bool canEditRoles,
+    required String? currentUserId,
   }) {
     final t = AppLocalizations.of(context);
-    // Owners can't be downgraded to minors (would lock the household out of
-    // admin-only actions), so we only open the role picker for non-owners.
-    final tappable = canEditRoles && !member.isOwner;
+    // Owners and the current user can't be downgraded from this flow.
+    final tappable =
+        canEditRoles && !member.isOwner && member.userId != currentUserId;
     return AnimatedPress(
       onPressed: tappable ? () => _openRolePicker(member) : null,
       child: Container(

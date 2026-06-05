@@ -250,6 +250,7 @@ class SavingsTab extends ConsumerWidget {
         builder: (context, setModalState) {
           final bottomInset = MediaQuery.of(context).viewInsets.bottom;
           final t = AppLocalizations.of(context);
+          final theme = context.theme;
 
           return Align(
             alignment: Alignment.bottomCenter,
@@ -270,7 +271,7 @@ class SavingsTab extends ConsumerWidget {
                         width: 46,
                         height: 6,
                         decoration: BoxDecoration(
-                          color: AppColors.divider,
+                          color: theme.divider,
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
@@ -311,20 +312,20 @@ class SavingsTab extends ConsumerWidget {
                                       children: [
                                         Text(
                                           t.savingsNewGoalTitle,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 30,
                                             fontWeight: FontWeight.w900,
-                                            color: AppColors.textPrimary,
+                                            color: theme.textPrimary,
                                             letterSpacing: -1.2,
                                           ),
                                         ),
                                         const SizedBox(height: 10),
                                         Text(
                                           t.savingsNewGoalSubtitle,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 16,
                                             height: 1.4,
-                                            color: AppColors.textSecondary,
+                                            color: theme.textSecondary,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -336,8 +337,8 @@ class SavingsTab extends ConsumerWidget {
                               const SizedBox(height: 32),
                               Text(
                                 t.savingsSectionDetail,
-                                style: const TextStyle(
-                                  color: AppColors.textMuted,
+                                style: TextStyle(
+                                  color: theme.textMuted,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 1.5,
@@ -346,20 +347,20 @@ class SavingsTab extends ConsumerWidget {
                               const SizedBox(height: 12),
                               Text(
                                 t.savingsSectionDetailTitle,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
-                                  color: AppColors.textPrimary,
+                                  color: theme.textPrimary,
                                   letterSpacing: -0.4,
                                 ),
                               ),
                               const SizedBox(height: 18),
                               TextField(
                                 controller: titleController,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 18,
-                                  color: AppColors.textPrimary,
+                                  color: theme.textPrimary,
                                 ),
                                 decoration: InputDecoration(
                                   labelText: AppLocalizations.of(context)
@@ -371,7 +372,7 @@ class SavingsTab extends ConsumerWidget {
                                     color: AppColors.primary,
                                   ),
                                   filled: true,
-                                  fillColor: context.theme.surface,
+                                  fillColor: theme.surface,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 22,
@@ -379,15 +380,13 @@ class SavingsTab extends ConsumerWidget {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary
-                                          .withValues(alpha: 0.12),
+                                      color: theme.border,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary
-                                          .withValues(alpha: 0.12),
+                                      color: theme.border,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
@@ -404,10 +403,10 @@ class SavingsTab extends ConsumerWidget {
                                 controller: amountController,
                                 keyboardType: TextInputType.number,
                                 inputFormatters: [ThousandsInputFormatter()],
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w900,
                                   fontSize: 22,
-                                  color: AppColors.textPrimary,
+                                  color: theme.textPrimary,
                                 ),
                                 decoration: InputDecoration(
                                   labelText: AppLocalizations.of(context)
@@ -416,13 +415,13 @@ class SavingsTab extends ConsumerWidget {
                                       .expensesSavingsGoalAmountHint,
                                   prefixText:
                                       ref.watch(currencyProvider).inputPrefix(),
-                                  prefixStyle: const TextStyle(
+                                  prefixStyle: TextStyle(
                                     fontWeight: FontWeight.w800,
                                     fontSize: 20,
-                                    color: AppColors.textSecondary,
+                                    color: theme.textSecondary,
                                   ),
                                   filled: true,
-                                  fillColor: context.theme.surface,
+                                  fillColor: theme.surface,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 22,
@@ -430,15 +429,13 @@ class SavingsTab extends ConsumerWidget {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary
-                                          .withValues(alpha: 0.12),
+                                      color: theme.border,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary
-                                          .withValues(alpha: 0.12),
+                                      color: theme.border,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
@@ -453,8 +450,8 @@ class SavingsTab extends ConsumerWidget {
                               const SizedBox(height: 32),
                               Text(
                                 t.savingsSectionPersonalization,
-                                style: const TextStyle(
-                                  color: AppColors.textMuted,
+                                style: TextStyle(
+                                  color: theme.textMuted,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 1.5,
@@ -463,10 +460,10 @@ class SavingsTab extends ConsumerWidget {
                               const SizedBox(height: 12),
                               Text(
                                 t.savingsSectionPersonalizationTitle,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
-                                  color: AppColors.textPrimary,
+                                  color: theme.textPrimary,
                                   letterSpacing: -0.4,
                                 ),
                               ),
@@ -474,6 +471,7 @@ class SavingsTab extends ConsumerWidget {
                               Row(
                                 children: [
                                   _buildGoalOption(
+                                    context: context,
                                     label: t.savingsFieldEmoji,
                                     value: selectedEmoji,
                                     onTap: () {
@@ -501,6 +499,7 @@ class SavingsTab extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: 14),
                                   _buildGoalOption(
+                                    context: context,
                                     label: t.savingsFieldColor,
                                     value: '',
                                     customValue: Container(
@@ -543,10 +542,10 @@ class SavingsTab extends ConsumerWidget {
                           24,
                           20 + MediaQuery.of(context).padding.bottom,
                         ),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
+                        decoration: BoxDecoration(
+                          color: theme.surface,
                           border: Border(
-                            top: BorderSide(color: AppColors.divider),
+                            top: BorderSide(color: theme.border),
                           ),
                         ),
                         child: Row(
@@ -555,8 +554,8 @@ class SavingsTab extends ConsumerWidget {
                               onPressed: () => Navigator.pop(context),
                               child: Text(
                                 t.commonCancel,
-                                style: const TextStyle(
-                                  color: AppColors.textMuted,
+                                style: TextStyle(
+                                  color: theme.textMuted,
                                   fontWeight: FontWeight.w800,
                                   fontSize: 16,
                                 ),
@@ -743,30 +742,32 @@ class SavingsTab extends ConsumerWidget {
   }
 
   static Widget _buildGoalOption({
+    required BuildContext context,
     required String label,
     required String value,
     Widget? customValue,
     required VoidCallback onTap,
   }) {
+    final theme = context.theme;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: theme.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.divider),
+            border: Border.all(color: theme.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textMuted,
+                  color: theme.textMuted,
                 ),
               ),
               const SizedBox(height: 8),
@@ -775,12 +776,18 @@ class SavingsTab extends ConsumerWidget {
                   if (customValue != null)
                     customValue
                   else
-                    Text(value, style: const TextStyle(fontSize: 18)),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontSize: 18,
+                      ),
+                    ),
                   const Spacer(),
-                  const Icon(
+                  Icon(
                     Icons.keyboard_arrow_down_rounded,
                     size: 20,
-                    color: AppColors.textMuted,
+                    color: theme.textMuted,
                   ),
                 ],
               ),
@@ -803,45 +810,50 @@ class SavingsTab extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 20),
-            GridView.builder(
-              shrinkWrap: true,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 5,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
+      builder: (context) {
+        final theme = context.theme;
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
               ),
-              itemCount: options.length,
-              itemBuilder: (context, index) => GestureDetector(
-                onTap: () {
-                  onSelect(options[index]);
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    options[index],
-                    style: const TextStyle(fontSize: 24),
+              const SizedBox(height: 20),
+              GridView.builder(
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 5,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                ),
+                itemCount: options.length,
+                itemBuilder: (context, index) => GestureDetector(
+                  onTap: () {
+                    onSelect(options[index]);
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.border),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      options[index],
+                      style: const TextStyle(fontSize: 24),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -857,42 +869,46 @@ class SavingsTab extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: colors
-                  .map(
-                    (c) => GestureDetector(
-                      onTap: () {
-                        onSelect(c);
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: c,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+      builder: (context) {
+        final theme = context.theme;
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: colors
+                    .map(
+                      (c) => GestureDetector(
+                        onTap: () {
+                          onSelect(c);
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: c,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: theme.border, width: 2),
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                  .toList(),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
     );
   }
 }

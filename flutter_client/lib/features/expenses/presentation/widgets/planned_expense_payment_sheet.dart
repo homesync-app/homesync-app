@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -149,6 +150,7 @@ class _PlannedExpensePaymentSheetState
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final membersAsync = ref.watch(householdMembersProvider);
     final isSharedEconomy =
         ref.watch(currentHouseholdProvider).value?.financeMode == 'shared';
@@ -160,9 +162,9 @@ class _PlannedExpensePaymentSheetState
         24,
         MediaQuery.of(context).viewInsets.bottom + 32,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      decoration: BoxDecoration(
+        color: theme.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: membersAsync.when(
         loading: () => const SizedBox(
@@ -187,7 +189,7 @@ class _PlannedExpensePaymentSheetState
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.divider,
+                      color: theme.divider,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -195,10 +197,10 @@ class _PlannedExpensePaymentSheetState
                 const SizedBox(height: 16),
                 Text(
                   AppLocalizations.of(context).expensesPlannedPaymentTitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
+                    color: theme.textPrimary,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -207,8 +209,8 @@ class _PlannedExpensePaymentSheetState
                   AppLocalizations.of(context).expensesPlannedPaymentSubtitle(
                     widget.plannedExpense.title,
                   ),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: theme.textSecondary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -231,15 +233,16 @@ class _PlannedExpensePaymentSheetState
   }
 
   Widget _buildAmountField() {
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           AppLocalizations.of(context).expensesPlannedPaymentAmountEyebrow,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
-            color: AppColors.textMuted,
+            color: theme.textMuted,
             letterSpacing: 1,
           ),
         ),
@@ -249,18 +252,28 @@ class _PlannedExpensePaymentSheetState
           controller: _amountController,
           onChanged: _onAmountChanged,
           keyboardType: TextInputType.number,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w900,
-            color: AppColors.textPrimary,
+            color: theme.textPrimary,
           ),
           decoration: InputDecoration(
             prefixText: ref.watch(currencyProvider).inputPrefix(),
             filled: true,
-            fillColor: AppColors.surface,
+            fillColor: theme.surface,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(20),
-              borderSide: BorderSide.none,
+              borderSide: BorderSide(color: theme.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20),
+              borderSide:
+                  BorderSide(color: theme.border.withValues(alpha: 0.5)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20),
+              borderSide:
+                  BorderSide(color: theme.primary.withValues(alpha: 0.7)),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
@@ -273,15 +286,16 @@ class _PlannedExpensePaymentSheetState
   }
 
   Widget _buildDatePicker(BuildContext context) {
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           AppLocalizations.of(context).expensesPlannedPaymentDateEyebrow,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
-            color: AppColors.textMuted,
+            color: theme.textMuted,
             letterSpacing: 1,
           ),
         ),
@@ -299,8 +313,9 @@ class _PlannedExpensePaymentSheetState
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: theme.surface,
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: theme.border.withValues(alpha: 0.5)),
             ),
             child: Row(
               children: [
@@ -312,16 +327,16 @@ class _PlannedExpensePaymentSheetState
                 const SizedBox(width: 12),
                 Text(
                   DateFormat('EEEE d, MMMM', 'es').format(_paidAt),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: theme.textPrimary,
                   ),
                 ),
                 const Spacer(),
-                const Icon(
+                Icon(
                   Icons.edit_calendar_rounded,
                   size: 20,
-                  color: AppColors.textMuted,
+                  color: theme.textMuted,
                 ),
               ],
             ),
@@ -332,15 +347,16 @@ class _PlannedExpensePaymentSheetState
   }
 
   Widget _buildPayerSelector(List<MemberModel> members) {
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           AppLocalizations.of(context).expensesFormFieldPayer.toUpperCase(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
-            color: AppColors.textMuted,
+            color: theme.textMuted,
             letterSpacing: 1,
           ),
         ),
@@ -380,9 +396,8 @@ class _PlannedExpensePaymentSheetState
                       fontSize: 10,
                       fontWeight:
                           isSelected ? FontWeight.w900 : FontWeight.w600,
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.textSecondary,
+                      color:
+                          isSelected ? AppColors.primary : theme.textSecondary,
                     ),
                   ),
                 ],
@@ -395,13 +410,14 @@ class _PlannedExpensePaymentSheetState
   }
 
   Widget _buildConfirmButton() {
+    final theme = context.theme;
     return SizedBox(
       width: double.infinity,
       height: 60,
       child: ElevatedButton(
         onPressed: _isLoading ? null : _confirmPayment,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.textPrimary,
+          backgroundColor: theme.primary,
           foregroundColor: Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

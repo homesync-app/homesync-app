@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 /// Shared body for the couple/family finance configuration.
@@ -42,6 +43,7 @@ class CoupleFinanceConfigBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
+    final theme = context.theme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,9 +81,10 @@ class CoupleFinanceConfigBody extends StatelessWidget {
           ],
           Text(
             t.coupleSplitStrategiesTitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
+              color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -102,16 +105,17 @@ class CoupleFinanceConfigBody extends StatelessWidget {
           const SizedBox(height: 32),
           Text(
             t.coupleSplitCustomTitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
+              color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             t.coupleSplitCustomBody,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: theme.textSecondary,
               fontSize: 14,
             ),
           ),
@@ -144,42 +148,51 @@ class CoupleFinanceConfigBody extends StatelessWidget {
   }
 
   Widget _buildInfoCard(String title, String desc) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.accentTeal.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.accentTeal.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Builder(
+      builder: (context) {
+        final theme = context.theme;
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppColors.accentTeal.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: theme.isDarkMode
+                  ? AppColors.accentTeal.withValues(alpha: 0.34)
+                  : AppColors.accentTeal.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.info_outline_rounded,
-                color: AppColors.accentTeal,
-                size: 20,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
+              Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline_rounded,
                     color: AppColors.accentTeal,
+                    size: 20,
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.accentTeal,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                desc,
+                style: TextStyle(height: 1.5, color: theme.textPrimary),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            desc,
-            style: const TextStyle(height: 1.5, color: AppColors.textPrimary),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -190,63 +203,74 @@ class CoupleFinanceConfigBody extends StatelessWidget {
     required bool isActive,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isActive ? AppColors.primary : Colors.transparent,
-            width: 2,
-          ),
-          boxShadow: isActive
-              ? [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [],
-        ),
-        child: Row(
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 24)),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  Text(
-                    desc,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+    return Builder(
+      builder: (context) {
+        final theme = context.theme;
+        final surfaceColor = isActive ? theme.surface : theme.surfaceContainer;
+        return GestureDetector(
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onTap();
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isActive ? AppColors.primary : theme.border,
+                width: 2,
               ),
+              boxShadow: isActive
+                  ? [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : [],
             ),
-            if (isActive)
-              const Icon(Icons.check_circle_rounded, color: AppColors.primary),
-          ],
-        ),
-      ),
+            child: Row(
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 24)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: theme.textPrimary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Text(
+                        desc,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isActive)
+                  const Icon(Icons.check_circle_rounded,
+                      color: AppColors.primary),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildSplitVisualizer(BuildContext context, AppLocalizations t) {
+    final theme = context.theme;
     final youPercent = (splitRatio * 100).toInt();
     final partnerPercent = 100 - youPercent;
 
@@ -269,9 +293,10 @@ class CoupleFinanceConfigBody extends StatelessWidget {
                 ),
                 Text(
                   '$youPercent%',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
+                    color: theme.textPrimary,
                   ),
                 ),
               ],
@@ -290,9 +315,10 @@ class CoupleFinanceConfigBody extends StatelessWidget {
                 ),
                 Text(
                   '$partnerPercent%',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
+                    color: theme.textPrimary,
                   ),
                 ),
               ],

@@ -24,10 +24,10 @@ class PersonalMetricCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(28),
         boxShadow: theme.cardShadow,
-        border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.45)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,7 +46,7 @@ class PersonalMetricCard extends StatelessWidget {
               Text(
                 label.toUpperCase(),
                 style: TextStyle(
-                  color: AppColors.textPrimary.withValues(alpha: 0.4),
+                  color: theme.textSecondary,
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.5,
@@ -57,8 +57,8 @@ class PersonalMetricCard extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: theme.textPrimary,
               fontSize: 24,
               fontWeight: FontWeight.w900,
               letterSpacing: -0.5,

@@ -135,7 +135,6 @@ class MemberModel {
   bool needsSubmissionApproval(String? approvalMode) {
     switch (approvalMode) {
       case 'all':
-        return true;
       case 'children_only':
         return isChild || isTeen;
       case 'per_member':

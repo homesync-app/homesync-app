@@ -72,7 +72,8 @@ class AchievementsTab extends StatelessWidget {
             progressText: '$totalXp/5000',
           ),
           const SizedBox(height: 32),
-          SectionLabel(label: t.achievementsCoupleChallengesSection, icon: '💖'),
+          SectionLabel(
+              label: t.achievementsCoupleChallengesSection, icon: '💖'),
           const SizedBox(height: 16),
           _buildAchievementCard(
             context,
@@ -114,18 +115,21 @@ class AchievementsTab extends StatelessWidget {
           SectionLabel(label: t.achievementsIconicMomentsSection, icon: '✨'),
           const SizedBox(height: 16),
           _buildChallengeAchievement(
+            context,
             title: t.achievementsLoveRootsTitle,
             description: t.achievementsLoveRootsDesc,
             icon: '❤️',
             isUnlocked: connectionTasks >= 1, // Heurístico
           ),
           _buildChallengeAchievement(
+            context,
             title: t.achievementsBlindDateTitle,
             description: t.achievementsBlindDateDesc,
             icon: '🕯️',
             isUnlocked: false,
           ),
           _buildChallengeAchievement(
+            context,
             title: t.achievementsDreamArchitectsTitle,
             description: t.achievementsDreamArchitectsDesc,
             icon: '✨',
@@ -150,13 +154,13 @@ class AchievementsTab extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(28),
         boxShadow: theme.cardShadow,
         border: Border.all(
           color: isUnlocked
               ? AppColors.accentGold.withValues(alpha: 0.2)
-              : Colors.black.withValues(alpha: 0.02),
+              : theme.border.withValues(alpha: 0.45),
           width: 1.5,
         ),
       ),
@@ -182,9 +186,7 @@ class AchievementsTab extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 14,
-                    color: isUnlocked
-                        ? AppColors.textPrimary
-                        : AppColors.textPrimary.withValues(alpha: 0.4),
+                    color: isUnlocked ? theme.textPrimary : theme.textMuted,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -193,7 +195,7 @@ class AchievementsTab extends StatelessWidget {
                   description,
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary.withValues(alpha: 0.7),
+                    color: theme.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -201,7 +203,7 @@ class AchievementsTab extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: progress,
-                    backgroundColor: Colors.black.withValues(alpha: 0.05),
+                    backgroundColor: theme.surfaceContainer,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       isUnlocked
                           ? AppColors.accentGold
@@ -227,17 +229,19 @@ class AchievementsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildChallengeAchievement({
+  Widget _buildChallengeAchievement(
+    BuildContext context, {
     required String title,
     required String description,
     required String icon,
     required bool isUnlocked,
   }) {
+    final theme = context.theme;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isUnlocked ? Colors.white : Colors.black.withValues(alpha: 0.02),
+        color: isUnlocked ? theme.surface : theme.surfaceContainer,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isUnlocked
@@ -258,9 +262,7 @@ class AchievementsTab extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
-                    color: isUnlocked
-                        ? AppColors.textPrimary
-                        : AppColors.textMuted,
+                    color: isUnlocked ? theme.textPrimary : theme.textMuted,
                   ),
                 ),
                 if (isUnlocked)
@@ -268,18 +270,24 @@ class AchievementsTab extends StatelessWidget {
                     description,
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppColors.textSecondary.withValues(alpha: 0.6),
+                      color: theme.textSecondary,
                     ),
                   ),
               ],
             ),
           ),
           if (isUnlocked)
-            const Icon(Icons.check_circle_rounded,
-                color: AppColors.success, size: 20,)
+            const Icon(
+              Icons.check_circle_rounded,
+              color: AppColors.success,
+              size: 20,
+            )
           else
-            const Icon(Icons.lock_outline_rounded,
-                color: AppColors.textMuted, size: 18,),
+            const Icon(
+              Icons.lock_outline_rounded,
+              color: AppColors.textMuted,
+              size: 18,
+            ),
         ],
       ),
     );

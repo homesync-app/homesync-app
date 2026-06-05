@@ -1085,12 +1085,17 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.sage.withValues(alpha: 0.16),
-                foregroundColor: AppColors.textPrimary,
+                backgroundColor: theme.isDarkMode
+                    ? theme.primary
+                    : AppColors.sage.withValues(alpha: 0.16),
+                foregroundColor:
+                    theme.isDarkMode ? Colors.white : AppColors.textPrimary,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 17),
                 side: BorderSide(
-                  color: AppColors.sage.withValues(alpha: 0.22),
+                  color: theme.isDarkMode
+                      ? theme.primary.withValues(alpha: 0.42)
+                      : AppColors.sage.withValues(alpha: 0.22),
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
@@ -1512,305 +1517,327 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          padding: EdgeInsets.only(
-            left: 28,
-            right: 28,
-            top: 24,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 32,
-          ),
-          decoration: BoxDecoration(
-            color: context.theme.background,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
-          ),
-          child: Form(
-            key: formKey,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 42,
-                      height: 5,
-                      margin: const EdgeInsets.only(bottom: 24),
-                      decoration: BoxDecoration(
-                        color: AppColors.divider,
-                        borderRadius: BorderRadius.circular(999),
+        builder: (context, setModalState) {
+          final theme = context.theme;
+          OutlineInputBorder inputBorder(Color color) => OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide(color: color),
+              );
+
+          return Container(
+            padding: EdgeInsets.only(
+              left: 28,
+              right: 28,
+              top: 24,
+              bottom: MediaQuery.of(context).viewInsets.bottom +
+                  MediaQuery.viewPaddingOf(context).bottom +
+                  32,
+            ),
+            decoration: BoxDecoration(
+              color: theme.background,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(40)),
+            ),
+            child: Form(
+              key: formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 42,
+                        height: 5,
+                        margin: const EdgeInsets.only(bottom: 24),
+                        decoration: BoxDecoration(
+                          color: theme.divider,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    isSuggestion
-                        ? 'Proponer un deseo'
-                        : 'Nuevo premio de la casa',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  const Text(
-                    'TITULO',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: titleController,
-                    validator: (value) {
-                      final title = value?.trim() ?? '';
-                      if (title.isEmpty) return 'Escribe el nombre del deseo.';
-                      if (title.length < 3) return 'Usa al menos 3 caracteres.';
-                      return null;
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Ej: Masaje de 20 minutos',
-                      filled: true,
-                      fillColor: context.theme.surface,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
+                    Text(
+                      isSuggestion
+                          ? 'Proponer un deseo'
+                          : 'Nuevo premio de la casa',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
                       ),
-                      contentPadding: const EdgeInsets.all(20),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    isSuggestion ? 'NOTA (OPCIONAL)' : 'DESCRIPCION',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: descriptionController,
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      hintText: isSuggestion
-                          ? 'Agregá un detalle si querés (opcional)'
-                          : 'Un detalle corto para describir el premio',
-                      filled: true,
-                      fillColor: context.theme.surface,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
+                    const SizedBox(height: 28),
+                    Text(
+                      'TITULO',
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
                       ),
-                      contentPadding: const EdgeInsets.all(20),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'COSTO',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: costController,
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      final cost = int.tryParse((value ?? '').trim());
-                      if (cost == null) return 'Ingresa un costo valido.';
-                      if (cost <= 0) return 'Debe costar al menos 1 coin.';
-                      return null;
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Costo en coins',
-                      prefixIcon: const Icon(
-                        Icons.monetization_on_rounded,
-                        color: AppColors.sage,
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: titleController,
+                      validator: (value) {
+                        final title = value?.trim() ?? '';
+                        if (title.isEmpty)
+                          return 'Escribe el nombre del deseo.';
+                        if (title.length < 3)
+                          return 'Usa al menos 3 caracteres.';
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Ej: Masaje de 20 minutos',
+                        filled: true,
+                        fillColor: theme.surface,
+                        border:
+                            inputBorder(theme.border.withValues(alpha: 0.4)),
+                        enabledBorder:
+                            inputBorder(theme.border.withValues(alpha: 0.42)),
+                        focusedBorder:
+                            inputBorder(theme.primary.withValues(alpha: 0.72)),
+                        contentPadding: const EdgeInsets.all(20),
                       ),
-                      filled: true,
-                      fillColor: context.theme.surface,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      isSuggestion ? 'NOTA (OPCIONAL)' : 'DESCRIPCION',
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
                       ),
-                      contentPadding: const EdgeInsets.all(20),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'CATEGORIA',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: descriptionController,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        hintText: isSuggestion
+                            ? 'Agregá un detalle si querés (opcional)'
+                            : 'Un detalle corto para describir el premio',
+                        filled: true,
+                        fillColor: theme.surface,
+                        border:
+                            inputBorder(theme.border.withValues(alpha: 0.4)),
+                        enabledBorder:
+                            inputBorder(theme.border.withValues(alpha: 0.42)),
+                        focusedBorder:
+                            inputBorder(theme.primary.withValues(alpha: 0.72)),
+                        contentPadding: const EdgeInsets.all(20),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: categories.map((category) {
-                      final selected = selectedCategory == category;
-                      return ChoiceChip(
-                        label: Text(
-                          localizedRewardCategoryByKey(
-                            t,
-                            null,
-                            category,
+                    const SizedBox(height: 20),
+                    Text(
+                      'COSTO',
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: costController,
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        final cost = int.tryParse((value ?? '').trim());
+                        if (cost == null) return 'Ingresa un costo valido.';
+                        if (cost <= 0) return 'Debe costar al menos 1 coin.';
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Costo en coins',
+                        prefixIcon: const Icon(
+                          Icons.monetization_on_rounded,
+                          color: AppColors.sage,
+                        ),
+                        filled: true,
+                        fillColor: theme.surface,
+                        border:
+                            inputBorder(theme.border.withValues(alpha: 0.4)),
+                        enabledBorder:
+                            inputBorder(theme.border.withValues(alpha: 0.42)),
+                        focusedBorder:
+                            inputBorder(theme.primary.withValues(alpha: 0.72)),
+                        contentPadding: const EdgeInsets.all(20),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'CATEGORIA',
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: categories.map((category) {
+                        final selected = selectedCategory == category;
+                        return ChoiceChip(
+                          label: Text(
+                            localizedRewardCategoryByKey(
+                              t,
+                              null,
+                              category,
+                            ),
                           ),
-                        ),
-                        selected: selected,
-                        onSelected: isSubmitting
-                            ? null
-                            : (_) => setModalState(
-                                  () => selectedCategory = category,
-                                ),
-                        selectedColor:
-                            AppColors.primary.withValues(alpha: 0.14),
-                        backgroundColor: Theme.of(context).colorScheme.surface,
-                        labelStyle: TextStyle(
-                          color: selected
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        side: BorderSide(
-                          color: selected
-                              ? AppColors.primary.withValues(alpha: 0.4)
-                              : Colors.transparent,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'ICONO',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: icons.map((icon) {
-                        final selected = selectedIcon == icon;
-                        return GestureDetector(
-                          onTap: isSubmitting
+                          selected: selected,
+                          onSelected: isSubmitting
                               ? null
-                              : () => setModalState(() => selectedIcon = icon),
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 12),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? AppColors.primary.withValues(alpha: 0.10)
-                                  : context.theme.surface,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: selected
-                                    ? AppColors.primary
-                                    : Colors.transparent,
-                                width: 2,
-                              ),
-                            ),
-                            child: Text(
-                              icon,
-                              style: const TextStyle(fontSize: 30),
-                            ),
+                              : (_) => setModalState(
+                                    () => selectedCategory = category,
+                                  ),
+                          selectedColor:
+                              AppColors.primary.withValues(alpha: 0.14),
+                          backgroundColor: theme.surface,
+                          labelStyle: TextStyle(
+                            color:
+                                selected ? theme.primary : theme.textSecondary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          side: BorderSide(
+                            color: selected
+                                ? AppColors.primary.withValues(alpha: 0.4)
+                                : Colors.transparent,
                           ),
                         );
                       }).toList(),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  ElevatedButton(
-                    onPressed: isSubmitting
-                        ? null
-                        : () async {
-                            final isValid =
-                                formKey.currentState?.validate() ?? false;
-                            if (!isValid) return;
-
-                            final cost =
-                                int.tryParse(costController.text.trim()) ?? 0;
-
-                            setModalState(() => isSubmitting = true);
-                            final result = await ref
-                                .read(rewardsProvider.notifier)
-                                .suggestReward(
-                                  title: titleController.text.trim(),
-                                  description:
-                                      descriptionController.text.trim().isEmpty
-                                          ? null
-                                          : descriptionController.text.trim(),
-                                  cost: cost,
-                                  icon: selectedIcon,
-                                  category: selectedCategory,
-                                );
-
-                            if (!mounted) return;
-
-                            result.fold(
-                              (failure) {
-                                setModalState(() => isSubmitting = false);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(failure.message),
-                                    backgroundColor: AppColors.error,
-                                  ),
-                                );
-                              },
-                              (_) {
-                                Navigator.pop(context);
-                                _showSentToast(isSuggestion);
-                              },
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textPrimary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(22),
+                    const SizedBox(height: 24),
+                    Text(
+                      'ICONO',
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
                       ),
                     ),
-                    child: isSubmitting
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
+                    const SizedBox(height: 12),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: icons.map((icon) {
+                          final selected = selectedIcon == icon;
+                          return GestureDetector(
+                            onTap: isSubmitting
+                                ? null
+                                : () =>
+                                    setModalState(() => selectedIcon = icon),
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 12),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: selected
+                                    ? AppColors.primary.withValues(alpha: 0.10)
+                                    : theme.surface,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: selected
+                                      ? AppColors.primary
+                                      : Colors.transparent,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Text(
+                                icon,
+                                style: const TextStyle(fontSize: 30),
+                              ),
                             ),
-                          )
-                        : Text(
-                            isSuggestion ? 'Enviar propuesta' : 'Crear premio',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton(
+                      onPressed: isSubmitting
+                          ? null
+                          : () async {
+                              final isValid =
+                                  formKey.currentState?.validate() ?? false;
+                              if (!isValid) return;
+
+                              final cost =
+                                  int.tryParse(costController.text.trim()) ?? 0;
+
+                              setModalState(() => isSubmitting = true);
+                              final result = await ref
+                                  .read(rewardsProvider.notifier)
+                                  .suggestReward(
+                                    title: titleController.text.trim(),
+                                    description: descriptionController.text
+                                            .trim()
+                                            .isEmpty
+                                        ? null
+                                        : descriptionController.text.trim(),
+                                    cost: cost,
+                                    icon: selectedIcon,
+                                    category: selectedCategory,
+                                  );
+
+                              if (!mounted) return;
+
+                              result.fold(
+                                (failure) {
+                                  setModalState(() => isSubmitting = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(failure.message),
+                                      backgroundColor: AppColors.error,
+                                    ),
+                                  );
+                                },
+                                (_) {
+                                  Navigator.pop(context);
+                                  _showSentToast(isSuggestion);
+                                },
+                              );
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                      ),
+                      child: isSubmitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              isSuggestion
+                                  ? 'Enviar propuesta'
+                                  : 'Crear premio',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
-                          ),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

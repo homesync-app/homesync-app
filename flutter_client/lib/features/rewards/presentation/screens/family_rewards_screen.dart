@@ -626,23 +626,35 @@ class _BalanceHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final gradientColors = isChild
+        ? theme.isDarkMode
+            ? const [
+                Color(0xFF332720),
+                Color(0xFF1F2A27),
+              ]
+            : const [
+                Color(0xFFFFF2DF),
+                Color(0xFFEAF7F4),
+              ]
+        : [
+            AppColors.accentGold.withValues(
+              alpha: theme.isDarkMode ? 0.14 : 0.22,
+            ),
+            AppColors.accentGold.withValues(
+              alpha: theme.isDarkMode ? 0.05 : 0.08,
+            ),
+          ];
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isChild
-              ? const [
-                  Color(0xFFFFF2DF),
-                  Color(0xFFEAF7F4),
-                ]
-              : [
-                  AppColors.accentGold.withValues(alpha: 0.22),
-                  AppColors.accentGold.withValues(alpha: 0.08),
-                ],
+          colors: gradientColors,
         ),
         borderRadius: BorderRadius.circular(isChild ? 28 : 24),
         border: Border.all(
-          color: AppColors.accentGold.withValues(alpha: 0.3),
+          color: AppColors.accentGold.withValues(
+            alpha: theme.isDarkMode ? 0.18 : 0.3,
+          ),
         ),
       ),
       child: Row(
@@ -958,6 +970,9 @@ class _RewardGrid extends ConsumerWidget {
           children: rewards.map((reward) {
             final canAfford = userBalance >= reward.cost;
             final accent = canAfford ? theme.primary : theme.textMuted;
+            final cardGradient = theme.isDarkMode
+                ? [theme.elevatedSurface, theme.surfaceContainer]
+                : [theme.surface, theme.surfaceVariant];
 
             return SizedBox(
               width: cardWidth,
@@ -965,7 +980,7 @@ class _RewardGrid extends ConsumerWidget {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [theme.surface, AppColors.surfaceVariant],
+                    colors: cardGradient,
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/receipt_matcher.dart';
 import 'package:homesync_client/features/shopping/data/shopping_predefined.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_categories.dart';
@@ -33,6 +34,7 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
+    final theme = context.theme;
     final hasItems = linkedItems.isNotEmpty || detectedItemNames.isNotEmpty;
     final newCount = autoAddedItems.length;
 
@@ -45,16 +47,18 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Color.alphaBlend(
             AppColors.primary.withValues(alpha: 0.018),
-            AppColors.surface,
+            theme.surface,
           ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: AppColors.divider.withValues(alpha: 0.78),
+            color: theme.border.withValues(alpha: 0.78),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowBase.withValues(alpha: 0.035),
+              color: theme.shadowBase.withValues(
+                alpha: theme.isDarkMode ? 0.18 : 0.035,
+              ),
               blurRadius: 14,
               offset: const Offset(0, 5),
             ),
@@ -89,10 +93,10 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                           hasItems
                               ? t.expensesFormShoppingDetectedTitle
                               : t.expensesFormShoppingLinkTitle,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 14.5,
-                            color: AppColors.textPrimary,
+                            color: theme.textPrimary,
                             letterSpacing: -0.1,
                           ),
                         ),
@@ -102,27 +106,27 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                               linkedItems.length,
                               newCount,
                             ),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: AppColors.textSecondary,
+                              color: theme.textSecondary,
                               height: 1.4,
                             ),
                           )
                         else if (hasItems)
                           Text(
                             t.expensesFormShoppingWillMarkBought,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: AppColors.textSecondary,
+                              color: theme.textSecondary,
                               height: 1.4,
                             ),
                           )
                         else
                           Text(
                             t.expensesFormShoppingTapToLink,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: AppColors.textSecondary,
+                              color: theme.textSecondary,
                               height: 1.4,
                             ),
                           ),
@@ -137,15 +141,15 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
-                          color: AppColors.background.withValues(alpha: 0.72),
+                          color: theme.surfaceContainer.withValues(alpha: 0.72),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppColors.divider.withValues(alpha: 0.72),
+                            color: theme.border.withValues(alpha: 0.72),
                           ),
                         ),
                         child: Icon(
                           Icons.close_rounded,
-                          color: AppColors.textSecondary,
+                          color: theme.textSecondary,
                           size: 18,
                           semanticLabel: t.expensesFormShoppingClearAllSemantic,
                         ),
@@ -168,7 +172,7 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                 child: Container(
                   height: 1,
                   decoration: BoxDecoration(
-                    color: AppColors.divider.withValues(alpha: 0.52),
+                    color: theme.divider.withValues(alpha: 0.52),
                     borderRadius: BorderRadius.circular(1),
                   ),
                 ),
@@ -201,6 +205,7 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
 
   Widget _buildLockedCard(BuildContext context, bool hasItems) {
     final t = AppLocalizations.of(context);
+    final theme = context.theme;
     final displayNames =
         hasItems ? linkedItems.map((i) => i.name).toList() : detectedItemNames;
 
@@ -208,10 +213,10 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: theme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: AppColors.divider.withValues(alpha: 0.6),
+            color: theme.border.withValues(alpha: 0.6),
             width: 1,
           ),
         ),

@@ -96,13 +96,15 @@ class _CoupleSplitStrategyScreenState
     final household = ref.watch(currentHouseholdProvider).value;
     final isShared = _financeMode == 'shared';
     final t = AppLocalizations.of(context);
+    final theme = context.theme;
     final modeKey = household?.householdType ?? 'couple';
     // Couples and families can choose between an integrated/shared economy
     // (no debt between adults) and a divided economy (percentages + balances).
-    final supportsFinanceModeChoice = modeKey == 'family' || modeKey == 'couple';
+    final supportsFinanceModeChoice =
+        modeKey == 'family' || modeKey == 'couple';
 
     return Scaffold(
-      backgroundColor: context.theme.scaffoldBackground,
+      backgroundColor: theme.scaffoldBackground,
       body: Stack(
         children: [
           // Background Decor
@@ -126,15 +128,15 @@ class _CoupleSplitStrategyScreenState
                 expandedHeight: 200,
                 pinned: true,
                 stretch: true,
-                backgroundColor: context.theme.scaffoldBackground,
+                backgroundColor: theme.scaffoldBackground,
                 elevation: 0,
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: true,
                   title: Text(
                     t.coupleSplitTitle(modeKey),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
+                      color: theme.textPrimary,
                     ),
                   ),
                   background: Center(

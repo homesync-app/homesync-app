@@ -28,9 +28,7 @@ class XPToggleButton extends StatelessWidget {
           curve: Curves.easeOutQuart,
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: isSelected
-                ? Colors.white
-                : Colors.black.withValues(alpha: 0.03),
+            color: isSelected ? theme.surface : theme.surfaceContainer,
             borderRadius: BorderRadius.circular(20),
             boxShadow: isSelected ? theme.cardShadow : [],
             border: Border.all(
@@ -43,9 +41,7 @@ class XPToggleButton extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: isSelected
-                    ? color
-                    : AppColors.textPrimary.withValues(alpha: 0.4),
+                color: isSelected ? color : theme.textMuted,
                 fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
                 fontSize: 13,
                 letterSpacing: 0.8,
@@ -92,7 +88,7 @@ class PrivacyBadge extends StatelessWidget {
             child: Text(
               text,
               style: TextStyle(
-                color: AppColors.textPrimary.withValues(alpha: 0.7),
+                color: theme.textSecondary,
                 fontSize: 13,
                 height: 1.5,
                 fontWeight: FontWeight.w500,
@@ -160,10 +156,10 @@ class MiniStatCard extends StatelessWidget {
         children: [
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary,
+              color: theme.textPrimary,
               letterSpacing: -1,
               height: 1,
             ),

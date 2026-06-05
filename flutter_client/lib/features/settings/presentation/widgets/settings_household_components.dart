@@ -544,6 +544,8 @@ List<SettingsHouseholdMemberData> buildSettingsHouseholdMemberData({
   required List<Map<String, dynamic>> members,
   required String? currentUserId,
   required bool isAdminQaUser,
+  required bool canManageMemberRoles,
+  required bool allowCurrentUserRoleEdit,
   required String Function(Map<String, dynamic> member, String? role)
       roleLabelBuilder,
   required void Function(Map<String, dynamic> member) onEditRole,
@@ -572,7 +574,10 @@ List<SettingsHouseholdMemberData> buildSettingsHouseholdMemberData({
       avatarUrl: avatarUrl,
       isCurrentUser: isCurrentUser,
       showOwnerStar: role == 'owner',
-      onEdit: (isCurrentUser || isOwner) ? () => onEditRole(member) : null,
+      onEdit: (canManageMemberRoles ||
+              (allowCurrentUserRoleEdit && isCurrentUser))
+          ? () => onEditRole(member)
+          : null,
       onRemove: (isOwner && !isCurrentUser)
           ? () => onRemoveMember(member['user_id'], rawName)
           : null,

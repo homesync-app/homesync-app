@@ -1695,13 +1695,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Adults complete directly; everyone else needs approval.';
 
   @override
-  String get settingsParentModeApprovalAllTitle => 'All members';
-
-  @override
-  String get settingsParentModeApprovalAllSubtitle =>
-      'Every completion goes through your OK before paying coins.';
-
-  @override
   String get settingsParentModeApprovalPerMemberTitle => 'Per member';
 
   @override
@@ -1732,6 +1725,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsParentModeWeeklySummary => 'Weekly summary';
+
+  @override
+  String get settingsParentModeAllowanceTitle => 'Allowances';
+
+  @override
+  String get settingsParentModeAllowanceSubtitle =>
+      'Let adults send money to minors for their personal finances, separate from shared expenses.';
+
+  @override
+  String get settingsParentModeAllowanceCta => 'Send allowance';
 
   @override
   String get settingsParentModePerMemberEmpty =>
@@ -2985,6 +2988,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expensesFormHeaderNewExpense => 'New Expense';
+
+  @override
+  String get allowanceEntryTitle => 'Send allowance to a minor';
+
+  @override
+  String get allowanceSheetTitle => 'Send allowance';
+
+  @override
+  String get allowanceSheetSubtitle =>
+      'Move money from your personal balance to a minor\'s balance. It will not count as a shared expense.';
+
+  @override
+  String get allowanceRecipientLabel => 'To';
+
+  @override
+  String get allowanceAmountLabel => 'Amount';
+
+  @override
+  String get allowanceNoteHint => 'Optional note, e.g. June allowance';
+
+  @override
+  String get allowanceSubmitButton => 'Send allowance';
+
+  @override
+  String get allowanceNoRecipients =>
+      'There are no teens in this household with personal finances enabled. Children cannot receive allowances because they do not have access to Finances. If needed, update their role from Members in household settings.';
+
+  @override
+  String get allowanceRecipientRequired =>
+      'Choose who should receive the allowance.';
+
+  @override
+  String get allowanceAmountInvalid => 'Enter a valid amount.';
+
+  @override
+  String get allowanceSendGenericError => 'We couldn\'t send the allowance.';
+
+  @override
+  String get allowanceSentSnack => 'Allowance sent.';
+
+  @override
+  String allowanceSendError(String error) {
+    return 'Error sending allowance: $error';
+  }
 
   @override
   String get expensesFormSelectCategoryTitle => 'Select category';

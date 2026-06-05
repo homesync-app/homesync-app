@@ -375,6 +375,7 @@ class _AvatarContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final normalizedAvatarUrl = UserAvatar.normalizeAvatarValue(avatarUrl);
     final bool hasAvatar =
         normalizedAvatarUrl != null && normalizedAvatarUrl.trim().isNotEmpty;
@@ -394,6 +395,10 @@ class _AvatarContent extends StatelessWidget {
     final color = isEmoji
         ? UserAvatar.getColorForEmoji(normalizedAvatarUrl)
         : ((isNetwork || isAsset) ? Colors.transparent : AppColors.primary);
+    final imageBackground =
+        isDarkMode ? AppColors.elevatedSurfaceDark : Colors.grey.shade100;
+    final resolvedBorderColor = borderColor ??
+        (isDarkMode ? Colors.white.withValues(alpha: 0.18) : Colors.white);
 
     final safeName = name?.trim() ?? '';
     final initial =
@@ -405,12 +410,10 @@ class _AvatarContent extends StatelessWidget {
       decoration: BoxDecoration(
         color: isEmoji
             ? color
-            : ((isNetwork || isAsset)
-                ? Colors.grey.shade100
-                : AppColors.primary),
+            : ((isNetwork || isAsset) ? imageBackground : AppColors.primary),
         shape: BoxShape.circle,
         border: showBorder
-            ? Border.all(color: borderColor ?? Colors.white, width: 2)
+            ? Border.all(color: resolvedBorderColor, width: 2)
             : null,
         boxShadow: showBorder
             ? [

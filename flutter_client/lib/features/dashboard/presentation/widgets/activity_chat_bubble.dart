@@ -33,6 +33,7 @@ class ActivityChatBubble extends ConsumerWidget {
     final data = (activity['data'] as Map<String, dynamic>?) ?? {};
     final creatorId = activity['creator_id'] as String?;
     final isMe = creatorId == currentUserId;
+    final isReward = type == 'reward';
 
     final createdAt =
         DateTime.tryParse(activity['created_at'] as String? ?? '')?.toLocal() ??
@@ -73,6 +74,11 @@ class ActivityChatBubble extends ConsumerWidget {
       resolvedCategoryColor:
           categoryData != null ? AppColors.fromHex(categoryData.color) : null,
     );
+    final rewardSurface = theme.isDarkMode
+        ? AppColors.accentGold.withValues(alpha: 0.12)
+        : const Color(0xFFFFF4DD);
+    final rewardAccent =
+        theme.isDarkMode ? AppColors.accentGold : const Color(0xFFC47A18);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -98,15 +104,19 @@ class ActivityChatBubble extends ConsumerWidget {
                 constraints: const BoxConstraints(minHeight: 84),
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 decoration: BoxDecoration(
-                  color: isMe
-                      ? theme.elevatedSurface
-                      : theme.surfaceVariant.withValues(
-                          alpha: theme.isDarkMode ? 0.72 : 0.92,
-                        ),
+                  color: isReward
+                      ? rewardSurface
+                      : isMe
+                          ? theme.elevatedSurface
+                          : theme.surfaceVariant.withValues(
+                              alpha: theme.isDarkMode ? 0.72 : 0.92,
+                            ),
                   border: Border.all(
-                    color: isMe
-                        ? theme.primary.withValues(alpha: 0.1)
-                        : theme.divider.withValues(alpha: 0.09),
+                    color: isReward
+                        ? rewardAccent.withValues(alpha: 0.22)
+                        : isMe
+                            ? theme.primary.withValues(alpha: 0.1)
+                            : theme.divider.withValues(alpha: 0.09),
                     width: 0.9,
                   ),
                   borderRadius: BorderRadius.only(
@@ -117,10 +127,20 @@ class ActivityChatBubble extends ConsumerWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: (isMe ? theme.primary : Colors.black)
-                          .withValues(alpha: isMe ? 0.03 : 0.022),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                      color: (isReward
+                              ? rewardAccent
+                              : isMe
+                                  ? theme.primary
+                                  : Colors.black)
+                          .withValues(
+                        alpha: isReward
+                            ? 0.08
+                            : isMe
+                                ? 0.03
+                                : 0.022,
+                      ),
+                      blurRadius: isReward ? 18 : 12,
+                      offset: const Offset(0, 5),
                     ),
                   ],
                 ),
@@ -143,13 +163,13 @@ class ActivityChatBubble extends ConsumerWidget {
                           ),
                         ),
                       ),
-                    if (type == 'reward')
+                    if (isReward)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 6),
                         child: Text(
                           'Premio canjeado',
                           style: TextStyle(
-                            color: accent.withValues(alpha: 0.9),
+                            color: rewardAccent,
                             fontWeight: FontWeight.w800,
                             fontSize: 11,
                             letterSpacing: 0.1,
@@ -165,8 +185,7 @@ class ActivityChatBubble extends ConsumerWidget {
                           child: _activityLeading(
                             type,
                             category,
-                            data['reward_icon'] as String?,
-                            accent,
+                            isReward ? rewardAccent : accent,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -232,11 +251,10 @@ class ActivityChatBubble extends ConsumerWidget {
                             icon: Icons.monetization_on_rounded,
                             theme: theme,
                           ),
-                        if (type == 'reward' &&
-                            _readInt(data['reward_cost']) != null)
+                        if (isReward && _readInt(data['reward_cost']) != null)
                           _activityMetaPill(
                             label: '-${_readInt(data['reward_cost'])} coins',
-                            color: AppColors.accentGold,
+                            color: rewardAccent,
                             icon: Icons.monetization_on_rounded,
                             theme: theme,
                           ),
@@ -349,17 +367,14 @@ class ActivityChatBubble extends ConsumerWidget {
     return dashboardCategoryAccent(context, category);
   }
 
-  /// Leading visual for the bubble. For redeemed rewards we show the reward's
-  /// own emoji inside a soft gold chip — feels more celebratory than reusing
-  /// the generic task icon. Falls back to a gift icon if no emoji is set.
+  /// Leading visual for redeemed rewards stays generic so the feed keeps a
+  /// consistent rhythm even when reward catalog items use playful emoji.
   Widget _activityLeading(
     String? type,
     String? category,
-    String? rewardIcon,
     Color accent,
   ) {
     if (type == 'reward') {
-      final emoji = (rewardIcon ?? '').trim();
       return Container(
         width: 26,
         height: 26,
@@ -368,9 +383,7 @@ class ActivityChatBubble extends ConsumerWidget {
           color: accent.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: emoji.isNotEmpty
-            ? Text(emoji, style: const TextStyle(fontSize: 15))
-            : Icon(Icons.card_giftcard_rounded, size: 15, color: accent),
+        child: Icon(Icons.card_giftcard_rounded, size: 15, color: accent),
       );
     }
     return Padding(

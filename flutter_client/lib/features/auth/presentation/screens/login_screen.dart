@@ -444,6 +444,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildAuthPanel(ThemeData theme) {
+    final appTheme = context.theme;
     return ClipRRect(
       borderRadius: BorderRadius.circular(32),
       child: BackdropFilter(
@@ -454,20 +455,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                context.theme.surface.withValues(alpha: 0.9),
-                AppColors.elevatedSurface.withValues(alpha: 0.93),
-              ],
+              colors: appTheme.isDarkMode
+                  ? [
+                      appTheme.surface.withValues(alpha: 0.96),
+                      appTheme.elevatedSurface.withValues(alpha: 0.94),
+                    ]
+                  : [
+                      appTheme.surface.withValues(alpha: 0.9),
+                      AppColors.elevatedSurface.withValues(alpha: 0.93),
+                    ],
             ),
             borderRadius: BorderRadius.circular(32),
             border: Border.all(
-              color: AppColors.border.withValues(alpha: 0.34),
+              color: appTheme.border.withValues(alpha: 0.58),
               width: 0.7,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.shadowBase.withValues(alpha: 0.012),
-                blurRadius: 12,
+                color: appTheme.shadowBase.withValues(
+                  alpha: appTheme.isDarkMode ? 0.34 : 0.012,
+                ),
+                blurRadius: appTheme.isDarkMode ? 30 : 12,
                 offset: const Offset(0, 8),
               ),
             ],
@@ -664,32 +672,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     TextCapitalization textCapitalization = TextCapitalization.none,
     String? Function(String?)? validator,
   }) {
+    final appTheme = context.theme;
     return TextFormField(
       controller: controller,
       obscureText: isPassword && _obscurePassword,
       keyboardType: keyboardType,
       textCapitalization: textCapitalization,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
+        color: appTheme.textPrimary,
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(
+        hintStyle: TextStyle(
           fontSize: 16.5,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF9E948D),
+          color: appTheme.textMuted,
         ),
         filled: true,
-        fillColor: context.theme.surface.withValues(alpha: 0.9),
+        fillColor: appTheme.surfaceContainer.withValues(alpha: 0.9),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 22, vertical: 17),
         prefixIcon: Padding(
           padding: const EdgeInsets.only(left: 20, right: 12),
           child: Icon(
             icon,
-            color: AppColors.textMuted.withValues(alpha: 0.82),
+            color: appTheme.textMuted.withValues(alpha: 0.92),
             size: 23,
           ),
         ),
@@ -705,7 +714,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     _obscurePassword
                         ? Icons.visibility_outlined
                         : Icons.visibility_off_outlined,
-                    color: AppColors.textMuted.withValues(alpha: 0.8),
+                    color: appTheme.textMuted.withValues(alpha: 0.9),
                     size: 23,
                   ),
                   onPressed: () =>
@@ -721,7 +730,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide(
-            color: AppColors.border.withValues(alpha: 0.82),
+            color: appTheme.border.withValues(alpha: 0.82),
             width: 1.2,
           ),
         ),
@@ -780,16 +789,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildGoogleButton(ThemeData theme) {
+    final appTheme = context.theme;
     return OutlinedButton(
       onPressed: _isSubmitting ? null : _handleGoogleSignIn,
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 13.5),
         foregroundColor: theme.colorScheme.onSurface,
         side: BorderSide(
-          color: AppColors.border.withValues(alpha: 0.74),
+          color: appTheme.border.withValues(alpha: 0.74),
           width: 1.2,
         ),
-        backgroundColor: context.theme.surface.withValues(alpha: 0.9),
+        backgroundColor: appTheme.surfaceContainer.withValues(alpha: 0.9),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         elevation: 0,
       ),

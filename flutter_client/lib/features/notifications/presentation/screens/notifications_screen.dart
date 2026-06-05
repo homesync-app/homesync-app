@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/notifications/domain/entities/app_notification.dart';
 import 'package:homesync_client/features/notifications/presentation/providers/notifications_provider.dart';
@@ -238,6 +239,7 @@ class _NotificationsEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     return Center(
       child: Column(
@@ -245,31 +247,31 @@ class _NotificationsEmptyState extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
+            decoration: BoxDecoration(
+              color: theme.surface,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.notifications_off_rounded,
               size: 64,
-              color: AppColors.textMuted,
+              color: theme.textMuted,
             ),
           ),
           const SizedBox(height: 24),
           Text(
             t.notificationsEmptyTitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             t.notificationsEmptySubtitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
-              color: AppColors.textSecondary,
+              color: theme.textSecondary,
             ),
           ),
         ],
@@ -283,6 +285,7 @@ class _NotificationsErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     return Center(
       child: Column(
@@ -290,31 +293,31 @@ class _NotificationsErrorState extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
+            decoration: BoxDecoration(
+              color: theme.surface,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.cloud_off_rounded,
               size: 64,
-              color: AppColors.textMuted,
+              color: theme.textMuted,
             ),
           ),
           const SizedBox(height: 24),
           Text(
             t.notificationsErrorTitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             t.notificationsErrorSubtitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
-              color: AppColors.textSecondary,
+              color: theme.textSecondary,
             ),
           ),
         ],

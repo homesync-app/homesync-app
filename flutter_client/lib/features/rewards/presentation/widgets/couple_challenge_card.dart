@@ -215,10 +215,14 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: AppColors.background,
+                color: theme.isDarkMode
+                    ? theme.surfaceContainer.withValues(alpha: 0.78)
+                    : AppColors.background,
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: highlight.withValues(alpha: 0.08),
+                  color: theme.isDarkMode
+                      ? theme.border.withValues(alpha: 0.55)
+                      : highlight.withValues(alpha: 0.08),
                 ),
               ),
               child: Column(

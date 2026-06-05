@@ -119,7 +119,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   List<String> _unmatchedOcrItems = [];
   final Set<ShoppingItemModel> _ocrMatchedShoppingItems = {};
 
-  // TelemetrÃ­a OCR: id de la fila de log para asociar matcher_result + user_action.
+  // TelemetrÃƒÂ­a OCR: id de la fila de log para asociar matcher_result + user_action.
   String? _ocrLogId;
   bool _ocrConfirmed = false;
 
@@ -175,7 +175,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   @override
   void dispose() {
-    // Si hubo scan y el usuario cerrÃ³ sin confirmar, lo marcamos como cancelled.
+    // Si hubo scan y el usuario cerrÃƒÂ³ sin confirmar, lo marcamos como cancelled.
     if (_ocrLogId != null && !_ocrConfirmed) {
       OcrLogService(Supabase.instance.client).updateUserAction(
         logId: _ocrLogId!,
@@ -283,7 +283,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       if (result == null || !mounted) return;
       _prefillFromScan(result);
 
-      // Logging asÃ­ncrono â€” no bloquea la UI ni rompe si falla.
+      // Logging asÃƒÂ­ncrono Ã¢â‚¬â€ no bloquea la UI ni rompe si falla.
       final isPremium = ref.read(premiumProvider).value ?? false;
       final householdId = ref.read(currentHouseholdProvider).value?.id;
       OcrLogService(Supabase.instance.client)
@@ -300,8 +300,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         }
       });
 
-      // Solo corremos el matcher para categorÃ­as donde tiene sentido vincular
-      // con la lista de compras. Para cafeterÃ­as, transporte, servicios, etc.
+      // Solo corremos el matcher para categorÃƒÂ­as donde tiene sentido vincular
+      // con la lista de compras. Para cafeterÃƒÂ­as, transporte, servicios, etc.
       // el usuario no espera ver productos detectados.
       const shoppingRelevantCategories = {'supermarket', 'health'};
       if (shoppingRelevantCategories.contains(result.category)) {
@@ -386,7 +386,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       _unmatchedOcrItems = result.unrecognized;
     });
 
-    // TelemetrÃ­a: registramos el resultado del matcher para anÃ¡lisis offline.
+    // TelemetrÃƒÂ­a: registramos el resultado del matcher para anÃƒÂ¡lisis offline.
     final logId = _ocrLogId;
     if (logId != null) {
       OcrLogService(Supabase.instance.client).updateMatcherResult(
@@ -529,9 +529,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         final shoppingRepo = ref.read(shoppingRepositoryProvider);
         final userId = ref.read(currentUserIdProvider);
 
-        // Paralelizamos todos los items: antes se hacÃ­a secuencial (add+toggle
-        // por item) y con 14 artÃ­culos se iban ~5-6s. Con Future.wait todas las
-        // operaciones salen a la vez y el tiempo total â‰ˆ la operaciÃ³n mÃ¡s lenta.
+        // Paralelizamos todos los items: antes se hacÃƒÂ­a secuencial (add+toggle
+        // por item) y con 14 artÃƒÂ­culos se iban ~5-6s. Con Future.wait todas las
+        // operaciones salen a la vez y el tiempo total Ã¢â€°Ë† la operaciÃƒÂ³n mÃƒÂ¡s lenta.
         final futures = _selectedShoppingItems.map((item) async {
           if (item.id.startsWith('temp_')) {
             final addResult = await shoppingRepo.addItem(
@@ -574,7 +574,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(userBalanceProvider);
 
-      // TelemetrÃ­a OCR: el usuario confirmÃ³ el gasto.
+      // TelemetrÃƒÂ­a OCR: el usuario confirmÃƒÂ³ el gasto.
       if (_ocrLogId != null) {
         _ocrConfirmed = true;
         OcrLogService(Supabase.instance.client).updateUserAction(
@@ -595,7 +595,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 ? t.expensesFormSavedIncome
                 : t.expensesFormSavedExpense);
         final shoppingMsg = shoppingItemsSynced > 0
-            ? ' · ${t.expensesFormShoppingSynced(shoppingItemsSynced)} ?'
+            ? ' Â· ${t.expensesFormShoppingSynced(shoppingItemsSynced)} ?'
             : '';
         AppSnackBar.show(
           context,
@@ -783,15 +783,19 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     );
   }
 
-  /// Entry to the allowance ("mesada") flow — shown only when the premium
+  /// Entry to the allowance ("mesada") flow â€” shown only when the premium
   /// Parent Mode toggle is on (family + premium + allowance_enabled), via
   /// allowanceEnabledProvider. Opens the dedicated AllowanceSheet rather than
-  /// reusing the expense form body (a transfer ≠ an expense).
+  /// reusing the expense form body (a transfer â‰  an expense).
   Widget _buildAllowanceEntry(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return InkWell(
       onTap: () async {
         FocusManager.instance.primaryFocus?.unfocus();
-        await AllowanceSheet.show(context);
+        final sent = await AllowanceSheet.show(context);
+        if (sent == true && mounted) {
+          _closeSheet(true);
+        }
       },
       borderRadius: BorderRadius.circular(14),
       child: Container(
@@ -801,21 +805,21 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Text('💸', style: TextStyle(fontSize: 18)),
-            SizedBox(width: 10),
+            const Icon(Icons.payments_rounded, color: AppColors.primary),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Dar una mesada a un menor',
-                style: TextStyle(
+                t.allowanceEntryTitle,
+                style: const TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w800,
                   fontSize: 13.5,
                 ),
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: AppColors.primary),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.primary),
           ],
         ),
       ),
@@ -1013,7 +1017,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   /// Formatea el monto detectado por OCR al estilo argentino: punto para miles,
-  /// coma para decimal. Ej: 10666.5 â†’ "10.666,50"
+  /// coma para decimal. Ej: 10666.5 Ã¢â€ â€™ "10.666,50"
   String _formatAmountFromOcr(double amount) {
     if (amount <= 0) return '';
     final intPart = amount.truncate();
@@ -1038,16 +1042,18 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   Widget _buildTypeToggle() {
     final t = AppLocalizations.of(context);
+    final theme = context.theme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: theme.surfaceContainer,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.62)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: theme.shadowBase
+                .withValues(alpha: theme.isDarkMode ? 0.18 : 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1257,6 +1263,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   Widget _buildCategorySelector(BuildContext context) {
     final t = AppLocalizations.of(context);
+    final theme = context.theme;
     return GestureDetector(
       onTap: () => showExpenseCategorySelectorSheet(
         context: context,
@@ -1270,12 +1277,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: theme.surface,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.divider.withValues(alpha: 0.85)),
+          border: Border.all(color: theme.border.withValues(alpha: 0.85)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
+              color: theme.shadowBase.withValues(
+                alpha: theme.isDarkMode ? 0.18 : 0.02,
+              ),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -1305,8 +1314,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 children: [
                   Text(
                     t.expensesFormFieldCategory,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: theme.textSecondary,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1321,8 +1330,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                             t,
                             _selectedCategory!['id'] as String,
                           ),
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: theme.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                     ),
@@ -1330,9 +1339,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
-              color: AppColors.textSecondary,
+              color: theme.textSecondary,
             ),
           ],
         ),
@@ -1366,7 +1375,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               ? () => _showShoppingItemsSelector(context)
               : () => PremiumPaywall.show(context),
           // Solo permitimos limpiar/quitar si hubo scan (caso tipico:
-          // el usuario escaneÃ³ pero el ticket no es de un super â†’ quita todo).
+          // el usuario escaneÃƒÂ³ pero el ticket no es de un super Ã¢â€ â€™ quita todo).
           onClearAll: _scanResult != null
               ? () {
                   // Snapshot para deshacer.
@@ -1574,7 +1583,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       );
     } else if (_splitMode == SplitType.gift) {
       return _buildInfoBox(
-        'Este gasto no afectarÃ¡ el balance ${caps.actionMemberLabel(t)}.',
+        'Este gasto no afectarÃƒÂ¡ el balance ${caps.actionMemberLabel(t)}.',
         AppColors.primary,
       );
     } else if (_splitMode == SplitType.personal) {

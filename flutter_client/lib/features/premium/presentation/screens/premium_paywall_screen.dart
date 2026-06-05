@@ -6,6 +6,7 @@ import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:purchases_flutter/purchases_flutter.dart' as rc;
 
@@ -31,33 +32,40 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     final productsAsync = ref.watch(premiumProductsProvider);
     final isPremium = ref.watch(premiumProvider).value ?? false;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           tooltip: t.premiumPaywallCloseTooltip,
-          icon: const Icon(Icons.close, color: AppColors.textPrimary),
+          icon: Icon(Icons.close, color: theme.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Stack(
         children: [
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.background,
-                  AppColors.primaryLight,
-                  AppColors.surface,
-                ],
+                colors: theme.isDarkMode
+                    ? [
+                        theme.background,
+                        AppColors.primary.withValues(alpha: 0.12),
+                        theme.surface,
+                      ]
+                    : const [
+                        AppColors.background,
+                        AppColors.primaryLight,
+                        AppColors.surface,
+                      ],
               ),
             ),
           ),
@@ -98,8 +106,8 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
                           .call(),
                       child: Text(
                         t.premiumRestorePurchases,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: theme.textSecondary,
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                         ),
@@ -146,6 +154,7 @@ class _HeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
 
     return Column(
@@ -161,8 +170,8 @@ class _HeroHeader extends StatelessWidget {
           ),
           child: Text(
             t.premiumPaywallEyebrow,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: theme.textPrimary,
               fontSize: 11.5,
               fontWeight: FontWeight.w800,
             ),
@@ -172,10 +181,10 @@ class _HeroHeader extends StatelessWidget {
         Text(
           t.premiumPaywallTitle,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 23.5,
             fontWeight: FontWeight.w900,
-            color: AppColors.textPrimary,
+            color: theme.textPrimary,
             height: 1.1,
           ),
         ),
@@ -183,10 +192,10 @@ class _HeroHeader extends StatelessWidget {
         Text(
           t.premiumPaywallSubtitle,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13.5,
             fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+            color: theme.textSecondary,
             height: 1.32,
           ),
         ),
@@ -210,13 +219,17 @@ class _BenefitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.58),
+          color: theme.isDarkMode
+              ? theme.surface.withValues(alpha: 0.74)
+              : Colors.white.withValues(alpha: 0.58),
           borderRadius: BorderRadius.circular(AppRadii.lg),
+          border: Border.all(color: theme.border.withValues(alpha: 0.28)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,20 +250,20 @@ class _BenefitCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: theme.textPrimary,
                       height: 1.18,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     desc,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                      color: theme.textSecondary,
                       height: 1.28,
                     ),
                   ),
@@ -301,21 +314,22 @@ class _ProductListState extends ConsumerState<_ProductList> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     if (widget.products.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.86),
+          color: theme.surface.withValues(alpha: theme.isDarkMode ? 1 : 0.86),
           borderRadius: BorderRadius.circular(AppRadii.xl),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: theme.border),
         ),
         child: Column(
           children: [
             Text(
               t.premiumFreeTrialAvailable,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: theme.textPrimary,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -343,8 +357,8 @@ class _ProductListState extends ConsumerState<_ProductList> {
               const SizedBox(height: 8),
               Text(
                 t.premiumTestingModeLabel,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
+                style: TextStyle(
+                  color: theme.textMuted,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -368,8 +382,8 @@ class _ProductListState extends ConsumerState<_ProductList> {
       children: [
         Text(
           t.premiumChoosePlanTitle,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: theme.textPrimary,
             fontSize: 17,
             fontWeight: FontWeight.w900,
           ),
@@ -377,9 +391,9 @@ class _ProductListState extends ConsumerState<_ProductList> {
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.9),
+            color: theme.surface.withValues(alpha: theme.isDarkMode ? 1 : 0.9),
             borderRadius: BorderRadius.circular(AppRadii.xl),
-            border: Border.all(color: AppColors.border, width: 1.2),
+            border: Border.all(color: theme.border, width: 1.2),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -394,10 +408,10 @@ class _ProductListState extends ConsumerState<_ProductList> {
                       setState(() => _selectedPackage = sortedProducts[index]),
                 ),
                 if (index < sortedProducts.length - 1)
-                  const Divider(
+                  Divider(
                     height: 1,
                     thickness: 1,
-                    color: AppColors.border,
+                    color: theme.border,
                   ),
               ],
             ],
@@ -415,11 +429,21 @@ class _ProductListState extends ConsumerState<_ProductList> {
             ),
           ),
           onPressed: () async {
-            final isPremium = await ref
-                .read(buyPremiumProductUseCaseProvider)
-                .call(selectedPackage);
-            await ref.read(premiumProvider.notifier).refresh();
-            if (isPremium && context.mounted) Navigator.pop(context);
+            final messenger = ScaffoldMessenger.of(context);
+            try {
+              final isPremium = await ref
+                  .read(buyPremiumProductUseCaseProvider)
+                  .call(selectedPackage);
+              await ref.read(premiumProvider.notifier).refresh();
+              if (isPremium && context.mounted) Navigator.pop(context);
+            } catch (_) {
+              // Purchase errors (billing unavailable, DEVELOPER_ERROR on
+              // non-Play builds, region issues, etc.) must never crash the
+              // app — buyProduct already logs them. Show a friendly notice.
+              messenger.showSnackBar(
+                SnackBar(content: Text(t.commonError)),
+              );
+            }
           },
           child: Text(
             t.premiumContinueWithPlan,
@@ -446,6 +470,7 @@ class _ProductOptionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     final product = package.storeProduct;
     final periodLabel = isAnnual ? t.premiumAnnualPlan : t.premiumMonthlyPlan;
@@ -456,7 +481,9 @@ class _ProductOptionRow extends StatelessWidget {
         : null;
 
     return Material(
-      color: isSelected ? AppColors.primaryLight : Colors.transparent,
+      color: isSelected
+          ? AppColors.primary.withValues(alpha: theme.isDarkMode ? 0.16 : 0.10)
+          : Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -474,8 +501,8 @@ class _ProductOptionRow extends StatelessWidget {
                         Flexible(
                           child: Text(
                             periodLabel,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
+                            style: TextStyle(
+                              color: theme.textPrimary,
                               fontSize: 16,
                               fontWeight: FontWeight.w900,
                             ),
@@ -511,8 +538,8 @@ class _ProductOptionRow extends StatelessWidget {
                       monthlyEquivalent != null
                           ? t.premiumMonthlyEquivalent(monthlyEquivalent)
                           : supportingLabel,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: theme.textSecondary,
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700,
                       ),
@@ -520,8 +547,8 @@ class _ProductOptionRow extends StatelessWidget {
                     if (monthlyEquivalent != null)
                       Text(
                         supportingLabel,
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
+                        style: TextStyle(
+                          color: theme.textMuted,
                           fontSize: 11.5,
                           fontWeight: FontWeight.w600,
                         ),
@@ -535,8 +562,8 @@ class _ProductOptionRow extends StatelessWidget {
                 children: [
                   Text(
                     product.priceString,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: theme.textPrimary,
                       fontWeight: FontWeight.w900,
                       fontSize: 18,
                     ),
@@ -573,6 +600,7 @@ class _PlanRadio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       width: 22,
@@ -581,7 +609,7 @@ class _PlanRadio extends StatelessWidget {
         shape: BoxShape.circle,
         color: isSelected ? AppColors.primary : Colors.transparent,
         border: Border.all(
-          color: isSelected ? AppColors.primary : AppColors.border,
+          color: isSelected ? AppColors.primary : theme.border,
           width: 2,
         ),
       ),
@@ -599,11 +627,12 @@ class _PlanRadio extends StatelessWidget {
 class _AlreadyPremiumCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.86),
+        color: theme.surface.withValues(alpha: theme.isDarkMode ? 1 : 0.86),
         borderRadius: BorderRadius.circular(AppRadii.modal),
         border: Border.all(color: AppColors.primary, width: 1.5),
       ),
@@ -617,8 +646,8 @@ class _AlreadyPremiumCard extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             t.premiumAlreadyActiveTitle,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: theme.textPrimary,
               fontSize: 22,
               fontWeight: FontWeight.w900,
             ),
@@ -627,14 +656,14 @@ class _AlreadyPremiumCard extends ConsumerWidget {
           Text(
             t.premiumAlreadyActiveBody,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: theme.textSecondary),
           ),
           const SizedBox(height: 24),
           OutlinedButton(
             onPressed: () => Navigator.pop(context),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textPrimary,
-              side: const BorderSide(color: AppColors.border),
+              foregroundColor: theme.textPrimary,
+              side: BorderSide(color: theme.border),
               minimumSize: const Size(double.infinity, 50),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadii.lg),
@@ -651,8 +680,7 @@ class _AlreadyPremiumCard extends ConsumerWidget {
               },
               child: Text(
                 t.premiumDeactivateTesting,
-                style:
-                    const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                style: TextStyle(color: theme.textMuted, fontSize: 12),
               ),
             ),
         ],
@@ -667,25 +695,26 @@ class _StoreError extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     return Column(
       children: [
-        const Icon(
+        Icon(
           Icons.cloud_off_rounded,
-          color: AppColors.textSecondary,
+          color: theme.textSecondary,
           size: 48,
         ),
         const SizedBox(height: 16),
         Text(
           t.premiumStoreErrorTitle,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: theme.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
           error,
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
+          style: TextStyle(color: theme.textMuted, fontSize: 10),
         ),
         const SizedBox(height: 24),
         if (!AppEnvironment.isProduction)

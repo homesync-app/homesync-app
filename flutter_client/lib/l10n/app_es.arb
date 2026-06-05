@@ -1249,8 +1249,6 @@
   "settingsParentModeApprovalOffSubtitle": "Las tareas se acreditan apenas se completan.",
   "settingsParentModeApprovalChildrenOnlyTitle": "Solo niños y adolescentes",
   "settingsParentModeApprovalChildrenOnlySubtitle": "Los adultos completan directo; los demás requieren aprobación.",
-  "settingsParentModeApprovalAllTitle": "Todos los miembros",
-  "settingsParentModeApprovalAllSubtitle": "Cualquier completion pasa por tu OK antes de pagar coins.",
   "settingsParentModeApprovalPerMemberTitle": "Por miembro",
   "settingsParentModeApprovalPerMemberSubtitle": "Vos elegís exactamente quién necesita aprobación en la lista de abajo.",
   "settingsParentModeInboxIdle": "Bandeja de aprobaciones",
@@ -1266,6 +1264,9 @@
   },
   "settingsParentModeMemberView": "Vista por miembro",
   "settingsParentModeWeeklySummary": "Resumen de la semana",
+  "settingsParentModeAllowanceTitle": "Mesadas",
+  "settingsParentModeAllowanceSubtitle": "Permití dar plata a menores para sus finanzas personales, separado de los gastos compartidos.",
+  "settingsParentModeAllowanceCta": "Dar mesada",
   "settingsParentModePerMemberEmpty": "No hay otros miembros en el hogar todavía.",
   "settingsParentModeSaveError": "No pudimos guardar el cambio: {message}",
   "@settingsParentModeSaveError": {
@@ -1919,6 +1920,26 @@
   "expensesFormHeaderEditExpense": "Modificar Gasto",
   "expensesFormHeaderNewIncome": "Nuevo Ingreso",
   "expensesFormHeaderNewExpense": "Nuevo Gasto",
+  "allowanceEntryTitle": "Dar mesada a un menor",
+  "allowanceSheetTitle": "Dar mesada",
+  "allowanceSheetSubtitle": "Transferís plata desde tu balance personal al de un menor. No entra en los gastos compartidos.",
+  "allowanceRecipientLabel": "Para",
+  "allowanceAmountLabel": "Monto",
+  "allowanceNoteHint": "Nota opcional, ej: Mesada de junio",
+  "allowanceSubmitButton": "Enviar mesada",
+  "allowanceNoRecipients": "No hay adolescentes en el hogar con finanzas personales activas. Los chicos no pueden recibir mesadas porque no tienen acceso a Finanzas. Si corresponde, cambiá su rol desde Miembros en la configuración del hogar.",
+  "allowanceRecipientRequired": "Elegí a quién darle la mesada.",
+  "allowanceAmountInvalid": "Ingresá un monto válido.",
+  "allowanceSendGenericError": "No se pudo enviar la mesada.",
+  "allowanceSentSnack": "Mesada enviada.",
+  "allowanceSendError": "Error al enviar la mesada: {error}",
+  "@allowanceSendError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "expensesFormSelectCategoryTitle": "Seleccionar categoría",
   "expensesFormAutoTitleSupermarketShopping": "Compras del supermercado",
   "expensesFormShoppingSynced": "{count, plural, =1{1 artículo comprado} other{{count} artículos comprados}}",

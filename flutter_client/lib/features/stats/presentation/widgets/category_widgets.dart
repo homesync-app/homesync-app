@@ -22,10 +22,10 @@ class CategoryBarChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(32),
         boxShadow: theme.cardShadow,
-        border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.45)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,7 +37,7 @@ class CategoryBarChart extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
-                  color: AppColors.textPrimary.withValues(alpha: 0.4),
+                  color: theme.textSecondary,
                   letterSpacing: 1.5,
                 ),
               ),
@@ -127,7 +127,7 @@ class CategoryBarChart extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary.withValues(alpha: 0.6),
+                      color: theme.textSecondary,
                     ),
                   ),
                 ],
@@ -159,10 +159,10 @@ class CategoryDetailCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(32),
         boxShadow: theme.cardShadow,
-        border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.45)),
       ),
       child: Row(
         children: [
@@ -191,10 +191,10 @@ class CategoryDetailCard extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 17,
-                    color: AppColors.textPrimary,
+                    color: theme.textPrimary,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -210,7 +210,7 @@ class CategoryDetailCard extends StatelessWidget {
                     Text(
                       t.categoriesCompletedCount(count),
                       style: TextStyle(
-                        color: AppColors.textPrimary.withValues(alpha: 0.5),
+                        color: theme.textSecondary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),

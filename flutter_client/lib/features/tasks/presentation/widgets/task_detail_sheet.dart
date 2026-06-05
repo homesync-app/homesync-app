@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
@@ -178,6 +179,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appTheme = context.theme;
     final t = AppLocalizations.of(context);
     final (statusLabel, statusColor, statusIcon) = _statusInfo(t);
     final categoryColor = CategoryMapping.getCategoryColor(_category);
@@ -193,9 +195,9 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
 
     return Container(
       margin: const EdgeInsets.only(top: 56),
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      decoration: BoxDecoration(
+        color: appTheme.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: SafeArea(
         top: false,
@@ -207,7 +209,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.divider,
+                color: appTheme.divider,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -230,8 +232,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                       const SizedBox(height: 2),
                       Text(
                         dateStr,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: appTheme.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                         ),
@@ -277,10 +279,10 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                         vertical: 24,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: appTheme.surface,
                         borderRadius: BorderRadius.circular(28),
                         border: Border.all(
-                          color: AppColors.divider.withValues(alpha: 0.5),
+                          color: appTheme.border.withValues(alpha: 0.5),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -316,10 +318,10 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
+                                    color: appTheme.textPrimary,
                                     letterSpacing: -0.3,
                                   ),
                                 ),
@@ -371,7 +373,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                         color: theme.cardColor,
                         borderRadius: BorderRadius.circular(22),
                         border: Border.all(
-                          color: AppColors.divider.withValues(alpha: 0.45),
+                          color: appTheme.border.withValues(alpha: 0.45),
                         ),
                       ),
                       child: Column(
@@ -389,7 +391,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                               Container(
                                 width: 1,
                                 height: 58,
-                                color: AppColors.divider,
+                                color: appTheme.divider,
                               ),
                               Expanded(
                                 child: _buildStatColumn(
@@ -409,7 +411,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                               vertical: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.background,
+                              color: appTheme.surfaceContainer,
                               borderRadius: BorderRadius.circular(18),
                             ),
                             child: Row(
@@ -430,8 +432,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                         _hasCompletionRecord
                                             ? t.taskDetailCompletedBy
                                             : t.taskDetailAssignedTo,
-                                        style: const TextStyle(
-                                          color: AppColors.textMuted,
+                                        style: TextStyle(
+                                          color: appTheme.textMuted,
                                           fontSize: 11,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -441,8 +443,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                         _completedByName(t),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: AppColors.textPrimary,
+                                        style: TextStyle(
+                                          color: appTheme.textPrimary,
                                           fontSize: 14,
                                           fontWeight: FontWeight.w800,
                                         ),
@@ -456,8 +458,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                       DateTime.parse(completedAt as String)
                                           .toLocal(),
                                     ),
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
+                                    style: TextStyle(
+                                      color: appTheme.textSecondary,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -485,8 +487,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                           children: [
                             Text(
                               t.taskDetailComment,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
+                              style: TextStyle(
+                                color: appTheme.textPrimary,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -556,6 +558,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
     required String value,
     required String label,
   }) {
+    final appTheme = context.theme;
     return Column(
       children: [
         if (avatarName != null)
@@ -571,18 +574,18 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
         Text(
           value,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 13,
-            color: AppColors.textPrimary,
+            color: appTheme.textPrimary,
           ),
         ),
         const SizedBox(height: 2),
         Text(
           label,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: AppColors.textMuted,
+          style: TextStyle(
+            color: appTheme.textMuted,
             fontSize: 11,
             fontWeight: FontWeight.w600,
           ),

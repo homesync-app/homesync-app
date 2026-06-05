@@ -7,19 +7,24 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/allowance_sheet.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/family_dashboard_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/pending_approvals_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/weekly_family_summary_screen.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/design/app_button.dart';
 
 /// Sprint 1 Modo Padres: card de configuracion del bundle "Modo Padres".
 ///
 /// Solo se muestra a admins de un hogar familiar. Estados:
-///  - admin sin premium → CTA al paywall.
-///  - admin con premium → toggle de aprobacion + acceso a la bandeja.
+///  - admin sin premium -> CTA al paywall.
+///  - admin con premium -> toggle de aprobacion + acceso a la bandeja.
 ///
 /// Se inserta como un bloque opcional en la pantalla de Settings; si el
 /// usuario no es admin de una familia, el widget devuelve `SizedBox.shrink()`
@@ -171,7 +176,13 @@ class _SettingsParentModeCardState
       await ref.read(supabaseClientProvider).from('households').update(
         {'task_approval_mode': mode},
       ).eq('id', householdId);
+      ref.invalidate(homeBootstrapProvider);
       ref.invalidate(currentHouseholdProvider);
+      ref.invalidate(householdProvider);
+      ref.invalidate(taskApprovalEnabledProvider);
+      ref.invalidate(tasksProvider);
+      ref.invalidate(filteredTasksProvider);
+      ref.invalidate(recentActivityProvider);
       ref.invalidate(pendingTaskApprovalsProvider);
     } catch (e, stack) {
       log.e(
@@ -336,7 +347,8 @@ class _UnlockedBody extends ConsumerWidget {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     final householdAsync = ref.watch(currentHouseholdProvider);
-    final mode = householdAsync.value?.taskApprovalMode ?? 'off';
+    final rawMode = householdAsync.value?.taskApprovalMode ?? 'off';
+    final mode = rawMode == 'all' ? 'children_only' : rawMode;
     final pending = ref.watch(pendingTaskApprovalsProvider).value ?? [];
 
     return Column(
@@ -370,14 +382,6 @@ class _UnlockedBody extends ConsumerWidget {
           enabled: !saving,
           title: t.settingsParentModeApprovalChildrenOnlyTitle,
           subtitle: t.settingsParentModeApprovalChildrenOnlySubtitle,
-          onChanged: onChangeMode,
-        ),
-        _ModeOption(
-          value: 'all',
-          groupValue: mode,
-          enabled: !saving,
-          title: t.settingsParentModeApprovalAllTitle,
-          subtitle: t.settingsParentModeApprovalAllSubtitle,
           onChanged: onChangeMode,
         ),
         _ModeOption(
@@ -593,7 +597,7 @@ class _ModeOption extends StatelessWidget {
 /// Lista de miembros con toggle individual de `requires_task_approval`.
 /// Solo se muestra cuando `households.task_approval_mode = 'per_member'`.
 /// Lee directo de `household_members` con join a `users` y persiste el
-/// cambio con UPDATE — la RPC `should_require_task_approval` lo respeta.
+/// cambio con UPDATE; la RPC `should_require_task_approval` lo respeta.
 class _PerMemberToggleList extends ConsumerStatefulWidget {
   const _PerMemberToggleList();
 
@@ -632,6 +636,7 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
             memberFallbackName: memberFallbackName,
           ),
         )
+        .where((row) => row.isMinor)
         .toList();
   }
 
@@ -647,6 +652,13 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
           'p_requires_task_approval': requires,
         },
       );
+      ref.invalidate(homeBootstrapProvider);
+      ref.invalidate(currentHouseholdProvider);
+      ref.invalidate(householdProvider);
+      ref.invalidate(taskApprovalEnabledProvider);
+      ref.invalidate(tasksProvider);
+      ref.invalidate(filteredTasksProvider);
+      ref.invalidate(pendingTaskApprovalsProvider);
     } catch (e, stack) {
       log.e(
         'Failed to toggle requires_task_approval',
@@ -806,13 +818,15 @@ class _MemberApprovalRow {
       _ => t.settingsParentModeMemberTypeAdult,
     };
     if (role == 'owner') {
-      return '$type · ${t.settingsParentModeRoleOwnerSuffix}';
+      return '$type - ${t.settingsParentModeRoleOwnerSuffix}';
     }
     if (role == 'admin') {
-      return '$type · ${t.settingsParentModeRoleAdminSuffix}';
+      return '$type - ${t.settingsParentModeRoleAdminSuffix}';
     }
     return type;
   }
+
+  bool get isMinor => memberType == 'child' || memberType == 'teen';
 }
 
 /// Premium Parent Mode toggle for the allowance ("mesada") feature.
@@ -841,7 +855,13 @@ class _AllowanceToggleState extends ConsumerState<_AllowanceToggle> {
       log.e('Failed to update allowance_enabled', error: e, stackTrace: stack);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo guardar el cambio.')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).settingsParentModeSaveError(
+                e.toString(),
+              ),
+            ),
+          ),
         );
       }
     } finally {
@@ -852,37 +872,53 @@ class _AllowanceToggleState extends ConsumerState<_AllowanceToggle> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final enabled =
         ref.watch(currentHouseholdProvider).value?.allowanceEnabled ?? false;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Mesadas',
-                style: TextStyle(
-                  color: theme.textPrimary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t.settingsParentModeAllowanceTitle,
+                    style: TextStyle(
+                      color: theme.textPrimary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    t.settingsParentModeAllowanceSubtitle,
+                    style: TextStyle(color: theme.textSecondary, fontSize: 12),
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                'Permití dar plata a los menores para sus finanzas personales '
-                '(transferencia adulto → adolescente).',
-                style: TextStyle(color: theme.textSecondary, fontSize: 12),
-              ),
-            ],
+            ),
+            const SizedBox(width: 8),
+            Switch.adaptive(
+              value: enabled,
+              onChanged: _saving ? null : _set,
+            ),
+          ],
+        ),
+        if (enabled) ...[
+          const SizedBox(height: 14),
+          AppButton(
+            label: t.settingsParentModeAllowanceCta,
+            icon: Icons.payments_rounded,
+            variant: AppButtonVariant.secondary,
+            size: AppButtonSize.medium,
+            isFullWidth: true,
+            onTap: () => AllowanceSheet.show(context),
           ),
-        ),
-        const SizedBox(width: 8),
-        Switch.adaptive(
-          value: enabled,
-          onChanged: _saving ? null : _set,
-        ),
+        ],
       ],
     );
   }

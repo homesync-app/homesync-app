@@ -348,7 +348,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                           .addTaskOptionsDone(_addedIds.length),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textPrimary,
+                      backgroundColor: context.theme.primary,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(0, 52),
                       shape: RoundedRectangleBorder(
@@ -382,7 +382,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
     final isSelected = _selectedCategory == id;
     final color = category != null
         ? AppColors.fromHex(category.color)
-        : AppColors.textSecondary;
+        : context.theme.textSecondary;
+    final theme = context.theme;
 
     return GestureDetector(
       onTap: () => setState(() => _selectedCategory = id),
@@ -391,11 +392,10 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.12) : Colors.white,
+          color: isSelected ? color.withValues(alpha: 0.12) : theme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color:
-                isSelected ? color : AppColors.divider.withValues(alpha: 0.6),
+            color: isSelected ? color : theme.border.withValues(alpha: 0.6),
             width: isSelected ? 1.5 : 1,
           ),
           boxShadow: [
@@ -414,7 +414,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   ? Icons.format_list_bulleted_rounded
                   : CategoryMapping.getCategoryMaterialIcon(id),
               size: 16,
-              color: isSelected ? color : AppColors.textSecondary,
+              color: isSelected ? color : theme.textSecondary,
             ),
             const SizedBox(width: 6),
             Text(
@@ -422,7 +422,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? color : AppColors.textSecondary,
+                color: isSelected ? color : theme.textSecondary,
               ),
             ),
           ],
@@ -432,6 +432,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
   }
 
   Widget _buildEmpty() {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     return Center(
       child: Column(
@@ -445,7 +446,11 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           const SizedBox(height: 20),
           Text(
             t.addTaskOptionsAllSuggestedDone,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -550,6 +555,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
   }
 
   Widget _buildTemplateCard(TaskTemplate template) {
+    final theme = context.theme;
     final isAdding = _addingIds.contains(template.id);
     final isAdded = _addedIds.contains(template.id);
 
@@ -571,14 +577,18 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
       duration: const Duration(milliseconds: 250),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: color.withValues(alpha: isAdded ? 0.24 : 0.12),
+          color: isAdded
+              ? AppColors.accentGreen.withValues(alpha: 0.28)
+              : theme.border,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.025),
+            color: theme.shadowBase.withValues(
+              alpha: theme.isDarkMode ? 0.18 : 0.025,
+            ),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -605,7 +615,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
             fontWeight: FontWeight.w700,
             fontSize: 15,
             decoration: isAdded ? TextDecoration.lineThrough : null,
-            color: isAdded ? AppColors.textSecondary : AppColors.textPrimary,
+            color: isAdded ? theme.textSecondary : theme.textPrimary,
           ),
         ),
         subtitle: Row(
@@ -656,7 +666,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
               )
             : Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.surfaceContainer,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(

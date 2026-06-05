@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
 class AppLoadingState extends StatelessWidget {
   final String? message;
@@ -8,6 +9,7 @@ class AppLoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -23,8 +25,8 @@ class AppLoadingState extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 message!,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: theme.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
                 textAlign: TextAlign.center,
@@ -49,6 +51,7 @@ class AppErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -63,8 +66,8 @@ class AppErrorState extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               message,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: theme.textPrimary,
                 fontWeight: FontWeight.w700,
               ),
               textAlign: TextAlign.center,
@@ -108,8 +111,9 @@ class AppEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final highlight = accentColor ?? theme.colorScheme.primary;
+    final materialTheme = Theme.of(context);
+    final theme = context.theme;
+    final highlight = accentColor ?? materialTheme.colorScheme.primary;
 
     return Center(
       child: Padding(
@@ -118,7 +122,7 @@ class AppEmptyState extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 360),
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
+            color: theme.surface,
             borderRadius: BorderRadius.circular(28),
             border: Border.all(color: highlight.withValues(alpha: 0.12)),
             boxShadow: [
@@ -155,8 +159,7 @@ class AppEmptyState extends StatelessWidget {
                     height: 72,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.55),
+                      color: theme.surfaceContainer.withValues(alpha: 0.55),
                     ),
                     child: Center(
                       child: emoji != null
@@ -172,8 +175,8 @@ class AppEmptyState extends StatelessWidget {
               const SizedBox(height: 18),
               Text(
                 title,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: theme.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 18,
                 ),
@@ -183,8 +186,8 @@ class AppEmptyState extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   subtitle!,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: theme.textSecondary,
                     fontWeight: FontWeight.w500,
                     height: 1.4,
                   ),
@@ -199,7 +202,7 @@ class AppEmptyState extends StatelessWidget {
                   label: Text(actionLabel!),
                   style: FilledButton.styleFrom(
                     backgroundColor: highlight,
-                    foregroundColor: theme.colorScheme.onPrimary,
+                    foregroundColor: materialTheme.colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 18,
                       vertical: 12,

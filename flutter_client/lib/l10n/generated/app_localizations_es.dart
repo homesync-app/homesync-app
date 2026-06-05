@@ -1703,13 +1703,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Los adultos completan directo; los demás requieren aprobación.';
 
   @override
-  String get settingsParentModeApprovalAllTitle => 'Todos los miembros';
-
-  @override
-  String get settingsParentModeApprovalAllSubtitle =>
-      'Cualquier completion pasa por tu OK antes de pagar coins.';
-
-  @override
   String get settingsParentModeApprovalPerMemberTitle => 'Por miembro';
 
   @override
@@ -1740,6 +1733,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsParentModeWeeklySummary => 'Resumen de la semana';
+
+  @override
+  String get settingsParentModeAllowanceTitle => 'Mesadas';
+
+  @override
+  String get settingsParentModeAllowanceSubtitle =>
+      'Permití dar plata a menores para sus finanzas personales, separado de los gastos compartidos.';
+
+  @override
+  String get settingsParentModeAllowanceCta => 'Dar mesada';
 
   @override
   String get settingsParentModePerMemberEmpty =>
@@ -2999,6 +3002,49 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get expensesFormHeaderNewExpense => 'Nuevo Gasto';
+
+  @override
+  String get allowanceEntryTitle => 'Dar mesada a un menor';
+
+  @override
+  String get allowanceSheetTitle => 'Dar mesada';
+
+  @override
+  String get allowanceSheetSubtitle =>
+      'Transferís plata desde tu balance personal al de un menor. No entra en los gastos compartidos.';
+
+  @override
+  String get allowanceRecipientLabel => 'Para';
+
+  @override
+  String get allowanceAmountLabel => 'Monto';
+
+  @override
+  String get allowanceNoteHint => 'Nota opcional, ej: Mesada de junio';
+
+  @override
+  String get allowanceSubmitButton => 'Enviar mesada';
+
+  @override
+  String get allowanceNoRecipients =>
+      'No hay adolescentes en el hogar con finanzas personales activas. Los chicos no pueden recibir mesadas porque no tienen acceso a Finanzas. Si corresponde, cambiá su rol desde Miembros en la configuración del hogar.';
+
+  @override
+  String get allowanceRecipientRequired => 'Elegí a quién darle la mesada.';
+
+  @override
+  String get allowanceAmountInvalid => 'Ingresá un monto válido.';
+
+  @override
+  String get allowanceSendGenericError => 'No se pudo enviar la mesada.';
+
+  @override
+  String get allowanceSentSnack => 'Mesada enviada.';
+
+  @override
+  String allowanceSendError(String error) {
+    return 'Error al enviar la mesada: $error';
+  }
 
   @override
   String get expensesFormSelectCategoryTitle => 'Seleccionar categoría';

@@ -4,7 +4,6 @@ import 'package:homesync_client/core/services/analytics_service.dart';
 import 'package:homesync_client/core/services/mercadopago_service.dart';
 import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:homesync_client/core/services/shopping_service.dart';
-import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 
@@ -33,12 +32,6 @@ final shoppingServiceProvider = Provider<ShoppingService>((ref) {
 final templateServiceProvider = Provider<TemplateService>((ref) {
   return TemplateService(
     supabaseClient: ref.read(supabaseClientProvider),
-  );
-});
-
-final authServiceProvider = Provider<SupabaseAuthService>((ref) {
-  throw UnimplementedError(
-    'authServiceProvider must be overridden in ProviderScope.',
   );
 });
 

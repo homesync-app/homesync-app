@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -20,7 +21,6 @@ import 'package:homesync_client/core/services/breadcrumb_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/services/premium_service.dart';
-import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
@@ -227,16 +227,23 @@ void main() async {
 
   final supabaseClient = Supabase.instance.client;
   AppIdentityService.instance.configure(client: supabaseClient);
-  final auth = SupabaseAuthService(client: supabaseClient);
+  // Warm up GoogleSignIn at startup so the first sign-in is fast. Auth itself
+  // is handled by FirebaseAuthService (Firebase Third-Party Auth bridge); we
+  // never touch supabase.auth because the client runs in accessToken mode.
   try {
     await PerformanceMonitor.measureFuture(
-      'startup.auth_service_initialize',
-      auth.initialize,
+      'startup.google_sign_in_initialize',
+      () => GoogleSignIn.instance
+          .initialize(
+            clientId: kIsWeb ? AppEnvironment.googleWebClientId : null,
+            serverClientId: kIsWeb ? null : AppEnvironment.googleWebClientId,
+          )
+          .timeout(const Duration(seconds: 5)),
       warnAfterMs: 500,
     );
   } catch (e, stack) {
     log.w(
-      'Auth service init failed (offline?)',
+      'GoogleSignIn warm-up failed (offline?)',
       error: e,
       stackTrace: stack,
     );
@@ -328,7 +335,6 @@ void main() async {
     ProviderScope(
       retry: appRiverpodRetry,
       overrides: [
-        authServiceProvider.overrideWithValue(auth),
         rpcServiceProvider.overrideWithValue(rpc),
         sharedPreferencesProvider.overrideWithValue(prefs),
       ],

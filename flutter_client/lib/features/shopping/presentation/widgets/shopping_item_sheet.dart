@@ -56,6 +56,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
   late TextEditingController _quantityController;
   late String _category;
   late String _emoji;
+  bool _didLocalizeInitialName = false;
 
   @override
   void initState() {
@@ -63,11 +64,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
     _nameController = TextEditingController(
       text: widget.item == null
           ? widget.initialName ?? ''
-          : localizedShoppingCatalogName(
-              context,
-              name: widget.item!.name,
-              nameKey: widget.item!.nameKey,
-            ),
+          : widget.item!.name,
     );
     _quantityController = TextEditingController(
       text: widget.item?.quantity ?? '',
@@ -88,6 +85,19 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didLocalizeInitialName || widget.item == null) return;
+
+    _didLocalizeInitialName = true;
+    _nameController.text = localizedShoppingCatalogName(
+      context,
+      name: widget.item!.name,
+      nameKey: widget.item!.nameKey,
+    );
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _quantityController.dispose();
@@ -96,6 +106,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     final productKey =
         widget.item?.nameKey ?? shoppingCatalogKeyForName(_nameController.text);
@@ -106,9 +117,9 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
         right: 24,
         top: 12,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -119,7 +130,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.divider,
+                color: theme.divider,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -130,7 +141,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.background,
+                  color: theme.background,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: ShoppingIcon(
@@ -146,15 +157,15 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
               Expanded(
                 child: TextField(
                   controller: _nameController,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
+                    color: theme.textPrimary,
                   ),
                   decoration: InputDecoration(
                     hintText: t.shoppingItemNameHint,
                     border: InputBorder.none,
-                    hintStyle: const TextStyle(color: AppColors.textMuted),
+                    hintStyle: TextStyle(color: theme.textMuted),
                   ),
                 ),
               ),
@@ -172,10 +183,10 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
           const SizedBox(height: 24),
           Text(
             t.shoppingCategoryLabel,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: theme.textSecondary,
             ),
           ),
           const SizedBox(height: 12),
@@ -215,8 +226,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                   backgroundColor: context.theme.scaffoldBackground,
                   selectedColor: AppColors.primary.withValues(alpha: 0.1),
                   labelStyle: TextStyle(
-                    color:
-                        isSelected ? AppColors.primary : AppColors.textPrimary,
+                    color: isSelected ? AppColors.primary : theme.textPrimary,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   ),
                   shape: RoundedRectangleBorder(
