@@ -392,6 +392,10 @@ class _UnlockedBody extends ConsumerWidget {
           const SizedBox(height: 12),
           const _PerMemberToggleList(),
         ],
+        const SizedBox(height: 16),
+        Divider(color: theme.divider.withValues(alpha: 0.2), height: 1),
+        const SizedBox(height: 16),
+        const _AllowanceToggle(),
         const SizedBox(height: 12),
         InkWell(
           onTap: onOpenInbox,
@@ -808,5 +812,78 @@ class _MemberApprovalRow {
       return '$type · ${t.settingsParentModeRoleAdminSuffix}';
     }
     return type;
+  }
+}
+
+/// Premium Parent Mode toggle for the allowance ("mesada") feature.
+/// Persists `households.allowance_enabled` (off by default). The "Mesada" entry
+/// in the add-money form only shows when this is on (via allowanceEnabledProvider).
+class _AllowanceToggle extends ConsumerStatefulWidget {
+  const _AllowanceToggle();
+
+  @override
+  ConsumerState<_AllowanceToggle> createState() => _AllowanceToggleState();
+}
+
+class _AllowanceToggleState extends ConsumerState<_AllowanceToggle> {
+  bool _saving = false;
+
+  Future<void> _set(bool value) async {
+    final householdId = await ref.read(householdIdProvider.future);
+    if (householdId == null) return;
+    setState(() => _saving = true);
+    try {
+      await ref.read(supabaseClientProvider).from('households').update(
+        {'allowance_enabled': value},
+      ).eq('id', householdId);
+      ref.invalidate(currentHouseholdProvider);
+    } catch (e, stack) {
+      log.e('Failed to update allowance_enabled', error: e, stackTrace: stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo guardar el cambio.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final enabled =
+        ref.watch(currentHouseholdProvider).value?.allowanceEnabled ?? false;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Mesadas',
+                style: TextStyle(
+                  color: theme.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Permití dar plata a los menores para sus finanzas personales '
+                '(transferencia adulto → adolescente).',
+                style: TextStyle(color: theme.textSecondary, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Switch.adaptive(
+          value: enabled,
+          onChanged: _saving ? null : _set,
+        ),
+      ],
+    );
   }
 }

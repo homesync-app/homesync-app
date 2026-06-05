@@ -4671,6 +4671,12 @@ abstract class AppLocalizations {
   /// **'Gasto actualizado'**
   String get expensesFormUpdatedExpense;
 
+  /// Primary button on the planned expense payment sheet. Confirms the payment and records it as an actual expense.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar y registrar'**
+  String get plannedExpensePaymentConfirmButton;
+
   /// Delete confirmation dialog title in the expense form.
   ///
   /// In es, this message translates to:

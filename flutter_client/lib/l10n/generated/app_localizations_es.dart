@@ -2855,6 +2855,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get expensesFormUpdatedExpense => 'Gasto actualizado';
 
   @override
+  String get plannedExpensePaymentConfirmButton => 'Confirmar y registrar';
+
+  @override
   String get expensesFormDeleteDialogTitle => '¿Eliminar gasto?';
 
   @override

@@ -1762,6 +1762,10 @@
   "@expensesFormUpdatedExpense": {
     "description": "Success label on the save button when editing an existing expense."
   },
+  "plannedExpensePaymentConfirmButton": "Confirmar y registrar",
+  "@plannedExpensePaymentConfirmButton": {
+    "description": "Primary button on the planned expense payment sheet. Confirms the payment and records it as an actual expense."
+  },
   "expensesFormDeleteDialogTitle": "¿Eliminar gasto?",
   "@expensesFormDeleteDialogTitle": {
     "description": "Delete confirmation dialog title in the expense form."

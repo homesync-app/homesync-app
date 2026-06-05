@@ -2842,6 +2842,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expensesFormUpdatedExpense => 'Updated';
 
   @override
+  String get plannedExpensePaymentConfirmButton => 'Confirm and record';
+
+  @override
   String get expensesFormDeleteDialogTitle => 'Delete expense?';
 
   @override

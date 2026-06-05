@@ -18,7 +18,7 @@ class SupabaseAuthService {
   SupabaseAuthService._internal();
 
   late SupabaseClient _client;
-  final fa.FirebaseAuth _firebaseAuth = fa.FirebaseAuth.instance;
+  fa.FirebaseAuth get _firebaseAuth => fa.FirebaseAuth.instance;
 
   Future<void> initialize() async {
     // Inicializar GoogleSignIn con el Web Client ID (serverClientId)

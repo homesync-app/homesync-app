@@ -163,14 +163,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                 child: summaryAsync.when(
-                  loading: () => const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(32),
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
+                  loading: () => _buildSummaryLoadingCard(),
                   error: (e, _) => Center(child: Text('Error: $e')),
                   data: (summary) {
                     final realIncome =
@@ -181,7 +174,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         (summary['settlements_received'] as num?)?.toDouble() ??
                             0.0;
                     final settlementsPaid =
-                        (summary['settlements_paid'] as num?)?.toDouble() ?? 0.0;
+                        (summary['settlements_paid'] as num?)?.toDouble() ??
+                            0.0;
                     final rpcBalance =
                         (summary['balance'] as num?)?.toDouble() ?? 0.0;
                     final isIncomeEstimated =
@@ -201,8 +195,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         : rpcBalance;
 
                     return projectionAsync.when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
+                      loading: () => _buildSummaryLoadingCard(),
                       error: (_, __) => _buildUnifiedSummaryCard(
                         balance,
                         displayIncome,
@@ -226,15 +219,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
             // 2. FEED & FUTURE EXPENSES
             feedAsync.when(
-              loading: () => const SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-              ),
+              loading: () => _buildFeedLoadingSliver(),
               error: (e, _) => SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(child: Text('Error: $e')),
@@ -245,8 +230,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 final sortedItems = List<FeedItemModel>.from(filteredItems)
                   ..sort((a, b) => b.date.compareTo(a.date));
 
-                final expenses = ref.watch(expenseControllerProvider).value ?? const <ExpenseModel>[];
-                final expenseMap = { for (final e in expenses) e.id: e };
+                final expenses = ref.watch(expenseControllerProvider).value ??
+                    const <ExpenseModel>[];
+                final expenseMap = {for (final e in expenses) e.id: e};
 
                 return SliverMainAxisGroup(
                   slivers: [
@@ -259,8 +245,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                               Container(
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
-                                  color:
-                                      theme.textSecondary.withValues(alpha: 0.1),
+                                  color: theme.textSecondary
+                                      .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(
@@ -276,8 +262,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                 style: TextStyle(
                                   fontWeight: FontWeight.w900,
                                   fontSize: 12,
-                                  color:
-                                      theme.textSecondary.withValues(alpha: 0.7),
+                                  color: theme.textSecondary
+                                      .withValues(alpha: 0.7),
                                   letterSpacing: 1.2,
                                 ),
                               ),
@@ -292,15 +278,21 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             final item = sortedItems[index];
                             final isFirstOfDate = index == 0 ||
                                 _formatFeedDate(item.date) !=
-                                    _formatFeedDate(sortedItems[index - 1].date);
+                                    _formatFeedDate(
+                                      sortedItems[index - 1].date,
+                                    );
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (isFirstOfDate)
                                   Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(24, 24, 24, 12),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      24,
+                                      24,
+                                      24,
+                                      12,
+                                    ),
                                     child: Text(
                                       _formatFeedDate(item.date),
                                       style: TextStyle(
@@ -505,6 +497,80 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   // --- Recurrentes Tab (delegated to RecurrentesTab widget) ---
+
+  Widget _buildSummaryLoadingCard() {
+    final theme = context.theme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: theme.border.withValues(alpha: 0.62)),
+        boxShadow: theme.cardShadow,
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              ShimmerLoading(height: 14, width: 120, borderRadius: 10),
+              Spacer(),
+              ShimmerLoading(height: 36, width: 36, borderRadius: 18),
+            ],
+          ),
+          SizedBox(height: 18),
+          ShimmerLoading(height: 42, width: 180, borderRadius: 14),
+          SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(child: ShimmerLoading(height: 58, borderRadius: 18)),
+              SizedBox(width: 12),
+              Expanded(child: ShimmerLoading(height: 58, borderRadius: 18)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeedLoadingSliver() {
+    final theme = context.theme;
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      sliver: SliverList.separated(
+        itemCount: 5,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) => Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.surface,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: theme.border.withValues(alpha: 0.52)),
+            boxShadow: theme.cardShadow,
+          ),
+          child: const Row(
+            children: [
+              ShimmerLoading(height: 42, width: 42, borderRadius: 14),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShimmerLoading(height: 14, width: 160, borderRadius: 10),
+                    SizedBox(height: 8),
+                    ShimmerLoading(height: 12, width: 104, borderRadius: 10),
+                  ],
+                ),
+              ),
+              SizedBox(width: 12),
+              ShimmerLoading(height: 18, width: 72, borderRadius: 10),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildUnifiedSummaryCard(
     num balance,
@@ -1320,7 +1386,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     );
   }
 
-  Widget _buildFeedItemCard(FeedItemModel item, Map<String, ExpenseModel> expenseMap) {
+  Widget _buildFeedItemCard(
+    FeedItemModel item,
+    Map<String, ExpenseModel> expenseMap,
+  ) {
     if (item.isRealExpense) {
       final expense = expenseMap[item.id] ??
           ExpenseModel(

@@ -284,417 +284,432 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
     final currentCategoryId =
         _selectedCategory ?? (categories.isNotEmpty ? categories.first.id : '');
 
-    return Dialog(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 420, maxHeight: 640),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.16),
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Dialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 420, maxHeight: 640),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.16),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.add_task_rounded,
+                          color: AppColors.primary,
                         ),
                       ),
-                      child: const Icon(
-                        Icons.add_task_rounded,
-                        color: AppColors.primary,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)
+                                  .createTaskHeaderTitle,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            AppLocalizations.of(context).createTaskHeaderTitle,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
+                          _buildSectionHeader(
+                            AppLocalizations.of(context)
+                                .createTaskSectionDetailEyebrow,
+                            AppLocalizations.of(context)
+                                .createTaskSectionDetailTitle,
+                            AppLocalizations.of(context)
+                                .createTaskSectionDetailSubtitle,
+                          ),
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            controller: _titleController,
+                            decoration: InputDecoration(
+                              labelText: AppLocalizations.of(context)
+                                  .createTaskFieldTitleLabel,
+                              prefixIcon: const Icon(Icons.edit_note_rounded),
+                            ),
+                            validator: (value) {
+                              final title = value?.trim() ?? '';
+                              if (title.isEmpty) {
+                                return AppLocalizations.of(context)
+                                    .createTaskValidationTitleRequired;
+                              }
+                              if (title.length < 3) {
+                                return 'Usa al menos 3 caracteres';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _descriptionController,
+                            maxLines: 2,
+                            decoration: InputDecoration(
+                              labelText: AppLocalizations.of(context)
+                                  .createTaskFieldNotesLabel,
+                              hintText:
+                                  'ej: "usar el limpiapisos azul", "revisar el filtro tambien"',
+                              prefixIcon: const Padding(
+                                padding: EdgeInsets.only(bottom: 24),
+                                child: Icon(Icons.notes_rounded),
+                              ),
+                              alignLabelWithHint: true,
                             ),
                           ),
+                          const SizedBox(height: 18),
+                          _buildSectionHeader(
+                            AppLocalizations.of(context)
+                                .createTaskSectionCategoryEyebrow,
+                            AppLocalizations.of(context)
+                                .createTaskSectionCategoryTitle,
+                            AppLocalizations.of(context)
+                                .createTaskSectionCategorySubtitle,
+                          ),
+                          const SizedBox(height: 10),
+                          categoriesAsync.when(
+                            data: (_) => SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Row(
+                                children: categories.map((category) {
+                                  final isSelected =
+                                      currentCategoryId == category.id;
+                                  final color =
+                                      AppColors.fromHex(category.color);
+                                  return GestureDetector(
+                                    onTap: () => setState(
+                                      () => _selectedCategory = category.id,
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 16),
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            width: 56,
+                                            height: 56,
+                                            decoration: BoxDecoration(
+                                              color: isSelected
+                                                  ? color.withValues(
+                                                      alpha: 0.15,
+                                                    )
+                                                  : const Color(0xFFF8FAFC),
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: isSelected
+                                                    ? color
+                                                    : const Color(0xFFF1F5F9),
+                                                width: isSelected ? 2.5 : 1.5,
+                                              ),
+                                              boxShadow: isSelected
+                                                  ? [
+                                                      BoxShadow(
+                                                        color: color.withValues(
+                                                          alpha: 0.2,
+                                                        ),
+                                                        blurRadius: 10,
+                                                        offset:
+                                                            const Offset(0, 4),
+                                                      ),
+                                                    ]
+                                                  : [],
+                                            ),
+                                            child: Center(
+                                              child: Icon(
+                                                CategoryMapping
+                                                    .getCategoryMaterialIcon(
+                                                  category.id,
+                                                ),
+                                                color: isSelected
+                                                    ? color
+                                                    : color.withValues(
+                                                        alpha: 0.8,
+                                                      ),
+                                                size: 24,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            localizedTaskCategoryName(
+                                              AppLocalizations.of(context),
+                                              category,
+                                            ),
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: isSelected
+                                                  ? FontWeight.w800
+                                                  : FontWeight.w600,
+                                              color: isSelected
+                                                  ? color
+                                                  : AppColors.textSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                            loading: () => const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                            error: (_, __) => const SizedBox(),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildSectionHeader(
+                            AppLocalizations.of(context)
+                                .createTaskSectionFrequencyEyebrow,
+                            AppLocalizations.of(context)
+                                .createTaskSectionFrequencyTitle,
+                            AppLocalizations.of(context)
+                                .createTaskSectionFrequencySubtitle,
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _buildFrequencyChip(
+                                AppLocalizations.of(context)
+                                    .createTaskRecurrenceNone,
+                                null,
+                              ),
+                              ..._recurrenceOptions.map(
+                                (recurrence) => _buildFrequencyChip(
+                                  _recurrenceName(
+                                    AppLocalizations.of(context),
+                                    recurrence['id']!,
+                                  ),
+                                  recurrence['id'],
+                                ),
+                              ),
+                              _buildFrequencyChip(
+                                AppLocalizations.of(context)
+                                    .createTaskRecurrenceCustom,
+                                'custom',
+                              ),
+                            ],
+                          ),
+                          if (_selectedRecurrence == 'custom') ...[
+                            const SizedBox(height: 16),
+                            _buildCustomRecurrenceMenu(),
+                          ],
+                          const SizedBox(height: 20),
+                          _buildSectionHeader(
+                            AppLocalizations.of(context)
+                                .createTaskSectionAssigneeEyebrow,
+                            AppLocalizations.of(context)
+                                .createTaskSectionAssigneeTitle,
+                            AppLocalizations.of(context)
+                                .createTaskSectionAssigneeSubtitle,
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _buildAssigneeChip(
+                                AppLocalizations.of(context)
+                                    .createTaskAssigneeAnyone,
+                                null,
+                                'C',
+                              ),
+                              ..._members.map((member) {
+                                final user =
+                                    member['users'] as Map<String, dynamic>?;
+                                final name = user?['full_name'] ??
+                                    user?['email'] ??
+                                    AppLocalizations.of(context)
+                                        .settingsHouseholdMemberFallbackName;
+                                final safeName = name.toString().trim();
+                                final initial = safeName.isNotEmpty
+                                    ? safeName.substring(0, 1).toUpperCase()
+                                    : '?';
+                                return _buildAssigneeChip(
+                                  name,
+                                  member['user_id'] as String,
+                                  initial,
+                                );
+                              }),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          _buildRotationSection(),
+                          _buildSectionHeader(
+                            AppLocalizations.of(context)
+                                .createTaskSectionValueEyebrow,
+                            AppLocalizations.of(context)
+                                .createTaskSectionValueTitle,
+                            AppLocalizations.of(context)
+                                .createTaskSectionValueSubtitle,
+                          ),
+                          const SizedBox(height: 10),
+                          _buildDifficultySection(),
+                          const SizedBox(height: 16),
+                          _buildRewardsSection(),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSectionHeader(
-                          AppLocalizations.of(context)
-                              .createTaskSectionDetailEyebrow,
-                          AppLocalizations.of(context)
-                              .createTaskSectionDetailTitle,
-                          AppLocalizations.of(context)
-                              .createTaskSectionDetailSubtitle,
-                        ),
-                        const SizedBox(height: 14),
-                        TextFormField(
-                          controller: _titleController,
-                          decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)
-                                .createTaskFieldTitleLabel,
-                            prefixIcon: const Icon(Icons.edit_note_rounded),
-                          ),
-                          validator: (value) {
-                            final title = value?.trim() ?? '';
-                            if (title.isEmpty) {
-                              return AppLocalizations.of(context)
-                                  .createTaskValidationTitleRequired;
-                            }
-                            if (title.length < 3) {
-                              return 'Usa al menos 3 caracteres';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _descriptionController,
-                          maxLines: 2,
-                          decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)
-                                .createTaskFieldNotesLabel,
-                            hintText:
-                                'ej: "usar el limpiapisos azul", "revisar el filtro tambien"',
-                            prefixIcon: const Padding(
-                              padding: EdgeInsets.only(bottom: 24),
-                              child: Icon(Icons.notes_rounded),
-                            ),
-                            alignLabelWithHint: true,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        _buildSectionHeader(
-                          AppLocalizations.of(context)
-                              .createTaskSectionCategoryEyebrow,
-                          AppLocalizations.of(context)
-                              .createTaskSectionCategoryTitle,
-                          AppLocalizations.of(context)
-                              .createTaskSectionCategorySubtitle,
-                        ),
-                        const SizedBox(height: 10),
-                        categoriesAsync.when(
-                          data: (_) => SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Row(
-                              children: categories.map((category) {
-                                final isSelected =
-                                    currentCategoryId == category.id;
-                                final color = AppColors.fromHex(category.color);
-                                return GestureDetector(
-                                  onTap: () => setState(
-                                    () => _selectedCategory = category.id,
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 16),
-                                    child: Column(
-                                      children: [
-                                        Container(
-                                          width: 56,
-                                          height: 56,
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? color.withValues(alpha: 0.15)
-                                                : const Color(0xFFF8FAFC),
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: isSelected
-                                                  ? color
-                                                  : const Color(0xFFF1F5F9),
-                                              width: isSelected ? 2.5 : 1.5,
-                                            ),
-                                            boxShadow: isSelected
-                                                ? [
-                                                    BoxShadow(
-                                                      color: color.withValues(
-                                                        alpha: 0.2,
-                                                      ),
-                                                      blurRadius: 10,
-                                                      offset:
-                                                          const Offset(0, 4),
-                                                    ),
-                                                  ]
-                                                : [],
-                                          ),
-                                          child: Center(
-                                            child: Icon(
-                                              CategoryMapping
-                                                  .getCategoryMaterialIcon(
-                                                category.id,
-                                              ),
-                                              color: isSelected
-                                                  ? color
-                                                  : color.withValues(
-                                                      alpha: 0.8,
-                                                    ),
-                                              size: 24,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          localizedTaskCategoryName(
-                                            AppLocalizations.of(context),
-                                            category,
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: isSelected
-                                                ? FontWeight.w800
-                                                : FontWeight.w600,
-                                            color: isSelected
-                                                ? color
-                                                : AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                          loading: () => const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                color: AppColors.primary,
-                                strokeWidth: 2,
-                              ),
-                            ),
-                          ),
-                          error: (_, __) => const SizedBox(),
-                        ),
-                        const SizedBox(height: 20),
-                        _buildSectionHeader(
-                          AppLocalizations.of(context)
-                              .createTaskSectionFrequencyEyebrow,
-                          AppLocalizations.of(context)
-                              .createTaskSectionFrequencyTitle,
-                          AppLocalizations.of(context)
-                              .createTaskSectionFrequencySubtitle,
-                        ),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _buildFrequencyChip(
-                              AppLocalizations.of(context)
-                                  .createTaskRecurrenceNone,
-                              null,
-                            ),
-                            ..._recurrenceOptions.map(
-                              (recurrence) => _buildFrequencyChip(
-                                _recurrenceName(
-                                  AppLocalizations.of(context),
-                                  recurrence['id']!,
-                                ),
-                                recurrence['id'],
-                              ),
-                            ),
-                            _buildFrequencyChip(
-                              AppLocalizations.of(context)
-                                  .createTaskRecurrenceCustom,
-                              'custom',
-                            ),
-                          ],
-                        ),
-                        if (_selectedRecurrence == 'custom') ...[
-                          const SizedBox(height: 16),
-                          _buildCustomRecurrenceMenu(),
-                        ],
-                        const SizedBox(height: 20),
-                        _buildSectionHeader(
-                          AppLocalizations.of(context)
-                              .createTaskSectionAssigneeEyebrow,
-                          AppLocalizations.of(context)
-                              .createTaskSectionAssigneeTitle,
-                          AppLocalizations.of(context)
-                              .createTaskSectionAssigneeSubtitle,
-                        ),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _buildAssigneeChip(
-                              AppLocalizations.of(context)
-                                  .createTaskAssigneeAnyone,
-                              null,
-                              'C',
-                            ),
-                            ..._members.map((member) {
-                              final user =
-                                  member['users'] as Map<String, dynamic>?;
-                              final name = user?['full_name'] ??
-                                  user?['email'] ??
-                                  AppLocalizations.of(context)
-                                      .settingsHouseholdMemberFallbackName;
-                              final safeName = name.toString().trim();
-                              final initial = safeName.isNotEmpty
-                                  ? safeName.substring(0, 1).toUpperCase()
-                                  : '?';
-                              return _buildAssigneeChip(
-                                name,
-                                member['user_id'] as String,
-                                initial,
-                              );
-                            }),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        _buildRotationSection(),
-                        _buildSectionHeader(
-                          AppLocalizations.of(context)
-                              .createTaskSectionValueEyebrow,
-                          AppLocalizations.of(context)
-                              .createTaskSectionValueTitle,
-                          AppLocalizations.of(context)
-                              .createTaskSectionValueSubtitle,
-                        ),
-                        const SizedBox(height: 10),
-                        _buildDifficultySection(),
-                        const SizedBox(height: 16),
-                        _buildRewardsSection(),
-                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed:
-                            _isLoading ? null : () => Navigator.pop(context),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed:
+                              _isLoading ? null : () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Text(
+                            AppLocalizations.of(context).commonCancel,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                        child: Text(
-                          AppLocalizations.of(context).commonCancel,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.14),
-                              blurRadius: 18,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: AnimatedPress(
-                          scale: _isLoading ? 1 : 0.97,
-                          onTap: _isLoading ? null : _handleSubmit,
-                          child: ElevatedButton(
-                            onPressed: null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.textPrimary,
-                              disabledBackgroundColor: AppColors.textPrimary,
-                              disabledForegroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.14),
+                                blurRadius: 18,
+                                offset: const Offset(0, 8),
                               ),
-                              elevation: 0,
-                            ),
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 220),
-                              switchInCurve: Curves.easeOutBack,
-                              switchOutCurve: Curves.easeInCubic,
-                              transitionBuilder: (child, animation) {
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: ScaleTransition(
-                                    scale: animation,
-                                    child: child,
-                                  ),
-                                );
-                              },
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      key: ValueKey('loading'),
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : _showSuccessState
-                                      ? Row(
-                                          key: const ValueKey('success'),
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(
-                                              Icons.check_circle_rounded,
-                                              color: Colors.white,
-                                              size: 20,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              AppLocalizations.of(context)
-                                                  .createTaskSnackCreated,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w800,
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      : Text(
-                                          key: const ValueKey('idle'),
-                                          AppLocalizations.of(context)
-                                              .createTaskCreateButton,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                          ),
+                            ],
+                          ),
+                          child: AnimatedPress(
+                            scale: _isLoading ? 1 : 0.97,
+                            onTap: _isLoading ? null : _handleSubmit,
+                            child: ElevatedButton(
+                              onPressed: null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.textPrimary,
+                                disabledBackgroundColor: AppColors.textPrimary,
+                                disabledForegroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 220),
+                                switchInCurve: Curves.easeOutBack,
+                                switchOutCurve: Curves.easeInCubic,
+                                transitionBuilder: (child, animation) {
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: ScaleTransition(
+                                      scale: animation,
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        key: ValueKey('loading'),
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
                                         ),
+                                      )
+                                    : _showSuccessState
+                                        ? Row(
+                                            key: const ValueKey('success'),
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.check_circle_rounded,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                AppLocalizations.of(context)
+                                                    .createTaskSnackCreated,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        : Text(
+                                            key: const ValueKey('idle'),
+                                            AppLocalizations.of(context)
+                                                .createTaskCreateButton,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

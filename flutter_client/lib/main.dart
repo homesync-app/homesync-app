@@ -150,43 +150,44 @@ void main() async {
 
   AppEnvironment.validateRuntimeConfig(isWeb: kIsWeb);
 
-  // 1. Initialize Firebase
-  try {
-    await PerformanceMonitor.measureFuture(
-      'startup.firebase_initialize',
-      () => Firebase.initializeApp(
-        options: kIsWeb ? AppEnvironment.firebaseOptions : null,
-      ),
-      warnAfterMs: 700,
-    );
-    // Pass ALL uncaught Flutter errors to Crashlytics (Android/iOS only).
-    // El handler completo (con contexto + Supabase logs) se asigna más abajo,
-    // después de inicializar RPC. Acá sólo seteamos las custom keys.
-    if (!kIsWeb) {
-      FirebaseCrashlytics.instance
-          .setCustomKey('environment', appContext['environment'] as String);
-      FirebaseCrashlytics.instance
-          .setCustomKey('app_version', appContext['app_version'] as String);
-      FirebaseCrashlytics.instance
-          .setCustomKey('build_number', appContext['build_number'] as String);
-      FirebaseCrashlytics.instance
-          .setCustomKey('platform', appContext['platform'] as String);
-      FirebaseCrashlytics.instance
-          .setCustomKey('locale', appContext['locale'] as String);
-      FirebaseCrashlytics.instance
-          .setCustomKey('timezone', appContext['timezone'] as String);
-      if (deviceContext['model'] != null) {
+    // 1. Initialize Firebase
+    try {
+      await PerformanceMonitor.measureFuture(
+        'startup.firebase_initialize',
+        () => Firebase.initializeApp(
+          // Android MUST use the native google-services.json (correct API key,
+          // same one shipped in +81). Do NOT force AppEnvironment.firebaseOptions
+          // here — its Dart API key differs from native and breaks prod Auth.
+          options: kIsWeb ? AppEnvironment.firebaseOptions : null,
+        ),
+        warnAfterMs: 700,
+      );
+      // Blindaje: Solo proceder si Firebase se inicializó correctamente
+      if (Firebase.apps.isNotEmpty && !kIsWeb) {
         FirebaseCrashlytics.instance
-            .setCustomKey('device_model', deviceContext['model'] as String);
-      }
-      if (deviceContext['device'] != null) {
+            .setCustomKey('environment', appContext['environment'] as String);
         FirebaseCrashlytics.instance
-            .setCustomKey('device_type', deviceContext['device'] as String);
+            .setCustomKey('app_version', appContext['app_version'] as String);
+        FirebaseCrashlytics.instance
+            .setCustomKey('build_number', appContext['build_number'] as String);
+        FirebaseCrashlytics.instance
+            .setCustomKey('platform', appContext['platform'] as String);
+        FirebaseCrashlytics.instance
+            .setCustomKey('locale', appContext['locale'] as String);
+        FirebaseCrashlytics.instance
+            .setCustomKey('timezone', appContext['timezone'] as String);
+        if (deviceContext['model'] != null) {
+          FirebaseCrashlytics.instance
+              .setCustomKey('device_model', deviceContext['model'] as String);
+        }
+        if (deviceContext['device'] != null) {
+          FirebaseCrashlytics.instance
+              .setCustomKey('device_type', deviceContext['device'] as String);
+        }
       }
+    } catch (e) {
+      log.e('Firebase initialization failed', error: e);
     }
-  } catch (e) {
-    log.e('Firebase initialization failed', error: e);
-  }
 
   // Inicialización de Supabase + auth/rpc. Si no hay red la SDK reintenta
   // internamente; este try/catch protege el arranque para que un fallo de
@@ -202,9 +203,16 @@ void main() async {
         // Supabase validates it against Firebase's JWKS endpoint automatically.
         // This replaces the manual session sync (_syncSupabaseSession).
         accessToken: () async {
-          final user = fa.FirebaseAuth.instance.currentUser;
-          if (user == null) return null;
-          return await user.getIdToken(false);
+          try {
+            // Check if Firebase is actually initialized before accessing Auth
+            if (Firebase.apps.isEmpty) return null;
+            final user = fa.FirebaseAuth.instance.currentUser;
+            if (user == null) return null;
+            return await user.getIdToken(false);
+          } catch (e) {
+            log.w('Firebase Auth token retrieval failed during Supabase init', error: e);
+            return null;
+          }
         },
       ),
       warnAfterMs: 700,
@@ -255,7 +263,7 @@ void main() async {
   // sigue ejecutándose. Marcarlos como fatal contamina los "crash-free users".
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    if (!kIsWeb) {
+    if (!kIsWeb && Firebase.apps.isNotEmpty) {
       FirebaseCrashlytics.instance.recordFlutterError(details);
     }
     final diagnosticLines = <String>[
@@ -286,7 +294,7 @@ void main() async {
   // Catch async errors outside of Flutter framework
   PlatformDispatcher.instance.onError = (error, stack) {
     // 1. Crashlytics — marks as fatal (mobile only)
-    if (!kIsWeb) {
+    if (!kIsWeb && Firebase.apps.isNotEmpty) {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     }
     // 2. Supabase admin logs (all platforms)
@@ -361,9 +369,12 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
-    _analyticsObserver = FirebaseAnalyticsObserver(
-      analytics: FirebaseAnalytics.instance,
-    );
+    // Blindaje: Solo usar Analytics si Firebase está listo
+    if (Firebase.apps.isNotEmpty) {
+      _analyticsObserver = FirebaseAnalyticsObserver(
+        analytics: FirebaseAnalytics.instance,
+      );
+    }
     ref.read(authBootstrapProvider);
     unawaited(_configureAnalytics());
 
@@ -404,6 +415,9 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _configureAnalytics() async {
+    // Blindaje: Solo configurar si Firebase está listo
+    if (Firebase.apps.isEmpty) return;
+
     final analytics = ref.read(analyticsServiceProvider);
     await PerformanceMonitor.measureFuture(
       'startup.analytics_configure',
@@ -657,7 +671,10 @@ class _MyAppState extends ConsumerState<MyApp> {
       title: 'HomeSync',
       debugShowCheckedModeBanner: false,
       navigatorKey: _navigatorKey,
-      navigatorObservers: [_analyticsObserver, _breadcrumbObserver],
+      navigatorObservers: [
+        if (Firebase.apps.isNotEmpty) _analyticsObserver,
+        _breadcrumbObserver,
+      ],
       theme: AppTheme.lightTheme(customPrimary: customPrimary),
       darkTheme: AppTheme.darkTheme(customPrimary: customPrimary),
       themeMode: themeMode,

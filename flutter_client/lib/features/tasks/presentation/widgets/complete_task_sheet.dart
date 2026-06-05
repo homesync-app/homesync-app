@@ -347,9 +347,16 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       children: [
         Align(
           alignment: Alignment.bottomCenter,
-          child: FractionallySizedBox(
-            heightFactor: 0.86,
-            child: _buildBody(tasksToShow, categories),
+          child: AnimatedPadding(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: FractionallySizedBox(
+              heightFactor: 0.86,
+              child: _buildBody(tasksToShow, categories),
+            ),
           ),
         ),
       ],
@@ -429,6 +436,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 const SizedBox(height: 24),
                 Expanded(
                   child: ListView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: EdgeInsets.only(
                       bottom: _selectedTaskIds.isEmpty || _isLoading ? 24 : 12,
                     ),

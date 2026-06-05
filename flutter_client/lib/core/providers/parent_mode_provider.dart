@@ -144,6 +144,22 @@ final taskApprovalEnabledProvider = Provider<bool>((ref) {
   return mode != null && mode != 'off';
 });
 
+/// Whether the allowance ("mesada", adult→teen transfer) feature is active.
+///
+/// Premium Parent Mode feature, OFF by default. Active only when the household
+/// is family, premium is active, AND the `allowance_enabled` toggle is on.
+/// Mirrors [taskApprovalEnabledProvider] — same single source of truth so the
+/// "Mesada" UI never shows where the feature isn't actually enabled.
+final allowanceEnabledProvider = Provider<bool>((ref) {
+  final caps = ref.watch(householdCapabilitiesProvider);
+  if (caps.type != HouseholdType.family) return false;
+
+  final isPremium = ref.watch(effectivePremiumProvider);
+  if (!isPremium) return false;
+
+  return ref.watch(currentHouseholdProvider).value?.allowanceEnabled ?? false;
+});
+
 /// Misma logica que [parentModeAvailableProvider] pero sin exigir premium.
 /// Sirve para mostrar la entrada al paywall: si el usuario es adulto de una
 /// familia y todavia no compro, ahi mostramos el CTA.

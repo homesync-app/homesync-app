@@ -35,7 +35,7 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat();
-    _animation = Tween<double>(begin: -2.0, end: 2.0).animate(_controller);
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
   }
 
   @override
@@ -51,6 +51,7 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
+        final sweep = (_animation.value * 2.4) - 1.2;
         final shimmer = Container(
           width: widget.width,
           height: widget.height,
@@ -58,18 +59,14 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(widget.borderRadius),
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment(-1 + sweep, -0.7),
+              end: Alignment(0.8 + sweep, 0.7),
               colors: [
                 AppColors.surfaceVariant.withValues(alpha: 0.1),
                 AppColors.surfaceVariant.withValues(alpha: 0.3),
                 AppColors.surfaceVariant.withValues(alpha: 0.1),
               ],
-              stops: [
-                0.0,
-                (_animation.value + 1) / 2,
-                1.0,
-              ],
+              stops: const [0.18, 0.5, 0.82],
             ),
           ),
           child: widget.child != null

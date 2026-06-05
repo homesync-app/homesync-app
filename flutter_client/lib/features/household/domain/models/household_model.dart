@@ -20,6 +20,11 @@ class HouseholdModel {
   /// cliente lo usamos para mostrar el toggle correcto en settings.
   final String taskApprovalMode;
 
+  /// Parent Mode (premium): si las mesadas (transferencia adulto→teen) están
+  /// habilitadas. Off por defecto. El gate efectivo (familia + premium) lo
+  /// aplica `allowanceEnabledProvider`.
+  final bool allowanceEnabled;
+
   const HouseholdModel({
     required this.id,
     required this.name,
@@ -30,6 +35,7 @@ class HouseholdModel {
     this.splitRatioAnchorId,
     this.createdAt,
     this.taskApprovalMode = 'off',
+    this.allowanceEnabled = false,
   });
 
   factory HouseholdModel.fromJson(Map<String, dynamic> json) {
@@ -49,6 +55,7 @@ class HouseholdModel {
           ? DateTime.parse(json['created_at'] as String)
           : null,
       taskApprovalMode: (json['task_approval_mode'] as String?) ?? 'off',
+      allowanceEnabled: json['allowance_enabled'] as bool? ?? false,
     );
   }
 

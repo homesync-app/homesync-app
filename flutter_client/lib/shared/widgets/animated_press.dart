@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:motor/motor.dart';
 
+enum AppPressHaptic { none, selection, light, medium, heavy }
+
 /// A wrapper for widgets that should scale down slightly when pressed.
 /// Standardized across the app for premium feel.
 ///
@@ -16,6 +18,8 @@ class AnimatedPress extends StatefulWidget {
   final VoidCallback? onLongPress;
   final double scale;
   final Duration duration;
+  final AppPressHaptic haptic;
+  final AppPressHaptic longPressHaptic;
 
   const AnimatedPress({
     super.key,
@@ -25,6 +29,8 @@ class AnimatedPress extends StatefulWidget {
     this.onLongPress,
     this.scale = 0.95,
     this.duration = const Duration(milliseconds: 80),
+    this.haptic = AppPressHaptic.none,
+    this.longPressHaptic = AppPressHaptic.medium,
   });
 
   @override
@@ -44,7 +50,7 @@ class _AnimatedPressState extends State<AnimatedPress> {
     setState(() {
       _scale = widget.scale;
     });
-    HapticFeedback.selectionClick();
+    _triggerHaptic(widget.haptic);
   }
 
   void _release() {
@@ -58,8 +64,8 @@ class _AnimatedPressState extends State<AnimatedPress> {
   Widget build(BuildContext context) {
     final isApple = !kIsWeb && (Platform.isIOS || Platform.isMacOS);
     final motion = isApple
-        ? CupertinoMotion.smooth()
-        : MaterialSpringMotion.standardSpatialFast();
+        ? const CupertinoMotion.smooth()
+        : const MaterialSpringMotion.standardSpatialFast();
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -73,7 +79,7 @@ class _AnimatedPressState extends State<AnimatedPress> {
       onTapCancel: _isActive ? _release : null,
       onLongPress: _isActive && widget.onLongPress != null
           ? () {
-              HapticFeedback.mediumImpact();
+              _triggerHaptic(widget.longPressHaptic);
               widget.onLongPress!();
             }
           : null,
@@ -87,5 +93,24 @@ class _AnimatedPressState extends State<AnimatedPress> {
         child: widget.child,
       ),
     );
+  }
+
+  void _triggerHaptic(AppPressHaptic haptic) {
+    switch (haptic) {
+      case AppPressHaptic.none:
+        return;
+      case AppPressHaptic.selection:
+        HapticFeedback.selectionClick();
+        return;
+      case AppPressHaptic.light:
+        HapticFeedback.lightImpact();
+        return;
+      case AppPressHaptic.medium:
+        HapticFeedback.mediumImpact();
+        return;
+      case AppPressHaptic.heavy:
+        HapticFeedback.heavyImpact();
+        return;
+    }
   }
 }

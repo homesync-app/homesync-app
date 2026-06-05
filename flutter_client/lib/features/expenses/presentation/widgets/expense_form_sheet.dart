@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
@@ -34,6 +35,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'allowance_sheet.dart';
 import 'expense_category_matcher.dart';
 import 'expense_form_components.dart';
 import 'expense_form_data.dart';
@@ -685,6 +687,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                         children: [
                           const SizedBox(height: 16),
                           _buildTypeToggle(),
+                          if (ref.watch(allowanceEnabledProvider)) ...[
+                            const SizedBox(height: 12),
+                            _buildAllowanceEntry(context),
+                          ],
                           const SizedBox(height: 28),
                           _buildAmountField(),
                           const SizedBox(height: 32),
@@ -774,6 +780,45 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           ),
         );
       },
+    );
+  }
+
+  /// Entry to the allowance ("mesada") flow — shown only when the premium
+  /// Parent Mode toggle is on (family + premium + allowance_enabled), via
+  /// allowanceEnabledProvider. Opens the dedicated AllowanceSheet rather than
+  /// reusing the expense form body (a transfer ≠ an expense).
+  Widget _buildAllowanceEntry(BuildContext context) {
+    return InkWell(
+      onTap: () async {
+        FocusManager.instance.primaryFocus?.unfocus();
+        await AllowanceSheet.show(context);
+      },
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+        ),
+        child: const Row(
+          children: [
+            Text('💸', style: TextStyle(fontSize: 18)),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Dar una mesada a un menor',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13.5,
+                ),
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: AppColors.primary),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1549,6 +1594,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildSaveButton() {
+    final t = AppLocalizations.of(context);
     return SizedBox(
       width: double.infinity,
       height: 60,
@@ -1600,10 +1646,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                           const SizedBox(width: 8),
                           Text(
                             widget.expense != null
-                                ? 'Actualizado'
+                                ? t.expensesFormSaveButtonUpdated
                                 : (_isIncome
-                                    ? 'Ingreso guardado'
-                                    : 'Gasto guardado'),
+                                    ? t.expensesFormSavedIncome
+                                    : t.expensesFormSavedExpense),
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w900,

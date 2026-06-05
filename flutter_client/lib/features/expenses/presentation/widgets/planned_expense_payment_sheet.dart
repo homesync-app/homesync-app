@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
@@ -60,8 +61,8 @@ class _PlannedExpensePaymentSheetState
     super.dispose();
   }
 
-  /// Guarantees [_paidBy] always points at an actual member so the selector
-  /// highlights a chip and the value sent to the RPC is a real member id.
+  /// Guarantees [_paidBy] always points at an eligible member so the selector
+  /// highlights a chip and the value sent to the RPC is a real adult member id.
   ///
   /// The planned expense's payer id can come from a different identity space
   /// than [MemberModel.userId] (Supabase UUID vs Firebase UID, depending on the
@@ -69,16 +70,22 @@ class _PlannedExpensePaymentSheetState
   /// — the person registering the payment is the natural default — and finally
   /// to the first member.
   void _ensureValidPayer(List<MemberModel> members) {
-    if (members.isEmpty) return;
-    if (members.any((m) => m.userId == _paidBy)) return;
+    final eligiblePayers = _eligiblePayers(members);
+    if (eligiblePayers.isEmpty) return;
+    if (eligiblePayers.any((m) => m.userId == _paidBy)) return;
 
     final currentUserId = ref.read(currentUserIdProvider);
-    _paidBy = members
+    _paidBy = eligiblePayers
         .firstWhere(
           (m) => m.userId == currentUserId,
-          orElse: () => members.first,
+          orElse: () => eligiblePayers.first,
         )
         .userId;
+  }
+
+  List<MemberModel> _eligiblePayers(List<MemberModel> members) {
+    final adults = members.where((member) => member.isAdult).toList();
+    return adults.isNotEmpty ? adults : members;
   }
 
   void _onAmountChanged(String val) {
@@ -119,6 +126,7 @@ class _PlannedExpensePaymentSheetState
       if (!mounted) return;
 
       final templateUpdated = result['template_updated'] == true;
+      HapticFeedback.mediumImpact();
       Navigator.pop(context, {
         'success': true,
         'template_updated': templateUpdated,
@@ -142,6 +150,8 @@ class _PlannedExpensePaymentSheetState
   @override
   Widget build(BuildContext context) {
     final membersAsync = ref.watch(householdMembersProvider);
+    final isSharedEconomy =
+        ref.watch(currentHouseholdProvider).value?.financeMode == 'shared';
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -165,6 +175,7 @@ class _PlannedExpensePaymentSheetState
         ),
         data: (List<MemberModel> members) {
           _ensureValidPayer(members);
+          final eligiblePayers = _eligiblePayers(members);
 
           return SingleChildScrollView(
             child: Column(
@@ -194,7 +205,8 @@ class _PlannedExpensePaymentSheetState
                 const SizedBox(height: 8),
                 Text(
                   AppLocalizations.of(context).expensesPlannedPaymentSubtitle(
-                      widget.plannedExpense.title,),
+                    widget.plannedExpense.title,
+                  ),
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
@@ -204,8 +216,10 @@ class _PlannedExpensePaymentSheetState
                 _buildAmountField(),
                 const SizedBox(height: 20),
                 _buildDatePicker(context),
-                const SizedBox(height: 20),
-                _buildPayerSelector(members),
+                if (!isSharedEconomy) ...[
+                  const SizedBox(height: 20),
+                  _buildPayerSelector(eligiblePayers),
+                ],
                 const SizedBox(height: 32),
                 _buildConfirmButton(),
               ],
@@ -321,9 +335,9 @@ class _PlannedExpensePaymentSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'QUIEN PAGO?',
-          style: TextStyle(
+        Text(
+          AppLocalizations.of(context).expensesFormFieldPayer.toUpperCase(),
+          style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
             color: AppColors.textMuted,
@@ -395,9 +409,12 @@ class _PlannedExpensePaymentSheetState
         ),
         child: _isLoading
             ? const CircularProgressIndicator(color: Colors.white)
-            : const Text(
-                'Confirmar y registrar',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+            : Text(
+                AppLocalizations.of(context).plannedExpensePaymentConfirmButton,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
       ),
     );

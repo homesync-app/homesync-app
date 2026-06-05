@@ -860,6 +860,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   Widget _buildEmptyState(String? filterStatus) {
     final isSolo =
         ref.watch(currentHouseholdProvider).value?.householdType == 'solo';
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final currentMember = ref.watch(householdMembersProvider).maybeWhen(
+          data: (members) =>
+              members.where((m) => m.userId == currentUserId).firstOrNull,
+          orElse: () => null,
+        );
+    final canCreateTasks = !(currentMember?.isChild ?? false);
     final t = AppLocalizations.of(context);
     return AppEmptyState(
       title:
@@ -867,6 +874,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       subtitle: filterStatus == null
           ? (isSolo ? t.tasksEmptySoloSubtitle : t.tasksEmptySharedSubtitle)
           : t.tasksEmptyFilteredSubtitle,
+      actionLabel:
+          filterStatus == null && canCreateTasks ? t.tasksFabNew : null,
+      actionIcon: Icons.add_rounded,
+      onAction:
+          filterStatus == null && canCreateTasks ? _showCreateTaskDialog : null,
       icon: filterStatus == null
           ? Icons.edit_note_rounded
           : Icons.filter_list_off_rounded,

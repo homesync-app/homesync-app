@@ -88,10 +88,11 @@ class FamilyTaskCard extends StatelessWidget {
       shadowBaseAlpha: isPendingReview ? 0.046 : 0.032,
       shadowPulseAlpha: 0.065,
       shadowPulseBlur: 11,
-      popScale: 0.016,
+      // popScale handled by AppCompletionFeedback now
       builder: (context, progress, pulse, completionColor) {
         return AnimatedPress(
-          scale: 0.985,
+          // Disable scaling during completion to avoid "Double Scale" jank
+          scale: isCompleting ? 1.0 : 0.985,
           onTap: isCompleting
               ? null
               : () {

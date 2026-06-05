@@ -90,6 +90,9 @@ class AppEmptyState extends StatelessWidget {
   final IconData icon;
   final String? emoji;
   final Color? accentColor;
+  final String? actionLabel;
+  final IconData? actionIcon;
+  final VoidCallback? onAction;
 
   const AppEmptyState({
     super.key,
@@ -98,6 +101,9 @@ class AppEmptyState extends StatelessWidget {
     this.icon = Icons.inbox_rounded,
     this.emoji,
     this.accentColor,
+    this.actionLabel,
+    this.actionIcon,
+    this.onAction,
   });
 
   @override
@@ -183,6 +189,28 @@ class AppEmptyState extends StatelessWidget {
                     height: 1.4,
                   ),
                   textAlign: TextAlign.center,
+                ),
+              ],
+              if (actionLabel != null && onAction != null) ...[
+                const SizedBox(height: 18),
+                FilledButton.icon(
+                  onPressed: onAction,
+                  icon: Icon(actionIcon ?? Icons.add_rounded),
+                  label: Text(actionLabel!),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: highlight,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
               ],
             ],
