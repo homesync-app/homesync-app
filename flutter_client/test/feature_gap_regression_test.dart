@@ -253,8 +253,9 @@ class FakeHouseholdRepository implements HouseholdRepository {
   @override
   Future<Either<Failure, void>> updateMemberType(
     String userId,
-    String type,
-  ) async =>
+    String type, {
+    String? displayRole,
+  }) async =>
       const Right(null);
 
   @override

@@ -181,6 +181,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
+    final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
 
     return Container(
       padding: EdgeInsets.only(bottom: bottom),
@@ -195,14 +196,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           ),
         ],
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 14, 24, 24),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 350),
-            child: _sent ? _buildSuccess(theme) : _buildForm(theme),
-          ),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(24, 14, 24, 24 + safeBottom),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          child: _sent ? _buildSuccess(theme) : _buildForm(theme),
         ),
       ),
     );

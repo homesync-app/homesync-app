@@ -65,9 +65,15 @@ abstract class HouseholdRepository {
     String? displayRole,
   );
 
-  /// Updates the permission type for a member.
-  /// [type] must be one of `parent`, `guardian`, `teen`, `child`.
-  Future<Either<Failure, void>> updateMemberType(String userId, String type);
+  /// Updates the permission type for a member, optionally setting the gendered
+  /// [displayRole] atomically so `member_type` and `display_role` never drift.
+  /// [type] must be one of `parent`, `guardian`, `teen`, `child`. When
+  /// [displayRole] is null, a generic label is derived from [type].
+  Future<Either<Failure, void>> updateMemberType(
+    String userId,
+    String type, {
+    String? displayRole,
+  });
 
   /// QA admin: restores a testing scenario to its seeded baseline.
   Future<Either<Failure, Map<String, dynamic>>> qaResetScenario(

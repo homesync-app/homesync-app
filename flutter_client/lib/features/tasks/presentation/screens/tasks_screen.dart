@@ -9,6 +9,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_scroll_physics.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -321,6 +322,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
+                  physics: const AppSnappyPagePhysics(),
                   children: [
                     // TASK LIST TAB
                     filteredAsync.when(

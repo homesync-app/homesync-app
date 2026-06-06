@@ -123,6 +123,7 @@ class AvatarPickerSheet extends ConsumerWidget {
       ),
     );
     final googlePhotoUrl = _resolveGooglePhotoUrl();
+    final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
 
     return Container(
       constraints: BoxConstraints(
@@ -132,173 +133,169 @@ class AvatarPickerSheet extends ConsumerWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
       ),
-      padding: const EdgeInsets.only(left: 24, right: 24, top: 12, bottom: 40),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 48,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(10),
-              ),
+      padding: EdgeInsets.fromLTRB(24, 12, 24, 24 + safeBottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 48,
+            height: 5,
+            decoration: BoxDecoration(
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(10),
             ),
-            const SizedBox(height: 28),
-            Text(
-              t.avatarPickerTitle,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-              ),
+          ),
+          const SizedBox(height: 28),
+          Text(
+            t.avatarPickerTitle,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
             ),
-            const SizedBox(height: 12),
-            Text(
-              t.avatarPickerSubtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurfaceVariant
-                    .withValues(alpha: 0.7),
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            t.avatarPickerSubtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurfaceVariant
+                  .withValues(alpha: 0.7),
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
             ),
-            const SizedBox(height: 32),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Column(
-                  children: [
-                    if (googlePhotoUrl != null) ...[
-                      _GoogleAvatarOption(
-                        photoUrl: googlePhotoUrl,
-                        isSelected: currentAvatar == googlePhotoUrl,
-                        onTap: () =>
-                            _updateAvatar(context, ref, googlePhotoUrl),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      alignment: WrapAlignment.center,
-                      children: UserAvatar.defaultAvatars.map((animal) {
-                        final normalizedEmoji = UserAvatar.normalizeAvatarValue(
-                              animal['emoji'] as String?,
-                            ) ??
-                            '';
-                        final isSelected = currentAvatar == normalizedEmoji;
-                        return _AvatarOption(
-                          emoji: normalizedEmoji,
-                          color: animal['color'],
-                          isSelected: isSelected,
-                          onTap: () => _updateAvatar(
-                            context,
-                            ref,
-                            normalizedEmoji,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 28),
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final isPremium =
-                            ref.watch(premiumProvider).value ?? false;
-                        return Column(
-                          children: [
-                            _CustomAvatarOptionsSection(
-                              currentAvatar: currentAvatar,
-                              isPremium: isPremium,
-                              onSelect: (avatarUrl) => _updateAvatar(
-                                context,
-                                ref,
-                                avatarUrl,
-                              ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.auto_awesome_rounded,
-                                  color: AppColors.accentGold,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  t.avatarPickerPremiumSection,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Wrap(
-                              spacing: 14,
-                              runSpacing: 16,
-                              alignment: WrapAlignment.center,
-                              children: UserAvatar.premiumAvatars.map((avatar) {
-                                final value =
-                                    UserAvatar.premiumAvatarValue(avatar);
-                                final legacyValue =
-                                    'premium://${avatar['url'] as String}';
-                                final isSelected = currentAvatar == value ||
-                                    currentAvatar == legacyValue;
-                                return _PremiumAvatarOption(
-                                  avatarValue: value,
-                                  name: avatar['name'] as String,
-                                  color: avatar['color'] as Color,
-                                  isLocked: !isPremium,
-                                  isSelected: isSelected,
-                                  onTap: isPremium
-                                      ? () => _updateAvatar(
-                                            context,
-                                            ref,
-                                            value,
-                                          )
-                                      : () => PremiumPaywall.show(context),
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                        );
-                      },
+          ),
+          const SizedBox(height: 32),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                children: [
+                  if (googlePhotoUrl != null) ...[
+                    _GoogleAvatarOption(
+                      photoUrl: googlePhotoUrl,
+                      isSelected: currentAvatar == googlePhotoUrl,
+                      onTap: () => _updateAvatar(context, ref, googlePhotoUrl),
                     ),
                     const SizedBox(height: 24),
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final isPremium =
-                            ref.watch(premiumProvider).value ?? false;
-                        return OutlinedButton.icon(
-                          onPressed: isPremium
-                              ? () => _showCustomAvatarSourceSheet(context, ref)
-                              : () => PremiumPaywall.show(context),
-                          icon: const Icon(Icons.auto_awesome_rounded),
-                          label: Text(
-                            isPremium
-                                ? AppLocalizations.of(context)
-                                    .avatarPickerCreateCustom
-                                : AppLocalizations.of(context)
-                                    .avatarPickerUnlockCustom,
-                          ),
-                        );
-                      },
-                    ),
                   ],
-                ),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    alignment: WrapAlignment.center,
+                    children: UserAvatar.defaultAvatars.map((animal) {
+                      final normalizedEmoji = UserAvatar.normalizeAvatarValue(
+                            animal['emoji'] as String?,
+                          ) ??
+                          '';
+                      final isSelected = currentAvatar == normalizedEmoji;
+                      return _AvatarOption(
+                        emoji: normalizedEmoji,
+                        color: animal['color'],
+                        isSelected: isSelected,
+                        onTap: () => _updateAvatar(
+                          context,
+                          ref,
+                          normalizedEmoji,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 28),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final isPremium =
+                          ref.watch(premiumProvider).value ?? false;
+                      return Column(
+                        children: [
+                          _CustomAvatarOptionsSection(
+                            currentAvatar: currentAvatar,
+                            isPremium: isPremium,
+                            onSelect: (avatarUrl) => _updateAvatar(
+                              context,
+                              ref,
+                              avatarUrl,
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.auto_awesome_rounded,
+                                color: AppColors.accentGold,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                t.avatarPickerPremiumSection,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 14,
+                            runSpacing: 16,
+                            alignment: WrapAlignment.center,
+                            children: UserAvatar.premiumAvatars.map((avatar) {
+                              final value =
+                                  UserAvatar.premiumAvatarValue(avatar);
+                              final legacyValue =
+                                  'premium://${avatar['url'] as String}';
+                              final isSelected = currentAvatar == value ||
+                                  currentAvatar == legacyValue;
+                              return _PremiumAvatarOption(
+                                avatarValue: value,
+                                name: avatar['name'] as String,
+                                color: avatar['color'] as Color,
+                                isLocked: !isPremium,
+                                isSelected: isSelected,
+                                onTap: isPremium
+                                    ? () => _updateAvatar(
+                                          context,
+                                          ref,
+                                          value,
+                                        )
+                                    : () => PremiumPaywall.show(context),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final isPremium =
+                          ref.watch(premiumProvider).value ?? false;
+                      return OutlinedButton.icon(
+                        onPressed: isPremium
+                            ? () => _showCustomAvatarSourceSheet(context, ref)
+                            : () => PremiumPaywall.show(context),
+                        icon: const Icon(Icons.auto_awesome_rounded),
+                        label: Text(
+                          isPremium
+                              ? AppLocalizations.of(context)
+                                  .avatarPickerCreateCustom
+                              : AppLocalizations.of(context)
+                                  .avatarPickerUnlockCustom,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

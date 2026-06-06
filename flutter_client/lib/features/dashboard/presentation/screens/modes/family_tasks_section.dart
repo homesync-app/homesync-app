@@ -647,6 +647,8 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
   Future<void> _approvePendingTask(TaskModel task) async {
     if (_completedTaskIds.contains(task.id)) return;
 
+    // Haptico inmediato al aprobar, igual que completar una tarea en Hoy.
+    HapticFeedback.mediumImpact();
     setState(() => _completedTaskIds.add(task.id));
     try {
       final result =
@@ -690,9 +692,17 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
 
     setState(() => _completedTaskIds.add(task.id));
     try {
-      await ref.read(tasksProvider.notifier).rejectPendingTask(task);
+      final ok = await ref.read(tasksProvider.notifier).rejectPendingTask(task);
       if (!mounted) return;
       final t = AppLocalizations.of(context);
+      if (!ok) {
+        AppSnackBar.show(
+          context,
+          message: t.pendingApprovalsRejectErrorRetry,
+          type: AppSnackBarType.error,
+        );
+        return;
+      }
       AppSnackBar.show(
         context,
         message: t.familyTasksRejectSuccess,

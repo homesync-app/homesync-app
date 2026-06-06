@@ -2742,7 +2742,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsParentModeAllowanceSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Permití dar plata a menores para sus finanzas personales, separado de los gastos compartidos.'**
+  /// **'Enviá mesadas a adolescentes con finanzas personales.'**
   String get settingsParentModeAllowanceSubtitle;
 
   /// No description provided for @settingsParentModeAllowanceCta.
@@ -4245,6 +4245,12 @@ abstract class AppLocalizations {
   /// **'Esta sección es para administradores de hogares familiares.'**
   String get pendingApprovalsLockedNotice;
 
+  /// No description provided for @pendingApprovalsSubmittedBy.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviada por {name}'**
+  String pendingApprovalsSubmittedBy(Object name);
+
   /// No description provided for @pendingApprovalsApproveButton.
   ///
   /// In es, this message translates to:
@@ -4257,6 +4263,18 @@ abstract class AppLocalizations {
   /// **'Rechazar'**
   String get pendingApprovalsRejectButton;
 
+  /// No description provided for @pendingApprovalsLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar las aprobaciones: {message}'**
+  String pendingApprovalsLoadError(Object message);
+
+  /// No description provided for @pendingApprovalsApprovedSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'Aprobada. Se acreditaron {coins} coins.'**
+  String pendingApprovalsApprovedSnack(Object coins);
+
   /// No description provided for @pendingApprovalsApproveErrorRetry.
   ///
   /// In es, this message translates to:
@@ -4268,6 +4286,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Tarea rechazada.'**
   String get pendingApprovalsRejectedSnack;
+
+  /// No description provided for @pendingApprovalsRejectErrorRetry.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos rechazar la tarea. Reintentá.'**
+  String get pendingApprovalsRejectErrorRetry;
 
   /// No description provided for @pendingApprovalsRejectDialogTitle.
   ///
@@ -4944,7 +4968,7 @@ abstract class AppLocalizations {
   /// No description provided for @allowanceEntryTitle.
   ///
   /// In es, this message translates to:
-  /// **'Dar mesada a un menor'**
+  /// **'Dar mesada'**
   String get allowanceEntryTitle;
 
   /// No description provided for @allowanceSheetTitle.
@@ -4956,7 +4980,7 @@ abstract class AppLocalizations {
   /// No description provided for @allowanceSheetSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Transferís plata desde tu balance personal al de un menor. No entra en los gastos compartidos.'**
+  /// **'Elegí destinatario y monto. Se registra como ingreso personal.'**
   String get allowanceSheetSubtitle;
 
   /// No description provided for @allowanceRecipientLabel.
@@ -4986,7 +5010,7 @@ abstract class AppLocalizations {
   /// No description provided for @allowanceNoRecipients.
   ///
   /// In es, this message translates to:
-  /// **'No hay adolescentes en el hogar con finanzas personales activas. Los chicos no pueden recibir mesadas porque no tienen acceso a Finanzas. Si corresponde, cambiá su rol desde Miembros en la configuración del hogar.'**
+  /// **'No hay adolescentes con finanzas personales en este hogar.'**
   String get allowanceNoRecipients;
 
   /// No description provided for @allowanceRecipientRequired.
@@ -5738,6 +5762,54 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Chico/a'**
   String get membersRoleChild;
+
+  /// No description provided for @membersRoleFather.
+  ///
+  /// In es, this message translates to:
+  /// **'Padre'**
+  String get membersRoleFather;
+
+  /// No description provided for @membersRoleMother.
+  ///
+  /// In es, this message translates to:
+  /// **'Madre'**
+  String get membersRoleMother;
+
+  /// No description provided for @membersRoleDad.
+  ///
+  /// In es, this message translates to:
+  /// **'Papá'**
+  String get membersRoleDad;
+
+  /// No description provided for @membersRoleMom.
+  ///
+  /// In es, this message translates to:
+  /// **'Mamá'**
+  String get membersRoleMom;
+
+  /// No description provided for @membersRoleGuardianMale.
+  ///
+  /// In es, this message translates to:
+  /// **'Tutor'**
+  String get membersRoleGuardianMale;
+
+  /// No description provided for @membersRoleGuardianFemale.
+  ///
+  /// In es, this message translates to:
+  /// **'Tutora'**
+  String get membersRoleGuardianFemale;
+
+  /// No description provided for @membersRoleSon.
+  ///
+  /// In es, this message translates to:
+  /// **'Hijo'**
+  String get membersRoleSon;
+
+  /// No description provided for @membersRoleDaughter.
+  ///
+  /// In es, this message translates to:
+  /// **'Hija'**
+  String get membersRoleDaughter;
 
   /// No description provided for @membersRoleParentGuardianDesc.
   ///

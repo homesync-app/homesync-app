@@ -5,7 +5,7 @@ class RestorePremiumPurchasesUseCase {
 
   const RestorePremiumPurchasesUseCase(this._repository);
 
-  Future<void> call() {
+  Future<bool> call() {
     return _repository.restorePurchases();
   }
 }

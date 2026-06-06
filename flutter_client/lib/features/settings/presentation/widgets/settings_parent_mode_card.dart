@@ -7,13 +7,10 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/allowance_sheet.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/family_dashboard_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/pending_approvals_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/weekly_family_summary_screen.dart';
@@ -176,13 +173,8 @@ class _SettingsParentModeCardState
       await ref.read(supabaseClientProvider).from('households').update(
         {'task_approval_mode': mode},
       ).eq('id', householdId);
-      ref.invalidate(homeBootstrapProvider);
       ref.invalidate(currentHouseholdProvider);
-      ref.invalidate(householdProvider);
       ref.invalidate(taskApprovalEnabledProvider);
-      ref.invalidate(tasksProvider);
-      ref.invalidate(filteredTasksProvider);
-      ref.invalidate(recentActivityProvider);
       ref.invalidate(pendingTaskApprovalsProvider);
     } catch (e, stack) {
       log.e(
@@ -652,12 +644,6 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
           'p_requires_task_approval': requires,
         },
       );
-      ref.invalidate(homeBootstrapProvider);
-      ref.invalidate(currentHouseholdProvider);
-      ref.invalidate(householdProvider);
-      ref.invalidate(taskApprovalEnabledProvider);
-      ref.invalidate(tasksProvider);
-      ref.invalidate(filteredTasksProvider);
       ref.invalidate(pendingTaskApprovalsProvider);
     } catch (e, stack) {
       log.e(

@@ -5,6 +5,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
+import 'package:homesync_client/features/household/domain/models/family_role_option.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/widgets/invitation_sheet.dart';
@@ -196,7 +197,11 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
   Future<void> _openRolePicker(MemberModel member) async {
     final t = AppLocalizations.of(context);
     final theme = context.theme;
-    final selected = await showModalBottomSheet<MemberType>(
+    final current = FamilyRoleOption.fromMember(
+      displayRole: member.displayRole,
+      type: member.type,
+    );
+    final selected = await showModalBottomSheet<FamilyRoleOption>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
@@ -229,17 +234,21 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              for (final type in MemberType.values)
-                _buildRoleOption(type, member, theme, t),
+              for (final option in FamilyRoleOption.values)
+                _buildRoleOption(option, current, theme, t),
             ],
           ),
         ),
       ),
     );
 
-    if (selected == null || selected == member.type) return;
+    if (selected == null || selected == current) return;
     final repo = ref.read(householdRepositoryProvider);
-    final result = await repo.updateMemberType(member.userId, selected.name);
+    final result = await repo.updateMemberType(
+      member.userId,
+      selected.memberType.name,
+      displayRole: selected.displayRole,
+    );
     if (!mounted) return;
     result.fold(
       (failure) {
@@ -260,19 +269,14 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
   }
 
   Widget _buildRoleOption(
-    MemberType type,
-    MemberModel member,
+    FamilyRoleOption option,
+    FamilyRoleOption? current,
     AppThemeColors theme,
     AppLocalizations t,
   ) {
-    final isCurrent = member.type == type;
-    final label = switch (type) {
-      MemberType.parent => t.membersRoleParent,
-      MemberType.guardian => t.membersRoleGuardian,
-      MemberType.teen => t.membersRoleTeen,
-      MemberType.child => t.membersRoleChild,
-    };
-    final subtitle = switch (type) {
+    final isCurrent = current == option;
+    final label = option.label(t);
+    final subtitle = switch (option.memberType) {
       MemberType.parent ||
       MemberType.guardian =>
         t.membersRoleParentGuardianDesc,
@@ -280,7 +284,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
       MemberType.child => t.membersRoleChildDesc,
     };
     return AnimatedPress(
-      onPressed: () => Navigator.pop(context, type),
+      onPressed: () => Navigator.pop(context, option),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(14),

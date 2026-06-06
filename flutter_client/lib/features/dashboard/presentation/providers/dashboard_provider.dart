@@ -66,8 +66,12 @@ AsyncValue<List<Map<String, dynamic>>> recentActivity(Ref ref) {
   final bootstrap = ref.watch(homeBootstrapProvider).value;
   final realtimeReady =
       ref.watch(recentActivityRealtimeDelayProvider).value ?? false;
+  final remoteAsync = ref.watch(recentActivityRemoteProvider);
+  final remoteHasPendingApproval =
+      remoteAsync.hasValue && _hasPendingApprovalActivity(remoteAsync.value);
 
   if (!realtimeReady &&
+      !remoteHasPendingApproval &&
       bootstrap != null &&
       bootstrap.householdId == householdId) {
     final visibleBootstrap = _filterHiddenExpenses(
@@ -82,7 +86,6 @@ AsyncValue<List<Map<String, dynamic>>> recentActivity(Ref ref) {
     );
   }
 
-  final remoteAsync = ref.watch(recentActivityRemoteProvider);
   if (remoteAsync.hasError &&
       bootstrap != null &&
       bootstrap.householdId == householdId) {
@@ -104,6 +107,16 @@ AsyncValue<List<Map<String, dynamic>>> recentActivity(Ref ref) {
       return activity['household_id'] == householdId;
     }).toList();
     return mergeOptimisticActivities(scopedOptimistic, visibleRemote);
+  });
+}
+
+bool _hasPendingApprovalActivity(List<Map<String, dynamic>>? activities) {
+  if (activities == null) return false;
+  return activities.any((activity) {
+    final data = activity['data'] as Map<String, dynamic>? ?? const {};
+    return activity['type'] == 'task_pending_approval' ||
+        data['approval_status'] == 'pending_approval' ||
+        data['task_status'] == 'pending_approval';
   });
 }
 

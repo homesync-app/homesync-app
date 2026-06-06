@@ -1,6 +1,7 @@
--- Functional family roles are permissions, not self-service profile labels.
--- Adult household admins may change child/teen roles; minors may not
--- self-promote by editing household_members directly.
+-- Keep family role changes functional, not just cosmetic.
+-- Adult household admins can move a child to teen/guardian/parent roles; minors
+-- cannot self-promote. QA/admin member fetches also need member_type so the UI
+-- does not reconstruct permissions from stale display_role labels.
 
 create schema if not exists private;
 
@@ -69,7 +70,7 @@ begin
       using errcode = '42501';
   end if;
 
-  select type
+  select household_type
     into v_household_type
   from public.households
   where id = OLD.household_id;
@@ -127,6 +128,67 @@ with check (
     household_members.user_id
   )
 );
+
+drop function if exists public.qa_admin_get_household_members(uuid);
+
+create or replace function public.qa_admin_get_household_members(
+  p_household_id uuid
+)
+returns table (
+  id uuid,
+  user_id uuid,
+  household_id uuid,
+  role text,
+  joined_at timestamptz,
+  display_role text,
+  member_type text,
+  onboarding_completed boolean,
+  email text,
+  full_name text,
+  avatar_url text,
+  mercadopago_alias text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform public.qa_admin_require_access();
+
+  if not exists (
+    select 1
+    from public.qa_admin_household_defaults(p_household_id)
+    where household_name is not null
+  ) then
+    raise exception 'Escenario QA invalido';
+  end if;
+
+  return query
+  select
+    hm.id,
+    hm.user_id,
+    hm.household_id,
+    hm.role,
+    hm.joined_at,
+    hm.display_role,
+    hm.member_type,
+    coalesce(hm.onboarding_completed, true),
+    u.email,
+    u.full_name,
+    u.avatar_url,
+    u.mercadopago_alias
+  from public.household_members hm
+  join public.users u on u.id = hm.user_id
+  where hm.household_id = p_household_id
+  order by
+    case when hm.role = 'owner' then 0 else 1 end,
+    hm.joined_at,
+    u.full_name;
+end;
+$$;
+
+grant execute on function public.qa_admin_get_household_members(uuid)
+  to authenticated;
 
 comment on function public.reject_member_sensitive_updates() is
   'Blocks direct client updates to sensitive membership columns; family member_type/display_role changes are restricted to adult household admins.';

@@ -220,7 +220,7 @@ class _MemberCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _roleLabel(snapshot),
+                      _roleLabel(t, snapshot),
                       style: TextStyle(
                         color: theme.textSecondary,
                         fontSize: 12.5,
@@ -417,14 +417,16 @@ class _MemberCard extends StatelessWidget {
     return '${(rate * 100).round()}%';
   }
 
-  String _roleLabel(FamilyMemberSnapshot s) {
-    if (s.displayRole != null && s.displayRole!.isNotEmpty) {
-      return s.displayRole!;
+  String _roleLabel(AppLocalizations t, FamilyMemberSnapshot s) {
+    if (s.isTeen) return t.membersRoleTeen;
+    if (s.isChild) return t.membersRoleChild;
+    if (s.memberType == 'guardian') return t.membersRoleGuardian;
+    if (s.memberType == 'parent' || s.memberType == 'adult') {
+      return t.membersRoleParent;
     }
-    // Note: short fallback labels — backend usually provides displayRole.
-    if (s.isChild) return 'Hijo/a';
-    if (s.isTeen) return 'Adolescente';
-    return 'Adulto';
+    return s.displayRole?.trim().isNotEmpty == true
+        ? s.displayRole!.trim()
+        : t.membersRoleParent;
   }
 }
 

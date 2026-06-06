@@ -489,58 +489,60 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                         ),
                       ],
                     ),
-                    padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
-                    child: SafeArea(
-                      top: false,
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ||
-                                  _selectedTaskIds.isEmpty ||
-                                  _selectedMemberIds.isEmpty
-                              ? null
-                              : _submitCompletedTasks,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            elevation: 0,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(22),
-                            ),
+                    padding: EdgeInsets.fromLTRB(
+                      24,
+                      18,
+                      24,
+                      20 + MediaQuery.viewPaddingOf(context).bottom,
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ||
+                                _selectedTaskIds.isEmpty ||
+                                _selectedMemberIds.isEmpty
+                            ? null
+                            : _submitCompletedTasks,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          elevation: 0,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(22),
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(
-                                      Icons.check_circle_rounded,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      _selectedTaskIds.length == 1
-                                          ? 'Completar 1 tarea'
-                                          : 'Completar ${_selectedTaskIds.length} tareas',
-                                      style: const TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: -0.4,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
                         ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.check_circle_rounded,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _selectedTaskIds.length == 1
+                                        ? 'Completar 1 tarea'
+                                        : 'Completar ${_selectedTaskIds.length} tareas',
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.4,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
                       ),
                     ),
                   ),

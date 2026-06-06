@@ -101,9 +101,14 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
                         ),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      onPressed: () => ref
-                          .read(restorePremiumPurchasesUseCaseProvider)
-                          .call(),
+                      onPressed: () async {
+                        final isPremium = await ref
+                            .read(premiumProvider.notifier)
+                            .restorePurchases();
+                        if (isPremium && context.mounted) {
+                          Navigator.pop(context);
+                        }
+                      },
                       child: Text(
                         t.premiumRestorePurchases,
                         style: TextStyle(
@@ -432,9 +437,8 @@ class _ProductListState extends ConsumerState<_ProductList> {
             final messenger = ScaffoldMessenger.of(context);
             try {
               final isPremium = await ref
-                  .read(buyPremiumProductUseCaseProvider)
-                  .call(selectedPackage);
-              await ref.read(premiumProvider.notifier).refresh();
+                  .read(premiumProvider.notifier)
+                  .buyProduct(selectedPackage);
               if (isPremium && context.mounted) Navigator.pop(context);
             } catch (_) {
               // Purchase errors (billing unavailable, DEVELOPER_ERROR on

@@ -199,32 +199,51 @@ class _HeaderCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  currentMember == null
-                      ? t.householdSocialHubRoleFallback
-                      : t.householdSocialHubYourRole(
-                          // Si el usuario es admin/owner del hogar, lo agregamos
-                          // como sufijo para que sepa que tiene permisos
-                          // adicionales (aprobar tareas, configurar, etc.).
-                          () {
-                            // Convivencia (friends) trata a todos como adultos
-                            // pares: nunca mostramos rol familiar (Padre/Madre).
-                            final roleLabel = caps.usesFamilyRoles
-                                ? currentMember!.localizedRoleLabel(t)
-                                : t.householdSocialHubRoleMember;
-                            return currentMember!.isAdmin
-                                ? '$roleLabel · Admin'
-                                : roleLabel;
-                          }(),
+                child: Builder(
+                  builder: (context) {
+                    final roleStyle = TextStyle(
+                      color: theme.textSecondary,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      height: 1.2,
+                    );
+                    if (currentMember == null) {
+                      return Text(
+                        t.householdSocialHubRoleFallback,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: roleStyle,
+                      );
+                    }
+                    // Convivencia (friends) trata a todos como adultos pares:
+                    // nunca mostramos rol familiar (Padre/Madre).
+                    final roleLabel = caps.usesFamilyRoles
+                        ? currentMember!.localizedGenderedRoleLabel(t)
+                        : t.householdSocialHubRoleMember;
+                    return Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            t.householdSocialHubYourRole(roleLabel),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: roleStyle,
+                          ),
                         ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: theme.textSecondary,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w800,
-                    height: 1.2,
-                  ),
+                        // El escudo indica que este miembro gestiona el hogar
+                        // (aprueba tareas, configura). Reemplaza al viejo texto
+                        // "· Admin", mas tecnico.
+                        if (currentMember!.isAdmin) ...[
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.shield_rounded,
+                            size: 14,
+                            color: theme.primary,
+                          ),
+                        ],
+                      ],
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: 10),

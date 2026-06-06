@@ -4,6 +4,6 @@ abstract class PremiumRepository {
   Future<bool> getPremiumStatus();
   Future<List<Package>> getProducts({required String offeringId});
   Future<bool> buyProduct(Package package);
-  Future<void> restorePurchases();
+  Future<bool> restorePurchases();
   Future<void> togglePremiumMock();
 }

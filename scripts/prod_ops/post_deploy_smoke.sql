@@ -121,6 +121,9 @@ DECLARE
   v_required text[] := ARRAY[
     'complete_task_v1',
     'approve_task_v1',
+    'reject_task_v1',
+    'get_pending_approvals',
+    'update_member_task_approval',
     'get_combined_feed',
     'save_expense_v4',
     'upsert_catalog_request',
@@ -150,6 +153,8 @@ DECLARE
   v_mutating text[] := ARRAY[
     'complete_task_v1',
     'approve_task_v1',
+    'reject_task_v1',
+    'update_member_task_approval',
     'upsert_catalog_request',
     'settle_debt_v1'
   ];

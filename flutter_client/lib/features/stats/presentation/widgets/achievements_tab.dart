@@ -21,10 +21,16 @@ class AchievementsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     // Definimos algunos logros predeterminados basados en las estadísticas
-    final totalTasks = taskStats.fold<int>(
+    final totalTasksByCategory = taskStats.fold<int>(
       0,
       (sum, item) => sum + ((item['completed_count'] as num?)?.toInt() ?? 0),
     );
+    final totalTasksByMember = memberStats.fold<int>(
+      0,
+      (sum, item) => sum + ((item['tasks_completed'] as num?)?.toInt() ?? 0),
+    );
+    final totalTasks =
+        totalTasksByCategory > 0 ? totalTasksByCategory : totalTasksByMember;
     final totalXp = memberStats.fold<int>(
       0,
       (sum, item) => sum + ((item['xp_earned'] as num?)?.toInt() ?? 0),
@@ -73,7 +79,9 @@ class AchievementsTab extends StatelessWidget {
           ),
           const SizedBox(height: 32),
           SectionLabel(
-              label: t.achievementsCoupleChallengesSection, icon: '💖'),
+            label: t.achievementsCoupleChallengesSection,
+            icon: '💖',
+          ),
           const SizedBox(height: 16),
           _buildAchievementCard(
             context,

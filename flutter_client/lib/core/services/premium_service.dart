@@ -168,14 +168,16 @@ class PremiumService {
     }
   }
 
-  Future<void> restorePurchases() async {
+  Future<bool> restorePurchases() async {
     if (!await _ensureConfigured()) {
       log.w('Restore purchases skipped: RevenueCat unavailable');
-      return;
+      return false;
     }
 
     await _analytics.trackPremiumRestoreStarted();
-    await rc.Purchases.restorePurchases();
+    final customerInfo = await rc.Purchases.restorePurchases();
+    if (_hasPremium(customerInfo)) return true;
+    return getPremiumStatus();
   }
 
   Future<void> togglePremiumMock() async {

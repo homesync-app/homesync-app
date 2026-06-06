@@ -182,6 +182,8 @@ class SupabaseHouseholdRepository
                   'role': map['role'],
                   'joined_at': map['joined_at'],
                   'display_role': map['display_role'],
+                  'member_type': map['member_type'],
+                  'onboarding_completed': map['onboarding_completed'],
                   'users': {
                     'email': map['email'],
                     'full_name': map['full_name'],
@@ -441,11 +443,19 @@ class SupabaseHouseholdRepository
     return executeWithHandling(
       () async {
         final householdMember = await _requireCurrentHouseholdMembership();
-        await _client
+        final updated = await _client
             .from(AppConstants.tableHouseholdMembers)
             .update({'display_role': displayRole})
             .eq('user_id', userId)
-            .eq('household_id', householdMember['household_id']);
+            .eq('household_id', householdMember['household_id'])
+            .select('user_id')
+            .maybeSingle();
+        if (updated == null) {
+          throw const PostgrestException(
+            message: 'Member role was not updated',
+            code: '42501',
+          );
+        }
       },
       context: 'SupabaseHouseholdRepository.updateMemberDisplayRole',
       isOnline: _isOnline,
@@ -455,19 +465,32 @@ class SupabaseHouseholdRepository
   @override
   Future<Either<Failure, void>> updateMemberType(
     String userId,
-    String type,
-  ) async {
+    String type, {
+    String? displayRole,
+  }) async {
     return executeWithHandling(
       () async {
         final householdMember = await _requireCurrentHouseholdMembership();
-        await _client
+        final resolvedDisplayRole =
+            (displayRole != null && displayRole.trim().isNotEmpty)
+                ? displayRole.trim()
+                : _displayRoleForMemberType(type);
+        final updated = await _client
             .from(AppConstants.tableHouseholdMembers)
             .update({
               'member_type': type,
-              'display_role': _displayRoleForMemberType(type),
+              'display_role': resolvedDisplayRole,
             })
             .eq('user_id', userId)
-            .eq('household_id', householdMember['household_id']);
+            .eq('household_id', householdMember['household_id'])
+            .select('user_id')
+            .maybeSingle();
+        if (updated == null) {
+          throw const PostgrestException(
+            message: 'Member type was not updated',
+            code: '42501',
+          );
+        }
       },
       context: 'SupabaseHouseholdRepository.updateMemberType',
       isOnline: _isOnline,
@@ -478,7 +501,7 @@ class SupabaseHouseholdRepository
     return switch (type) {
       'guardian' => 'Tutor/a',
       'teen' => 'Adolescente',
-      'child' => 'Chico/a',
+      'child' => 'Hijo/a',
       _ => 'Padre/Madre',
     };
   }

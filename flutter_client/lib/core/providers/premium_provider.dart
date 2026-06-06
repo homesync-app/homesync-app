@@ -10,14 +10,19 @@ import 'package:homesync_client/features/premium/domain/usecases/buy_premium_pro
 import 'package:homesync_client/features/premium/domain/usecases/get_premium_products_usecase.dart';
 import 'package:homesync_client/features/premium/domain/usecases/get_premium_status_usecase.dart';
 import 'package:homesync_client/features/premium/domain/usecases/restore_premium_purchases_usecase.dart';
+import 'package:purchases_flutter/purchases_flutter.dart' as rc;
 
 import '../services/premium_service.dart';
 
 class PremiumNotifier extends AsyncNotifier<bool> {
   static const String _freeFallbackAvatar = '\u{1F431}';
 
+  rc.CustomerInfoUpdateListener? _customerInfoUpdateListener;
+
   @override
   Future<bool> build() async {
+    _registerCustomerInfoListener();
+
     ref.listen<AsyncValue<AppAuthState>>(authStateProvider, (previous, next) {
       next.whenData((authState) {
         if (authState.isAuthenticated) {
@@ -33,10 +38,51 @@ class PremiumNotifier extends AsyncNotifier<bool> {
 
   PremiumRepository get _repository => ref.read(premiumRepositoryProvider);
 
+  void _registerCustomerInfoListener() {
+    if (_customerInfoUpdateListener != null) return;
+
+    _customerInfoUpdateListener = (customerInfo) {
+      final currentUserId = ref.read(currentUserIdProvider);
+      if (currentUserId == null) {
+        state = const AsyncData(false);
+        return;
+      }
+
+      final isPremium = customerInfo.entitlements.active.containsKey(
+        PremiumService.premiumEntitlementId,
+      );
+      unawaited(_syncCustomerInfoStatus(isPremium));
+    };
+
+    rc.Purchases.addCustomerInfoUpdateListener(_customerInfoUpdateListener!);
+    ref.onDispose(() {
+      final listener = _customerInfoUpdateListener;
+      if (listener != null) {
+        rc.Purchases.removeCustomerInfoUpdateListener(listener);
+      }
+      _customerInfoUpdateListener = null;
+    });
+  }
+
   Future<bool> _fetchPremiumStatus() async {
     final isPremium = await ref.read(getPremiumStatusUseCaseProvider).call();
     await _enforceFreeAvatarIfNeeded(isPremium);
     return isPremium;
+  }
+
+  Future<void> _syncCustomerInfoStatus(bool revenueCatPremium) async {
+    if (revenueCatPremium) {
+      await _setPremiumState(true);
+      return;
+    }
+
+    final effectivePremium = await _fetchPremiumStatus();
+    state = AsyncData(effectivePremium);
+  }
+
+  Future<void> _setPremiumState(bool isPremium) async {
+    await _enforceFreeAvatarIfNeeded(isPremium);
+    state = AsyncData(isPremium);
   }
 
   bool _isPremiumAvatarValue(String? value) {
@@ -78,6 +124,21 @@ class PremiumNotifier extends AsyncNotifier<bool> {
   Future<void> togglePremiumMock() async {
     await _repository.togglePremiumMock();
     await refresh();
+  }
+
+  Future<bool> buyProduct(rc.Package package) async {
+    final isPremium = await ref.read(buyPremiumProductUseCaseProvider).call(
+          package,
+        );
+    await _setPremiumState(isPremium);
+    return isPremium;
+  }
+
+  Future<bool> restorePurchases() async {
+    final isPremium =
+        await ref.read(restorePremiumPurchasesUseCaseProvider).call();
+    await _setPremiumState(isPremium);
+    return isPremium;
   }
 
   Future<void> refresh() async {

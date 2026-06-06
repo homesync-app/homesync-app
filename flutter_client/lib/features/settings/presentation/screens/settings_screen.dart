@@ -10,6 +10,7 @@ import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/locale_provider.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
@@ -22,6 +23,7 @@ import 'package:homesync_client/features/dashboard/presentation/providers/admin_
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
+import 'package:homesync_client/features/household/domain/models/family_role_option.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -37,6 +39,7 @@ import 'package:homesync_client/features/settings/presentation/widgets/settings_
 import 'package:homesync_client/features/settings/presentation/widgets/settings_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_household_components.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/family_member_dashboard_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/admin_panel.dart';
@@ -843,6 +846,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   String _getMemberRoleLabel(Map<String, dynamic> member, String? role) {
+    final t = AppLocalizations.of(context);
+    if (_householdType == 'family') {
+      return _memberTypeLabel(
+        _memberTypeFromRaw(member['member_type'] as String?),
+        t,
+      );
+    }
+
     final displayRole = member['display_role'] as String?;
     if (displayRole != null && displayRole.isNotEmpty) {
       return displayRole;
@@ -996,8 +1007,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         (userData['email'] as String?)?.split('@').first ??
         t.settingsHouseholdMemberFallbackName;
     final currentType = _memberTypeFromRaw(member['member_type'] as String?);
+    final current = FamilyRoleOption.fromMember(
+      displayRole: member['display_role'] as String?,
+      type: currentType,
+    );
 
-    final selected = await showModalBottomSheet<MemberType>(
+    final selected = await showModalBottomSheet<FamilyRoleOption>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
@@ -1030,31 +1045,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              for (final type in MemberType.values)
-                _buildMemberTypeOption(type, currentType, theme, t),
+              for (final option in FamilyRoleOption.values)
+                _buildMemberTypeOption(option, current, theme, t),
             ],
           ),
         ),
       ),
     );
 
-    if (selected == null || selected == currentType) return;
+    if (selected == null || selected == current) return;
 
     try {
       setState(() => _isLoading = true);
       final repo = ref.read(householdRepositoryProvider);
-      final result = await repo.updateMemberType(userId, selected.name);
+      final result = await repo.updateMemberType(
+        userId,
+        selected.memberType.name,
+        displayRole: selected.displayRole,
+      );
 
       result.fold(
         (failure) => throw failure,
         (_) {
           if (mounted) {
             setState(() {
-              member['member_type'] = selected.name;
-              member['display_role'] = _memberTypeLabel(selected, t);
+              member['member_type'] = selected.memberType.name;
+              member['display_role'] = selected.displayRole;
             });
             ref.invalidate(householdMembersProvider);
             ref.invalidate(currentHouseholdProvider);
+            ref.invalidate(familyMemberDashboardProvider);
+            ref.invalidate(homeBootstrapProvider);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(t.membersRoleUpdated),
@@ -1064,7 +1085,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           }
         },
       );
-    } catch (e) {
+    } catch (e, stack) {
+      await ref.read(adminRpcServiceProvider).logApplicationError(
+        message: 'Family member role update failed',
+        stackTrace: stack.toString(),
+        context: {
+          'source': 'settings_update_family_member_type',
+          'household_type': _householdType,
+          'member_user_id': userId,
+          'member_name': name,
+          'current_member_type': currentType.name,
+          'selected_member_type': selected.memberType.name,
+          'error': e.toString(),
+        },
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1079,13 +1113,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildMemberTypeOption(
-    MemberType type,
-    MemberType currentType,
+    FamilyRoleOption option,
+    FamilyRoleOption? current,
     AppThemeColors theme,
     AppLocalizations t,
   ) {
-    final isCurrent = type == currentType;
-    final subtitle = switch (type) {
+    final isCurrent = option == current;
+    final subtitle = switch (option.memberType) {
       MemberType.parent ||
       MemberType.guardian =>
         t.membersRoleParentGuardianDesc,
@@ -1094,7 +1128,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     };
 
     return InkWell(
-      onTap: () => Navigator.pop(context, type),
+      onTap: () => Navigator.pop(context, option),
       borderRadius: BorderRadius.circular(16),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
@@ -1117,7 +1151,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _memberTypeLabel(type, t),
+                    option.label(t),
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 15,
@@ -1265,6 +1299,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _buildPremiumCard() {
     final isPremium = ref.watch(premiumProvider).value ?? false;
     final t = AppLocalizations.of(context);
+    final theme = context.theme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1298,13 +1333,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: context.theme.isDarkMode
-                  ? context.theme.surfaceContainer
+              color: theme.isDarkMode
+                  ? const Color(0xFF241E1B)
                   : AppColors.primaryLight.withValues(alpha: 0.72),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: context.theme.isDarkMode
-                    ? AppColors.primary.withValues(alpha: 0.28)
+                color: theme.isDarkMode
+                    ? AppColors.primary.withValues(alpha: 0.34)
                     : AppColors.primary.withValues(alpha: 0.16),
               ),
             ),
@@ -1314,8 +1349,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: context.theme.isDarkMode
-                        ? AppColors.primary.withValues(alpha: 0.14)
+                    color: theme.isDarkMode
+                        ? AppColors.primary.withValues(alpha: 0.16)
                         : Colors.white.withValues(alpha: 0.74),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -1330,7 +1365,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: Text(
                     t.settingsPremiumFeedbackRewardNote,
                     style: TextStyle(
-                      color: context.theme.textSecondary,
+                      color: theme.isDarkMode
+                          ? theme.textPrimary.withValues(alpha: 0.82)
+                          : theme.textSecondary,
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
                       height: 1.25,

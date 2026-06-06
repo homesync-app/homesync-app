@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/utils/app_scroll_physics.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/stats/presentation/widgets/widgets.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -116,6 +117,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
             ),
             data: (stats) => TabBarView(
               controller: _tabController,
+              physics: const AppSnappyPagePhysics(),
               children: [
                 WeeklyProgressTab(
                   weeklyRanking: stats.weeklyRanking,
@@ -123,7 +125,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                   duelHistory: stats.duelHistory,
                   weekRange: _getWeekRange(),
                   totalTasks: _totalTasksCompleted(
-                      stats.taskStats, stats.memberActivity,),
+                    stats.taskStats,
+                    stats.memberActivity,
+                  ),
                   totalXp:
                       _totalXpEarned(stats.taskStats, stats.memberActivity),
                   totalCoins: _totalCoinsEarned(stats.memberActivity),

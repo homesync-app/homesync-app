@@ -761,8 +761,8 @@ class SettingsPremiumCard extends StatelessWidget {
     final t = AppLocalizations.of(context);
     final gradientColors = theme.isDarkMode
         ? [
-            AppColors.accentGold.withValues(alpha: isPremium ? 0.18 : 0.12),
-            theme.elevatedSurface,
+            const Color(0xFF2A211B),
+            const Color(0xFF211C19),
           ]
         : isPremium
             ? [
@@ -797,16 +797,18 @@ class SettingsPremiumCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: AppColors.accentGold.withValues(
-                alpha: theme.isDarkMode ? 0.24 : (isPremium ? 0.55 : 0.42),
+                alpha: theme.isDarkMode ? 0.34 : (isPremium ? 0.55 : 0.42),
               ),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: (isPremium
-                        ? const Color(0xFFF59E0B)
-                        : const Color(0xFFD8A539))
-                    .withValues(alpha: 0.05),
+                color: theme.isDarkMode
+                    ? Colors.black.withValues(alpha: 0.24)
+                    : (isPremium
+                            ? const Color(0xFFF59E0B)
+                            : const Color(0xFFD8A539))
+                        .withValues(alpha: 0.05),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -823,7 +825,7 @@ class SettingsPremiumCard extends StatelessWidget {
                       color: isPremium
                           ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
                           : AppColors.accentGold.withValues(
-                              alpha: theme.isDarkMode ? 0.12 : 0.16,
+                              alpha: theme.isDarkMode ? 0.16 : 0.16,
                             ),
                       borderRadius: BorderRadius.circular(14),
                     ),

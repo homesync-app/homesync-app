@@ -35,12 +35,15 @@ class _FamilyRankingSectionState extends ConsumerState<FamilyRankingSection> {
     return statsAsync.when(
       data: (stats) {
         final ranking = stats.weeklyRanking;
+        final viewer = widget.currentMember;
         return _RankingContent(
           ranking: ranking,
           selectedTab: _selectedTab,
           onTabChanged: (i) => setState(() => _selectedTab = i),
           theme: theme,
-          hideLiveScores: _shouldHideLiveScores(widget.currentMember),
+          hideLiveScores: _shouldHideLiveScores(viewer),
+          // Vista de nino/teen: los adultos aparecen como Papa/Mama.
+          childView: (viewer?.isChild ?? false) || (viewer?.isTeen ?? false),
         );
       },
       loading: () => Padding(
@@ -71,6 +74,7 @@ class _RankingContent extends StatelessWidget {
     required this.onTabChanged,
     required this.theme,
     required this.hideLiveScores,
+    required this.childView,
   });
 
   final List<Map<String, dynamic>> ranking;
@@ -78,6 +82,7 @@ class _RankingContent extends StatelessWidget {
   final ValueChanged<int> onTabChanged;
   final AppThemeColors theme;
   final bool hideLiveScores;
+  final bool childView;
 
   List<Map<String, dynamic>> get _filtered {
     if (selectedTab == 0) return ranking;
@@ -111,19 +116,12 @@ class _RankingContent extends StatelessWidget {
   }
 
   String _roleLabel(Map<String, dynamic> item, AppLocalizations t) {
-    final type = item['member_type'] as String?;
-    switch (type) {
-      case 'parent':
-        return t.membersRoleParent;
-      case 'guardian':
-        return t.membersRoleGuardian;
-      case 'teen':
-        return t.membersRoleTeen;
-      case 'child':
-        return t.membersRoleChild;
-      default:
-        return t.householdSocialHubMemberFallback;
-    }
+    return genderedRoleLabel(
+      t,
+      displayRole: item['display_role'] as String?,
+      memberType: item['member_type'] as String?,
+      childView: childView,
+    );
   }
 
   @override
@@ -470,39 +468,23 @@ class _RankingRow extends ConsumerWidget {
                         ),
                       ),
                     ),
+                    // Escudo = gestiona el hogar (aprueba tareas, configura).
+                    // Solo icono, sin la palabra "Admin" (mas tecnica).
                     if (isAdmin)
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 3,
-                        ),
+                        padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(999),
+                          shape: BoxShape.circle,
                           border: Border.all(
                             color: AppColors.primary.withValues(alpha: 0.30),
                             width: 0.6,
                           ),
                         ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.shield_rounded,
-                              size: 11,
-                              color: AppColors.primary,
-                            ),
-                            SizedBox(width: 3),
-                            Text(
-                              'Admin',
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.primary,
-                                height: 1,
-                              ),
-                            ),
-                          ],
+                        child: const Icon(
+                          Icons.shield_rounded,
+                          size: 11,
+                          color: AppColors.primary,
                         ),
                       ),
                   ],

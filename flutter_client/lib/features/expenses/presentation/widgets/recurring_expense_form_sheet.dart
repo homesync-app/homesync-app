@@ -296,93 +296,89 @@ class _RecurringExpenseFormSheetState
           ),
         ],
       ),
-      child: SafeArea(
-        top: false,
-        child: membersAsync.when(
-          loading: () => const SizedBox(
-            height: 220,
-            child: Center(child: CircularProgressIndicator()),
-          ),
-          error: (e, _) => Center(child: Text('Error: $e')),
-          data: (members) {
-            return Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(24, 12, 24, 28 + bottomInset),
-                    child: Form(
-                      key: _formKey,
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Container(
-                              width: 56,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color:
-                                    AppColors.divider.withValues(alpha: 0.85),
-                                borderRadius: BorderRadius.circular(99),
-                              ),
+      child: membersAsync.when(
+        loading: () => const SizedBox(
+          height: 220,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+        error: (e, _) => Center(child: Text('Error: $e')),
+        data: (members) {
+          return Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(24, 12, 24, 28 + bottomInset),
+                  child: Form(
+                    key: _formKey,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 56,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: AppColors.divider.withValues(alpha: 0.85),
+                              borderRadius: BorderRadius.circular(99),
                             ),
                           ),
-                          const SizedBox(height: 18),
-                          _buildHeader(),
+                        ),
+                        const SizedBox(height: 18),
+                        _buildHeader(),
+                        const SizedBox(height: 28),
+                        _buildSectionIntro(
+                          eyebrow: t.recurringExpenseDetailEyebrow,
+                          title: t.recurringExpenseDetailTitle,
+                          subtitle: t.recurringExpenseDetailSubtitle,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTitleField(),
+                        const SizedBox(height: 16),
+                        _buildAmountField(),
+                        const SizedBox(height: 28),
+                        _buildSectionIntro(
+                          eyebrow: t.recurringExpenseCalendarEyebrow,
+                          title: t.recurringExpenseCalendarTitle,
+                          subtitle: t.recurringExpenseCalendarSubtitle,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDaySelector(),
+                        const SizedBox(height: 28),
+                        _buildSectionIntro(
+                          eyebrow: t.recurringExpenseCategoryEyebrow,
+                          title: t.recurringExpenseCategoryTitle,
+                          subtitle: t.recurringExpenseCategorySubtitle,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildCategorySelector(),
+                        const SizedBox(height: 28),
+                        _buildSectionIntro(
+                          eyebrow: t.recurringExpenseSplitEyebrow,
+                          title: t.recurringExpenseSplitTitle,
+                          subtitle: t.recurringExpenseSplitSubtitle,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildSplitTypeSelector(),
+                        if (_splitType != 'personal') ...[
                           const SizedBox(height: 28),
                           _buildSectionIntro(
-                            eyebrow: t.recurringExpenseDetailEyebrow,
-                            title: t.recurringExpenseDetailTitle,
-                            subtitle: t.recurringExpenseDetailSubtitle,
+                            eyebrow: t.recurringExpensePayerEyebrow,
+                            title: t.recurringExpensePayerTitle,
+                            subtitle: t.recurringExpensePayerSubtitle,
                           ),
                           const SizedBox(height: 16),
-                          _buildTitleField(),
-                          const SizedBox(height: 16),
-                          _buildAmountField(),
-                          const SizedBox(height: 28),
-                          _buildSectionIntro(
-                            eyebrow: t.recurringExpenseCalendarEyebrow,
-                            title: t.recurringExpenseCalendarTitle,
-                            subtitle: t.recurringExpenseCalendarSubtitle,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildDaySelector(),
-                          const SizedBox(height: 28),
-                          _buildSectionIntro(
-                            eyebrow: t.recurringExpenseCategoryEyebrow,
-                            title: t.recurringExpenseCategoryTitle,
-                            subtitle: t.recurringExpenseCategorySubtitle,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildCategorySelector(),
-                          const SizedBox(height: 28),
-                          _buildSectionIntro(
-                            eyebrow: t.recurringExpenseSplitEyebrow,
-                            title: t.recurringExpenseSplitTitle,
-                            subtitle: t.recurringExpenseSplitSubtitle,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildSplitTypeSelector(),
-                          if (_splitType != 'personal') ...[
-                            const SizedBox(height: 28),
-                            _buildSectionIntro(
-                              eyebrow: t.recurringExpensePayerEyebrow,
-                              title: t.recurringExpensePayerTitle,
-                              subtitle: t.recurringExpensePayerSubtitle,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildPayerSelector(members),
-                          ],
+                          _buildPayerSelector(members),
                         ],
-                      ),
+                      ],
                     ),
                   ),
                 ),
-                _buildBottomActions(bottomInset),
-              ],
-            );
-          },
-        ),
+              ),
+              _buildBottomActions(bottomInset),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1001,8 +997,14 @@ class _RecurringExpenseFormSheetState
 
   Widget _buildBottomActions(double bottomInset) {
     return Container(
-      padding:
-          EdgeInsets.fromLTRB(24, 18, 24, bottomInset > 0 ? bottomInset : 18),
+      padding: EdgeInsets.fromLTRB(
+        24,
+        18,
+        24,
+        bottomInset > 0
+            ? bottomInset
+            : 18 + MediaQuery.viewPaddingOf(context).bottom,
+      ),
       decoration: BoxDecoration(
         color: context.theme.background.withValues(alpha: 0.98),
         border: Border(

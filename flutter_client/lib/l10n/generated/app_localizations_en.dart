@@ -1731,7 +1731,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsParentModeAllowanceSubtitle =>
-      'Let adults send money to minors for their personal finances, separate from shared expenses.';
+      'Send allowances to teens with personal finances.';
 
   @override
   String get settingsParentModeAllowanceCta => 'Send allowance';
@@ -2611,10 +2611,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'This section is for family-household admins.';
 
   @override
+  String pendingApprovalsSubmittedBy(Object name) {
+    return 'Submitted by $name';
+  }
+
+  @override
   String get pendingApprovalsApproveButton => 'Approve';
 
   @override
   String get pendingApprovalsRejectButton => 'Reject';
+
+  @override
+  String pendingApprovalsLoadError(Object message) {
+    return 'We couldn\'t load approvals: $message';
+  }
+
+  @override
+  String pendingApprovalsApprovedSnack(Object coins) {
+    return 'Approved. $coins coins were credited.';
+  }
 
   @override
   String get pendingApprovalsApproveErrorRetry =>
@@ -2622,6 +2637,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pendingApprovalsRejectedSnack => 'Task rejected.';
+
+  @override
+  String get pendingApprovalsRejectErrorRetry =>
+      'We couldn\'t reject the task. Try again.';
 
   @override
   String get pendingApprovalsRejectDialogTitle => 'Reason for rejection';
@@ -2990,14 +3009,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expensesFormHeaderNewExpense => 'New Expense';
 
   @override
-  String get allowanceEntryTitle => 'Send allowance to a minor';
+  String get allowanceEntryTitle => 'Send allowance';
 
   @override
   String get allowanceSheetTitle => 'Send allowance';
 
   @override
   String get allowanceSheetSubtitle =>
-      'Move money from your personal balance to a minor\'s balance. It will not count as a shared expense.';
+      'Choose a recipient and amount. It is recorded as personal income.';
 
   @override
   String get allowanceRecipientLabel => 'To';
@@ -3013,7 +3032,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allowanceNoRecipients =>
-      'There are no teens in this household with personal finances enabled. Children cannot receive allowances because they do not have access to Finances. If needed, update their role from Members in household settings.';
+      'There are no teens with personal finances in this household.';
 
   @override
   String get allowanceRecipientRequired =>
@@ -3458,6 +3477,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get membersRoleChild => 'Child';
+
+  @override
+  String get membersRoleFather => 'Father';
+
+  @override
+  String get membersRoleMother => 'Mother';
+
+  @override
+  String get membersRoleDad => 'Dad';
+
+  @override
+  String get membersRoleMom => 'Mom';
+
+  @override
+  String get membersRoleGuardianMale => 'Guardian';
+
+  @override
+  String get membersRoleGuardianFemale => 'Guardian';
+
+  @override
+  String get membersRoleSon => 'Son';
+
+  @override
+  String get membersRoleDaughter => 'Daughter';
 
   @override
   String get membersRoleParentGuardianDesc =>

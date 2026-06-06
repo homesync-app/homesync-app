@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 
 /// Shared visual decisions for HomeSync.
 ///
@@ -94,4 +95,10 @@ class AppMotion {
   static const Duration normal = Duration(milliseconds: 220);
   static const Duration slow = Duration(milliseconds: 360);
   static const Curve standard = Curves.easeOutCubic;
+
+  static const SpringDescription snappyPageSpring = SpringDescription(
+    mass: 0.5,
+    stiffness: 200,
+    damping: 18,
+  );
 }

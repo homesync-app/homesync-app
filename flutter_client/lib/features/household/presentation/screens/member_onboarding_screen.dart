@@ -96,8 +96,16 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
         log.w('get_available_family_roles returned empty, using safe defaults');
         if (mounted) {
           setState(() {
-            _availableRoles = ['Tutor/a', 'Adolescente', 'Hijo/a'];
-            _selectedDisplayRole = 'Tutor/a';
+            _availableRoles = [
+              'Padre',
+              'Madre',
+              'Tutor',
+              'Tutora',
+              'Adolescente',
+              'Hijo',
+              'Hija',
+            ];
+            _selectedDisplayRole = 'Padre';
             _selectedMemberType = 'parent';
           });
         }
@@ -128,6 +136,8 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
       _selectedMemberType = 'teen';
     } else if (lower.contains('hij')) {
       _selectedMemberType = 'child';
+    } else if (lower.contains('tutor')) {
+      _selectedMemberType = 'guardian';
     } else {
       _selectedMemberType = 'parent';
     }
@@ -287,9 +297,13 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
   static const _roleVisuals = <String, (IconData, Color)>{
     'Padre': (Icons.person_rounded, AppColors.primary),
     'Madre': (Icons.person_rounded, AppColors.primary),
+    'Tutor': (Icons.supervisor_account_rounded, AppColors.primary),
+    'Tutora': (Icons.supervisor_account_rounded, AppColors.primary),
     'Tutor/a': (Icons.supervisor_account_rounded, AppColors.primary),
     'Adulto': (Icons.person_rounded, AppColors.primary),
     'Adolescente': (Icons.emoji_people_rounded, AppColors.accentTeal),
+    'Hijo': (Icons.child_care_rounded, AppColors.accentPurple),
+    'Hija': (Icons.child_care_rounded, AppColors.accentPurple),
     'Hijo/a': (Icons.child_care_rounded, AppColors.accentPurple),
   };
 
@@ -299,12 +313,20 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
         return t.setupFamilyRoleFather;
       case 'Madre':
         return t.setupFamilyRoleMother;
+      case 'Tutor':
+        return t.membersRoleGuardianMale;
+      case 'Tutora':
+        return t.membersRoleGuardianFemale;
       case 'Tutor/a':
         return t.setupFamilyRoleGuardian;
       case 'Adulto':
         return t.settingsParentModeMemberTypeAdult;
       case 'Adolescente':
         return t.setupFamilyRoleTeen;
+      case 'Hijo':
+        return t.membersRoleSon;
+      case 'Hija':
+        return t.membersRoleDaughter;
       case 'Hijo/a':
         return t.settingsParentModeMemberTypeChild;
       default:
@@ -316,11 +338,15 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
     switch (role) {
       case 'Padre':
       case 'Madre':
+      case 'Tutor':
+      case 'Tutora':
       case 'Tutor/a':
       case 'Adulto':
         return t.memberOnboardingRoleDescAdult;
       case 'Adolescente':
         return t.memberOnboardingRoleDescTeen;
+      case 'Hijo':
+      case 'Hija':
       case 'Hijo/a':
         return t.memberOnboardingRoleDescChild;
       default:

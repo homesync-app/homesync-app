@@ -188,6 +188,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
         CategoryMapping.categoryNames[_category.toLowerCase()] ?? _category;
     final completedAt = widget.taskData['completed_at'];
     final localeTag = Localizations.localeOf(context).toString();
+    final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
     final dateStr = completedAt != null
         ? DateFormat("d MMM '·' HH:mm", localeTag)
             .format(DateTime.parse(completedAt as String).toLocal())
@@ -199,321 +200,317 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
         color: appTheme.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: appTheme.divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: appTheme.divider,
+              borderRadius: BorderRadius.circular(2),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        t.taskDetailHeaderTitle,
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.taskDetailHeaderTitle,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                       ),
-                      const SizedBox(height: 2),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      dateStr,
+                      style: TextStyle(
+                        color: appTheme.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(statusIcon, size: 14, color: statusColor),
+                      const SizedBox(width: 6),
                       Text(
-                        dateStr,
+                        statusLabel,
                         style: TextStyle(
-                          color: appTheme.textPrimary,
-                          fontSize: 16,
+                          color: statusColor,
                           fontWeight: FontWeight.w800,
+                          fontSize: 12,
                         ),
                       ),
                     ],
                   ),
+                ),
+              ],
+            ),
+          ),
+          Flexible(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottomPadding),
+              child: Column(
+                children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(999),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 24,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    decoration: BoxDecoration(
+                      color: appTheme.surface,
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: appTheme.border.withValues(alpha: 0.5),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
                       children: [
-                        Icon(statusIcon, size: 14, color: statusColor),
-                        const SizedBox(width: 6),
-                        Text(
-                          statusLabel,
-                          style: TextStyle(
-                            color: statusColor,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 12,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: categoryColor.withValues(alpha: 0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                categoryIcon,
+                                size: 26,
+                                color: categoryColor,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                localizedTaskTitle(
+                                  AppLocalizations.of(context),
+                                  _task,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: appTheme.textPrimary,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _buildChip(
+                              icon: categoryIcon,
+                              label: categoryLabel,
+                              color: categoryColor,
+                            ),
+                            if (_task.isRecurring || !_task.isOverdue)
+                              _buildChip(
+                                icon: _task.isRecurring
+                                    ? Icons.event_repeat_rounded
+                                    : Icons.edit_calendar_rounded,
+                                label: _task.isRecurring
+                                    ? _task.recurrenceLabel(t)
+                                    : t.tasksPillNoDate,
+                                color: _task.isRecurring
+                                    ? AppColors.accentGold
+                                    : const Color(0xFFA8734F),
+                                background: _task.isRecurring
+                                    ? null
+                                    : const Color(0xFFFFF7EF),
+                                textWeight: _task.isRecurring
+                                    ? FontWeight.w800
+                                    : FontWeight.w700,
+                                gap: _task.isRecurring ? 6 : 8,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 20,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: appTheme.border.withValues(alpha: 0.45),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildStatColumn(
+                                icon: Icons.star_rounded,
+                                iconColor: AppColors.accentGold,
+                                value: '+$_xpReward XP',
+                                label: t.taskDetailExperience,
+                              ),
+                            ),
+                            Container(
+                              width: 1,
+                              height: 58,
+                              color: appTheme.divider,
+                            ),
+                            Expanded(
+                              child: _buildStatColumn(
+                                icon: Icons.monetization_on_rounded,
+                                iconColor: AppColors.accentGreen,
+                                value: '+$_coinReward coins',
+                                label: t.taskDetailReward,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: appTheme.surfaceContainer,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Row(
+                            children: [
+                              CustomUserAvatar(
+                                name: _completedByName(t),
+                                avatarUrl: _completedByAvatar,
+                                radius: 16,
+                                forceCircular: true,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _hasCompletionRecord
+                                          ? t.taskDetailCompletedBy
+                                          : t.taskDetailAssignedTo,
+                                      style: TextStyle(
+                                        color: appTheme.textMuted,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _completedByName(t),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: appTheme.textPrimary,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (completedAt != null)
+                                Text(
+                                  DateFormat('HH:mm').format(
+                                    DateTime.parse(completedAt as String)
+                                        .toLocal(),
+                                  ),
+                                  style: TextStyle(
+                                    color: appTheme.textSecondary,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
+                  if (_comment != null && _comment!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentRed.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: AppColors.accentRed.withValues(alpha: 0.18),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.taskDetailComment,
+                            style: TextStyle(
+                              color: appTheme.textPrimary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _comment!,
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontSize: 14,
+                              height: 1.45,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  _buildActions(),
                 ],
               ),
             ),
-            Flexible(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-                child: Column(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 24,
-                      ),
-                      decoration: BoxDecoration(
-                        color: appTheme.surface,
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(
-                          color: appTheme.border.withValues(alpha: 0.5),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: categoryColor.withValues(alpha: 0.12),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  categoryIcon,
-                                  size: 26,
-                                  color: categoryColor,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  localizedTaskTitle(
-                                    AppLocalizations.of(context),
-                                    _task,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w800,
-                                    color: appTheme.textPrimary,
-                                    letterSpacing: -0.3,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _buildChip(
-                                icon: categoryIcon,
-                                label: categoryLabel,
-                                color: categoryColor,
-                              ),
-                              if (_task.isRecurring || !_task.isOverdue)
-                                _buildChip(
-                                  icon: _task.isRecurring
-                                      ? Icons.event_repeat_rounded
-                                      : Icons.edit_calendar_rounded,
-                                  label: _task.isRecurring
-                                      ? _task.recurrenceLabel(t)
-                                      : t.tasksPillNoDate,
-                                  color: _task.isRecurring
-                                      ? AppColors.accentGold
-                                      : const Color(0xFFA8734F),
-                                  background: _task.isRecurring
-                                      ? null
-                                      : const Color(0xFFFFF7EF),
-                                  textWeight: _task.isRecurring
-                                      ? FontWeight.w800
-                                      : FontWeight.w700,
-                                  gap: _task.isRecurring ? 6 : 8,
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 20,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.cardColor,
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
-                          color: appTheme.border.withValues(alpha: 0.45),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildStatColumn(
-                                  icon: Icons.star_rounded,
-                                  iconColor: AppColors.accentGold,
-                                  value: '+$_xpReward XP',
-                                  label: t.taskDetailExperience,
-                                ),
-                              ),
-                              Container(
-                                width: 1,
-                                height: 58,
-                                color: appTheme.divider,
-                              ),
-                              Expanded(
-                                child: _buildStatColumn(
-                                  icon: Icons.monetization_on_rounded,
-                                  iconColor: AppColors.accentGreen,
-                                  value: '+$_coinReward coins',
-                                  label: t.taskDetailReward,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 18),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: appTheme.surfaceContainer,
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            child: Row(
-                              children: [
-                                CustomUserAvatar(
-                                  name: _completedByName(t),
-                                  avatarUrl: _completedByAvatar,
-                                  radius: 16,
-                                  forceCircular: true,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        _hasCompletionRecord
-                                            ? t.taskDetailCompletedBy
-                                            : t.taskDetailAssignedTo,
-                                        style: TextStyle(
-                                          color: appTheme.textMuted,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        _completedByName(t),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: appTheme.textPrimary,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (completedAt != null)
-                                  Text(
-                                    DateFormat('HH:mm').format(
-                                      DateTime.parse(completedAt as String)
-                                          .toLocal(),
-                                    ),
-                                    style: TextStyle(
-                                      color: appTheme.textSecondary,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (_comment != null && _comment!.trim().isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentRed.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: AppColors.accentRed.withValues(alpha: 0.18),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              t.taskDetailComment,
-                              style: TextStyle(
-                                color: appTheme.textPrimary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _comment!,
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurface,
-                                fontSize: 14,
-                                height: 1.45,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 20),
-                    _buildActions(),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

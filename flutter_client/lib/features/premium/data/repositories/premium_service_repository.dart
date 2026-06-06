@@ -23,7 +23,7 @@ class PremiumServiceRepository implements PremiumRepository {
   }
 
   @override
-  Future<void> restorePurchases() {
+  Future<bool> restorePurchases() {
     return _service.restorePurchases();
   }
 
