@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/app_scroll_physics.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/stats/presentation/widgets/widgets.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 
 class StatsScreen extends ConsumerStatefulWidget {
@@ -106,7 +106,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
         Expanded(
           child: statsAsync.when(
             loading: () => const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+              child: AppLoader(),
             ),
             error: (_, __) => Center(
               child: TextButton(

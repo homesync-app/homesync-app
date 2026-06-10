@@ -1554,6 +1554,15 @@
   "taskDetailNoRecord": "Sin registro",
   "taskDetailExperience": "Experiencia",
   "taskDetailReward": "Recompensa",
+  "taskDetailCoinsAwarded": "+{count, plural, =1{1 coin} other{{count} coins}}",
+  "@taskDetailCoinsAwarded": {
+    "description": "Recompensa compacta de coins mostrada en el detalle de tarea.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "taskDetailCompletedBy": "La completó",
   "taskDetailAssignedTo": "Responsable",
   "taskDetailComment": "Comentario",
@@ -1968,6 +1977,7 @@
     }
   },
   "expensesFormShoppingWillMarkBought": "Se marcarán como comprados al guardar",
+  "expensesFormShoppingPreparingProducts": "Preparando productos...",
   "expensesFormShoppingTapToLink": "Tocá para vincular artículos",
   "expensesFormShoppingClearAllSemantic": "Quitar todas las vinculaciones",
   "expensesFormShoppingDetectedCount": "{count, plural, =1{1 producto detectado} other{{count} productos detectados}}",
@@ -2454,6 +2464,15 @@
   "weeklyWinnerEmptyBody": "Completá tareas esta semana y el duelo empezará a tomar forma.",
   "weeklyWinnerWeeklyClose": "CIERRE SEMANAL",
   "weeklyWinnerTitle": "Ganador semanal",
+  "weeklyWinnerHeadline": "{name} ganó la semana",
+  "@weeklyWinnerHeadline": {
+    "description": "Headline for the weekly duel winner screen.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "weeklyWinnerSubtitle": "Así terminó el duelo semanal entre ustedes.",
   "weeklyWinnerCardSubtitle": "Terminó adelante en XP y se llevó el cierre semanal.",
   "weeklyWinnerCoinsReward": "+20 coins",
@@ -2474,6 +2493,10 @@
   "weeklyWinnerFallbackPlayer": "Jugador",
   "weeklyWinnerClose": "Cerrar",
   "weeklyWinnerContinue": "Continuar",
+  "weeklyWinnerTestButton": "Generar ganador semanal",
+  "@weeklyWinnerTestButton": {
+    "description": "Botón temporal de testing para forzar el cierre del duelo semanal y otorgar coins."
+  },
   "loveNoteDialogTitle": "Nueva nota de amor",
   "loveNoteHint": "Escribí algo tierno...",
   "loveNoteSent": "Nota enviada con amor",
@@ -3107,7 +3130,7 @@
       }
     }
   },
-  "expensesNewItemsDetectedTitle": "Productos nuevos detectados",
+  "expensesNewItemsDetectedTitle": "Nuevos para tu lista",
   "expensesNewItemsDetectedSubtitle": "¿Los agregamos a la lista para la próxima?",
   "expensesNewItemsIgnore": "Ignorar",
   "expensesNewItemsAddToList": "Agregar {count} a lista",

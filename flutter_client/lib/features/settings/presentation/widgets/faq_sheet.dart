@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 
 class FAQSheet extends StatelessWidget {
   const FAQSheet({super.key});
 
   static void show(BuildContext context) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

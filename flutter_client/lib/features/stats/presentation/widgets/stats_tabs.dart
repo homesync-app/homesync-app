@@ -2,19 +2,21 @@ import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/animated_amount.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 import 'category_widgets.dart';
@@ -229,7 +231,7 @@ class WeeklyTab extends ConsumerWidget {
               if (!isPremium) {
                 PremiumPaywall.show(context);
               } else {
-                HapticFeedback.lightImpact();
+                AppHaptics.tap();
                 showLoveNoteDialog(context: context, ref: ref);
               }
             },
@@ -464,10 +466,10 @@ class _ProgressTabState extends State<ProgressTab> {
               AppSpacing.md,
             ),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.surface,
               borderRadius: BorderRadius.circular(32),
               boxShadow: theme.cardShadow,
-              border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
+              border: Border.all(color: theme.border.withValues(alpha: 0.45)),
             ),
             child: spots.length < 2 || spots.every((s) => s.y == 0)
                 ? Center(
@@ -488,82 +490,95 @@ class _ProgressTabState extends State<ProgressTab> {
                       ],
                     ),
                   )
-                : LineChart(
-                    LineChartData(
-                      minY: 0,
-                      maxY: maxY,
-                      lineTouchData: LineTouchData(
-                        touchTooltipData: LineTouchTooltipData(
-                          getTooltipColor: (_) => AppColors.textPrimary,
-                          tooltipBorderRadius: BorderRadius.circular(12),
-                          getTooltipItems: (touchedSpots) {
-                            return touchedSpots.map((s) {
-                              return LineTooltipItem(
-                                '${s.y.toInt()} ${_showXp ? t.statsXP : t.statsCoins}',
-                                const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 12,
-                                ),
-                              );
-                            }).toList();
-                          },
-                        ),
-                      ),
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                        getDrawingHorizontalLine: (value) => FlLine(
-                          color: Colors.black.withValues(alpha: 0.03),
-                          strokeWidth: 1,
-                        ),
-                      ),
-                      titlesData: const FlTitlesData(
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: spots,
-                          isCurved: true,
-                          curveSmoothness: 0.35,
-                          color: color,
-                          barWidth: 5,
-                          isStrokeCapRound: true,
-                          dotData: FlDotData(
-                            show: true,
-                            getDotPainter: (spot, percent, barData, index) =>
-                                FlDotCirclePainter(
-                              radius: 4,
-                              color: Colors.white,
-                              strokeWidth: 3,
-                              strokeColor: color,
-                            ),
-                          ),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            gradient: LinearGradient(
-                              colors: [
-                                color.withValues(alpha: 0.15),
-                                color.withValues(alpha: 0.0),
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
+                : TweenAnimationBuilder<double>(
+                    // Draw-in: the line grows up from the baseline on entry
+                    // and whenever the XP/coins toggle swaps the dataset.
+                    key: ValueKey(_showXp),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 700),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, reveal, _) => LineChart(
+                      duration: AppMotion.slow,
+                      curve: AppMotion.standard,
+                      LineChartData(
+                        minY: 0,
+                        maxY: maxY,
+                        lineTouchData: LineTouchData(
+                          touchTooltipData: LineTouchTooltipData(
+                            getTooltipColor: (_) => theme.textPrimary,
+                            tooltipBorderRadius: BorderRadius.circular(14),
+                            getTooltipItems: (touchedSpots) {
+                              return touchedSpots.map((s) {
+                                return LineTooltipItem(
+                                  '${s.y.toInt()} ${_showXp ? t.statsXP : t.statsCoins}',
+                                  TextStyle(
+                                    color: theme.surface,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12,
+                                    fontFeatures: kTabularFigures,
+                                  ),
+                                );
+                              }).toList();
+                            },
                           ),
                         ),
-                      ],
+                        gridData: FlGridData(
+                          show: true,
+                          drawVerticalLine: false,
+                          getDrawingHorizontalLine: (value) => FlLine(
+                            color: theme.textPrimary.withValues(alpha: 0.04),
+                            strokeWidth: 1,
+                          ),
+                        ),
+                        titlesData: const FlTitlesData(
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          rightTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          topTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                        ),
+                        borderData: FlBorderData(show: false),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: spots
+                                .map((s) => FlSpot(s.x, s.y * reveal))
+                                .toList(),
+                            isCurved: true,
+                            curveSmoothness: 0.35,
+                            color: color,
+                            barWidth: 5,
+                            isStrokeCapRound: true,
+                            dotData: FlDotData(
+                              show: true,
+                              getDotPainter: (spot, percent, barData, index) =>
+                                  FlDotCirclePainter(
+                                radius: 4,
+                                color: theme.surface,
+                                strokeWidth: 3,
+                                strokeColor: color,
+                              ),
+                            ),
+                            belowBarData: BarAreaData(
+                              show: true,
+                              gradient: LinearGradient(
+                                colors: [
+                                  color.withValues(alpha: 0.18 * reveal),
+                                  color.withValues(alpha: 0.0),
+                                ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
           ),

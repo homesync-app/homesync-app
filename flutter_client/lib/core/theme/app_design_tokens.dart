@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 
 /// Shared visual decisions for HomeSync.
 ///
@@ -88,6 +87,23 @@ class AppElevation {
           offset: const Offset(0, 16),
         ),
       ];
+}
+
+/// Weight hierarchy for HomeSync. When everything is bold, nothing is —
+/// contrast should come from SIZE first, weight second.
+///
+/// - [hero]: screen titles and hero amounts ONLY (one per screen).
+/// - [title]: card and section titles.
+/// - [emphasis]: buttons, chips, selected states, small labels.
+/// - [body]: running text and descriptions.
+class AppTypography {
+  static const FontWeight hero = FontWeight.w900;
+  static const FontWeight title = FontWeight.w700;
+  static const FontWeight emphasis = FontWeight.w600;
+  static const FontWeight body = FontWeight.w500;
+
+  /// Tight tracking is reserved for hero sizes (26+); body text stays at 0.
+  static const double heroLetterSpacing = -0.8;
 }
 
 class AppMotion {

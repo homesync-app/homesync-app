@@ -7,7 +7,6 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
     show dashboardCategoryAccent, dashboardCategoryIcon;
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_detail_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
@@ -343,13 +342,29 @@ class ActivityChatBubble extends ConsumerWidget {
     if (type == 'expense') {
       final expenseId = data['expense_id']?.toString();
       if (expenseId == null || expenseId.isEmpty) return;
-      final repo = ref.read(expenseRepositoryProvider);
-      final result = await repo.getExpenseWithSplits(expenseId);
-      result.fold(
-        (_) {},
-        (fullData) => ExpenseDetailSheet.show(
-          context,
-          ExpenseModel.fromJson(fullData),
+      // Open instantly with the data the feed already shows — the sheet
+      // enriches itself (splits, description) in place, so tapping an expense
+      // feels as immediate as tapping a task instead of waiting on a network
+      // round-trip with no feedback.
+      final createdAt = DateTime.tryParse(
+            activity['created_at'] as String? ?? '',
+          )?.toLocal() ??
+          DateTime.now();
+      ExpenseDetailSheet.show(
+        context,
+        ExpenseModel(
+          id: expenseId,
+          title: data['title']?.toString() ?? '',
+          titleKey: data['title_key']?.toString(),
+          amount: _parseAmount(data['amount']) ?? 0,
+          category: data['category'] as String?,
+          householdId: activity['household_id']?.toString() ?? '',
+          paidBy: activity['creator_id']?.toString() ?? '',
+          paidAt: createdAt,
+          createdAt: createdAt,
+          payerFullName: data['user_name'] as String?,
+          payerAvatarUrl:
+              (data['avatar_url'] ?? data['creator_avatar_url']) as String?,
         ),
       );
     }

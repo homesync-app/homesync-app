@@ -4,6 +4,7 @@ import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/animated_amount.dart';
 import 'package:intl/intl.dart';
 
 /// Personal summary card for the solo home dashboard.
@@ -83,8 +84,10 @@ class SoloSummaryCard extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        currency.format(spent),
+                      AnimatedAmount(
+                        value: spent,
+                        locale: currency.locale,
+                        prefix: currency.inputPrefix(),
                         style: TextStyle(
                           color: theme.textPrimary,
                           fontSize: 30,

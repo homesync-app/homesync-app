@@ -10,6 +10,8 @@ import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/widgets/invitation_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 
 class MembersScreen extends ConsumerStatefulWidget {
   const MembersScreen({super.key});
@@ -35,7 +37,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
           // mutation instead of flashing a full-screen spinner.
           skipLoadingOnReload: true,
           data: (members) => _buildContent(members, theme),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: AppLoader()),
           error: (e, _) => Center(child: Text('Error: $e')),
         ),
       ),
@@ -201,7 +203,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
       displayRole: member.displayRole,
       type: member.type,
     );
-    final selected = await showModalBottomSheet<FamilyRoleOption>(
+    final selected = await AppSheet.show<FamilyRoleOption>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(

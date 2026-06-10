@@ -17,6 +17,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_completion_flow_mixin.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 
 class HomeSoloView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -312,7 +313,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
         ),
         const SizedBox(height: AppSpacing.sm),
         activityAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: AppLoader()),
           error: (e, _) => Text(t.commonErrorWithDetails(e.toString())),
           data: (activities) {
             if (activities.isEmpty) {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
 class PersonalMetricCard extends StatelessWidget {

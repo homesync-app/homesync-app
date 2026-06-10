@@ -9,7 +9,6 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
     show dashboardCategoryAccent, dashboardCategoryIcon;
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_detail_sheet.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
@@ -98,7 +97,14 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isPendingApproval ? const Color(0xFFFFF8ED) : theme.surface,
+          color: isPendingApproval
+              ? (theme.isDarkMode
+                  ? Color.alphaBlend(
+                      const Color(0xFFE59A2F).withValues(alpha: 0.08),
+                      theme.surface,
+                    )
+                  : const Color(0xFFFFF8ED))
+              : theme.surface,
           borderRadius: BorderRadius.circular(isPendingApproval ? 24 : 22),
           border: Border.all(
             color: isPendingApproval
@@ -284,13 +290,29 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     if (type == 'expense') {
       final expenseId = data['expense_id']?.toString();
       if (expenseId == null || expenseId.isEmpty) return;
-      final repo = ref.read(expenseRepositoryProvider);
-      final result = await repo.getExpenseWithSplits(expenseId);
-      result.fold(
-        (_) {},
-        (fullData) => ExpenseDetailSheet.show(
-          context,
-          ExpenseModel.fromJson(fullData),
+      // Open instantly with the data the feed already shows — the sheet
+      // enriches itself (splits, description) in place, so tapping an expense
+      // feels as immediate as tapping a task instead of waiting on a network
+      // round-trip with no feedback.
+      final createdAt = DateTime.tryParse(
+            activity['created_at'] as String? ?? '',
+          )?.toLocal() ??
+          DateTime.now();
+      ExpenseDetailSheet.show(
+        context,
+        ExpenseModel(
+          id: expenseId,
+          title: data['title']?.toString() ?? '',
+          titleKey: data['title_key']?.toString(),
+          amount: _parseAmount(data['amount']) ?? 0,
+          category: data['category'] as String?,
+          householdId: activity['household_id']?.toString() ?? '',
+          paidBy: activity['creator_id']?.toString() ?? '',
+          paidAt: createdAt,
+          createdAt: createdAt,
+          payerFullName: data['user_name'] as String?,
+          payerAvatarUrl:
+              (data['avatar_url'] ?? data['creator_avatar_url']) as String?,
         ),
       );
     }

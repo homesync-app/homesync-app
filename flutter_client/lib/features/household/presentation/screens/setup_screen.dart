@@ -10,6 +10,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -17,6 +18,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/household/presentation/widgets/couple_finance_config_body.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -269,7 +271,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   // -- Step handlers ----------------------------------------------------------
 
   void _onModeSelected() {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     if (_selectedMode == 'family' &&
         _familyHouseholdNameController.text.trim().isEmpty) {
       _familyHouseholdNameController.text = _suggestFamilyHouseholdName();
@@ -292,7 +294,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Future<void> _handleCreateTeam() async {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     setState(() {
       _isGeneratingCode = true;
     });
@@ -420,7 +422,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Future<void> _handleJoinTeam() async {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     final code = _codeController.text.trim().toUpperCase();
     if (code.length != 6) {
       setState(() => _joinError = 'El código debe tener 6 caracteres');
@@ -665,7 +667,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   void _copyCode() {
     if (_myInviteCode == null) return;
     Clipboard.setData(ClipboardData(text: _myInviteCode!));
-    HapticFeedback.selectionClick();
+    AppHaptics.selection();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppLocalizations.of(context).setupSnackCodeCopied),
@@ -1084,7 +1086,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             SetupPrimaryButton(
               text: t.setupValuePropStartButton,
               onPressed: () {
-                HapticFeedback.heavyImpact();
+                AppHaptics.warning();
                 setState(() => _currentStep = 1);
               },
             ),
@@ -1157,7 +1159,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 SetupPrimaryButton(
                   text: t.setupWelcomeStartButton,
                   onPressed: () {
-                    HapticFeedback.heavyImpact();
+                    AppHaptics.warning();
                     setState(() => _currentStep = 2);
                   },
                 ),
@@ -1314,7 +1316,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
                     return GestureDetector(
                       onTap: () {
-                        HapticFeedback.selectionClick();
+                        AppHaptics.selection();
                         setState(() {
                           _selectedAvatar = emoji;
                           _selectedAvatarUrl = null;
@@ -1364,7 +1366,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               onPressed: _nameController.text.trim().isEmpty
                   ? null
                   : () {
-                      HapticFeedback.heavyImpact();
+                      AppHaptics.warning();
                       setState(() => _currentStep = 3);
                     },
             ),
@@ -1510,7 +1512,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selection();
         setState(() => _selectedMode = id);
       },
       child: AnimatedContainer(
@@ -1712,7 +1714,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           ],
           const SizedBox(height: 20),
           if (_isJoining)
-            const Center(child: CircularProgressIndicator())
+            const Center(child: AppLoader())
           else
             SetupPrimaryButton(
               text: _createNew
@@ -1808,9 +1810,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                                     ),
                                   ),
                                   if (_isGeneratingCode)
-                                    const CircularProgressIndicator(
-                                      color: AppColors.primary,
-                                    )
+                                    const AppLoader(size: 26)
                                   else
                                     FittedBox(
                                       child: Text(
@@ -2242,7 +2242,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   Widget _buildTaskSelectionV2() {
     if (_isLoadingTemplates) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: AppLoader());
     }
 
     final t = AppLocalizations.of(context);
@@ -2344,7 +2344,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selection();
         setState(() {
           if (isSelected) {
             _selectedTemplateIds.remove(template.id);

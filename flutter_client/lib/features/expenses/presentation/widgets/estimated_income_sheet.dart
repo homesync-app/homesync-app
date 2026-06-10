@@ -5,12 +5,13 @@ import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/estimated_income_provider.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 
 class EstimatedIncomeSheet extends ConsumerStatefulWidget {
   const EstimatedIncomeSheet({super.key});
 
   static Future<void> show(BuildContext context) {
-    return showModalBottomSheet(
+    return AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

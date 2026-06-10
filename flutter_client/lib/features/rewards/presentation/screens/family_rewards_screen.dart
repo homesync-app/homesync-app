@@ -10,6 +10,8 @@ import 'package:homesync_client/features/rewards/presentation/providers/reward_p
 import 'package:homesync_client/features/rewards/presentation/utils/reward_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 
 class FamilyRewardsScreen extends ConsumerWidget {
   const FamilyRewardsScreen({super.key});
@@ -178,7 +180,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: AppLoader()),
         error: (error, _) => Center(child: Text('Error: $error')),
       ),
     );
@@ -210,7 +212,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
       '\uD83C\uDFC6',
     ];
 
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -454,7 +456,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
     bool isAdmin,
   ) {
     if (!isAdmin) return;
-    showModalBottomSheet<void>(
+    AppSheet.show<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {

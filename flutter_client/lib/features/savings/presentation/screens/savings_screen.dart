@@ -8,6 +8,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/concept_icon.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:intl/intl.dart';
 
 class SavingsScreen extends ConsumerStatefulWidget {
@@ -432,7 +433,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
 
   void _showContributionDialog(SavingsGoalModel goal) {
     final controller = TextEditingController();
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -545,7 +546,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     String selectedEmoji = '🎯';
     Color selectedColor = AppColors.primary;
 
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -967,7 +968,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     Function(String) onSelect,
   ) {
     final theme = context.theme;
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       backgroundColor: theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(
@@ -1024,7 +1025,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     List<Color> colors,
     Function(Color) onSelect,
   ) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       backgroundColor: context.theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(

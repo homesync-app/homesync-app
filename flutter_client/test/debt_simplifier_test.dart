@@ -110,7 +110,7 @@ void main() {
 
       for (final entry in net.entries) {
         expect(entry.value, closeTo(0, 0.001),
-            reason: '${entry.key} should net to zero after settlement');
+            reason: '${entry.key} should net to zero after settlement',);
       }
     });
 
@@ -127,13 +127,13 @@ void main() {
 
     test('carries debtor/creditor names and avatars into the result', () {
       final debts = DebtSimplifier.simplify([
-        HouseholdBalanceModel(
+        const HouseholdBalanceModel(
           userId: 'u1',
           userFullName: 'Ana Lopez',
           avatarUrl: 'http://x/ana.png',
           balance: -30,
         ),
-        HouseholdBalanceModel(
+        const HouseholdBalanceModel(
           userId: 'u2',
           userFullName: 'Beto Diaz',
           avatarUrl: 'http://x/beto.png',

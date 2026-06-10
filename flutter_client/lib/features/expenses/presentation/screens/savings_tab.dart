@@ -8,6 +8,8 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
 
 class SavingsTab extends ConsumerWidget {
@@ -19,7 +21,7 @@ class SavingsTab extends ConsumerWidget {
     final t = AppLocalizations.of(context);
 
     return goalsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: AppLoader()),
       error: (e, _) => Center(child: Text(t.savingsLoadError(e.toString()))),
       data: (goals) {
         if (goals.isEmpty) {
@@ -242,7 +244,7 @@ class SavingsTab extends ConsumerWidget {
     String selectedEmoji = '🎯';
     Color selectedColor = AppColors.primary;
 
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -621,7 +623,7 @@ class SavingsTab extends ConsumerWidget {
     SavingsGoalModel goal,
     WidgetRef ref,
   ) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -804,7 +806,7 @@ class SavingsTab extends ConsumerWidget {
     List<String> options,
     Function(String) onSelect,
   ) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       backgroundColor: context.theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(
@@ -863,7 +865,7 @@ class SavingsTab extends ConsumerWidget {
     List<Color> colors,
     Function(Color) onSelect,
   ) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       backgroundColor: context.theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(

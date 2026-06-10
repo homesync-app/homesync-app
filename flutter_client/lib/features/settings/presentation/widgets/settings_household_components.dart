@@ -3,6 +3,7 @@ import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class SettingsNoHouseholdCard extends StatelessWidget {
@@ -782,7 +783,7 @@ void showSettingsEditHouseholdMenu(
   final theme = context.theme;
   final t = AppLocalizations.of(context);
 
-  showModalBottomSheet(
+  AppSheet.show(
     context: context,
     backgroundColor: theme.surface,
     shape: const RoundedRectangleBorder(
@@ -899,7 +900,7 @@ void showSettingsInvitationCodeSheet(
 }) {
   final theme = context.theme;
 
-  showModalBottomSheet(
+  AppSheet.show(
     context: context,
     backgroundColor: theme.surface,
     isScrollControlled: true,

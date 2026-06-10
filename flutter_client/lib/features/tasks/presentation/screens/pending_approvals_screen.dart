@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_approval_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 /// Sprint 1 Modo Padres: bandeja de aprobaciones para adultos owner/admin.
@@ -70,7 +71,7 @@ class PendingApprovalsScreen extends ConsumerWidget {
       ),
       body: approvalsAsync.when(
         skipLoadingOnReload: true,
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: AppLoader()),
         error: (e, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -264,7 +265,7 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
   Future<void> _onApprove() async {
     // Haptico inmediato al tap, igual que completar una tarea en Hoy/Inicio:
     // el feedback fisico acompaña la intencion, no el resultado del RPC.
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     setState(() => _busy = true);
     try {
       // Construimos un TaskModel minimo para reusar approvePendingTask del

@@ -11,6 +11,8 @@ import 'package:homesync_client/features/expenses/presentation/utils/finance_loc
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -36,7 +38,7 @@ class RecurringExpenseFormSheet extends ConsumerStatefulWidget {
     ExpenseTemplateModel? template,
     String initialType = 'expense',
   }) {
-    return showModalBottomSheet(
+    return AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -299,7 +301,7 @@ class _RecurringExpenseFormSheetState
       child: membersAsync.when(
         loading: () => const SizedBox(
           height: 220,
-          child: Center(child: CircularProgressIndicator()),
+          child: Center(child: AppLoader()),
         ),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (members) {

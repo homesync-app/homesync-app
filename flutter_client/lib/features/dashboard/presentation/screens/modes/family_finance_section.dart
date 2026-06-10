@@ -12,6 +12,7 @@ import 'package:homesync_client/features/household/domain/models/household_capab
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/animated_amount.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 
 class FamilyFinanceSection extends ConsumerWidget {
@@ -344,8 +345,10 @@ class _SharedFamilyFinanceCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  currency.format(spent),
+                AnimatedAmount(
+                  value: spent,
+                  locale: currency.locale,
+                  prefix: currency.inputPrefix(),
                   style: TextStyle(
                     color: theme.textPrimary,
                     fontSize: 31,

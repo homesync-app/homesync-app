@@ -2,9 +2,10 @@ import 'dart:math';
 
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 
+export 'package:homesync_client/shared/widgets/animated_amount.dart';
 export 'package:homesync_client/shared/widgets/animated_press.dart';
 export 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 export 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -141,7 +142,7 @@ class FadeIndexedStack extends StatefulWidget {
     super.key,
     required this.index,
     required this.children,
-    this.duration = const Duration(milliseconds: 220),
+    this.duration = const Duration(milliseconds: 300),
   });
 
   @override
@@ -197,11 +198,11 @@ class _FadeIndexedStackState extends State<FadeIndexedStack>
             opacity: curve,
             child: SlideTransition(
               position: Tween<Offset>(
-                begin: const Offset(0, 0.018),
+                begin: const Offset(0, 0.035),
                 end: Offset.zero,
               ).animate(curve),
               child: ScaleTransition(
-                scale: Tween<double>(begin: 0.992, end: 1).animate(curve),
+                scale: Tween<double>(begin: 0.985, end: 1).animate(curve),
                 child: widget.children[i],
               ),
             ),
@@ -261,7 +262,7 @@ class SuccessCelebration {
     required String message,
     String? icon,
   }) {
-    HapticFeedback.mediumImpact();
+    AppHaptics.celebrate();
 
     showDialog(
       context: context,

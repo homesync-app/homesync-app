@@ -19,7 +19,9 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/app_swipe_to_delete.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:intl/intl.dart';
@@ -484,8 +486,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            _formatCurrency(amount),
+          AnimatedAmount(
+            value: amount.toDouble(),
+            locale: ref.watch(currencyProvider).locale,
+            prefix: ref.watch(currencyProvider).inputPrefix(),
             style: TextStyle(
               color: isBold ? theme.textPrimary : color,
               fontSize: isBold ? 20 : 17,
@@ -630,8 +634,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    _formatCurrency(mainAmount),
+                  child: AnimatedAmount(
+                    value: mainAmount.abs().toDouble(),
+                    locale: ref.watch(currencyProvider).locale,
+                    prefix: mainAmount < 0
+                        ? '- ${ref.watch(currencyProvider).inputPrefix()}'
+                        : ref.watch(currencyProvider).inputPrefix(),
                     style: TextStyle(
                       color: theme.textPrimary,
                       fontSize: 40,
@@ -752,7 +760,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         .toList();
     final t = AppLocalizations.of(context);
 
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -1094,7 +1102,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         .toList();
 
     final t = AppLocalizations.of(context);
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -1139,7 +1147,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     List<ExpenseModel> items,
     Color accentColor,
   ) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -1676,25 +1684,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       splitType: expense.splitType,
     );
 
-    return Dismissible(
-      key: Key(expense.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 28),
-        decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: const Icon(
-          Icons.delete_sweep_rounded,
-          color: Colors.white,
-          size: 28,
-        ),
-      ),
-      confirmDismiss: (direction) async {
+    return AppSwipeToDelete(
+      dismissibleKey: Key(expense.id),
+      borderRadius: 22,
+      confirm: () async {
         final t = AppLocalizations.of(context);
-        return await showDialog(
+        return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
             title: Text(t.expensesDeleteDialogTitle),
@@ -1713,7 +1708,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ),
         );
       },
-      onDismissed: (_) {
+      onDeleted: () {
         ref.read(expenseControllerProvider.notifier).deleteExpense(expense.id);
         AppSnackBar.show(
           context,

@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
@@ -30,7 +32,7 @@ class PlannedExpensePaymentSheet extends ConsumerStatefulWidget {
     BuildContext context,
     FeedItemModel plannedExpense,
   ) {
-    return showModalBottomSheet<Map<String, dynamic>>(
+    return AppSheet.show<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -127,7 +129,7 @@ class _PlannedExpensePaymentSheetState
       if (!mounted) return;
 
       final templateUpdated = result['template_updated'] == true;
-      HapticFeedback.mediumImpact();
+      AppHaptics.success();
       Navigator.pop(context, {
         'success': true,
         'template_updated': templateUpdated,
@@ -169,7 +171,7 @@ class _PlannedExpensePaymentSheetState
       child: membersAsync.when(
         loading: () => const SizedBox(
           height: 200,
-          child: Center(child: CircularProgressIndicator()),
+          child: Center(child: AppLoader()),
         ),
         error: (e, _) => Center(
           child:

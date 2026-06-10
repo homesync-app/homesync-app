@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_completion_feedback.dart';
@@ -66,7 +66,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   void _triggerAddSuccessFeedback() {
     if (!mounted) return;
     _addSuccessTimer?.cancel();
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     setState(() => _showAddSuccess = true);
     _addSuccessTimer = Timer(const Duration(milliseconds: 520), () {
       if (!mounted) return;
@@ -122,7 +122,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   // -- Actions --------------------------------------------------------------
 
   Future<void> _toggleItem(ShoppingItemModel item) async {
-    HapticFeedback.lightImpact();
+    AppHaptics.tap();
     final willBeCompleted = !item.completed;
     ref.read(shoppingItemsProvider.notifier).toggleItem(
           item.id,
@@ -138,7 +138,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   }
 
   Future<void> _deleteItem(ShoppingItemModel item) async {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     ref.read(shoppingItemsProvider.notifier).deleteItem(item.id);
   }
 
@@ -167,7 +167,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     String? category,
     String? nameKey,
   }) async {
-    HapticFeedback.lightImpact();
+    AppHaptics.tap();
     final val = name.trim();
     if (val.isEmpty) return;
 
@@ -984,7 +984,7 @@ class _PredefinedItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedPress(
       onTap: () {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         onTap.call();
       },
       child: AnimatedContainer(
@@ -1119,7 +1119,7 @@ class _ShoppingItemTile extends StatelessWidget {
         return AnimatedPress(
           scale: 0.96,
           onTap: () {
-            HapticFeedback.lightImpact();
+            AppHaptics.tap();
             onToggle();
           },
           onLongPress: () {

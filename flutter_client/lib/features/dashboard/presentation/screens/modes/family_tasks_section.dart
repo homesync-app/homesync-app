@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_task_card.dart';
@@ -17,6 +17,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 
@@ -578,7 +579,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
         performer?.displayName ?? t.familyTasksReviewPerformerFallback;
     final localizedTitle = localizedTaskTitle(t, task);
 
-    await showModalBottomSheet<void>(
+    await AppSheet.show<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
@@ -648,7 +649,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     if (_completedTaskIds.contains(task.id)) return;
 
     // Haptico inmediato al aprobar, igual que completar una tarea en Hoy.
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     setState(() => _completedTaskIds.add(task.id));
     try {
       final result =
@@ -735,7 +736,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     setState(() => _completedTaskIds.add(task.id));
     // Haptic inmediato al tap — feedback fisico tiene que coincidir con la
     // intencion del usuario, no con el resultado del RPC.
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     // La entrada optimista del feed la agrega Tasks.completeTask de forma
     // centralizada (con el activity_id del servidor para deduplicar bien).
     // Antes tambien la agregabamos aca, lo que generaba un registro DUPLICADO

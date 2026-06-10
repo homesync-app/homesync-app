@@ -1,6 +1,6 @@
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/models/task_completion_result.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -53,7 +53,7 @@ mixin TaskCompletionFlowMixin<T extends ConsumerStatefulWidget>
         return;
       }
 
-      HapticFeedback.mediumImpact();
+      AppHaptics.success();
       AppSnackBar.show(
         context,
         message: t.tasksSnackCompleted,

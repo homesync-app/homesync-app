@@ -1,6 +1,5 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
@@ -9,6 +8,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/utils/app_scroll_physics.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
@@ -26,6 +26,7 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_completion_feedback.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/schedule_dialog.dart'
@@ -147,7 +148,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         .read(householdMembersProvider)
         .maybeWhen(data: (m) => m, orElse: () => <MemberModel>[]);
 
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -235,7 +236,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   }
 
   void _showEditDialog(TaskModel task) async {
-    final result = await showModalBottomSheet<bool>(
+    final result = await AppSheet.show<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -306,9 +307,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
               icon: Icons.add_rounded,
               onPressed: _showCreateTaskDialog,
               heroTag: 'tasks_fab',
-              margin: EdgeInsets.only(
-                bottom: MediaQuery.viewPaddingOf(context).bottom + 10,
-              ),
+              // Safe-area/nav clearance is handled natively via NavClearance.
+              margin: const EdgeInsets.only(bottom: 10),
               animateIn: true,
             ),
       body: Stack(
@@ -719,12 +719,12 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   void _showCompletionFeedback({required bool isFinalTodayTask}) {
     final media = MediaQuery.maybeOf(context);
     if (!isFinalTodayTask || (media?.accessibleNavigation ?? false)) {
-      HapticFeedback.lightImpact();
+      AppHaptics.tap();
       return;
     }
 
     _completionConfettiController.play();
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     setState(() => _showTodayDoneCelebration = true);
     Future<void>.delayed(const Duration(milliseconds: 1600), () {
       if (mounted) {
@@ -1250,7 +1250,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         onTap: _isSubmitting
             ? null
             : () {
-                HapticFeedback.lightImpact();
+                AppHaptics.tap();
                 setState(() => _isExpanded = !_isExpanded);
               },
         child: Padding(
@@ -1678,7 +1678,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   Future<void> _confirmAdultTakeoverCompletion(String ownerName) async {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
-    final confirmed = await showModalBottomSheet<bool>(
+    final confirmed = await AppSheet.show<bool>(
           context: context,
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
@@ -1821,7 +1821,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   }
 
   Future<void> _completeTask() async {
-    HapticFeedback.lightImpact();
+    AppHaptics.tap();
     setState(() => _isSubmitting = true);
     try {
       final result =

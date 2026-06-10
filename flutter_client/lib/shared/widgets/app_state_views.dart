@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+
+export 'package:homesync_client/shared/widgets/app_loader.dart';
 
 class AppLoadingState extends StatelessWidget {
   final String? message;
@@ -16,11 +19,7 @@ class AppLoadingState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
-            ),
+            const AppLoader(size: 28),
             if (message != null) ...[
               const SizedBox(height: 12),
               Text(

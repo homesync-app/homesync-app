@@ -10,6 +10,7 @@ import 'package:homesync_client/features/expenses/presentation/providers/expense
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/design/app_button.dart';
 import 'package:homesync_client/shared/widgets/design/app_sheet_shell.dart';
@@ -22,7 +23,7 @@ class AllowanceSheet extends ConsumerStatefulWidget {
   final String? initialRecipientId;
 
   static Future<bool?> show(BuildContext context, {String? recipientId}) {
-    return showModalBottomSheet<bool>(
+    return AppSheet.show<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/rpc_providers.dart';
@@ -14,6 +15,7 @@ import 'package:homesync_client/core/services/receipt_scan_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/utils/receipt_matcher.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
@@ -28,6 +30,9 @@ import 'package:homesync_client/features/shopping/domain/models/shopping_model.d
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_shake.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -69,7 +74,7 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
     bool triggerScanOnOpen = false,
   }) async {
     final t = AppLocalizations.of(context);
-    final deleted = await showModalBottomSheet<bool>(
+    final deleted = await AppSheet.show<bool>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
@@ -99,8 +104,14 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
   }
 }
 
+enum _ShoppingRevealPhase { idle, preparing, revealing, revealed }
+
 class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   final _formKey = GlobalKey<FormState>();
+  final _formScrollController = ScrollController();
+  final _shoppingSectionKey = GlobalKey();
+  // Incremented on failed validation to play the error shake (see AppShake).
+  int _shakeTrigger = 0;
   bool _isLoading = false;
   bool _showSuccessState = false;
   bool _isIncome = false;
@@ -118,10 +129,22 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   ReceiptScanResult? _scanResult;
   List<String> _unmatchedOcrItems = [];
   final Set<ShoppingItemModel> _ocrMatchedShoppingItems = {};
+  int _amountRevealEpoch = 0;
+  int _shoppingRevealEpoch = 0;
+  _ShoppingRevealPhase _shoppingRevealPhase = _ShoppingRevealPhase.idle;
+  bool _waitForAmountRevealBeforeShopping = false;
+  bool _userTouchedScrollAfterScan = false;
+  bool _isAutoScrollingToShopping = false;
 
   // TelemetrÃƒÂ­a OCR: id de la fila de log para asociar matcher_result + user_action.
   String? _ocrLogId;
   bool _ocrConfirmed = false;
+  // El matcher corre apenas llega el scan, pero el id del log se inserta en
+  // paralelo y puede no estar listo todavÃƒÂ­a. Guardamos el resultado del matcher
+  // acÃƒÂ¡ y lo flusheamos en cuanto ambos (id + resultado) estÃƒÂ©n disponibles, sin
+  // importar cuÃƒÂ¡l gane la carrera. Sin esto, matcher_result quedaba null en el
+  // panel admin (match/nuevos/sin/drop todos en 0).
+  Map<String, dynamic>? _pendingMatcherResult;
 
   // Split logic
   SplitType _splitMode = SplitType.equal;
@@ -183,6 +206,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       );
     }
     _titleController.removeListener(_onTitleChanged);
+    _formScrollController.dispose();
     _amountController.dispose();
     _titleController.dispose();
     _fixedSplitManager.dispose();
@@ -276,11 +300,17 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   Future<void> _scanReceipt(ImageSource source) async {
     final t = AppLocalizations.of(context);
     if (_isScanningReceipt) return;
-    setState(() => _isScanningReceipt = true);
+    setState(() {
+      _isScanningReceipt = true;
+      _userTouchedScrollAfterScan = false;
+      _shoppingRevealPhase = _ShoppingRevealPhase.idle;
+    });
     try {
       final service = ReceiptScanService(Supabase.instance.client);
       final result = await service.scan(source: source);
       if (result == null || !mounted) return;
+      _waitForAmountRevealBeforeShopping =
+          result.amount != null && result.amount! > 0;
       _prefillFromScan(result);
 
       // Logging asÃƒÂ­ncrono Ã¢â‚¬â€ no bloquea la UI ni rompe si falla.
@@ -297,6 +327,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           .then((logId) {
         if (logId != null && mounted) {
           setState(() => _ocrLogId = logId);
+          // El matcher pudo haber terminado antes que el insert: flusheamos
+          // el resultado pendiente ahora que ya tenemos el id.
+          _flushMatcherLog();
         }
       });
 
@@ -305,7 +338,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       // el usuario no espera ver productos detectados.
       const shoppingRelevantCategories = {'supermarket', 'health'};
       if (shoppingRelevantCategories.contains(result.category)) {
+        setState(() {
+          _shoppingRevealPhase = _ShoppingRevealPhase.preparing;
+        });
         _matchOcrItemsToShoppingList(result.rawItems);
+        if (!_waitForAmountRevealBeforeShopping) {
+          _scheduleShoppingReveal();
+        }
       }
     } catch (e, st) {
       debugPrint('[ReceiptScan] ERROR: $e\n$st');
@@ -335,6 +374,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       final amount = result.amount;
       if (amount != null) {
         _amountController.text = _formatAmountFromOcr(amount);
+        _amountRevealEpoch++;
       }
       if (result.date != null) {
         _selectedDate = result.date!;
@@ -387,18 +427,87 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     });
 
     // TelemetrÃƒÂ­a: registramos el resultado del matcher para anÃƒÂ¡lisis offline.
-    final logId = _ocrLogId;
-    if (logId != null) {
-      OcrLogService(Supabase.instance.client).updateMatcherResult(
-        logId: logId,
-        matcherResult: {
-          'matched': result.toMarkPurchased.map((i) => i.name).toList(),
-          'to_add': result.toAddAndMark.map((i) => i.name).toList(),
-          'unrecognized': result.unrecognized,
-          'dropped': result.dropped,
-        },
-      );
+    // El insert del log corre en paralelo (puede no haber resuelto todavÃƒÂ­a),
+    // asÃƒÂ­ que guardamos el resultado y lo flusheamos cuando haya logId.
+    _pendingMatcherResult = {
+      'matched': result.toMarkPurchased.map((i) => i.name).toList(),
+      'to_add': result.toAddAndMark.map((i) => i.name).toList(),
+      'unrecognized': result.unrecognized,
+      'dropped': result.dropped,
+    };
+    _flushMatcherLog();
+
+    if (result.allLinked.isEmpty && result.unrecognized.isEmpty) {
+      setState(() => _shoppingRevealPhase = _ShoppingRevealPhase.idle);
     }
+  }
+
+  void _scheduleShoppingReveal() {
+    Future<void>.delayed(Duration.zero, () async {
+      if (!mounted) return;
+      if (_shoppingRevealPhase == _ShoppingRevealPhase.idle) return;
+      if (_userTouchedScrollAfterScan) {
+        _revealShoppingProducts();
+        return;
+      }
+
+      final targetContext = _shoppingSectionKey.currentContext;
+      if (targetContext == null) {
+        if (mounted) _revealShoppingProducts();
+        return;
+      }
+      if (!targetContext.mounted) return;
+
+      _isAutoScrollingToShopping = true;
+      try {
+        await Scrollable.ensureVisible(
+          targetContext,
+          duration: const Duration(milliseconds: 820),
+          curve: Curves.easeOutCubic,
+          alignment: 0.18,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+        );
+      } finally {
+        _isAutoScrollingToShopping = false;
+      }
+
+      if (!mounted) return;
+      _revealShoppingProducts();
+    });
+  }
+
+  void _revealShoppingProducts() {
+    if (_shoppingRevealPhase == _ShoppingRevealPhase.idle) return;
+    setState(() {
+      _shoppingRevealPhase = _ShoppingRevealPhase.revealing;
+      _shoppingRevealEpoch++;
+    });
+    Future<void>.delayed(const Duration(milliseconds: 900), () {
+      if (!mounted) return;
+      if (_shoppingRevealPhase == _ShoppingRevealPhase.revealing) {
+        setState(() => _shoppingRevealPhase = _ShoppingRevealPhase.revealed);
+      }
+    });
+  }
+
+  void _onAmountRevealComplete() {
+    if (!_waitForAmountRevealBeforeShopping) return;
+    _waitForAmountRevealBeforeShopping = false;
+    _scheduleShoppingReveal();
+  }
+
+  /// EnvÃƒÂ­a el resultado del matcher al log de OCR en cuanto estÃƒÂ©n disponibles
+  /// tanto el id del log como el resultado. Idempotente: tras flushear limpia
+  /// el pendiente para no reenviar.
+  void _flushMatcherLog() {
+    final logId = _ocrLogId;
+    final pending = _pendingMatcherResult;
+    if (logId == null || pending == null) return;
+    _pendingMatcherResult = null;
+    OcrLogService(Supabase.instance.client).updateMatcherResult(
+      logId: logId,
+      matcherResult: pending,
+    );
   }
 
   Future<void> _selectDate() async {
@@ -415,13 +524,17 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   Future<void> _saveExpense() async {
     final t = AppLocalizations.of(context);
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      setState(() => _shakeTrigger++);
+      return;
+    }
 
     final cleanAmtStr =
         _amountController.text.replaceAll('.', '').replaceAll(',', '.');
     final amountParsed = double.tryParse(cleanAmtStr);
     if (amountParsed == null || amountParsed <= 0) {
       final t = AppLocalizations.of(context);
+      setState(() => _shakeTrigger++);
       AppSnackBar.show(
         context,
         message: t.expensesFormValidationAmountRequired,
@@ -584,7 +697,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       }
 
       if (mounted) {
-        HapticFeedback.mediumImpact();
+        AppHaptics.success();
         setState(() => _showSuccessState = true);
         await Future<void>.delayed(const Duration(milliseconds: 220));
         if (!mounted) return;
@@ -630,7 +743,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     final shoppingItemsAsync = ref.watch(shoppingItemsProvider);
 
     return membersAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: AppLoader()),
       error: (e, s) {
         return Center(child: Text(t.commonErrorWithDetails(e.toString())));
       },
@@ -678,99 +791,124 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 ),
                 _buildHeader(context),
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 16),
-                          _buildTypeToggle(),
-                          if (ref.watch(allowanceEnabledProvider)) ...[
-                            const SizedBox(height: 12),
-                            _buildAllowanceEntry(context),
-                          ],
-                          const SizedBox(height: 28),
-                          _buildAmountField(),
-                          const SizedBox(height: 32),
-                          _buildSectionIntro(
-                            eyebrow: t.expensesFormSectionDetailEyebrow,
-                            title: _isIncome
-                                ? t.expensesFormSectionDetailTitleIncome
-                                : t.expensesFormSectionDetailTitleExpense,
-                            subtitle: _isIncome
-                                ? t.expensesFormSectionDetailSubtitleIncome
-                                : t.expensesFormSectionDetailSubtitleExpense,
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification is ScrollStartNotification &&
+                          notification.dragDetails != null &&
+                          !_isAutoScrollingToShopping) {
+                        _userTouchedScrollAfterScan = true;
+                      }
+                      return false;
+                    },
+                    child: SingleChildScrollView(
+                      controller: _formScrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Form(
+                        key: _formKey,
+                        child: AppShake(
+                          trigger: _shakeTrigger,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 16),
+                              _buildTypeToggle(),
+                              if (ref.watch(allowanceEnabledProvider)) ...[
+                                const SizedBox(height: 12),
+                                _buildAllowanceEntry(context),
+                              ],
+                              const SizedBox(height: 28),
+                              _buildAmountField(),
+                              const SizedBox(height: 32),
+                              _buildSectionIntro(
+                                eyebrow: t.expensesFormSectionDetailEyebrow,
+                                title: _isIncome
+                                    ? t.expensesFormSectionDetailTitleIncome
+                                    : t.expensesFormSectionDetailTitleExpense,
+                                subtitle: _isIncome
+                                    ? t.expensesFormSectionDetailSubtitleIncome
+                                    : t.expensesFormSectionDetailSubtitleExpense,
+                              ),
+                              const SizedBox(height: 14),
+                              _buildTitleField(),
+                              const SizedBox(height: 28),
+                              _buildSectionIntro(
+                                eyebrow: t.expensesFormSectionContextEyebrow,
+                                title: _isIncome
+                                    ? t.expensesFormSectionContextTitleIncome
+                                    : t.expensesFormSectionContextTitleExpense,
+                                subtitle: t.expensesFormSectionContextSubtitle,
+                              ),
+                              const SizedBox(height: 14),
+                              _buildDateAndPayerRow(
+                                context,
+                                payer,
+                                financeMembers,
+                              ),
+                              const SizedBox(height: 28),
+                              KeyedSubtree(
+                                key: _shoppingSectionKey,
+                                child: _buildShoppingIntegration(
+                                  context,
+                                  shoppingItemsAsync,
+                                ),
+                              ),
+                              if (_unmatchedOcrItems.isNotEmpty &&
+                                  _shoppingRevealPhase !=
+                                      _ShoppingRevealPhase.preparing &&
+                                  (ref.watch(premiumProvider).value ??
+                                      false)) ...[
+                                const SizedBox(height: 12),
+                                NewItemsSuggestionBanner(
+                                  animationTrigger: _shoppingRevealEpoch,
+                                  items: _unmatchedOcrItems,
+                                  householdId: ref
+                                          .read(currentHouseholdProvider)
+                                          .value
+                                          ?.id ??
+                                      '',
+                                  onDismiss: () =>
+                                      setState(() => _unmatchedOcrItems = []),
+                                  onItemsAdded: (addedItems) {
+                                    setState(() {
+                                      _selectedShoppingItems.addAll(addedItems);
+                                      _ocrMatchedShoppingItems
+                                          .addAll(addedItems);
+                                    });
+                                  },
+                                ),
+                              ],
+                              const SizedBox(height: 28),
+                              _buildSectionIntro(
+                                eyebrow: t.expensesFormSectionCategoryEyebrow,
+                                title: _isIncome
+                                    ? t.expensesFormSectionCategoryTitleIncome
+                                    : t.expensesFormSectionCategoryTitleExpense,
+                                subtitle: t.expensesFormSectionCategorySubtitle,
+                              ),
+                              const SizedBox(height: 14),
+                              _buildCategorySelector(context),
+                              const SizedBox(height: 28),
+                              if (showSplit) ...[
+                                _buildSectionIntro(
+                                  eyebrow: t.expensesFormSectionSplitEyebrow,
+                                  title: _isIncome
+                                      ? t.expensesFormSectionSplitTitleIncome
+                                      : t.expensesFormSectionSplitTitleExpense,
+                                  subtitle: t.expensesFormSectionSplitSubtitle,
+                                ),
+                                const SizedBox(height: 14),
+                                _buildSplitConfiguration(
+                                  context,
+                                  financeMembers,
+                                ),
+                              ],
+                              const SizedBox(height: 32),
+                              const SizedBox(height: 48),
+                              _buildSaveButton(),
+                              const SizedBox(height: 40),
+                            ],
                           ),
-                          const SizedBox(height: 14),
-                          _buildTitleField(),
-                          const SizedBox(height: 28),
-                          _buildSectionIntro(
-                            eyebrow: t.expensesFormSectionContextEyebrow,
-                            title: _isIncome
-                                ? t.expensesFormSectionContextTitleIncome
-                                : t.expensesFormSectionContextTitleExpense,
-                            subtitle: t.expensesFormSectionContextSubtitle,
-                          ),
-                          const SizedBox(height: 14),
-                          _buildDateAndPayerRow(
-                            context,
-                            payer,
-                            financeMembers,
-                          ),
-                          const SizedBox(height: 28),
-                          _buildShoppingIntegration(
-                            context,
-                            shoppingItemsAsync,
-                          ),
-                          if (_unmatchedOcrItems.isNotEmpty &&
-                              (ref.watch(premiumProvider).value ?? false)) ...[
-                            const SizedBox(height: 12),
-                            NewItemsSuggestionBanner(
-                              items: _unmatchedOcrItems,
-                              householdId: ref
-                                      .read(currentHouseholdProvider)
-                                      .value
-                                      ?.id ??
-                                  '',
-                              onDismiss: () =>
-                                  setState(() => _unmatchedOcrItems = []),
-                              onItemsAdded: (addedItems) {
-                                setState(() {
-                                  _selectedShoppingItems.addAll(addedItems);
-                                  _ocrMatchedShoppingItems.addAll(addedItems);
-                                });
-                              },
-                            ),
-                          ],
-                          const SizedBox(height: 28),
-                          _buildSectionIntro(
-                            eyebrow: t.expensesFormSectionCategoryEyebrow,
-                            title: _isIncome
-                                ? t.expensesFormSectionCategoryTitleIncome
-                                : t.expensesFormSectionCategoryTitleExpense,
-                            subtitle: t.expensesFormSectionCategorySubtitle,
-                          ),
-                          const SizedBox(height: 14),
-                          _buildCategorySelector(context),
-                          const SizedBox(height: 28),
-                          if (showSplit) ...[
-                            _buildSectionIntro(
-                              eyebrow: t.expensesFormSectionSplitEyebrow,
-                              title: _isIncome
-                                  ? t.expensesFormSectionSplitTitleIncome
-                                  : t.expensesFormSectionSplitTitleExpense,
-                              subtitle: t.expensesFormSectionSplitSubtitle,
-                            ),
-                            const SizedBox(height: 14),
-                            _buildSplitConfiguration(context, financeMembers),
-                          ],
-                          const SizedBox(height: 32),
-                          const SizedBox(height: 48),
-                          _buildSaveButton(),
-                          const SizedBox(height: 40),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -1016,10 +1154,16 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     return NumberFormat.decimalPattern('es_ES').format(value.round());
   }
 
-  /// Formatea el monto detectado por OCR al estilo argentino: punto para miles,
-  /// coma para decimal. Ej: 10666.5 Ã¢â€ â€™ "10.666,50"
+  /// Formatea el monto detectado por OCR para el input del formulario.
+  /// En ARS ocultamos centavos porque los tickets argentinos los muestran,
+  /// pero para la carga diaria solo agregan ruido visual.
   String _formatAmountFromOcr(double amount) {
     if (amount <= 0) return '';
+    final currency = ref.read(currencyProvider);
+    if (currency.code == 'ARS') {
+      return NumberFormat.decimalPattern('es_ES').format(amount.round());
+    }
+
     final intPart = amount.truncate();
     final decPart = ((amount - intPart) * 100).round().abs();
     final intFormatted = NumberFormat('#,##0', 'es_ES').format(intPart);
@@ -1141,6 +1285,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       showScanAction: !_isIncome,
       isScanningReceipt: _isScanningReceipt,
       hasScanResult: _scanResult != null,
+      ocrRevealTrigger: _amountRevealEpoch,
+      onOcrRevealComplete: _onAmountRevealComplete,
       onScanReceipt:
           _isScanningReceipt ? null : () => _scanReceipt(ImageSource.camera),
     );
@@ -1364,6 +1510,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             .toSet();
 
         return ExpenseShoppingIntegrationCard(
+          animationTrigger: _shoppingRevealEpoch,
+          isPreparing: _shoppingRevealPhase == _ShoppingRevealPhase.preparing,
           isPremium: isPremium,
           linkedItems: isPremium
               ? _selectedShoppingItems.toList()
@@ -1430,7 +1578,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   void _showShoppingItemsSelector(BuildContext context) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

@@ -12,6 +12,8 @@ import 'package:homesync_client/features/tasks/presentation/providers/category_p
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 import 'create_task_dialog.dart';
@@ -22,7 +24,7 @@ class AddTaskOptionsSheet extends ConsumerStatefulWidget {
   const AddTaskOptionsSheet({super.key, required this.members});
 
   static Future<bool?> show(BuildContext context, List<MemberModel> members) {
-    return showModalBottomSheet<bool>(
+    return AppSheet.show<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -284,7 +286,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           Expanded(
             child: (_isLoading || tasksAsync.isLoading)
                 ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
+                    child: AppLoader(),
                   )
                 : filtered.isEmpty
                     ? _buildEmpty()
@@ -486,7 +488,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         if (_isLoadingMore) ...[
           const SizedBox(height: 16),
           const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
+            child: AppLoader(size: 24),
           ),
         ] else if (_hasMore && _selectedCategory == null) ...[
           const SizedBox(height: 16),

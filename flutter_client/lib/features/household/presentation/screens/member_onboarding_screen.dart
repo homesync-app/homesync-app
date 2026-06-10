@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
@@ -7,10 +6,12 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/widgets/app_background.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 
 class MemberOnboardingScreen extends ConsumerStatefulWidget {
   final VoidCallback onComplete;
@@ -150,7 +151,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
   }
 
   void _goToStep(int step) {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     _fadeController.reset();
     setState(() => _step = step);
     _fadeController.forward();
@@ -159,7 +160,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
   Future<void> _completeOnboarding() async {
     final t = AppLocalizations.of(context);
     setState(() => _isSaving = true);
-    HapticFeedback.heavyImpact();
+    AppHaptics.warning();
 
     try {
       final client = ref.read(supabaseClientProvider);
@@ -356,7 +357,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
 
   Widget _buildRoleStep(AppThemeColors theme) {
     if (_isLoadingRoles) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: AppLoader());
     }
 
     final t = AppLocalizations.of(context);
@@ -406,7 +407,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
                   isSelected: _selectedDisplayRole == role,
                   tone: visuals.$2,
                   onTap: () {
-                    HapticFeedback.selectionClick();
+                    AppHaptics.selection();
                     setState(() {
                       _selectedDisplayRole = role;
                       _updateMemberTypeFromRole(role);
@@ -417,7 +418,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
             ),
           ),
           if (_isSaving)
-            const Center(child: CircularProgressIndicator())
+            const Center(child: AppLoader())
           else
             _buildPrimaryButton(
               text: t.memberOnboardingFinishButton,

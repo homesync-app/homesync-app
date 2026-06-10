@@ -2400,6 +2400,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get taskDetailReward => 'Recompensa';
 
   @override
+  String taskDetailCoinsAwarded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count coins',
+      one: '1 coin',
+    );
+    return '+$_temp0';
+  }
+
+  @override
   String get taskDetailCompletedBy => 'La completó';
 
   @override
@@ -3109,6 +3120,9 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get expensesFormShoppingWillMarkBought =>
       'Se marcarán como comprados al guardar';
+
+  @override
+  String get expensesFormShoppingPreparingProducts => 'Preparando productos...';
 
   @override
   String get expensesFormShoppingTapToLink => 'Tocá para vincular artículos';
@@ -4058,6 +4072,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get weeklyWinnerTitle => 'Ganador semanal';
 
   @override
+  String weeklyWinnerHeadline(String name) {
+    return '$name ganó la semana';
+  }
+
+  @override
   String get weeklyWinnerSubtitle =>
       'Así terminó el duelo semanal entre ustedes.';
 
@@ -4096,6 +4115,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get weeklyWinnerContinue => 'Continuar';
+
+  @override
+  String get weeklyWinnerTestButton => 'Generar ganador semanal';
 
   @override
   String get loveNoteDialogTitle => 'Nueva nota de amor';
@@ -4916,7 +4938,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get expensesNewItemsDetectedTitle => 'Productos nuevos detectados';
+  String get expensesNewItemsDetectedTitle => 'Nuevos para tu lista';
 
   @override
   String get expensesNewItemsDetectedSubtitle =>

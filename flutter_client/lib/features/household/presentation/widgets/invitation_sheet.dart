@@ -8,6 +8,8 @@ import 'package:homesync_client/features/household/domain/models/household_capab
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/portal_labs/reveal_copy_interaction.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -15,7 +17,7 @@ class InvitationSheet extends ConsumerStatefulWidget {
   const InvitationSheet({super.key});
 
   static Future<void> show(BuildContext context) {
-    return showModalBottomSheet(
+    return AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -170,7 +172,7 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
           if (_isLoading)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
-              child: CircularProgressIndicator(),
+              child: AppLoader(),
             )
           else if (_invitationCode != null) ...[
             RevealCopyInteraction(

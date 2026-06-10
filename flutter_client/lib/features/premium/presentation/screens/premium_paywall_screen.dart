@@ -7,7 +7,9 @@ import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:purchases_flutter/purchases_flutter.dart' as rc;
 
 class PremiumPaywallScreen extends ConsumerStatefulWidget {
@@ -66,6 +68,27 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
                         AppColors.primaryLight,
                         AppColors.surface,
                       ],
+              ),
+            ),
+          ),
+          // Soft golden halo behind the hero so the screen opens with warmth.
+          Positioned(
+            top: -90,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(
+              child: Container(
+                height: 320,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.accentGold.withValues(
+                        alpha: theme.isDarkMode ? 0.14 : 0.12,
+                      ),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -164,6 +187,44 @@ class _HeroHeader extends StatelessWidget {
 
     return Column(
       children: [
+        // Gold medallion: the single hero element of the screen.
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFF2C266), Color(0xFFDF9A2E)],
+            ),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.55),
+              width: 1.4,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.accentGold.withValues(alpha: 0.38),
+                blurRadius: 26,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.workspace_premium_rounded,
+            color: Colors.white,
+            size: 36,
+          ),
+        )
+            .animate()
+            .scale(
+              begin: const Offset(0.8, 0.8),
+              end: const Offset(1, 1),
+              duration: 500.ms,
+              curve: Curves.easeOutBack,
+            )
+            .fadeIn(duration: 250.ms),
+        const SizedBox(height: 14),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
@@ -187,10 +248,11 @@ class _HeroHeader extends StatelessWidget {
           t.premiumPaywallTitle,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 23.5,
+            fontSize: 26,
             fontWeight: FontWeight.w900,
             color: theme.textPrimary,
-            height: 1.1,
+            letterSpacing: -0.8,
+            height: 1.08,
           ),
         ),
         const SizedBox(height: 8),
@@ -409,8 +471,10 @@ class _ProductListState extends ConsumerState<_ProductList> {
                   isSelected: sortedProducts[index].identifier ==
                       selectedPackage.identifier,
                   isAnnual: _isAnnual(sortedProducts[index]),
-                  onTap: () =>
-                      setState(() => _selectedPackage = sortedProducts[index]),
+                  onTap: () {
+                    AppHaptics.selection();
+                    setState(() => _selectedPackage = sortedProducts[index]);
+                  },
                 ),
                 if (index < sortedProducts.length - 1)
                   Divider(
@@ -423,23 +487,19 @@ class _ProductListState extends ConsumerState<_ProductList> {
           ),
         ),
         const SizedBox(height: 12),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            minimumSize: const Size(double.infinity, 54),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadii.pill),
-            ),
-          ),
-          onPressed: () async {
+        AnimatedPress(
+          scale: 0.98,
+          haptic: AppPressHaptic.light,
+          onTap: () async {
             final messenger = ScaffoldMessenger.of(context);
             try {
               final isPremium = await ref
                   .read(premiumProvider.notifier)
                   .buyProduct(selectedPackage);
-              if (isPremium && context.mounted) Navigator.pop(context);
+              if (isPremium && context.mounted) {
+                AppHaptics.celebrate();
+                Navigator.pop(context);
+              }
             } catch (_) {
               // Purchase errors (billing unavailable, DEVELOPER_ERROR on
               // non-Play builds, region issues, etc.) must never crash the
@@ -449,9 +509,33 @@ class _ProductListState extends ConsumerState<_ProductList> {
               );
             }
           },
-          child: Text(
-            t.premiumContinueWithPlan,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+          child: Container(
+            height: 56,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.primary, AppColors.primaryDark],
+              ),
+              borderRadius: BorderRadius.circular(AppRadii.pill),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.34),
+                  blurRadius: 22,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Text(
+              t.premiumContinueWithPlan,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.1,
+              ),
+            ),
           ),
         ),
       ],

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 import 'package:homesync_client/features/household/presentation/widgets/couple_finance_config_body.dart';
@@ -49,7 +49,7 @@ class _CoupleSplitStrategyScreenState
 
   Future<void> _saveRatio() async {
     setState(() => _isSaving = true);
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
 
     try {
       final household = ref.read(currentHouseholdProvider).value;

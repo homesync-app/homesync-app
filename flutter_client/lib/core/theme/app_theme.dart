@@ -2,8 +2,66 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_design_tokens.dart';
+import 'app_page_transitions.dart';
+import 'app_system_ui.dart';
 
 class AppTheme {
+  /// Refined weight hierarchy (see [AppTypography]): hero weights only at hero
+  /// sizes; titles at w700; body at w500/w600. Size carries the contrast.
+  /// Colors are resolved by Material from the active [ColorScheme].
+  static const TextTheme _textTheme = TextTheme(
+    headlineLarge: TextStyle(
+      fontSize: 28,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -0.8,
+      height: 1.1,
+    ),
+    headlineMedium: TextStyle(
+      fontSize: 24,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -0.5,
+      height: 1.12,
+    ),
+    headlineSmall: TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.3,
+    ),
+    titleLarge: TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.2,
+    ),
+    titleMedium: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
+    titleSmall: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+    bodyLarge: TextStyle(
+      fontSize: 15.5,
+      fontWeight: FontWeight.w500,
+      height: 1.45,
+    ),
+    bodyMedium: TextStyle(
+      fontSize: 13.5,
+      fontWeight: FontWeight.w500,
+      height: 1.4,
+    ),
+    bodySmall: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w500,
+      height: 1.35,
+    ),
+    labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+    labelMedium: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.2,
+    ),
+    labelSmall: TextStyle(
+      fontSize: 10.5,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.6,
+    ),
+  );
+
   // ── Light Theme ────────────────────────────────────────────────────────────
   static ThemeData lightTheme({Color? customPrimary}) {
     final primary = customPrimary ?? AppColors.primary;
@@ -29,14 +87,17 @@ class AppTheme {
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: AppColors.background,
-      appBarTheme: const AppBarTheme(
+      pageTransitionsTheme: homeSyncPageTransitionsTheme,
+      textTheme: _textTheme,
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        iconTheme: IconThemeData(color: AppColors.textPrimary, size: 22),
-        titleTextStyle: TextStyle(
+        systemOverlayStyle: AppSystemUi.light,
+        iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 22),
+        titleTextStyle: const TextStyle(
           color: AppColors.textPrimary,
           fontSize: 26,
           fontWeight: FontWeight.w900,
@@ -70,8 +131,8 @@ class AppTheme {
           ),
           textStyle: const TextStyle(
             fontSize: 17,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.2,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.1,
           ),
         ),
       ),
@@ -88,8 +149,8 @@ class AppTheme {
           ),
           textStyle: const TextStyle(
             fontSize: 17,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.2,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.1,
           ),
         ),
       ),
@@ -104,7 +165,7 @@ class AppTheme {
           ),
           textStyle: const TextStyle(
             fontSize: 17,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -114,7 +175,7 @@ class AppTheme {
           minimumSize: const Size(0, 48),
           textStyle: const TextStyle(
             fontSize: 15,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -167,7 +228,7 @@ class AppTheme {
         unselectedItemColor: AppColors.textMuted,
         selectedLabelStyle: const TextStyle(
           fontFamily: 'Outfit',
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           fontSize: 12,
         ),
         unselectedLabelStyle: const TextStyle(
@@ -228,14 +289,17 @@ class AppTheme {
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: darkBg,
-      appBarTheme: const AppBarTheme(
+      pageTransitionsTheme: homeSyncPageTransitionsTheme,
+      textTheme: _textTheme,
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         foregroundColor: darkText,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        iconTheme: IconThemeData(color: darkText, size: 22),
-        titleTextStyle: TextStyle(
+        systemOverlayStyle: AppSystemUi.dark,
+        iconTheme: const IconThemeData(color: darkText, size: 22),
+        titleTextStyle: const TextStyle(
           fontFamily: 'Outfit',
           color: darkText,
           fontSize: 26,
@@ -269,8 +333,8 @@ class AppTheme {
           ),
           textStyle: const TextStyle(
             fontSize: 17,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.2,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.1,
           ),
         ),
       ),
@@ -287,8 +351,8 @@ class AppTheme {
           ),
           textStyle: const TextStyle(
             fontSize: 17,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.2,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.1,
           ),
         ),
       ),
@@ -303,7 +367,7 @@ class AppTheme {
           ),
           textStyle: const TextStyle(
             fontSize: 17,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -313,7 +377,7 @@ class AppTheme {
           minimumSize: const Size(0, 48),
           textStyle: const TextStyle(
             fontSize: 15,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -366,7 +430,7 @@ class AppTheme {
         unselectedItemColor: darkMuted,
         selectedLabelStyle: const TextStyle(
           fontFamily: 'Outfit',
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           fontSize: 12,
         ),
         unselectedLabelStyle: const TextStyle(

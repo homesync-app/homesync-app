@@ -3855,6 +3855,12 @@ abstract class AppLocalizations {
   /// **'Recompensa'**
   String get taskDetailReward;
 
+  /// Recompensa compacta de coins mostrada en el detalle de tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'+{count, plural, =1{1 coin} other{{count} coins}}'**
+  String taskDetailCoinsAwarded(int count);
+
   /// No description provided for @taskDetailCompletedBy.
   ///
   /// In es, this message translates to:
@@ -5084,6 +5090,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Se marcarán como comprados al guardar'**
   String get expensesFormShoppingWillMarkBought;
+
+  /// No description provided for @expensesFormShoppingPreparingProducts.
+  ///
+  /// In es, this message translates to:
+  /// **'Preparando productos...'**
+  String get expensesFormShoppingPreparingProducts;
 
   /// No description provided for @expensesFormShoppingTapToLink.
   ///
@@ -6723,6 +6735,12 @@ abstract class AppLocalizations {
   /// **'Ganador semanal'**
   String get weeklyWinnerTitle;
 
+  /// Headline for the weekly duel winner screen.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} ganó la semana'**
+  String weeklyWinnerHeadline(String name);
+
   /// No description provided for @weeklyWinnerSubtitle.
   ///
   /// In es, this message translates to:
@@ -6794,6 +6812,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Continuar'**
   String get weeklyWinnerContinue;
+
+  /// Botón temporal de testing para forzar el cierre del duelo semanal y otorgar coins.
+  ///
+  /// In es, this message translates to:
+  /// **'Generar ganador semanal'**
+  String get weeklyWinnerTestButton;
 
   /// No description provided for @loveNoteDialogTitle.
   ///
@@ -8220,7 +8244,7 @@ abstract class AppLocalizations {
   /// No description provided for @expensesNewItemsDetectedTitle.
   ///
   /// In es, this message translates to:
-  /// **'Productos nuevos detectados'**
+  /// **'Nuevos para tu lista'**
   String get expensesNewItemsDetectedTitle;
 
   /// No description provided for @expensesNewItemsDetectedSubtitle.

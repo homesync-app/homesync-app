@@ -11,6 +11,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/concept_icon.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
 import '../../../household/presentation/providers/household_provider.dart';
@@ -248,9 +249,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                             if (rawRewards.isLoadingMore) ...[
                               const SizedBox(height: 20),
                               const Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColors.primary,
-                                ),
+                                child: AppLoader(size: 24),
                               ),
                             ] else if (rawRewards.hasMore) ...[
                               const SizedBox(height: 20),
@@ -287,7 +286,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   Widget _buildDuelTab() {
     if (_isStatsLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
+        child: AppLoader(),
       );
     }
 
@@ -376,7 +375,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
           onComplete: () => _handleChallengeCompletion(challenge, householdId),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: AppLoader()),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
@@ -1032,7 +1031,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => const Center(child: AppLoader()),
     );
 
     final t = AppLocalizations.of(context);
@@ -1237,7 +1236,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   }
 
   void _showProposalDecisionSheet(RewardModel reward) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
@@ -1415,7 +1414,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
     const categories = ['mimos', 'momentos', 'libertades', 'experiencias'];
 
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

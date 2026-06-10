@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -22,6 +23,7 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/services/premium_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+import 'package:homesync_client/core/theme/app_system_ui.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
 import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
@@ -44,6 +46,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   PerformanceMonitor.mark('app.main.start');
+
+  // Edge-to-edge: draw behind the status and gesture bars from frame one.
+  unawaited(AppSystemUi.init());
 
   // Force use of bundled assets for fonts to prevent network errors
   GoogleFonts.config.allowRuntimeFetching = false;
@@ -150,44 +155,44 @@ void main() async {
 
   AppEnvironment.validateRuntimeConfig(isWeb: kIsWeb);
 
-    // 1. Initialize Firebase
-    try {
-      await PerformanceMonitor.measureFuture(
-        'startup.firebase_initialize',
-        () => Firebase.initializeApp(
-          // Android MUST use the native google-services.json (correct API key,
-          // same one shipped in +81). Do NOT force AppEnvironment.firebaseOptions
-          // here — its Dart API key differs from native and breaks prod Auth.
-          options: kIsWeb ? AppEnvironment.firebaseOptions : null,
-        ),
-        warnAfterMs: 700,
-      );
-      // Blindaje: Solo proceder si Firebase se inicializó correctamente
-      if (Firebase.apps.isNotEmpty && !kIsWeb) {
+  // 1. Initialize Firebase
+  try {
+    await PerformanceMonitor.measureFuture(
+      'startup.firebase_initialize',
+      () => Firebase.initializeApp(
+        // Android MUST use the native google-services.json (correct API key,
+        // same one shipped in +81). Do NOT force AppEnvironment.firebaseOptions
+        // here — its Dart API key differs from native and breaks prod Auth.
+        options: kIsWeb ? AppEnvironment.firebaseOptions : null,
+      ),
+      warnAfterMs: 700,
+    );
+    // Blindaje: Solo proceder si Firebase se inicializó correctamente
+    if (Firebase.apps.isNotEmpty && !kIsWeb) {
+      FirebaseCrashlytics.instance
+          .setCustomKey('environment', appContext['environment'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('app_version', appContext['app_version'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('build_number', appContext['build_number'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('platform', appContext['platform'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('locale', appContext['locale'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('timezone', appContext['timezone'] as String);
+      if (deviceContext['model'] != null) {
         FirebaseCrashlytics.instance
-            .setCustomKey('environment', appContext['environment'] as String);
-        FirebaseCrashlytics.instance
-            .setCustomKey('app_version', appContext['app_version'] as String);
-        FirebaseCrashlytics.instance
-            .setCustomKey('build_number', appContext['build_number'] as String);
-        FirebaseCrashlytics.instance
-            .setCustomKey('platform', appContext['platform'] as String);
-        FirebaseCrashlytics.instance
-            .setCustomKey('locale', appContext['locale'] as String);
-        FirebaseCrashlytics.instance
-            .setCustomKey('timezone', appContext['timezone'] as String);
-        if (deviceContext['model'] != null) {
-          FirebaseCrashlytics.instance
-              .setCustomKey('device_model', deviceContext['model'] as String);
-        }
-        if (deviceContext['device'] != null) {
-          FirebaseCrashlytics.instance
-              .setCustomKey('device_type', deviceContext['device'] as String);
-        }
+            .setCustomKey('device_model', deviceContext['model'] as String);
       }
-    } catch (e) {
-      log.e('Firebase initialization failed', error: e);
+      if (deviceContext['device'] != null) {
+        FirebaseCrashlytics.instance
+            .setCustomKey('device_type', deviceContext['device'] as String);
+      }
     }
+  } catch (e) {
+    log.e('Firebase initialization failed', error: e);
+  }
 
   // Inicialización de Supabase + auth/rpc. Si no hay red la SDK reintenta
   // internamente; este try/catch protege el arranque para que un fallo de
@@ -210,7 +215,10 @@ void main() async {
             if (user == null) return null;
             return await user.getIdToken(false);
           } catch (e) {
-            log.w('Firebase Auth token retrieval failed during Supabase init', error: e);
+            log.w(
+              'Firebase Auth token retrieval failed during Supabase init',
+              error: e,
+            );
             return null;
           }
         },
@@ -687,6 +695,12 @@ class _MyAppState extends ConsumerState<MyApp> {
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      // Status/nav bar icons follow the active theme on every screen,
+      // including the ones without an AppBar (home tab, splash, login).
+      builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+        value: AppSystemUi.styleFor(Theme.of(context).brightness),
+        child: child ?? const SizedBox.shrink(),
+      ),
       routes: {
         '/__login__': (_) => LoginScreen(prefs: widget.prefs),
       },

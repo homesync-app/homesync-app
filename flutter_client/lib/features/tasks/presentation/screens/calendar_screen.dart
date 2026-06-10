@@ -10,6 +10,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/category_p
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:intl/intl.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -172,7 +173,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       body: tasksAsync.when(
         skipLoadingOnReload: true,
         loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+          child: AppLoader(),
         ),
         error: (err, _) => Center(
           child: Text(

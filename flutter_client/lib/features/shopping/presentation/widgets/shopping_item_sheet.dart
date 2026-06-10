@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 
 import '../../domain/models/shopping_categories.dart';
 import '../../domain/models/shopping_model.dart';
@@ -31,7 +32,7 @@ class ShoppingItemSheet extends ConsumerStatefulWidget {
     String? initialCategory,
     String? initialEmoji,
   }) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

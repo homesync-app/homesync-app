@@ -232,6 +232,22 @@ class StatsRpcService extends BaseRpcService {
     return Map<String, dynamic>.from(response);
   }
 
+  Future<Map<String, dynamic>> debugAwardWeeklyWinnerBonus(
+    DateTime weekStartDate,
+  ) async {
+    final householdId = await requireHouseholdId();
+
+    final response = await client.rpc(
+      'debug_award_weekly_winner_bonus',
+      params: {
+        'p_household_id': householdId,
+        'p_week_start_date': _dateParam(weekStartDate),
+      },
+    );
+
+    return Map<String, dynamic>.from(response);
+  }
+
   Future<Map<String, dynamic>> checkShouldShowWinner() async {
     try {
       final householdId = await requireHouseholdId();

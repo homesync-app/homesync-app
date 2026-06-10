@@ -100,3 +100,6 @@ flutter_client/analyze*.txt
 
 # ─── Android QA evidence (screenshots, logcat, ui dumps — regenerable) ────────
 artifacts/
+
+# ─── Creative-production artifacts (ad moodboards, review boards — regenerable) ─
+outputs/

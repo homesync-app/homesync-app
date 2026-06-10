@@ -5,11 +5,13 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/custom_avatar_generation_service.dart';
+import 'package:homesync_client/core/services/premium_avatar_motion_cache.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -54,7 +56,7 @@ class AvatarPickerSheet extends ConsumerWidget {
   const AvatarPickerSheet({super.key});
 
   static void show(BuildContext context) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -84,6 +86,15 @@ class AvatarPickerSheet extends ConsumerWidget {
         (failure) => throw Exception(failure.message),
         (_) {},
       );
+
+      // Si el avatar tiene variante animada, arrancar la descarga ya para
+      // que el home lo muestre en movimiento apenas se cierre el picker.
+      final animatedId = UserAvatar.animatedPremiumAvatarIdFor(
+        normalizedAvatar,
+      );
+      if (animatedId != null) {
+        PremiumAvatarMotionCache.prefetch(animatedId);
+      }
 
       ref.invalidate(userProfileProvider);
       ref.invalidate(householdMembersProvider);
@@ -325,7 +336,7 @@ class AvatarPickerSheet extends ConsumerWidget {
   }
 
   void _showCustomAvatarSourceSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => SafeArea(
@@ -672,10 +683,13 @@ class _PremiumAvatarOption extends StatelessWidget {
               children: [
                 Opacity(
                   opacity: isLocked ? 0.42 : 1,
+                  // Solo la imagen: la variante animada se descarga recien
+                  // al seleccionar el avatar (no viene en el APK).
                   child: CustomUserAvatar(
                     avatarUrl: avatarValue,
                     radius: 26,
                     isAnimated: !isLocked,
+                    allowMotion: false,
                   ),
                 ),
                 if (isLocked)

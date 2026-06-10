@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
@@ -14,6 +14,8 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
@@ -29,7 +31,7 @@ class TaskDetailSheet extends ConsumerStatefulWidget {
     Map<String, dynamic> taskData, {
     VoidCallback? onChanged,
   }) {
-    return showModalBottomSheet(
+    return AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -123,7 +125,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
 
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     setState(() => _isLoading = true);
     try {
       final repo = ref.read(taskRepositoryProvider);
@@ -184,8 +186,6 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
     final (statusLabel, statusColor, statusIcon) = _statusInfo(t);
     final categoryColor = CategoryMapping.getCategoryColor(_category);
     final categoryIcon = CategoryMapping.getCategoryMaterialIcon(_category);
-    final categoryLabel =
-        CategoryMapping.categoryNames[_category.toLowerCase()] ?? _category;
     final completedAt = widget.taskData['completed_at'];
     final localeTag = Localizations.localeOf(context).toString();
     final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
@@ -195,7 +195,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
         : t.taskDetailNoRecord;
 
     return Container(
-      margin: const EdgeInsets.only(top: 56),
+      margin: const EdgeInsets.only(top: 72),
       decoration: BoxDecoration(
         color: appTheme.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -213,7 +213,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
+            padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -241,7 +241,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                 ),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(999),
@@ -268,25 +268,28 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
           Flexible(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottomPadding),
+              padding: EdgeInsets.fromLTRB(24, 16, 24, 22 + bottomPadding),
               child: Column(
                 children: [
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 24,
+                      horizontal: 16,
+                      vertical: 15,
                     ),
                     decoration: BoxDecoration(
-                      color: appTheme.surface,
-                      borderRadius: BorderRadius.circular(28),
+                      color: Color.alphaBlend(
+                        categoryColor.withValues(alpha: 0.018),
+                        appTheme.surface,
+                      ),
+                      borderRadius: BorderRadius.circular(26),
                       border: Border.all(
-                        color: appTheme.border.withValues(alpha: 0.5),
+                        color: appTheme.border.withValues(alpha: 0.68),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
-                          blurRadius: 15,
+                          color: Colors.black.withValues(alpha: 0.018),
+                          blurRadius: 16,
                           offset: const Offset(0, 8),
                         ),
                       ],
@@ -294,172 +297,159 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                     child: Column(
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              width: 44,
+                              height: 44,
                               decoration: BoxDecoration(
-                                color: categoryColor.withValues(alpha: 0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                categoryIcon,
-                                size: 26,
-                                color: categoryColor,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Text(
-                                localizedTaskTitle(
-                                  AppLocalizations.of(context),
-                                  _task,
+                                color: Color.alphaBlend(
+                                  categoryColor.withValues(alpha: 0.10),
+                                  appTheme.background,
                                 ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
-                                  color: appTheme.textPrimary,
-                                  letterSpacing: -0.3,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: categoryColor.withValues(alpha: 0.10),
+                                ),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  categoryIcon,
+                                  size: 23,
+                                  color: categoryColor,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _buildChip(
-                              icon: categoryIcon,
-                              label: categoryLabel,
-                              color: categoryColor,
-                            ),
-                            if (_task.isRecurring || !_task.isOverdue)
-                              _buildChip(
-                                icon: _task.isRecurring
-                                    ? Icons.event_repeat_rounded
-                                    : Icons.edit_calendar_rounded,
-                                label: _task.isRecurring
-                                    ? _task.recurrenceLabel(t)
-                                    : t.tasksPillNoDate,
-                                color: _task.isRecurring
-                                    ? AppColors.accentGold
-                                    : const Color(0xFFA8734F),
-                                background: _task.isRecurring
-                                    ? null
-                                    : const Color(0xFFFFF7EF),
-                                textWeight: _task.isRecurring
-                                    ? FontWeight.w800
-                                    : FontWeight.w700,
-                                gap: _task.isRecurring ? 6 : 8,
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 20,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.cardColor,
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                        color: appTheme.border.withValues(alpha: 0.45),
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
+                            const SizedBox(width: 12),
                             Expanded(
-                              child: _buildStatColumn(
-                                icon: Icons.star_rounded,
-                                iconColor: AppColors.accentGold,
-                                value: '+$_xpReward XP',
-                                label: t.taskDetailExperience,
-                              ),
-                            ),
-                            Container(
-                              width: 1,
-                              height: 58,
-                              color: appTheme.divider,
-                            ),
-                            Expanded(
-                              child: _buildStatColumn(
-                                icon: Icons.monetization_on_rounded,
-                                iconColor: AppColors.accentGreen,
-                                value: '+$_coinReward coins',
-                                label: t.taskDetailReward,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    localizedTaskTitle(t, _task),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                      color: appTheme.textPrimary,
+                                      letterSpacing: -0.2,
+                                      height: 1.12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    alignment: WrapAlignment.start,
+                                    spacing: 6,
+                                    runSpacing: 6,
+                                    children: [
+                                      _buildChip(
+                                        icon: Icons.star_rounded,
+                                        label: '+$_xpReward XP',
+                                        color: AppColors.accentGold,
+                                        textColor: appTheme.textPrimary,
+                                        background: AppColors.accentGold
+                                            .withValues(alpha: 0.10),
+                                      ),
+                                      _buildChip(
+                                        icon: Icons.monetization_on_rounded,
+                                        label: t.taskDetailCoinsAwarded(
+                                          _coinReward,
+                                        ),
+                                        color: AppColors.sage,
+                                        textColor: appTheme.textPrimary,
+                                        background: AppColors.sage
+                                            .withValues(alpha: 0.12),
+                                      ),
+                                      if (_task.isRecurring)
+                                        _buildChip(
+                                          icon: Icons.event_repeat_rounded,
+                                          label: _task.recurrenceLabel(t),
+                                          color: AppColors.accentGold,
+                                          textColor: appTheme.textPrimary,
+                                        ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 12),
                         Container(
-                          width: double.infinity,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
+                            horizontal: 12,
+                            vertical: 10,
                           ),
                           decoration: BoxDecoration(
-                            color: appTheme.surfaceContainer,
+                            color: Color.alphaBlend(
+                              AppColors.sage.withValues(alpha: 0.055),
+                              appTheme.surface,
+                            ),
                             borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: AppColors.sage.withValues(alpha: 0.10),
+                            ),
                           ),
                           child: Row(
                             children: [
                               CustomUserAvatar(
                                 name: _completedByName(t),
                                 avatarUrl: _completedByAvatar,
-                                radius: 16,
+                                radius: 15,
                                 forceCircular: true,
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 11),
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      _hasCompletionRecord
-                                          ? t.taskDetailCompletedBy
-                                          : t.taskDetailAssignedTo,
-                                      style: TextStyle(
-                                        color: appTheme.textMuted,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                                child: RichText(
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  text: TextSpan(
+                                    style: TextStyle(
+                                      color: appTheme.textSecondary,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.2,
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      _completedByName(t),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: appTheme.textPrimary,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w800,
+                                    children: [
+                                      TextSpan(
+                                        text: _hasCompletionRecord
+                                            ? '${t.taskDetailCompletedBy} '
+                                            : '${t.taskDetailAssignedTo} ',
                                       ),
-                                    ),
-                                  ],
+                                      TextSpan(
+                                        text: _completedByName(t),
+                                        style: TextStyle(
+                                          color: appTheme.textPrimary,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                               if (completedAt != null)
-                                Text(
-                                  DateFormat('HH:mm').format(
-                                    DateTime.parse(completedAt as String)
-                                        .toLocal(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
                                   ),
-                                  style: TextStyle(
-                                    color: appTheme.textSecondary,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
+                                  decoration: BoxDecoration(
+                                    color: appTheme.background
+                                        .withValues(alpha: 0.78),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    DateFormat('HH:mm').format(
+                                      DateTime.parse(completedAt as String)
+                                          .toLocal(),
+                                    ),
+                                    style: TextStyle(
+                                      color: appTheme.textSecondary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      height: 1,
+                                    ),
                                   ),
                                 ),
                             ],
@@ -504,7 +494,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   _buildActions(),
                 ],
               ),
@@ -520,11 +510,12 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
     required String label,
     required Color color,
     Color? background,
+    Color? textColor,
     FontWeight textWeight = FontWeight.w800,
     double gap = 6,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: background ?? color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(999),
@@ -532,14 +523,14 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: color),
+          Icon(icon, size: 12, color: color),
           SizedBox(width: gap),
           Text(
             label,
             style: TextStyle(
-              color: color,
+              color: textColor ?? color,
               fontWeight: textWeight,
-              fontSize: 12,
+              fontSize: 11,
             ),
           ),
         ],
@@ -547,54 +538,11 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
     );
   }
 
-  Widget _buildStatColumn({
-    IconData? icon,
-    Color? iconColor,
-    String? avatarName,
-    String? avatarUrl,
-    required String value,
-    required String label,
-  }) {
-    final appTheme = context.theme;
-    return Column(
-      children: [
-        if (avatarName != null)
-          CustomUserAvatar(
-            name: avatarName,
-            avatarUrl: avatarUrl,
-            radius: 18,
-            forceCircular: true,
-          )
-        else
-          Icon(icon, size: 24, color: iconColor),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 13,
-            color: appTheme.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: appTheme.textMuted,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildActions() {
+    final appTheme = context.theme;
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
+        child: AppLoader(),
       );
     }
 
@@ -606,14 +554,19 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
           icon: const Icon(Icons.undo_rounded, size: 18),
           label: Text(
             AppLocalizations.of(context).taskDetailUndoButton,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
           ),
           style: OutlinedButton.styleFrom(
-            foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-            side: BorderSide(color: Theme.of(context).dividerColor, width: 1.5),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            foregroundColor: appTheme.textPrimary,
+            backgroundColor: appTheme.surface,
+            side: BorderSide(
+              color: appTheme.border.withValues(alpha: 0.85),
+              width: 1.2,
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
           ),
         ),
       );

@@ -1,12 +1,12 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
@@ -79,7 +79,7 @@ class DashboardTaskCard extends ConsumerWidget {
           onTap: isCompleting
               ? null
               : () {
-                  HapticFeedback.lightImpact();
+                  AppHaptics.tap();
                   onTap?.call();
                 },
           child: Stack(
@@ -151,18 +151,22 @@ class DashboardTaskCard extends ConsumerWidget {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
+                            // At rest this must still read as an action button,
+                            // not as a blank status dot. During completion it
+                            // fills and turns into the confirmed check state.
                             color: Color.lerp(
-                              accent.withValues(alpha: 0.09),
+                              theme.surface.withValues(alpha: 0.94),
                               completionColor.withValues(alpha: 0.94),
                               progress,
                             ),
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: Color.lerp(
-                                accent.withValues(alpha: 0.12),
+                                accent.withValues(alpha: 0.28),
                                 Colors.white.withValues(alpha: 0.62),
                                 progress,
                               )!,
+                              width: 1.8 - (progress * 0.8),
                             ),
                           ),
                           child: AnimatedSwitcher(
@@ -181,8 +185,9 @@ class DashboardTaskCard extends ConsumerWidget {
                               Icons.check_rounded,
                               key: ValueKey(isCompleting),
                               size: isCompleting ? 22 : 18,
-                              color:
-                                  isCompleting ? Colors.white : completionColor,
+                              color: isCompleting
+                                  ? Colors.white
+                                  : accent.withValues(alpha: 0.62),
                             ),
                           ),
                         ),

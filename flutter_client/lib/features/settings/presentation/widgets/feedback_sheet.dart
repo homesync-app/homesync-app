@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
@@ -12,7 +11,9 @@ import 'package:homesync_client/core/services/breadcrumb_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -34,7 +35,7 @@ class FeedbackSheet extends ConsumerStatefulWidget {
     FeedbackType type = FeedbackType.bug,
     String? screen,
   }) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -103,7 +104,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
     if (title.isEmpty) return;
 
     setState(() => _isSending = true);
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
 
     try {
       final client = ref.read(supabaseClientProvider);
@@ -356,7 +357,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           onChanged: _isSending
               ? null
               : (value) {
-                  HapticFeedback.selectionClick();
+                  AppHaptics.selection();
                   setState(() => _wantsEmailResponse = value);
                 },
           contentPadding: EdgeInsets.zero,
@@ -425,7 +426,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          HapticFeedback.selectionClick();
+          AppHaptics.selection();
           setState(() => _type = type);
         },
         child: AnimatedContainer(

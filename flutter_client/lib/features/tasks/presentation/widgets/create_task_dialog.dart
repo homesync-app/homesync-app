@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
@@ -251,7 +251,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       });
 
       if (!mounted) return;
-      HapticFeedback.mediumImpact();
+      AppHaptics.success();
       setState(() => _showSuccessState = true);
       await Future<void>.delayed(const Duration(milliseconds: 220));
       if (mounted) Navigator.of(context).pop(true);
@@ -277,6 +277,14 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final media = MediaQuery.of(context);
+    final keyboardInset = media.viewInsets.bottom;
+    final availableHeight = media.size.height -
+        media.padding.top -
+        media.padding.bottom -
+        keyboardInset -
+        48;
+    final maxDialogHeight = availableHeight.clamp(320.0, 640.0);
     final categoriesAsync = ref.watch(categoriesProvider);
     final categories = categoriesAsync.maybeWhen(
       data: (list) => list,
@@ -290,11 +298,11 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+        bottom: keyboardInset,
       ),
       child: Dialog(
         backgroundColor: theme.surface,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
         child: Theme(
           data: Theme.of(context).copyWith(
@@ -319,9 +327,12 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
             ),
           ),
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 420, maxHeight: 640),
+            constraints: BoxConstraints(
+              maxWidth: 420,
+              maxHeight: maxDialogHeight,
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 18),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -470,7 +481,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                                           ),
                                                           blurRadius: 10,
                                                           offset: const Offset(
-                                                              0, 4),
+                                                            0,
+                                                            4,
+                                                          ),
                                                         ),
                                                       ]
                                                     : [],

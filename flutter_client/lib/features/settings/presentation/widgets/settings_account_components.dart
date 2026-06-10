@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/feedback_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
@@ -384,7 +384,7 @@ class SettingsFeedbackCard extends StatelessWidget {
             ),
             trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
             onTap: () {
-              HapticFeedback.lightImpact();
+              AppHaptics.tap();
               FeedbackSheet.show(context, type: FeedbackType.bug);
             },
           ),
@@ -423,7 +423,7 @@ class SettingsFeedbackCard extends StatelessWidget {
             ),
             trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
             onTap: () {
-              HapticFeedback.lightImpact();
+              AppHaptics.tap();
               FeedbackSheet.show(context, type: FeedbackType.suggestion);
             },
           ),

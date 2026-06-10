@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -9,9 +8,11 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/mascot_motion_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
@@ -28,6 +29,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/widgets/task_completion_flow_mixin.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_feed_entry_motion.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:uuid/uuid.dart';
 
@@ -174,43 +176,41 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     final partnerMember =
         members.where((m) => m.userId != currentUserId).firstOrNull;
 
+    // Jerarquia: saludo contextual chico arriba, el hero ("Todo lo
+    // importante del hogar") es el protagonista y la mascota lo acompana
+    // a la altura del hero, no del saludo.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text.rich(
+          _buildWelcomeGreetingSpan(
+            theme: theme,
+            currentMemberName: currentMember?.displayName,
+          ),
+          style: TextStyle(
+            color: theme.textSecondary,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            height: 1.1,
+            letterSpacing: -0.2,
+          ),
+        ).animateEntrance(),
+        const SizedBox(height: 10),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text.rich(
-                    _buildWelcomeGreetingSpan(
-                      theme: theme,
-                      currentMemberName: currentMember?.displayName,
-                    ),
-                    style: TextStyle(
-                      color: theme.textPrimary,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      height: 1.02,
-                      letterSpacing: -0.8,
-                    ),
-                  ).animateEntrance(),
-                ],
+              child: _buildHomeWelcome(
+                theme: theme,
+                partnerMember: partnerMember,
+                senderName: partnerMember != null
+                    ? (partnerMember.displayName.split(' ').first)
+                    : AppLocalizations.of(context).homeCouplePartnerFallback,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
             _buildProfileAvatar(currentMember).animateScaleIn(delay: 70),
           ],
-        ),
-        const SizedBox(height: 8),
-        _buildHomeWelcome(
-          theme: theme,
-          partnerMember: partnerMember,
-          senderName: partnerMember != null
-              ? (partnerMember.displayName.split(' ').first)
-              : AppLocalizations.of(context).homeCouplePartnerFallback,
         ),
       ],
     );
@@ -332,7 +332,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       children: [
         TextSpan(
           text: '$welcome, ',
-          style: TextStyle(color: theme.textPrimary),
+          style: TextStyle(color: theme.textSecondary),
         ),
         TextSpan(
           text: firstName ?? t.commonUserFallback,
@@ -355,17 +355,18 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       child: Transform.translate(
         offset: const Offset(6, 0),
         child: SizedBox(
-          width: 88,
-          height: 58,
+          width: 104,
+          height: 96,
           child: OverflowBox(
-            alignment: Alignment.topRight,
-            maxWidth: 104,
-            maxHeight: 104,
+            alignment: Alignment.centerRight,
+            maxWidth: 142,
+            maxHeight: 142,
             child: CustomUserAvatar(
               name: member?.displayName,
               avatarUrl: member?.avatarUrl,
-              radius: 26,
+              radius: 36,
               isAnimated: true,
+              motionController: ref.read(homeMascotMotionProvider),
             ),
           ),
         ),
@@ -375,6 +376,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
 
   Widget _buildFinancialSummary(String householdId) {
     final balanceAsync = ref.watch(userBalanceProvider);
+    final balanceData = balanceAsync.value;
     final membersAsync = ref.watch(householdMembersProvider);
     final expenseBalancesAsync = ref.watch(expenseBalancesProvider);
     final currentUserId = ref.read(currentUserIdProvider);
@@ -407,16 +409,16 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     if (isIntegratedEconomy) {
       final projection = ref.watch(monthlyProjectionProvider).value;
       return BalanceCard(
-        coins: balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0,
-        xp: balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0,
+        coins: (balanceData?['coins'] as num?)?.toInt() ?? 0,
+        xp: (balanceData?['xp'] as num?)?.toInt() ?? 0,
         integratedEconomy: true,
         monthlySpent: projection?.spent,
       ).animateEntrance(delay: 100);
     }
 
     return BalanceCard(
-      coins: balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0,
-      xp: balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0,
+      coins: (balanceData?['coins'] as num?)?.toInt() ?? 0,
+      xp: (balanceData?['xp'] as num?)?.toInt() ?? 0,
       userBalance: displayedExpenseBalance,
       partnerName: partner?.displayName,
       settlementJustCompleted: _settlementJustCompleted,
@@ -485,7 +487,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
               itemCount: tasks.length,
               separatorBuilder: (_, __) => const SizedBox(height: 14),
               itemBuilder: (context, index) =>
-                  _buildTaskCard(tasks.elementAt(index), theme, members),
+                  _buildTaskCard(tasks.elementAt(index), theme, members)
+                      .animateStaggered(index),
             );
           },
         ),
@@ -535,7 +538,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
         activityAsync.when(
           loading: () => const Padding(
             padding: EdgeInsets.symmetric(vertical: 20),
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(child: AppLoader()),
           ),
           error: (e, _) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -817,7 +820,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
                                 _settlementJustCompleted = true;
                               });
                             }
-                            HapticFeedback.mediumImpact();
+                            AppHaptics.success();
                             setDialogState(() {
                               isSubmitting = false;
                               showSuccess = true;

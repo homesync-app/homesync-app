@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/utils/debt_simplifier.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/mascot_motion_provider.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/animated_amount.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -213,6 +215,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
                     color: AppColors.accentTeal,
+                    fontFeatures: kTabularFigures,
                   ),
                 ),
               ),
@@ -302,7 +305,8 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
       // Success: next settlement is a new intent → new key.
       _pendingRequestId = null;
 
-      HapticFeedback.mediumImpact();
+      AppHaptics.celebrate();
+      ref.read(homeMascotMotionProvider).play(AvatarMotion.celebrate);
 
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(recentActivityRemoteProvider);

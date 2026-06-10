@@ -4,6 +4,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/contribution_balance_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 /// Equilibrio de aporte para modo convivencia (friends).
@@ -58,7 +59,7 @@ class ContributionBalanceCard extends ConsumerWidget {
                 : _buildContent(theme, t, balance),
             loading: () => const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(child: AppLoader()),
             ),
             error: (_, __) => _buildEmpty(theme, t),
           ),
@@ -108,7 +109,7 @@ class ContributionBalanceCard extends ConsumerWidget {
     final members = [...balance.members]
       ..sort((a, b) => a.displayName.toLowerCase().compareTo(
             b.displayName.toLowerCase(),
-          ));
+          ),);
 
     return Column(
       children: [

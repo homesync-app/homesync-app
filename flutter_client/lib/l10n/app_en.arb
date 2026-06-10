@@ -1554,6 +1554,15 @@
   "taskDetailNoRecord": "No record",
   "taskDetailExperience": "Experience",
   "taskDetailReward": "Reward",
+  "taskDetailCoinsAwarded": "+{count, plural, =1{1 coin} other{{count} coins}}",
+  "@taskDetailCoinsAwarded": {
+    "description": "Compact coin reward shown in the task detail sheet.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "taskDetailCompletedBy": "Completed by",
   "taskDetailAssignedTo": "Assigned to",
   "taskDetailComment": "Comment",
@@ -1933,6 +1942,7 @@
     }
   },
   "expensesFormShoppingWillMarkBought": "They'll be marked as purchased when you save",
+  "expensesFormShoppingPreparingProducts": "Preparing products...",
   "expensesFormShoppingTapToLink": "Tap to link items",
   "expensesFormShoppingClearAllSemantic": "Remove all links",
   "expensesFormShoppingDetectedCount": "{count, plural, =1{1 detected product} other{{count} detected products}}",
@@ -2404,6 +2414,15 @@
   "weeklyWinnerEmptyBody": "Complete tasks this week and the duel will start to take shape.",
   "weeklyWinnerWeeklyClose": "WEEKLY CLOSE",
   "weeklyWinnerTitle": "Weekly winner",
+  "weeklyWinnerHeadline": "{name} won the week",
+  "@weeklyWinnerHeadline": {
+    "description": "Headline for the weekly duel winner screen.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "weeklyWinnerSubtitle": "This is how the weekly duel ended between you.",
   "weeklyWinnerCardSubtitle": "Finished ahead in XP and took the weekly close.",
   "weeklyWinnerCoinsReward": "+20 coins",
@@ -2424,6 +2443,10 @@
   "weeklyWinnerFallbackPlayer": "Player",
   "weeklyWinnerClose": "Close",
   "weeklyWinnerContinue": "Continue",
+  "weeklyWinnerTestButton": "Generate weekly winner",
+  "@weeklyWinnerTestButton": {
+    "description": "Temporary testing button to force the weekly duel close and award coins."
+  },
   "loveNoteDialogTitle": "New love note",
   "loveNoteHint": "Write something tender...",
   "loveNoteSent": "Note sent with love",
@@ -2994,7 +3017,7 @@
       }
     }
   },
-  "expensesNewItemsDetectedTitle": "New items detected",
+  "expensesNewItemsDetectedTitle": "New for your list",
   "expensesNewItemsDetectedSubtitle": "Should we add them to the list for next time?",
   "expensesNewItemsIgnore": "Ignore",
   "expensesNewItemsAddToList": "Add {count} to list",

@@ -12,10 +12,15 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/concept_icon.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
+import '../../../dashboard/presentation/main_navigation.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../../household/presentation/providers/household_provider.dart';
+import '../../../household/presentation/providers/household_providers.dart';
+import '../../../stats/presentation/providers/stats_provider.dart';
+import '../../../stats/presentation/screens/weekly_winner_screen.dart';
 import '../../../stats/presentation/widgets/weekly_progress_tab.dart';
 import '../../../tasks/presentation/providers/task_provider.dart';
 import '../../domain/models/couple_challenge.dart';
@@ -356,8 +361,96 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       totalXp: _totalXpEarned,
       totalCoins: _totalCoinsEarned,
       showHeader: false,
+      onGenerateWeeklyWinner: _showWeeklyWinnerTest,
       onRefresh: _loadDuelStats,
     );
+  }
+
+  Future<void> _showWeeklyWinnerTest() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final currentWeekStart = today.subtract(Duration(days: today.weekday - 1));
+    final currentUserId = ref.read(currentUserIdProvider);
+    final householdId = ref.read(householdIdProvider).value;
+    final previousBalance = ref.read(userBalanceProvider).value;
+    // Captured up-front: the notifier stays usable even if this widget gets
+    // unmounted mid-flow, so the finally below can always unpin the balance.
+    final overrideNotifier = ref.read(userBalanceOverrideProvider.notifier);
+    Map<String, dynamic>? awardResult;
+
+    // Pin the pre-award balance while the winner screen is up. Any background
+    // refresh (realtime, push callback, the winner screen's own reloads) would
+    // otherwise apply the +20 silently behind the route — and by the time we
+    // land on home the card already shows the new total, so there is nothing
+    // left to animate. With the override pinned, the count-up below is
+    // guaranteed to start from the old value in front of the user.
+    Map<String, dynamic>? pinnedBalance;
+    if (previousBalance != null && householdId != null) {
+      pinnedBalance = {
+        ...previousBalance,
+        '_household_id': householdId,
+      };
+      overrideNotifier.state = pinnedBalance;
+    }
+
+    try {
+      await Navigator.of(context).push(
+        AppTransitions.slideUp<void>(
+          WeeklyWinnerScreen(
+            weekStartDate: currentWeekStart,
+            refreshBalanceOnAward: false,
+            useDebugAward: true,
+            onAwarded: (result) => awardResult = result,
+            onClose: () => Navigator.of(context).pop(),
+          ),
+        ),
+      );
+
+      final awardedCoins =
+          (awardResult?['coins_awarded'] as num?)?.toInt() ?? 0;
+      final winnerId = awardResult?['winner_id'] as String?;
+      log.i(
+        '[weekly-winner-test] awarded=$awardedCoins winner=$winnerId '
+        'me=$currentUserId pinned=${pinnedBalance != null} mounted=$mounted',
+      );
+      if (!mounted) return;
+
+      final caps = ref.read(householdCapabilitiesProvider);
+      final homeIndex = indexForMainTab(caps, MainTab.home);
+      if (homeIndex >= 0) {
+        ref.read(bottomNavIndexProvider.notifier).setIndex(homeIndex);
+      }
+
+      // Let the route pop (300ms) and the tab crossfade (300ms) fully settle
+      // so the balance card is actually on screen when the count-up starts.
+      await Future<void>.delayed(const Duration(milliseconds: 420));
+      if (!mounted) return;
+
+      if (pinnedBalance != null &&
+          awardedCoins > 0 &&
+          winnerId == currentUserId) {
+        final currentCoins = (pinnedBalance['coins'] as num?)?.toInt() ?? 0;
+        // Updating the override re-triggers userBalanceProvider (it watches
+        // the override), so no explicit invalidate is needed here.
+        overrideNotifier.state = {
+          ...pinnedBalance,
+          'coins': currentCoins + awardedCoins,
+        };
+        await Future<void>.delayed(const Duration(milliseconds: 1200));
+      }
+    } finally {
+      // Whatever happened above (early return, exception, unmount), never
+      // leave the balance pinned to a stale override — that freezes the card
+      // at the old value until the next app restart.
+      overrideNotifier.state = null;
+      if (mounted) {
+        ref.invalidate(homeBootstrapProvider);
+        ref.invalidate(userBalanceProvider);
+        ref.invalidate(statsControllerProvider);
+      }
+    }
+    if (!mounted) return;
+    await _loadDuelStats();
   }
 
   Widget _buildDuelLoadingState() {
@@ -474,7 +567,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
           onComplete: () => _handleChallengeCompletion(challenge, householdId),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: AppLoader()),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
@@ -779,14 +872,26 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '$availableCoins coins',
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.25,
-                    height: 1.05,
+                // TweenAnimationBuilder retargets from the currently shown
+                // value whenever the balance changes, so redemptions and
+                // bonuses count up/down instead of jumping.
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(
+                    begin: availableCoins.toDouble(),
+                    end: availableCoins.toDouble(),
+                  ),
+                  duration: const Duration(milliseconds: 620),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, animatedCoins, _) => Text(
+                    '${animatedCoins.round()} coins',
+                    style: TextStyle(
+                      color: theme.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.25,
+                      height: 1.05,
+                      fontFeatures: kTabularFigures,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1156,7 +1261,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => const Center(child: AppLoader()),
     );
 
     final t = AppLocalizations.of(context);
@@ -1344,7 +1449,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   }
 
   void _showProposalDecisionSheet(RewardModel reward) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
@@ -1512,7 +1617,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     ];
     const categories = ['mimos', 'momentos', 'libertades', 'experiencias'];
 
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -1583,10 +1688,12 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                       controller: titleController,
                       validator: (value) {
                         final title = value?.trim() ?? '';
-                        if (title.isEmpty)
+                        if (title.isEmpty) {
                           return 'Escribe el nombre del deseo.';
-                        if (title.length < 3)
+                        }
+                        if (title.length < 3) {
                           return 'Usa al menos 3 caracteres.';
+                        }
                         return null;
                       },
                       decoration: InputDecoration(

@@ -4,6 +4,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 import 'expense_form_data.dart';
@@ -13,7 +14,7 @@ Future<void> showExpenseMemberSelectorSheet({
   required List<MemberModel> members,
   required ValueChanged<MemberModel> onSelected,
 }) {
-  return showModalBottomSheet(
+  return AppSheet.show(
     context: context,
     backgroundColor: context.theme.scaffoldBackground,
     shape: const RoundedRectangleBorder(
@@ -72,7 +73,7 @@ Future<void> showExpenseCategorySelectorSheet({
   required ValueChanged<Map<String, dynamic>> onSelected,
   required bool isIncome,
 }) {
-  return showModalBottomSheet(
+  return AppSheet.show(
     context: context,
     backgroundColor: context.theme.scaffoldBackground,
     shape: const RoundedRectangleBorder(

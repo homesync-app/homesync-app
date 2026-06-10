@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 
 class AppSnappyPagePhysics extends PageScrollPhysics {

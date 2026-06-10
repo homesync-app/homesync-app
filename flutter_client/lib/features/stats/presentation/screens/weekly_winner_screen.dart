@@ -1,3 +1,6 @@
+import 'dart:math' show pi;
+
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -6,20 +9,30 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/stats/domain/utils/weekly_duel_period.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/design/app_card.dart';
 import 'package:homesync_client/shared/widgets/design/app_pill.dart';
 import 'package:homesync_client/shared/widgets/design/app_screen_scaffold.dart';
-import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class WeeklyWinnerScreen extends ConsumerStatefulWidget {
   final VoidCallback onClose;
+  final DateTime? weekStartDate;
+  final bool refreshBalanceOnAward;
+  final bool useDebugAward;
+  final ValueChanged<Map<String, dynamic>>? onAwarded;
 
   const WeeklyWinnerScreen({
     super.key,
     required this.onClose,
+    this.weekStartDate,
+    this.refreshBalanceOnAward = true,
+    this.useDebugAward = false,
+    this.onAwarded,
   });
 
   @override
@@ -31,16 +44,34 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
   Map<String, dynamic>? _winner;
   bool _isLoading = true;
   int _coinsAwarded = 20;
+  bool _awardSucceeded = false;
+  bool _isLoadingData = false;
   late final DateTime _weekStartDate;
+  late final ConfettiController _confettiController;
+  bool _celebrated = false;
 
   @override
   void initState() {
     super.initState();
-    _weekStartDate = weeklyDuelTargetWeekStart();
+    _weekStartDate = widget.weekStartDate ?? weeklyDuelTargetWeekStart();
+    _confettiController = ConfettiController(
+      duration: const Duration(milliseconds: 1800),
+    );
     _loadData();
   }
 
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
+    // The userProfileProvider listener in build() retriggers this; without a
+    // guard a profile refresh while the screen is open awards the bonus twice
+    // (the award RPC inserts a fresh ledger entry on every call).
+    if (_isLoadingData || _awardSucceeded) return;
+    _isLoadingData = true;
     try {
       final householdRpc = ref.read(householdRpcServiceProvider);
       final statsRpc = ref.read(statsRpcServiceProvider);
@@ -48,13 +79,18 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
 
       if (ranking.isNotEmpty) {
         _winner = ranking.first;
-        final awardResult =
-            await statsRpc.awardWeeklyWinnerForWeek(_weekStartDate);
+        final awardResult = widget.useDebugAward
+            ? await statsRpc.debugAwardWeeklyWinnerBonus(_weekStartDate)
+            : await statsRpc.awardWeeklyWinnerForWeek(_weekStartDate);
         _coinsAwarded =
             (awardResult['coins_awarded'] as num?)?.toInt() ?? _coinsAwarded;
         if (awardResult['success'] == true) {
-          ref.invalidate(userBalanceProvider);
-          ref.invalidate(statsControllerProvider);
+          _awardSucceeded = true;
+          widget.onAwarded?.call(awardResult);
+          if (widget.refreshBalanceOnAward) {
+            ref.invalidate(userBalanceProvider);
+            ref.invalidate(statsControllerProvider);
+          }
         }
 
         if (ranking.length >= 2) {
@@ -84,10 +120,18 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
         _ranking = ranking;
         _isLoading = false;
       });
+      // The big moment: confetti + the rising celebrate haptic, once.
+      if (_winner != null && !_celebrated) {
+        _celebrated = true;
+        _confettiController.play();
+        AppHaptics.celebrate();
+      }
     } catch (e) {
       log.e('Error loading winner: $e', error: e);
       if (!mounted) return;
       setState(() => _isLoading = false);
+    } finally {
+      _isLoadingData = false;
     }
   }
 
@@ -108,13 +152,36 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
       },
       child: AppScreenScaffold(
         body: SafeArea(
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                )
-              : _winner == null
-                  ? _buildEmptyState(theme, t)
-                  : _buildContent(theme, t),
+          child: Stack(
+            children: [
+              _isLoading
+                  ? const Center(
+                      child: AppLoader(color: AppColors.accentGold),
+                    )
+                  : _winner == null
+                      ? _buildEmptyState(theme, t)
+                      : _buildContent(theme, t),
+              Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirection: pi / 2,
+                  maxBlastForce: 7,
+                  minBlastForce: 2,
+                  emissionFrequency: 0.05,
+                  numberOfParticles: 32,
+                  gravity: 0.12,
+                  shouldLoop: false,
+                  colors: const [
+                    AppColors.accentGold,
+                    AppColors.sage,
+                    AppColors.primary,
+                    AppColors.accentOrange,
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -182,228 +249,211 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
         children: [
           Expanded(
             child: ListView(
+              physics: const BouncingScrollPhysics(),
               children: [
-                _buildHero(theme, t),
-                const SizedBox(height: 14),
-                _buildWinnerCard(theme, t),
-                if (_ranking.length > 1) ...[
-                  const SizedBox(height: 14),
-                  _buildRunnerUpCard(theme, t),
-                  const SizedBox(height: 14),
-                  _buildRanking(theme, t),
-                ],
+                _buildHero(theme, t).animateEntrance(delay: 40),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          _buildCloseButton(theme, label: t.weeklyWinnerContinue),
+          _buildCloseButton(theme, label: t.weeklyWinnerContinue)
+              .animateEntrance(delay: 340),
         ],
       ),
     );
   }
 
   Widget _buildHero(AppThemeColors theme, AppLocalizations t) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(22, 20, 22, 22),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.elevatedSurface,
-            AppColors.accentGold
-                .withValues(alpha: theme.isDarkMode ? 0.20 : 0.16),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppRadii.xxl),
-        border: Border.all(
-          color: AppColors.accentGold.withValues(alpha: 0.22),
-        ),
-        boxShadow: AppElevation.card(
-          color: theme.shadowBase,
-          isDarkMode: theme.isDarkMode,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Row(
-            children: [
-              AppPill(
-                label: t.weeklyWinnerWeeklyClose,
-                icon: Icons.workspace_premium_rounded,
-                color: AppColors.accentGold,
-                selected: true,
-                dense: true,
-              ),
-              const Spacer(),
-              Text(
-                _getWeekRange(),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: theme.textMuted,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 22),
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: AppColors.accentGold.withValues(alpha: 0.18),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.accentGold.withValues(alpha: 0.28),
-              ),
-            ),
-            child: const Icon(
-              Icons.emoji_events_rounded,
-              color: AppColors.accentGold,
-              size: 38,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            t.weeklyWinnerTitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w900,
-              color: theme.textPrimary,
-              letterSpacing: -0.8,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            t.weeklyWinnerSubtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: theme.textSecondary,
-              height: 1.35,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWinnerCard(AppThemeColors theme, AppLocalizations t) {
     final winnerName = _winner!['user_name'] ?? t.weeklyWinnerFallbackWinner;
     final winnerXp = (_winner!['xp_earned'] as num?)?.toInt() ?? 0;
 
     return AppCard(
-      variant: AppCardVariant.standard,
+      variant: AppCardVariant.hero,
       accentColor: AppColors.accentGold,
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 116,
-                height: 116,
-                decoration: BoxDecoration(
-                  color: AppColors.accentGold.withValues(alpha: 0.10),
-                  shape: BoxShape.circle,
+      padding: EdgeInsets.zero,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              theme.surface,
+              AppColors.accentGold
+                  .withValues(alpha: theme.isDarkMode ? 0.10 : 0.055),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(AppRadii.xxl),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                AppPill(
+                  label: t.weeklyWinnerWeeklyClose,
+                  icon: Icons.workspace_premium_rounded,
+                  color: AppColors.accentGold,
+                  selected: true,
+                  dense: true,
                 ),
-              ),
-              CustomUserAvatar(
-                name: winnerName,
-                avatarUrl: _winner!['avatar_url'],
-                radius: 50,
-                showBorder: true,
-                isPriority: true,
-              ),
-              Positioned(
-                right: -2,
-                bottom: 6,
-                child: Container(
-                  width: 34,
-                  height: 34,
+                const Spacer(),
+                Text(
+                  _getWeekRange(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: theme.textMuted,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 112,
+                  height: 112,
                   decoration: BoxDecoration(
-                    color: AppColors.accentGold,
+                    color: AppColors.accentGold.withValues(alpha: 0.10),
                     shape: BoxShape.circle,
-                    border: Border.all(color: theme.surface, width: 3),
+                    border: Border.all(
+                      color: AppColors.accentGold.withValues(alpha: 0.22),
+                      width: 2,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.military_tech_rounded,
-                    color: Colors.white,
-                    size: 18,
+                ),
+                Container(
+                  width: 92,
+                  height: 92,
+                  decoration: BoxDecoration(
+                    color: theme.surface.withValues(alpha: 0.92),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accentGold.withValues(alpha: 0.18),
+                        blurRadius: 26,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
+                ),
+                CustomUserAvatar(
+                  name: winnerName,
+                  avatarUrl: _winner!['avatar_url'],
+                  radius: 42,
+                  showBorder: true,
+                  isPriority: true,
+                  ambientMotion: AvatarMotion.victory,
+                ),
+                Positioned(
+                  right: 2,
+                  bottom: 6,
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: AppColors.accentGold,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: theme.surface, width: 4),
+                    ),
+                    child: const Icon(
+                      Icons.emoji_events_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ).animateScaleIn(delay: 420),
+                ),
+              ],
+            ).animateScaleIn(delay: 120),
+            const SizedBox(height: 14),
+            Text(
+              t.weeklyWinnerHeadline(winnerName),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 29,
+                fontWeight: FontWeight.w900,
+                color: theme.textPrimary,
+                letterSpacing: -0.8,
+                height: 1.05,
+              ),
+            ).animateEntrance(delay: 260),
+            const SizedBox(height: 10),
+            Text(
+              t.weeklyWinnerSubtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: theme.textSecondary,
+                height: 1.35,
+              ),
+            ).animateEntrance(delay: 340),
+            const SizedBox(height: 18),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              alignment: WrapAlignment.center,
+              children: [
+                _buildInfoPill(
+                  icon: Icons.auto_awesome_rounded,
+                  label: '$winnerXp XP',
+                  color: AppColors.accentGold,
+                  selected: true,
+                ),
+                _buildInfoPill(
+                  icon: Icons.monetization_on_rounded,
+                  label: t.weeklyWinnerCoinsAwarded(_coinsAwarded),
+                  color: AppColors.sage,
+                  selected: true,
+                ),
+              ],
+            ).animateEntrance(delay: 420),
+            if (_awardSucceeded) ...[
+              const SizedBox(height: 12),
+              Text(
+                t.weeklyWinnerCardSubtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textMuted,
+                  height: 1.25,
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            winnerName,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: theme.textPrimary,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            t.weeklyWinnerCardSubtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: theme.textSecondary,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            alignment: WrapAlignment.center,
-            children: [
-              _buildInfoPill(
-                icon: Icons.auto_awesome_rounded,
-                label: '$winnerXp XP',
-                color: AppColors.accentGold,
-                selected: true,
-              ),
-              _buildInfoPill(
-                icon: Icons.monetization_on_rounded,
-                label: t.weeklyWinnerCoinsAwarded(_coinsAwarded),
-                color: AppColors.success,
-                selected: true,
-              ),
+            if (_ranking.length > 1) ...[
+              const SizedBox(height: 16),
+              _buildRunnerUpStrip(theme, t).animateEntrance(delay: 500),
             ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildRunnerUpCard(AppThemeColors theme, AppLocalizations t) {
+  Widget _buildRunnerUpStrip(AppThemeColors theme, AppLocalizations t) {
     final runnerUp = _ranking[1];
     final runnerXp = (runnerUp['xp_earned'] as num?)?.toInt() ?? 0;
 
-    return AppCard(
-      variant: AppCardVariant.subtle,
-      padding: const EdgeInsets.all(16),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: theme.surface.withValues(alpha: 0.66),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: theme.border.withValues(alpha: 0.55)),
+      ),
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 30,
+            height: 30,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: theme.background,
+              color: theme.background.withValues(alpha: 0.74),
               shape: BoxShape.circle,
-              border: Border.all(color: theme.border.withValues(alpha: 0.55)),
             ),
             child: Text(
               '2',
@@ -418,7 +468,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
           CustomUserAvatar(
             name: runnerUp['user_name'] ?? t.weeklyWinnerFallbackParticipant,
             avatarUrl: runnerUp['avatar_url'],
-            radius: 26,
+            radius: 21,
             forceCircular: true,
           ),
           const SizedBox(width: 12),
@@ -427,11 +477,11 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Segundo lugar',
+                  t.weeklyWinnerSecondPlace,
                   style: TextStyle(
                     color: theme.textMuted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -439,7 +489,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
                   runnerUp['user_name'] ?? t.weeklyWinnerFallbackParticipant,
                   style: TextStyle(
                     color: theme.textPrimary,
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -454,108 +504,6 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
               fontWeight: FontWeight.w800,
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRanking(AppThemeColors theme, AppLocalizations t) {
-    return AppCard(
-      variant: AppCardVariant.standard,
-      accentColor: AppColors.sage,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.leaderboard_rounded,
-                size: 19,
-                color: theme.textSecondary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                t.weeklyWinnerRankingTitle,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: theme.textPrimary,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          ..._ranking.asMap().entries.map((entry) {
-            final index = entry.key;
-            final player = entry.value;
-            final xp = (player['xp_earned'] as num?)?.toInt() ?? 0;
-            final isWinner = index == 0;
-
-            return Container(
-              margin: EdgeInsets.only(
-                bottom: index == _ranking.length - 1 ? 0 : 12,
-              ),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: isWinner
-                    ? AppColors.accentGold.withValues(alpha: 0.08)
-                    : theme.background,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 30,
-                    height: 30,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isWinner
-                          ? AppColors.accentGold.withValues(alpha: 0.14)
-                          : theme.surface,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '${index + 1}',
-                      style: TextStyle(
-                        color: theme.textPrimary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  CustomUserAvatar(
-                    name: player['user_name'] ?? t.weeklyWinnerFallbackPlayer,
-                    avatarUrl: player['avatar_url'],
-                    radius: 18,
-                    forceCircular: true,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      player['user_name'] ?? t.weeklyWinnerFallbackPlayer,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: theme.textPrimary,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '$xp XP',
-                    style: TextStyle(
-                      color:
-                          isWinner ? AppColors.accentGold : theme.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/receipt_matcher.dart';
 import 'package:homesync_client/features/shopping/data/shopping_predefined.dart';
@@ -11,7 +12,9 @@ import 'package:homesync_client/features/shopping/presentation/widgets/shopping_
 import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
-class ExpenseShoppingIntegrationCard extends StatelessWidget {
+class ExpenseShoppingIntegrationCard extends StatefulWidget {
+  final int animationTrigger;
+  final bool isPreparing;
   final bool isPremium;
   final List<ShoppingItemModel> linkedItems;
   final Set<ShoppingItemModel> autoAddedItems;
@@ -22,6 +25,8 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
 
   const ExpenseShoppingIntegrationCard({
     super.key,
+    this.animationTrigger = 0,
+    this.isPreparing = false,
     required this.isPremium,
     required this.linkedItems,
     this.autoAddedItems = const {},
@@ -32,171 +37,300 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
   });
 
   @override
+  State<ExpenseShoppingIntegrationCard> createState() =>
+      _ExpenseShoppingIntegrationCardState();
+}
+
+class _ExpenseShoppingIntegrationCardState
+    extends State<ExpenseShoppingIntegrationCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _revealController;
+
+  @override
+  void initState() {
+    super.initState();
+    _revealController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 760),
+      value: widget.animationTrigger > 0 ? 0 : 1,
+    );
+    if (widget.animationTrigger > 0) {
+      _revealController.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant ExpenseShoppingIntegrationCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.animationTrigger != oldWidget.animationTrigger &&
+        widget.animationTrigger > 0) {
+      _revealController.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _revealController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final theme = context.theme;
-    final hasItems = linkedItems.isNotEmpty || detectedItemNames.isNotEmpty;
-    final newCount = autoAddedItems.length;
+    final hasItems =
+        widget.linkedItems.isNotEmpty || widget.detectedItemNames.isNotEmpty;
+    final newCount = widget.autoAddedItems.length;
 
-    if (!isPremium) return _buildLockedCard(context, hasItems);
+    if (widget.isPreparing) return _buildPreparingCard(context);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Color.alphaBlend(
-            AppColors.primary.withValues(alpha: 0.018),
-            theme.surface,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: theme.border.withValues(alpha: 0.78),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowBase.withValues(
-                alpha: theme.isDarkMode ? 0.18 : 0.035,
-              ),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
+    if (!widget.isPremium) return _buildLockedCard(context, hasItems);
+
+    return _ShoppingCardReveal(
+      controller: _revealController,
+      child: InkWell(
+        onTap: widget.onTap,
+        borderRadius: AppRadii.control,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Color.alphaBlend(
+              AppColors.primary.withValues(alpha: 0.02),
+              theme.surface,
             ),
-          ],
+            borderRadius: AppRadii.card,
+            border: Border.all(
+              color: theme.border.withValues(alpha: 0.78),
+              width: 1,
+            ),
+            boxShadow: AppElevation.card(
+              color: theme.shadowBase,
+              isDarkMode: theme.isDarkMode,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(AppRadii.md),
+                      ),
+                      child: const Center(
+                        child: ShoppingIcon(
+                          categoryId: 'general',
+                          fallbackEmoji: '\u{1F6D2}',
+                          allowCategoryFallback: true,
+                          size: 25,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            hasItems
+                                ? t.expensesFormShoppingDetectedTitle
+                                : t.expensesFormShoppingLinkTitle,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                              color: theme.textPrimary,
+                              letterSpacing: 0,
+                            ),
+                          ),
+                          if (hasItems && newCount > 0)
+                            Text(
+                              t.expensesFormShoppingDetectedSummary(
+                                widget.linkedItems.length,
+                                newCount,
+                              ),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: theme.textSecondary,
+                                height: 1.4,
+                              ),
+                            )
+                          else if (hasItems)
+                            Text(
+                              t.expensesFormShoppingWillMarkBought,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: theme.textSecondary,
+                                height: 1.4,
+                              ),
+                            )
+                          else
+                            Text(
+                              t.expensesFormShoppingTapToLink,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: theme.textSecondary,
+                                height: 1.4,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (hasItems && widget.onClearAll != null)
+                      InkWell(
+                        onTap: widget.onClearAll,
+                        borderRadius: BorderRadius.circular(AppRadii.pill),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color:
+                                theme.surfaceContainer.withValues(alpha: 0.72),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: theme.border.withValues(alpha: 0.72),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.close_rounded,
+                            color: theme.textSecondary,
+                            size: 18,
+                            semanticLabel:
+                                t.expensesFormShoppingClearAllSemantic,
+                          ),
+                        ),
+                      )
+                    else
+                      Icon(
+                        hasItems
+                            ? Icons.edit_outlined
+                            : Icons.add_circle_outline_rounded,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                  ],
+                ),
+              ),
+              if (hasItems) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  child: Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: widget.linkedItems.indexed.map((entry) {
+                      final index = entry.$1;
+                      final item = entry.$2;
+                      final isNew = widget.autoAddedItems.contains(item);
+                      return _StaggeredReveal(
+                        controller: _revealController,
+                        index: index,
+                        child: _ItemChip(
+                          item: item,
+                          isNew: isNew,
+                          onRemove: widget.onRemoveItem != null
+                              ? () => widget.onRemoveItem!(item)
+                              : null,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ] else ...[
+                const SizedBox(height: 16),
+              ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPreparingCard(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final theme = context.theme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          AppColors.primary.withValues(alpha: 0.016),
+          theme.surface,
+        ),
+        borderRadius: AppRadii.card,
+        border: Border.all(
+          color: theme.border.withValues(alpha: 0.72),
+          width: 1,
+        ),
+        boxShadow: AppElevation.card(
+          color: theme.shadowBase,
+          isDarkMode: theme.isDarkMode,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.105),
-                      borderRadius: BorderRadius.circular(11),
-                    ),
-                    child: const Icon(
-                      Icons.shopping_cart_outlined,
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight.withValues(alpha: 0.86),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
+                  ),
+                  child: const Center(
+                    child: ShoppingIcon(
+                      categoryId: 'general',
+                      fallbackEmoji: '\u{1F6D2}',
+                      allowCategoryFallback: true,
+                      size: 25,
                       color: AppColors.primary,
-                      size: 18,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          hasItems
-                              ? t.expensesFormShoppingDetectedTitle
-                              : t.expensesFormShoppingLinkTitle,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14.5,
-                            color: theme.textPrimary,
-                            letterSpacing: -0.1,
-                          ),
-                        ),
-                        if (hasItems && newCount > 0)
-                          Text(
-                            t.expensesFormShoppingDetectedSummary(
-                              linkedItems.length,
-                              newCount,
-                            ),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: theme.textSecondary,
-                              height: 1.4,
-                            ),
-                          )
-                        else if (hasItems)
-                          Text(
-                            t.expensesFormShoppingWillMarkBought,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: theme.textSecondary,
-                              height: 1.4,
-                            ),
-                          )
-                        else
-                          Text(
-                            t.expensesFormShoppingTapToLink,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: theme.textSecondary,
-                              height: 1.4,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  if (hasItems && onClearAll != null)
-                    InkWell(
-                      onTap: onClearAll,
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: theme.surfaceContainer.withValues(alpha: 0.72),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: theme.border.withValues(alpha: 0.72),
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.close_rounded,
-                          color: theme.textSecondary,
-                          size: 18,
-                          semanticLabel: t.expensesFormShoppingClearAllSemantic,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.expensesFormShoppingDetectedTitle,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                          color: theme.textPrimary,
                         ),
                       ),
-                    )
-                  else
-                    Icon(
-                      hasItems
-                          ? Icons.edit_outlined
-                          : Icons.add_circle_outline_rounded,
-                      color: AppColors.primary,
-                      size: 20,
-                    ),
-                ],
-              ),
-            ),
-            if (hasItems) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-                child: Container(
-                  height: 1,
-                  decoration: BoxDecoration(
-                    color: theme.divider.withValues(alpha: 0.52),
-                    borderRadius: BorderRadius.circular(1),
+                      const SizedBox(height: 2),
+                      Text(
+                        t.expensesFormShoppingPreparingProducts,
+                        style: TextStyle(
+                          color: theme.textSecondary,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          height: 1.25,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Wrap(
-                  spacing: 7,
-                  runSpacing: 7,
-                  children: linkedItems.map((item) {
-                    final isNew = autoAddedItems.contains(item);
-                    return _ItemChip(
-                      item: item,
-                      isNew: isNew,
-                      onRemove: onRemoveItem != null
-                          ? () => onRemoveItem!(item)
-                          : null,
-                    );
-                  }).toList(),
-                ),
-              ),
-            ] else ...[
-              const SizedBox(height: 16),
-            ],
+              ],
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: List.generate(7, (index) {
+                final width =
+                    <double>[112, 132, 104, 124, 96, 142, 116][index % 7];
+                return _PreparingProductPill(width: width);
+              }),
+            ),
           ],
         ),
       ),
@@ -206,166 +340,342 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
   Widget _buildLockedCard(BuildContext context, bool hasItems) {
     final t = AppLocalizations.of(context);
     final theme = context.theme;
-    final displayNames =
-        hasItems ? linkedItems.map((i) => i.name).toList() : detectedItemNames;
+    final displayNames = hasItems
+        ? widget.linkedItems.map((i) => i.name).toList()
+        : widget.detectedItemNames;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: theme.border.withValues(alpha: 0.6),
-            width: 1,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(11),
-                    ),
-                    child: const Icon(
-                      Icons.shopping_cart_outlined,
-                      color: Colors.grey,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                t.expensesFormShoppingLinkTitle,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    AppColors.primary.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Text(
-                                'PREMIUM',
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.primary,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          displayNames.isNotEmpty
-                              ? t.expensesFormShoppingDetectedCount(
-                                  displayNames.length,
-                                )
-                              : t.expensesFormShoppingTapToLink,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade500,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(
-                    Icons.lock_outline,
-                    color: Colors.grey,
-                    size: 18,
-                  ),
-                ],
-              ),
+    return _ShoppingCardReveal(
+      controller: _revealController,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Color.alphaBlend(
+              AppColors.sage.withValues(alpha: 0.018),
+              theme.surface,
             ),
-            if (displayNames.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              const Divider(height: 1, indent: 16, endIndent: 16),
-              const SizedBox(height: 12),
+            borderRadius: AppRadii.card,
+            border: Border.all(
+              color: AppColors.sage.withValues(alpha: 0.16),
+              width: 1,
+            ),
+            boxShadow: AppElevation.card(
+              color: theme.shadowBase,
+              isDarkMode: theme.isDarkMode,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: displayNames.take(8).map((raw) {
-                    // Resuelve emoji y nombre limpio desde el catÃ¡logo.
-                    // raw puede ser nombre canÃ³nico ("Antitranspirante") o
-                    // string crudo del OCR ("ANTITRANS DOVE M POMEL").
-                    final catalogEntry = ReceiptMatcher.findPredefined(raw);
-                    final emoji = catalogEntry?.emoji ?? 'ðŸ›’';
-                    final cleanRaw = ReceiptMatcher.cleanName(raw);
-                    final displayName = catalogEntry != null
-                        ? localizedShoppingCatalogName(
-                            context,
-                            name: catalogEntry.name,
-                            nameKey: catalogEntry.nameKey,
-                          )
-                        : (cleanRaw.isNotEmpty ? cleanRaw : raw);
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.grey.withValues(alpha: 0.25),
+                        color: AppColors.sage.withValues(alpha: 0.09),
+                        borderRadius: BorderRadius.circular(AppRadii.md),
+                      ),
+                      child: const Center(
+                        child: ShoppingIcon(
+                          categoryId: 'general',
+                          fallbackEmoji: '\u{1F6D2}',
+                          allowCategoryFallback: true,
+                          size: 25,
+                          color: AppColors.sage,
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            emoji,
-                            style: const TextStyle(fontSize: 13),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  hasItems
+                                      ? t.expensesFormShoppingDetectedTitle
+                                      : t.expensesFormShoppingLinkTitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14.5,
+                                    color: theme.textPrimary.withValues(
+                                      alpha: 0.78,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 5),
-                          Text(
-                            displayName,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade500,
-                            ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  displayNames.isNotEmpty
+                                      ? t.expensesFormShoppingDetectedCount(
+                                          displayNames.length,
+                                        )
+                                      : t.expensesFormShoppingTapToLink,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: theme.textSecondary,
+                                    height: 1.25,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryLight.withValues(
+                                    alpha: 0.86,
+                                  ),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadii.pill),
+                                ),
+                                child: const Text(
+                                  'PREMIUM',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.primary,
+                                    height: 1,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    );
-                  }).toList(),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: theme.surfaceContainer.withValues(alpha: 0.78),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: theme.border.withValues(alpha: 0.76),
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.lock_outline_rounded,
+                        color: theme.textSecondary,
+                        size: 18,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ] else ...[
-              const SizedBox(height: 16),
+              if (displayNames.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  child: Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: displayNames.take(8).indexed.map((entry) {
+                      final index = entry.$1;
+                      final raw = entry.$2;
+                      // Resuelve emoji y nombre limpio desde el catÃ¡logo.
+                      // raw puede ser nombre canÃ³nico ("Antitranspirante") o
+                      // string crudo del OCR ("ANTITRANS DOVE M POMEL").
+                      final catalogEntry = ReceiptMatcher.findPredefined(raw);
+                      final cleanRaw = ReceiptMatcher.cleanName(raw);
+                      final displayName = catalogEntry != null
+                          ? localizedShoppingCatalogName(
+                              context,
+                              name: catalogEntry.name,
+                              nameKey: catalogEntry.nameKey,
+                            )
+                          : (cleanRaw.isNotEmpty ? cleanRaw : raw);
+                      return _StaggeredReveal(
+                        controller: _revealController,
+                        index: index,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.surfaceContainer.withValues(
+                              alpha: 0.58,
+                            ),
+                            borderRadius: BorderRadius.circular(AppRadii.pill),
+                            border: Border.all(
+                              color: theme.border.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ShoppingIcon(
+                                productKey: catalogEntry?.nameKey ??
+                                    shoppingCatalogKeyForName(displayName),
+                                categoryId: catalogEntry?.category ?? 'general',
+                                fallbackEmoji:
+                                    catalogEntry?.emoji ?? '\u{1F6D2}',
+                                allowProductAsset: true,
+                                allowCategoryFallback: true,
+                                size: 18,
+                                opacity: 0.58,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                displayName,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.textSecondary
+                                      .withValues(alpha: 0.8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ] else ...[
+                const SizedBox(height: 16),
+              ],
             ],
-          ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _ShoppingCardReveal extends StatelessWidget {
+  final AnimationController controller;
+  final Widget child;
+
+  const _ShoppingCardReveal({
+    required this.controller,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final animation = CurvedAnimation(
+      parent: controller,
+      curve: const Interval(0, 0.36, curve: Curves.easeOutCubic),
+    );
+
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) {
+        final value = animation.value;
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, (1 - value) * 10),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _StaggeredReveal extends StatelessWidget {
+  final AnimationController controller;
+  final int index;
+  final Widget child;
+
+  const _StaggeredReveal({
+    required this.controller,
+    required this.index,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final start = (0.18 + index * 0.045).clamp(0.0, 0.82);
+    final end = (start + 0.22).clamp(0.0, 1.0);
+    final animation = CurvedAnimation(
+      parent: controller,
+      curve: Interval(start, end, curve: Curves.easeOutCubic),
+    );
+
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) {
+        final value = animation.value;
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, (1 - value) * 7),
+            child: Transform.scale(
+              scale: 0.96 + value * 0.04,
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PreparingProductPill extends StatelessWidget {
+  final double width;
+
+  const _PreparingProductPill({required this.width});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+
+    return Container(
+      width: width,
+      height: 38,
+      decoration: BoxDecoration(
+        color: theme.surfaceContainer.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
+        border: Border.all(
+          color: theme.border.withValues(alpha: 0.66),
+        ),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 10),
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight.withValues(alpha: 0.82),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              height: 10,
+              decoration: BoxDecoration(
+                color: theme.border.withValues(alpha: 0.74),
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
       ),
     );
   }
@@ -384,26 +694,31 @@ class _ItemChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final chipBorderColor = isNew
-        ? AppColors.divider.withValues(alpha: 0.95)
+        ? theme.border.withValues(alpha: 0.78)
         : AppColors.sage.withValues(alpha: 0.34);
     final chipBackgroundColor = isNew
-        ? AppColors.background.withValues(alpha: 0.84)
+        ? theme.surface.withValues(alpha: 0.86)
         : AppColors.sage.withValues(alpha: 0.065);
 
     final chip = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6.5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: chipBackgroundColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(color: chipBorderColor),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            item.emoji.isNotEmpty ? item.emoji : 'ðŸ›’',
-            style: const TextStyle(fontSize: 13),
+          ShoppingIcon(
+            productKey: item.nameKey ?? shoppingCatalogKeyForName(item.name),
+            categoryId: item.category,
+            fallbackEmoji: item.emoji.isNotEmpty ? item.emoji : '\u{1F6D2}',
+            allowProductAsset: true,
+            allowCategoryFallback: true,
+            size: 19,
           ),
           const SizedBox(width: 6),
           Text(
@@ -448,7 +763,7 @@ class _ItemChip extends StatelessWidget {
     if (onRemove == null) return chip;
     return InkWell(
       onTap: onRemove,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppRadii.pill),
       child: chip,
     );
   }

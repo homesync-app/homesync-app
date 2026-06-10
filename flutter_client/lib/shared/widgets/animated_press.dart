@@ -1,7 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:motor/motor.dart';
 
 enum AppPressHaptic { none, selection, light, medium, heavy }
@@ -100,16 +100,16 @@ class _AnimatedPressState extends State<AnimatedPress> {
       case AppPressHaptic.none:
         return;
       case AppPressHaptic.selection:
-        HapticFeedback.selectionClick();
+        AppHaptics.selection();
         return;
       case AppPressHaptic.light:
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         return;
       case AppPressHaptic.medium:
-        HapticFeedback.mediumImpact();
+        AppHaptics.success();
         return;
       case AppPressHaptic.heavy:
-        HapticFeedback.heavyImpact();
+        AppHaptics.warning();
         return;
     }
   }

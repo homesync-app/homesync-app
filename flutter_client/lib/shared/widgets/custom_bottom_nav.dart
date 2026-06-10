@@ -1,8 +1,36 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
+
+/// Wrap the tab content of the main shell with this when the outer Scaffold
+/// uses `extendBody` + a floating [CustomBottomNav].
+///
+/// `extendBody` raises MediaQuery.padding.bottom to the nav height, but nested
+/// Scaffolds ignore that padding when placing their FloatingActionButtons
+/// (the FAB slot only respects viewPadding). Raising viewPadding.bottom to the
+/// same clearance makes inner Scaffolds float their FABs above the nav pill
+/// using Flutter's own safe-area logic.
+class NavClearance extends StatelessWidget {
+  final Widget child;
+
+  const NavClearance({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    if (mq.padding.bottom <= mq.viewPadding.bottom) return child;
+    return MediaQuery(
+      data: mq.copyWith(
+        viewPadding: mq.viewPadding.copyWith(bottom: mq.padding.bottom),
+      ),
+      child: child,
+    );
+  }
+}
 
 class CustomBottomNavItem {
   final int index;
@@ -43,33 +71,46 @@ class CustomBottomNav extends StatelessWidget {
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 60),
-        padding: const EdgeInsets.all(AppSpacing.xs),
+        // Shadow lives outside the ClipRRect so the blur doesn't erase it.
         decoration: BoxDecoration(
-          color: theme.navigationSurface.withValues(
-            alpha: theme.isDarkMode ? 0.95 : 0.98,
-          ),
           borderRadius: BorderRadius.circular(AppRadii.xl),
-          border: Border.all(
-            color:
-                theme.border.withValues(alpha: theme.isDarkMode ? 0.48 : 0.72),
-          ),
           boxShadow: AppElevation.floating(
             color: theme.shadowBase,
             isDarkMode: theme.isDarkMode,
           ),
         ),
-        child: Row(
-          children: [
-            for (final item in items)
-              Expanded(
-                child: _CustomBottomNavTile(
-                  item: item,
-                  isSelected: currentIndex == item.index,
-                  onTap: () => onTap(item.index),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 60),
+              padding: const EdgeInsets.all(AppSpacing.xs),
+              decoration: BoxDecoration(
+                // Translucent so the page content reads through the blur.
+                color: theme.navigationSurface.withValues(
+                  alpha: theme.isDarkMode ? 0.62 : 0.70,
+                ),
+                borderRadius: BorderRadius.circular(AppRadii.xl),
+                border: Border.all(
+                  color: theme.border
+                      .withValues(alpha: theme.isDarkMode ? 0.48 : 0.72),
                 ),
               ),
-          ],
+              child: Row(
+                children: [
+                  for (final item in items)
+                    Expanded(
+                      child: _CustomBottomNavTile(
+                        item: item,
+                        isSelected: currentIndex == item.index,
+                        onTap: () => onTap(item.index),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -133,7 +174,7 @@ class _CustomBottomNavTile extends StatelessWidget {
               style: TextStyle(
                 color: foreground,
                 fontSize: 9.5,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
               ),
             ),
           ],

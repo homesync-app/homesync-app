@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
@@ -7,12 +6,15 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
@@ -32,7 +34,7 @@ class CompleteTaskSheet extends ConsumerStatefulWidget {
     BuildContext context, {
     VoidCallback? onTasksCompleted,
   }) {
-    return showModalBottomSheet(
+    return AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -218,7 +220,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       }
 
       if (mounted) {
-        HapticFeedback.mediumImpact();
+        AppHaptics.success();
         Navigator.pop(context);
 
         final approvalCount = selectedMembersRequiringApproval.length;
@@ -381,7 +383,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       ),
       child: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+              child: AppLoader(),
             )
           : Column(
               children: [
@@ -605,7 +607,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
           return GestureDetector(
             onTap: () {
-              HapticFeedback.selectionClick();
+              AppHaptics.selection();
               setState(() {
                 if (isSelected) {
                   _selectedMemberIds.remove(userId);
@@ -709,7 +711,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     final theme = context.theme;
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selection();
         onTap();
       },
       child: AnimatedContainer(
@@ -857,7 +859,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
     return GestureDetector(
       onTap: () {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         setState(() {
           if (normId == null) {
             _selectedCategories.clear();
@@ -1008,7 +1010,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     final isSelected = _selectedTaskIds.contains(task.id);
     return GestureDetector(
       onTap: () {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         _toggleTask(task);
       },
       child: AnimatedContainer(

@@ -192,6 +192,7 @@ class AIFaceoffWidget extends ConsumerWidget {
             radius: 38,
             isAnimated: true,
             showBorder: true,
+            ambientMotion: AvatarMotion.versus,
           ),
           const SizedBox(height: 10),
           Text(

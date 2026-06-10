@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 /// Shared body for the couple/family finance configuration.
@@ -137,7 +137,7 @@ class CoupleFinanceConfigBody extends StatelessWidget {
               max: 1,
               divisions: 20, // 5% increments
               onChanged: (val) {
-                HapticFeedback.lightImpact();
+                AppHaptics.tap();
                 onSplitRatioChanged(val);
               },
             ),
@@ -209,7 +209,7 @@ class CoupleFinanceConfigBody extends StatelessWidget {
         final surfaceColor = isActive ? theme.surface : theme.surfaceContainer;
         return GestureDetector(
           onTap: () {
-            HapticFeedback.selectionClick();
+            AppHaptics.selection();
             onTap();
           },
           child: AnimatedContainer(
@@ -260,7 +260,7 @@ class CoupleFinanceConfigBody extends StatelessWidget {
                 ),
                 if (isActive)
                   const Icon(Icons.check_circle_rounded,
-                      color: AppColors.primary),
+                      color: AppColors.primary,),
               ],
             ),
           ),

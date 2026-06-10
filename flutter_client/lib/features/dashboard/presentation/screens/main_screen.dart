@@ -9,6 +9,7 @@ import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/widgets/app_background.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
@@ -341,18 +342,9 @@ class _MainScreenState extends ConsumerState<MainScreen>
     }
 
     return householdAsync.when(
-      loading: () => Scaffold(
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: AppBackground(isDarkMode: context.theme.isDarkMode),
-            ),
-            Center(
-              child: CircularProgressIndicator(color: context.theme.primary),
-            ),
-          ],
-        ),
-      ),
+      // Mantiene el splash del gato (video compartido via cache) en vez de
+      // cortar a un spinner entre el splash de arranque y el Home.
+      loading: () => const SplashScreen(),
       error: (e, st) => Scaffold(
         body: Stack(
           children: [
@@ -428,19 +420,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
         final onboardingDone = ref.watch(memberOnboardingProvider);
         if (onboardingDone.isLoading) {
-          return Scaffold(
-            body: Stack(
-              children: [
-                Positioned.fill(
-                  child: AppBackground(isDarkMode: context.theme.isDarkMode),
-                ),
-                Center(
-                  child:
-                      CircularProgressIndicator(color: context.theme.primary),
-                ),
-              ],
-            ),
-          );
+          return const SplashScreen();
         }
         if (onboardingDone.value == false) {
           return MemberOnboardingScreen(
@@ -514,6 +494,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
         }
       },
       child: Scaffold(
+        // Let page content scroll underneath the floating blurred nav pill.
+        extendBody: true,
         appBar: safeIndex == 0
             ? null
             : AppBar(
@@ -561,9 +543,11 @@ class _MainScreenState extends ConsumerState<MainScreen>
             Positioned.fill(
               child: AppBackground(isDarkMode: theme.isDarkMode),
             ),
-            FadeIndexedStack(
-              index: safeIndex,
-              children: navConfigs.map((c) => c.screen).toList(),
+            NavClearance(
+              child: FadeIndexedStack(
+                index: safeIndex,
+                children: navConfigs.map((c) => c.screen).toList(),
+              ),
             ),
             // In-app notification banner (slides from top)
             InAppNotificationBanner(
@@ -797,6 +781,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
       return;
     }
 
+    AppHaptics.selection();
     ref.read(bottomNavIndexProvider.notifier).setIndex(index);
     if (targetTab == MainTab.home || targetTab == MainTab.tasks) {
       _refreshRealtimeBackedData();

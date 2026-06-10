@@ -17,6 +17,7 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/theme_palettes.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/admin_testing_provider.dart';
@@ -43,6 +44,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/family_mem
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/admin_panel.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -430,19 +432,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ],
               ),
             ),
-            if (_isLoading && !_hasLoadedOnce)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Container(
-                    color: theme.scaffoldBackground.withValues(alpha: 0.001),
-                    alignment: Alignment.center,
-                    child: CircularProgressIndicator(
-                      color: theme.primary,
-                      strokeWidth: 3,
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       ),
@@ -1011,11 +1000,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       displayRole: member['display_role'] as String?,
       type: currentType,
     );
+    final options = _familyRoleOptionsFor(currentType);
 
-    final selected = await showModalBottomSheet<FamilyRoleOption>(
+    final selected = await AppSheet.show<FamilyRoleOption>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.78,
+        ),
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
         decoration: BoxDecoration(
           color: theme.background,
@@ -1045,8 +1038,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              for (final option in FamilyRoleOption.values)
-                _buildMemberTypeOption(option, current, theme, t),
+              Flexible(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final option in options)
+                        _buildMemberTypeOption(option, current, theme, t),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -1110,6 +1113,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  List<FamilyRoleOption> _familyRoleOptionsFor(MemberType currentType) {
+    return switch (currentType) {
+      MemberType.child || MemberType.teen => const [
+          FamilyRoleOption.teen,
+          FamilyRoleOption.son,
+          FamilyRoleOption.daughter,
+        ],
+      MemberType.parent || MemberType.guardian => const [
+          FamilyRoleOption.father,
+          FamilyRoleOption.mother,
+          FamilyRoleOption.guardianMale,
+          FamilyRoleOption.guardianFemale,
+        ],
+    };
   }
 
   Widget _buildMemberTypeOption(
@@ -1230,7 +1249,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return SettingsLanguageCard(
       currentLocale: ref.watch(localeProvider),
       onLocaleChanged: (locale) {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         ref.read(localeProvider.notifier).setLocale(locale);
       },
     );
@@ -1240,7 +1259,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return SettingsCurrencyCard(
       currentCurrency: ref.watch(currencyProvider),
       onCurrencyChanged: (currency) {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         ref.read(currencyProvider.notifier).setCurrency(currency);
       },
     );
@@ -1267,7 +1286,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       isPremium: isPremium,
       currentThemeMode: ref.watch(themeModeProvider),
       onThemeModeChanged: (mode) {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         ref.read(themeModeProvider.notifier).setMode(mode);
       },
       // Menores ven el candado pero no se redirigen al paywall — se les indica
@@ -1276,7 +1295,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ? _showMinorPremiumSnackbar
           : () => PremiumPaywall.show(context),
       onPaletteTap: (palette) {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         ref.read(primaryColorProvider.notifier).setColor(palette.primary);
       },
     );
@@ -1323,7 +1342,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         InkWell(
           borderRadius: BorderRadius.circular(18),
           onTap: () {
-            HapticFeedback.lightImpact();
+            AppHaptics.tap();
             FeedbackSheet.show(
               context,
               type: FeedbackType.bug,
@@ -1442,7 +1461,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return SettingsNotificationsCard(
       isEnabled: isEnabled,
       onChanged: (value) {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         ref.read(notificationEnabledProvider.notifier).toggle(value);
         final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1588,7 +1607,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _buildFAQButton() {
     return SettingsFaqCard(
       onTap: () {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         FAQSheet.show(context);
       },
     );
@@ -1607,7 +1626,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: () {
-            HapticFeedback.lightImpact();
+            AppHaptics.tap();
             FeedbackSheet.show(context, screen: 'settings');
           },
           child: Padding(
@@ -1708,7 +1727,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
         onTap: () async {
-          HapticFeedback.lightImpact();
+          AppHaptics.tap();
           final controller =
               ref.read(coupleHomeTourControllerProvider.notifier);
           await controller.reset();
@@ -1725,7 +1744,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _buildLogoutButton() {
     return SettingsLogoutButton(
       onPressed: () async {
-        HapticFeedback.mediumImpact();
+        AppHaptics.success();
         final confirm = await showSettingsLogoutDialog(context);
 
         if (confirm == true) {
@@ -1743,11 +1762,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _buildResetAccountButton() {
     return SettingsDangerZone(
       onResetPressed: () {
-        HapticFeedback.vibrate();
+        AppHaptics.error();
         _resetAccount();
       },
       onDeletePressed: () {
-        HapticFeedback.vibrate();
+        AppHaptics.error();
         _deleteAccount();
       },
     );
@@ -1758,7 +1777,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final t = AppLocalizations.of(context);
 
     Future<void> openUrl(String url) async {
-      HapticFeedback.lightImpact();
+      AppHaptics.tap();
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);

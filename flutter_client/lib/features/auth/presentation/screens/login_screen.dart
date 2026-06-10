@@ -1,15 +1,16 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   final dynamic prefs;
@@ -80,7 +81,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   void _toggleMode() {
-    HapticFeedback.selectionClick();
+    AppHaptics.selection();
     setState(() {
       _isSignUpMode = !_isSignUpMode;
       _formKey.currentState?.reset();
@@ -89,7 +90,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   void _showError(String message) {
     if (!mounted) return;
-    HapticFeedback.heavyImpact();
+    AppHaptics.warning();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -110,7 +111,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   void _showSuccess(String message) {
     if (!mounted) return;
-    HapticFeedback.lightImpact();
+    AppHaptics.tap();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -138,7 +139,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
 
     final authController = ref.read(authControllerProvider.notifier);
     setState(() => _isSubmitting = true);
@@ -159,7 +160,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
 
     final fullName = _nameController.text.trim();
     final authController = ref.read(authControllerProvider.notifier);
@@ -183,7 +184,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Future<void> _handleGoogleSignIn() async {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
 
     final authController = ref.read(authControllerProvider.notifier);
     setState(() => _isSubmitting = true);
@@ -205,7 +206,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Future<void> _handleForgotPassword() async {
-    HapticFeedback.lightImpact();
+    AppHaptics.tap();
     final t = AppLocalizations.of(context);
     final emailController = TextEditingController(
       text: _emailController.text.trim(),
@@ -950,17 +951,7 @@ class _PremiumLoadingOverlay extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3.5,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.primary,
-                          ),
-                          strokeCap: StrokeCap.round,
-                        ),
-                      ),
+                      const AppLoader(size: 42),
                       if (message.isNotEmpty) ...[
                         const SizedBox(height: 24),
                         Text(

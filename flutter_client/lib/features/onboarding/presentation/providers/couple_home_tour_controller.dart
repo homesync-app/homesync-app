@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 
 /// Storage key — bumped suffix invalidates older tours when redesigned.
@@ -141,7 +141,7 @@ class CoupleHomeTourController extends Notifier<CoupleHomeTourState> {
   }
 
   void start({required bool hasTasks}) {
-    HapticFeedback.lightImpact();
+    AppHaptics.tap();
     state = CoupleHomeTourState(
       isActive: true,
       currentStep: 0,
@@ -150,7 +150,7 @@ class CoupleHomeTourController extends Notifier<CoupleHomeTourState> {
   }
 
   void next() {
-    HapticFeedback.selectionClick();
+    AppHaptics.selection();
     final steps = stepsFor(hasTasks: state.hasTasks);
     final nextIndex = state.currentStep + 1;
     if (nextIndex >= steps.length) {
@@ -162,12 +162,12 @@ class CoupleHomeTourController extends Notifier<CoupleHomeTourState> {
 
   void back() {
     if (state.currentStep == 0) return;
-    HapticFeedback.selectionClick();
+    AppHaptics.selection();
     state = state.copyWith(currentStep: state.currentStep - 1);
   }
 
   void skip() {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     _finishAndPersist();
   }
 

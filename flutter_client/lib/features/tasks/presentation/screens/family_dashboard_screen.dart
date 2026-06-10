@@ -6,6 +6,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/tasks/domain/models/family_member_dashboard.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/family_member_dashboard_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 /// Sprint 2 Modo Padres: dashboard parental.
@@ -118,7 +119,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> {
       ),
       body: dashboardAsync.when(
         skipLoadingOnReload: true,
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: AppLoader()),
         error: (e, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),

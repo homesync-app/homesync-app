@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
     show CompletionSparkleBurst, dashboardCategoryAccent, dashboardCategoryIcon;
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -96,7 +96,7 @@ class FamilyTaskCard extends StatelessWidget {
           onTap: isCompleting
               ? null
               : () {
-                  HapticFeedback.lightImpact();
+                  AppHaptics.tap();
                   onTap?.call();
                 },
           child: Row(
@@ -199,12 +199,17 @@ class FamilyTaskCard extends StatelessWidget {
                         ),
                         shape: BoxShape.circle,
                         border: Border.all(
+                          // Strong outline at rest so the circle reads as the
+                          // action button, not as an already-done state.
                           color: Color.lerp(
                             (isActionEnabled ? accent : theme.textMuted)
-                                .withValues(alpha: 0.12),
+                                .withValues(
+                              alpha: isActionEnabled ? 0.45 : 0.2,
+                            ),
                             Colors.white.withValues(alpha: 0.62),
                             progress,
                           )!,
+                          width: 1.8 - (progress * 0.8),
                         ),
                       ),
                       child: AnimatedSwitcher(
