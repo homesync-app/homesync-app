@@ -4,6 +4,8 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -213,7 +215,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           ),
           const SizedBox(height: 18),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -222,7 +224,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   height: 44,
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                     border: Border.all(
                       color: AppColors.primary.withValues(alpha: 0.14),
                     ),
@@ -293,7 +295,12 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                     : _buildTemplateList(filtered),
           ),
           Container(
-            padding: EdgeInsets.fromLTRB(24, 16, 24, bottomActionPadding),
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.lg,
+              bottomActionPadding,
+            ),
             decoration: BoxDecoration(
               color: context.theme.background,
               boxShadow: [
@@ -330,7 +337,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                       foregroundColor: AppColors.primary,
                       minimumSize: const Size(0, 52),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
                         side: BorderSide(
                           color: AppColors.primary.withValues(alpha: 0.18),
                         ),
@@ -354,7 +361,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                       foregroundColor: Colors.white,
                       minimumSize: const Size(0, 52),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
                       ),
                     ),
                   ),
@@ -395,7 +402,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? color.withValues(alpha: 0.12) : theme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           border: Border.all(
             color: isSelected ? color : theme.border.withValues(alpha: 0.6),
             width: isSelected ? 1.5 : 1,
@@ -655,7 +662,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         ),
         trailing: isAdded
             ? Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.xs),
                 decoration: BoxDecoration(
                   color: AppColors.accentGreen.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
@@ -679,7 +686,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                 ),
                 child: isAdding
                     ? Padding(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(AppSpacing.sm),
                         child: SizedBox(
                           width: 18,
                           height: 18,

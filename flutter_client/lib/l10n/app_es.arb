@@ -2442,6 +2442,8 @@
     }
   },
   "coupleChallengeWeDidIt": "Lo hicimos",
+  "coupleChallengeDoneThisWeek": "¡Completado esta semana!",
+  "coupleChallengeAlreadyDone": "Ya completaron el desafío de esta semana 💚",
   "familyRewardsCoinsLabel": "monedas",
   "statsTabWeek": "Semana",
   "statsTabEvolution": "Evolución",

@@ -4,6 +4,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
@@ -53,7 +54,9 @@ class WeeklyProgressTab extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.xxl),
+        ),
         backgroundColor: theme.surface,
         surfaceTintColor: Colors.transparent,
         title: Row(
@@ -78,7 +81,7 @@ class WeeklyProgressTab extends ConsumerWidget {
             filled: true,
             fillColor: const Color(0xFFEF4444).withValues(alpha: 0.05),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               borderSide: BorderSide.none,
             ),
           ),
@@ -129,7 +132,7 @@ class WeeklyProgressTab extends ConsumerWidget {
               backgroundColor: const Color(0xFFEF4444),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
             ),
             child: Text(t.commonSend),
@@ -177,7 +180,7 @@ class WeeklyProgressTab extends ConsumerWidget {
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(32),
+              borderRadius: BorderRadius.circular(AppRadii.modal),
               border: Border.all(color: theme.border.withValues(alpha: 0.45)),
               boxShadow: theme.cardShadow,
             ),
@@ -240,7 +243,7 @@ class WeeklyProgressTab extends ConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(AppRadii.modal),
                 border: Border.all(
                   color: isPremium
                       ? (theme.isDarkMode
@@ -254,7 +257,7 @@ class WeeklyProgressTab extends ConsumerWidget {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: isPremium
                           ? (theme.isDarkMode
@@ -367,7 +370,7 @@ class _WeeklyHeaderCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(AppRadii.modal),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.45),
         ),
@@ -404,7 +407,7 @@ class _WeeklyHeaderCard extends StatelessWidget {
               color: theme.isDarkMode
                   ? theme.surfaceVariant.withValues(alpha: 0.72)
                   : Colors.white.withValues(alpha: 0.72),
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadii.pill),
             ),
             child: Text(
               '${t.statsCurrentWeek} · $weekRange',
@@ -480,7 +483,7 @@ class _WeeklyWinnerTestButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         child: Ink(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
@@ -491,7 +494,7 @@ class _WeeklyWinnerTestButton extends StatelessWidget {
               AppColors.accentGold.withValues(alpha: 0.07),
               theme.surface,
             ),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             border: Border.all(
               color: AppColors.accentGold.withValues(alpha: 0.22),
             ),

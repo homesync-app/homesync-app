@@ -6,6 +6,7 @@ import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/allowance_sheet.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -114,7 +115,7 @@ class _SettingsParentModeCardState
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.accentGold.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
                     border: Border.all(
                       color: AppColors.accentGold.withValues(alpha: 0.22),
                     ),
@@ -395,12 +396,12 @@ class _UnlockedBody extends ConsumerWidget {
         const SizedBox(height: 12),
         InkWell(
           onTap: onOpenInbox,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             child: Row(
               children: [
@@ -433,12 +434,12 @@ class _UnlockedBody extends ConsumerWidget {
         const SizedBox(height: 8),
         InkWell(
           onTap: onOpenDashboard,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: AppColors.accentBlue.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             child: Row(
               children: [
@@ -469,12 +470,12 @@ class _UnlockedBody extends ConsumerWidget {
         const SizedBox(height: 8),
         InkWell(
           onTap: onOpenSummary,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: AppColors.accentPurple.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             child: Row(
               children: [
@@ -532,7 +533,7 @@ class _ModeOption extends StatelessWidget {
       onTap: enabled && !selected ? () => onChanged(value) : null,
       borderRadius: BorderRadius.circular(14),
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
+        margin: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: selected
@@ -677,7 +678,7 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
             child: Center(
               child: SizedBox(
                 width: 22,
@@ -690,7 +691,7 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
         final rows = snapshot.data ?? const <_MemberApprovalRow>[];
         if (rows.isEmpty) {
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
             child: Text(
               AppLocalizations.of(context).settingsParentModePerMemberEmpty,
               style: TextStyle(color: theme.textSecondary, fontSize: 12),
@@ -708,7 +709,7 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
                 ),
                 decoration: BoxDecoration(
                   color: theme.background,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                   border: Border.all(color: theme.divider, width: 0.5),
                 ),
                 child: Row(

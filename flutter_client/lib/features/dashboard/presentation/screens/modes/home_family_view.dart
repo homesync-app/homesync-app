@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
@@ -282,7 +283,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.warning.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         border: Border.all(color: AppColors.warning.withValues(alpha: 0.25)),
       ),
       child: Row(
@@ -310,7 +311,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             },
             style: TextButton.styleFrom(
               foregroundColor: AppColors.warning,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
@@ -331,7 +332,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(color: color.withValues(alpha: 0.12)),
       ),
       child: Row(
@@ -401,7 +402,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           end: Alignment.bottomRight,
           colors: heroGradient,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(color: heroBorder),
         boxShadow: [
           BoxShadow(
@@ -563,7 +564,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     return Container(
       decoration: BoxDecoration(
         color: theme.surfaceContainer.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
       ),
       child: const Column(
         children: [
@@ -682,7 +683,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 Container(
                   decoration: BoxDecoration(
                     color: theme.surfaceContainer.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(AppRadii.xl),
                   ),
                   child: Column(
                     children: [
@@ -756,7 +757,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                                   decoration: BoxDecoration(
                                     color:
                                         theme.primary.withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.sm),
                                   ),
                                   child: Icon(
                                     Icons.more_horiz_rounded,
@@ -915,7 +917,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   Widget _buildActivityLoadingCard(AppThemeColors theme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(22),
@@ -1103,7 +1105,10 @@ class _ShoppingLoadingTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       child: Row(
         children: [
           ShimmerLoading(height: 24, width: 24, borderRadius: 12),
@@ -1152,7 +1157,7 @@ class _ChildHeroMetric extends StatelessWidget {
             height: 30,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             child: Icon(icon, color: color, size: 17),
           ),

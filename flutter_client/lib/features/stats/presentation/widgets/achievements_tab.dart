@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme_extension.dart';
 import '../../../../core/widgets/concept_icon.dart';
@@ -159,11 +161,11 @@ class AchievementsTab extends StatelessWidget {
   }) {
     final theme = context.theme;
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         boxShadow: theme.cardShadow,
         border: Border.all(
           color: isUnlocked
@@ -246,11 +248,11 @@ class AchievementsTab extends StatelessWidget {
   }) {
     final theme = context.theme;
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: isUnlocked ? theme.surface : theme.surfaceContainer,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(
           color: isUnlocked
               ? AppColors.primary.withValues(alpha: 0.1)

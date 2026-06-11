@@ -160,6 +160,12 @@ class UserAvatar {
         normalized.startsWith('assets/images/custom_avatars/') ||
         normalized.contains('/storage/v1/object/public/custom-avatars/');
   }
+
+  static bool isPremiumCharacterAvatarValue(String? value) {
+    final normalized = normalizeAvatarValue(value);
+    if (normalized == null || normalized.trim().isEmpty) return false;
+    return normalized.startsWith('premium://');
+  }
 }
 
 class CustomUserAvatar extends ConsumerWidget {
@@ -202,7 +208,7 @@ class CustomUserAvatar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bool isPremium = UserAvatar.isPremiumAvatarValue(avatarUrl);
+    final bool isPremium = UserAvatar.isPremiumCharacterAvatarValue(avatarUrl);
     final admin = ref.watch(adminProvider);
 
     Widget avatarContent;
@@ -217,7 +223,7 @@ class CustomUserAvatar extends ConsumerWidget {
         motionController: motionController,
         allowMotion: allowMotion,
       );
-    } else if (isAnimated || isPriority) {
+    } else if (isPriority) {
       avatarContent = _AnimatedAvatar(
         name: name,
         avatarUrl: avatarUrl,

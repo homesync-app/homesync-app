@@ -7,6 +7,8 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
@@ -212,8 +214,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
         ),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+        ),
+        margin: const EdgeInsets.all(AppSpacing.md),
       ),
     );
   }
@@ -353,7 +357,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
             ),
             Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Text(
                   'Error de carga de identidad. Intenta salir de la app y volver a entrar: $e',
                   textAlign: TextAlign.center,
@@ -412,9 +416,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
         // Home/MemberOnboarding mid-flow, skipping steps and losing the chosen
         // name/avatar (persisted only on the final step).
         final setupInProgress = ref.watch(setupInProgressProvider);
-        if (householdId == null ||
-            householdId.isEmpty ||
-            setupInProgress) {
+        if (householdId == null || householdId.isEmpty || setupInProgress) {
           return _buildSetupScreen();
         }
 
@@ -505,7 +507,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
                   theme: theme,
                 ),
                 toolbarHeight: 86,
-                actionsPadding: const EdgeInsets.only(right: 12),
+                actionsPadding: const EdgeInsets.only(right: AppSpacing.sm),
                 actions: [
                   SizedBox(
                     width: 48,
@@ -520,7 +522,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
                             color: theme.surface.withValues(
                               alpha: theme.isDarkMode ? 0.72 : 0.9,
                             ),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(AppRadii.md),
                             border: Border.all(
                               color: theme.border.withValues(
                                 alpha: theme.isDarkMode ? 0.46 : 0.72,

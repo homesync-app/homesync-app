@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
@@ -166,7 +168,8 @@ class _PlannedExpensePaymentSheetState
       ),
       decoration: BoxDecoration(
         color: theme.background,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
       child: membersAsync.when(
         loading: () => const SizedBox(
@@ -264,16 +267,16 @@ class _PlannedExpensePaymentSheetState
             filled: true,
             fillColor: theme.surface,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               borderSide: BorderSide(color: theme.border),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               borderSide:
                   BorderSide(color: theme.border.withValues(alpha: 0.5)),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               borderSide:
                   BorderSide(color: theme.primary.withValues(alpha: 0.7)),
             ),
@@ -313,10 +316,10 @@ class _PlannedExpensePaymentSheetState
             if (picked != null) setState(() => _paidAt = picked);
           },
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               border: Border.all(color: theme.border.withValues(alpha: 0.5)),
             ),
             child: Row(
@@ -421,8 +424,9 @@ class _PlannedExpensePaymentSheetState
         style: ElevatedButton.styleFrom(
           backgroundColor: theme.primary,
           foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+          ),
           elevation: 0,
         ),
         child: _isLoading

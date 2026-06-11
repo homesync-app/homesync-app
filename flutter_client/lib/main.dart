@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fa;
@@ -9,7 +10,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
@@ -50,81 +50,57 @@ void main() async {
   // Edge-to-edge: draw behind the status and gesture bars from frame one.
   unawaited(AppSystemUi.init());
 
-  // Force use of bundled assets for fonts to prevent network errors
-  GoogleFonts.config.allowRuntimeFetching = false;
-
-  final packageInfo = await PerformanceMonitor.measureFuture(
+  // Nada de este grupo depende de Firebase/Supabase: las futures arrancan
+  // ya y se esperan recién donde se usan, solapadas con la cadena de red
+  // de abajo (Firebase → Supabase → RPC).
+  final packageInfoFuture = PerformanceMonitor.measureFuture(
     'startup.package_info',
     PackageInfo.fromPlatform,
     warnAfterMs: 200,
   );
-  breadcrumb.setAppVersion(packageInfo.version, packageInfo.buildNumber);
-  final deviceInfo = DeviceInfoPlugin();
-  final deviceContext = <String, dynamic>{};
-  try {
-    if (kIsWeb) {
-      final web = await deviceInfo.webBrowserInfo;
-      deviceContext.addAll({
-        'device': 'web',
-        'browser': web.browserName.name,
-        'user_agent': web.userAgent,
-        'platform': web.platform,
-      });
-    } else {
-      switch (defaultTargetPlatform) {
-        case TargetPlatform.android:
-          final info = await deviceInfo.androidInfo;
-          deviceContext.addAll({
-            'device': 'android',
-            'model': info.model,
-            'brand': info.brand,
-            'manufacturer': info.manufacturer,
-            'os_version': info.version.release,
-            'sdk_int': info.version.sdkInt,
-          });
-          break;
-        case TargetPlatform.iOS:
-          final info = await deviceInfo.iosInfo;
-          deviceContext.addAll({
-            'device': 'ios',
-            'model': info.utsname.machine,
-            'name': info.name,
-            'system_version': info.systemVersion,
-          });
-          break;
-        case TargetPlatform.macOS:
-          final info = await deviceInfo.macOsInfo;
-          deviceContext.addAll({
-            'device': 'macos',
-            'model': info.model,
-            'os_version': info.osRelease,
-            'kernel_version': info.kernelVersion,
-          });
-          break;
-        case TargetPlatform.windows:
-          final info = await deviceInfo.windowsInfo;
-          deviceContext.addAll({
-            'device': 'windows',
-            'computer_name': info.computerName,
-            'os_version': info.displayVersion,
-          });
-          break;
-        case TargetPlatform.linux:
-          final info = await deviceInfo.linuxInfo;
-          deviceContext.addAll({
-            'device': 'linux',
-            'name': info.name,
-            'version': info.version,
-          });
-          break;
-        case TargetPlatform.fuchsia:
-          deviceContext.addAll({'device': 'fuchsia'});
-          break;
-      }
+  final deviceContextFuture = _collectDeviceContext();
+  final dateFormattingFuture = PerformanceMonitor.measureFuture(
+    'startup.date_formatting',
+    () async {
+      await initializeDateFormatting('es', null);
+      await initializeDateFormatting('en_US', null);
+    },
+    warnAfterMs: 300,
+  );
+  final prefsFuture = PerformanceMonitor.measureFuture(
+    'startup.shared_preferences',
+    SharedPreferences.getInstance,
+    warnAfterMs: 300,
+  );
+  // Warm up GoogleSignIn so the first sign-in is fast. Auth itself is
+  // handled by FirebaseAuthService (Firebase Third-Party Auth bridge); we
+  // never touch supabase.auth because the client runs in accessToken mode.
+  // El timeout de 5s queda fuera del camino crítico: corre en paralelo y
+  // solo se espera justo antes de runApp.
+  final googleSignInWarmupFuture = () async {
+    try {
+      await PerformanceMonitor.measureFuture(
+        'startup.google_sign_in_initialize',
+        () => GoogleSignIn.instance
+            .initialize(
+              clientId: kIsWeb ? AppEnvironment.googleWebClientId : null,
+              serverClientId: kIsWeb ? null : AppEnvironment.googleWebClientId,
+            )
+            .timeout(const Duration(seconds: 5)),
+        warnAfterMs: 500,
+      );
+    } catch (e, stack) {
+      log.w(
+        'GoogleSignIn warm-up failed (offline?)',
+        error: e,
+        stackTrace: stack,
+      );
     }
-  } catch (e) {
-    log.w('Device info initialization failed', error: e);
-  }
+  }();
+
+  final packageInfo = await packageInfoFuture;
+  breadcrumb.setAppVersion(packageInfo.version, packageInfo.buildNumber);
+  final deviceContext = await deviceContextFuture;
 
   final locale = WidgetsBinding.instance.platformDispatcher.locale;
   final appContext = <String, dynamic>{
@@ -235,27 +211,6 @@ void main() async {
 
   final supabaseClient = Supabase.instance.client;
   AppIdentityService.instance.configure(client: supabaseClient);
-  // Warm up GoogleSignIn at startup so the first sign-in is fast. Auth itself
-  // is handled by FirebaseAuthService (Firebase Third-Party Auth bridge); we
-  // never touch supabase.auth because the client runs in accessToken mode.
-  try {
-    await PerformanceMonitor.measureFuture(
-      'startup.google_sign_in_initialize',
-      () => GoogleSignIn.instance
-          .initialize(
-            clientId: kIsWeb ? AppEnvironment.googleWebClientId : null,
-            serverClientId: kIsWeb ? null : AppEnvironment.googleWebClientId,
-          )
-          .timeout(const Duration(seconds: 5)),
-      warnAfterMs: 500,
-    );
-  } catch (e, stack) {
-    log.w(
-      'GoogleSignIn warm-up failed (offline?)',
-      error: e,
-      stackTrace: stack,
-    );
-  }
 
   final rpc = SupabaseRpcService(clientOverride: supabaseClient);
   try {
@@ -325,19 +280,8 @@ void main() async {
     return true;
   };
 
-  await PerformanceMonitor.measureFuture(
-    'startup.date_formatting',
-    () async {
-      await initializeDateFormatting('es', null);
-      await initializeDateFormatting('en_US', null);
-    },
-    warnAfterMs: 300,
-  );
-  final prefs = await PerformanceMonitor.measureFuture(
-    'startup.shared_preferences',
-    SharedPreferences.getInstance,
-    warnAfterMs: 300,
-  );
+  await Future.wait([dateFormattingFuture, googleSignInWarmupFuture]);
+  final prefs = await prefsFuture;
 
   runApp(
     ProviderScope(
@@ -352,6 +296,78 @@ void main() async {
       ),
     ),
   );
+}
+
+/// Contexto del dispositivo para logs/Crashlytics. Falla suave: si un
+/// plugin no responde se devuelve lo que se haya juntado hasta ahí.
+Future<Map<String, dynamic>> _collectDeviceContext() async {
+  final deviceInfo = DeviceInfoPlugin();
+  final deviceContext = <String, dynamic>{};
+  try {
+    if (kIsWeb) {
+      final web = await deviceInfo.webBrowserInfo;
+      deviceContext.addAll({
+        'device': 'web',
+        'browser': web.browserName.name,
+        'user_agent': web.userAgent,
+        'platform': web.platform,
+      });
+    } else {
+      switch (defaultTargetPlatform) {
+        case TargetPlatform.android:
+          final info = await deviceInfo.androidInfo;
+          deviceContext.addAll({
+            'device': 'android',
+            'model': info.model,
+            'brand': info.brand,
+            'manufacturer': info.manufacturer,
+            'os_version': info.version.release,
+            'sdk_int': info.version.sdkInt,
+          });
+          break;
+        case TargetPlatform.iOS:
+          final info = await deviceInfo.iosInfo;
+          deviceContext.addAll({
+            'device': 'ios',
+            'model': info.utsname.machine,
+            'name': info.name,
+            'system_version': info.systemVersion,
+          });
+          break;
+        case TargetPlatform.macOS:
+          final info = await deviceInfo.macOsInfo;
+          deviceContext.addAll({
+            'device': 'macos',
+            'model': info.model,
+            'os_version': info.osRelease,
+            'kernel_version': info.kernelVersion,
+          });
+          break;
+        case TargetPlatform.windows:
+          final info = await deviceInfo.windowsInfo;
+          deviceContext.addAll({
+            'device': 'windows',
+            'computer_name': info.computerName,
+            'os_version': info.displayVersion,
+          });
+          break;
+        case TargetPlatform.linux:
+          final info = await deviceInfo.linuxInfo;
+          deviceContext.addAll({
+            'device': 'linux',
+            'name': info.name,
+            'version': info.version,
+          });
+          break;
+        case TargetPlatform.fuchsia:
+          deviceContext.addAll({'device': 'fuchsia'});
+          break;
+      }
+    }
+  } catch (e) {
+    log.w('Device info initialization failed', error: e);
+  }
+  return deviceContext;
 }
 
 class MyApp extends ConsumerStatefulWidget {
@@ -455,6 +471,10 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _completeStartupGate() async {
+    // El splash mínimo de branding corre EN PARALELO con el bootstrap (no en
+    // serie): garantiza que el splash se vea al menos ese tiempo sin sumarle
+    // ~800ms al arranque cuando la carga ya tardó más que eso.
+    final minimumSplash = Future<void>.delayed(_minimumSplashDuration);
     // Precarga de íconos de compras en background apenas abre la app: corre en
     // paralelo al login/onboarding, así para cuando el usuario llega a la lista
     // de compras ya están cacheados en disco y nunca ve placeholders ni íconos
@@ -487,8 +507,6 @@ class _MyAppState extends ConsumerState<MyApp> {
 
     if (!mounted) return;
 
-    await Future<void>.delayed(_minimumSplashDuration);
-
     if (authState.isAuthenticated && authState.source != 'admin_testing') {
       log.i('StartupGate: preloading home data before entering...');
       await PerformanceMonitor.measureFuture(
@@ -497,6 +515,8 @@ class _MyAppState extends ConsumerState<MyApp> {
         warnAfterMs: 1800,
       );
     }
+
+    await minimumSplash;
 
     if (!mounted) return;
 
@@ -592,7 +612,10 @@ class _MyAppState extends ConsumerState<MyApp> {
       avatarUrls.map((url) async {
         try {
           if (url.startsWith('http')) {
-            await precacheImage(NetworkImage(url), context);
+            // CachedNetworkImageProvider y no NetworkImage: persiste en disco
+            // entre sesiones, así este precache cuesta red solo la primera vez
+            // (medido: ~750ms del gate de arranque re-bajando avatares).
+            await precacheImage(CachedNetworkImageProvider(url), context);
           } else if (url.startsWith('assets/')) {
             await precacheImage(AssetImage(url), context);
           }

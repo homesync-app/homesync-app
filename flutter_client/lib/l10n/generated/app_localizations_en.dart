@@ -3982,6 +3982,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coupleChallengeWeDidIt => 'We did it';
 
   @override
+  String get coupleChallengeDoneThisWeek => 'Completed this week!';
+
+  @override
+  String get coupleChallengeAlreadyDone =>
+      'You two already completed this week\'s challenge 💚';
+
+  @override
   String get familyRewardsCoinsLabel => 'coins';
 
   @override

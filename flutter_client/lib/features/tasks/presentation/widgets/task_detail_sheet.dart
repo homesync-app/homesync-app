@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
@@ -198,7 +200,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
       margin: const EdgeInsets.only(top: 72),
       decoration: BoxDecoration(
         color: appTheme.background,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -244,7 +247,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                       const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -307,7 +310,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                   categoryColor.withValues(alpha: 0.10),
                                   appTheme.background,
                                 ),
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadii.md),
                                 border: Border.all(
                                   color: categoryColor.withValues(alpha: 0.10),
                                 ),
@@ -437,7 +441,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                   decoration: BoxDecoration(
                                     color: appTheme.background
                                         .withValues(alpha: 0.78),
-                                    borderRadius: BorderRadius.circular(999),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.pill),
                                   ),
                                   child: Text(
                                     DateFormat('HH:mm').format(
@@ -462,7 +467,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                     const SizedBox(height: 16),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
                         color: AppColors.accentRed.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(18),
@@ -518,7 +523,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: background ?? color.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -563,7 +568,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
               color: appTheme.border.withValues(alpha: 0.85),
               width: 1.2,
             ),
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
             ),

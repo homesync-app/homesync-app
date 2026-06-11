@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -161,7 +163,7 @@ class _CoupleSplitStrategyScreenState
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     CoupleFinanceConfigBody(
@@ -180,7 +182,7 @@ class _CoupleSplitStrategyScreenState
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(AppRadii.lg),
                         ),
                       ),
                       child: _isSaving

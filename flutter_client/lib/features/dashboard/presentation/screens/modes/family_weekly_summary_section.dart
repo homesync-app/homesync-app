@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
@@ -47,7 +49,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
         0;
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -57,7 +59,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
             theme.primary.withValues(alpha: 0.05),
           ],
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(color: theme.primary.withValues(alpha: 0.15)),
       ),
       child: Column(
@@ -154,7 +156,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
   Widget _buildWeeklySummaryLoading(AppThemeColors theme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -164,7 +166,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
             theme.elevatedSurface.withValues(alpha: 0.92),
           ],
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.62),
         ),
@@ -266,7 +268,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: theme.surfaceContainer,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadii.xs),
                 ),
                 child: Text(
                   AppLocalizations.of(context).familyWeeklyRankingSubtitle,
@@ -290,7 +292,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.surfaceContainer.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
       ),
       child: const Column(
@@ -388,7 +390,7 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.surfaceContainer.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
       ),
       child: Column(
@@ -437,7 +439,7 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
           ],
           if (filtered.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -511,7 +513,7 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
                         color: xp > 0
                             ? theme.primary.withValues(alpha: 0.1)
                             : theme.divider.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
                       ),
                       child: Text(
                         xp > 0 ? '$xp pts' : '— pts',

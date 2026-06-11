@@ -4,6 +4,8 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
@@ -398,7 +400,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 ),
                 const SizedBox(height: 22),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                   child: Column(
                     children: [
                       Row(
@@ -444,7 +447,9 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: EdgeInsets.only(
-                      bottom: _selectedTaskIds.isEmpty || _isLoading ? 24 : 12,
+                      bottom: _selectedTaskIds.isEmpty || _isLoading
+                          ? AppSpacing.lg
+                          : AppSpacing.sm,
                     ),
                     children: [
                       if (ref.watch(parentModeAvailableProvider)) ...[
@@ -471,7 +476,9 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                       _buildCategoryAndSearch(categories),
                       const SizedBox(height: 16),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
                         child: Column(
                           children: _buildGroupedTasksInFull(tasks, categories),
                         ),
@@ -675,7 +682,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
   Widget _buildDateSelection() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xs,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -716,10 +726,13 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.sm,
+          horizontal: AppSpacing.md,
+        ),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : theme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(
             color: isSelected ? AppColors.primary : theme.border,
             width: 1.5,
@@ -767,11 +780,11 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: Container(
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               border: Border.all(color: theme.border, width: 1.2),
               boxShadow: [
                 BoxShadow(
@@ -825,7 +838,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
               return ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 children: [
                   _buildCategoryChip(
                     null,
@@ -916,7 +929,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       return [
         Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Text(
               AppLocalizations.of(context).completeTaskNoTasksAvailable,
             ),
@@ -982,7 +995,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     required Color color,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 12),
+      padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.sm),
       child: Row(
         children: [
           Icon(icon, size: 16, color: color),
@@ -1021,7 +1034,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.05)
               : theme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           border: Border.all(
             color: isSelected ? AppColors.primary : theme.border,
             width: 1.5,

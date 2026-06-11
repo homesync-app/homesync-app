@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -152,10 +154,10 @@ class CoupleFinanceConfigBody extends StatelessWidget {
       builder: (context) {
         final theme = context.theme;
         return Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: AppColors.accentTeal.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppRadii.xl),
             border: Border.all(
               color: theme.isDarkMode
                   ? AppColors.accentTeal.withValues(alpha: 0.34)
@@ -214,11 +216,11 @@ class CoupleFinanceConfigBody extends StatelessWidget {
           },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            margin: const EdgeInsets.only(bottom: 12),
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: surfaceColor,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               border: Border.all(
                 color: isActive ? AppColors.primary : theme.border,
                 width: 2,
@@ -259,8 +261,10 @@ class CoupleFinanceConfigBody extends StatelessWidget {
                   ),
                 ),
                 if (isActive)
-                  const Icon(Icons.check_circle_rounded,
-                      color: AppColors.primary,),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: AppColors.primary,
+                  ),
               ],
             ),
           ),
@@ -330,7 +334,7 @@ class CoupleFinanceConfigBody extends StatelessWidget {
           height: 40,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             color: AppColors.primary.withValues(alpha: 0.1),
           ),
           child: Row(

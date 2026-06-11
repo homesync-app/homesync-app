@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
@@ -20,10 +22,10 @@ class SettingsNoHouseholdCard extends StatelessWidget {
     final t = AppLocalizations.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -71,9 +73,12 @@ class SettingsNoHouseholdCard extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.primary,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.md,
+              ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadii.md),
               ),
               elevation: 0,
             ),
@@ -123,7 +128,7 @@ class SettingsHouseholdCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -148,8 +153,8 @@ class SettingsHouseholdCard extends StatelessWidget {
                 end: Alignment.bottomRight,
               ),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
+                topLeft: Radius.circular(AppRadii.xl),
+                topRight: Radius.circular(AppRadii.xl),
               ),
             ),
             child: Row(
@@ -158,7 +163,7 @@ class SettingsHouseholdCard extends StatelessWidget {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: theme.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                   ),
                   child:
                       Icon(Icons.home_rounded, color: theme.primary, size: 24),
@@ -203,7 +208,7 @@ class SettingsHouseholdCard extends StatelessWidget {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: onEdit,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                     child: Container(
                       padding: const EdgeInsets.all(7),
                       child: Icon(
@@ -224,7 +229,7 @@ class SettingsHouseholdCard extends StatelessWidget {
             endIndent: 18,
           ),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -232,7 +237,7 @@ class SettingsHouseholdCard extends StatelessWidget {
                 if (showTasksToggle) ...[
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: theme.scaffoldBackground,
                       borderRadius: BorderRadius.circular(18),
@@ -246,7 +251,7 @@ class SettingsHouseholdCard extends StatelessWidget {
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: theme.primary.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadii.sm),
                           ),
                           child: Icon(
                             Icons.task_alt_rounded,
@@ -374,7 +379,7 @@ class SettingsHouseholdMemberRow extends StatelessWidget {
     final hasActions = onEdit != null || onRemove != null || onQaDelete != null;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
@@ -445,7 +450,7 @@ class SettingsHouseholdMemberRow extends StatelessWidget {
                   size: 22,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 color: theme.surface,
                 onSelected: (value) {
@@ -495,7 +500,7 @@ class _SettingsMemberTinyChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -575,10 +580,10 @@ List<SettingsHouseholdMemberData> buildSettingsHouseholdMemberData({
       avatarUrl: avatarUrl,
       isCurrentUser: isCurrentUser,
       showOwnerStar: role == 'owner',
-      onEdit: (canManageMemberRoles ||
-              (allowCurrentUserRoleEdit && isCurrentUser))
-          ? () => onEditRole(member)
-          : null,
+      onEdit:
+          (canManageMemberRoles || (allowCurrentUserRoleEdit && isCurrentUser))
+              ? () => onEditRole(member)
+              : null,
       onRemove: (isOwner && !isCurrentUser)
           ? () => onRemoveMember(member['user_id'], rawName)
           : null,
@@ -672,7 +677,7 @@ Future<void> showSettingsJoinHouseholdDialog(
         return AlertDialog(
           backgroundColor: context.theme.surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
           ),
           title: Row(
             children: [
@@ -682,8 +687,9 @@ Future<void> showSettingsJoinHouseholdDialog(
                 size: 22,
               ),
               const SizedBox(width: 10),
-              Text(AppLocalizations.of(context)
-                  .settingsHouseholdJoinDialogTitle,),
+              Text(
+                AppLocalizations.of(context).settingsHouseholdJoinDialogTitle,
+              ),
             ],
           ),
           content: Column(
@@ -787,11 +793,11 @@ void showSettingsEditHouseholdMenu(
     context: context,
     backgroundColor: theme.surface,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
     ),
     builder: (ctx) => SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -805,7 +811,7 @@ void showSettingsEditHouseholdMenu(
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: Text(
                 householdName,
                 style: TextStyle(
@@ -821,7 +827,7 @@ void showSettingsEditHouseholdMenu(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: const Icon(Icons.edit_rounded, color: AppColors.primary),
               ),
@@ -837,7 +843,7 @@ void showSettingsEditHouseholdMenu(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: AppColors.accentBlue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: const Icon(
                   Icons.share_rounded,
@@ -861,7 +867,7 @@ void showSettingsEditHouseholdMenu(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: AppColors.accentTeal.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                   child: const Icon(
                     Icons.balance_rounded,
@@ -905,7 +911,7 @@ void showSettingsInvitationCodeSheet(
     backgroundColor: theme.surface,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
     ),
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setSheetState) => SafeArea(
@@ -958,7 +964,7 @@ void showSettingsInvitationCodeSheet(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: theme.scaffoldBackground,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                     border: Border.all(
                       color: theme.primary.withValues(alpha: 0.1),
                     ),
@@ -993,8 +999,8 @@ void showSettingsInvitationCodeSheet(
                           backgroundColor: theme.primary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.xs,
                           ),
                           elevation: 0,
                           minimumSize: const Size(120, 48),
@@ -1008,7 +1014,7 @@ void showSettingsInvitationCodeSheet(
                         icon: Icon(Icons.copy_rounded, color: theme.primary),
                         style: IconButton.styleFrom(
                           backgroundColor: theme.primary.withValues(alpha: 0.1),
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(AppSpacing.sm),
                         ),
                       ),
                     ],
@@ -1016,10 +1022,10 @@ void showSettingsInvitationCodeSheet(
                 )
               else
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     color: theme.surface,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                   child: Center(
                     child: Text(
@@ -1070,7 +1076,9 @@ Future<bool?> showSettingsRemoveMemberDialog(
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: theme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+      ),
       title: Text(
         t.settingsHouseholdRemoveMemberTitle,
         style: const TextStyle(fontWeight: FontWeight.w900),
@@ -1087,7 +1095,7 @@ Future<bool?> showSettingsRemoveMemberDialog(
             backgroundColor: theme.error,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             minimumSize: const Size(100, 48),
           ),
@@ -1109,7 +1117,9 @@ Future<bool?> showSettingsDeleteDummyMemberDialog(
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: theme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+      ),
       title: Text(
         t.settingsHouseholdDeleteDummyTitle,
         style: const TextStyle(fontWeight: FontWeight.w900),
@@ -1126,7 +1136,7 @@ Future<bool?> showSettingsDeleteDummyMemberDialog(
             backgroundColor: theme.error,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             minimumSize: const Size(128, 48),
           ),
@@ -1149,7 +1159,9 @@ Future<String?> showSettingsRenameHouseholdDialog(
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: theme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+      ),
       title: Text(
         t.settingsHouseholdRenameDialogTitle,
         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -1162,7 +1174,9 @@ Future<String?> showSettingsRenameHouseholdDialog(
           labelText: t.settingsHouseholdRenameDialogLabel,
           filled: true,
           fillColor: theme.primary.withValues(alpha: 0.05),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+          ),
         ),
       ),
       actions: [

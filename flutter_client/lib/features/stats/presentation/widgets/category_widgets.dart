@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -23,7 +25,7 @@ class CategoryBarChart extends StatelessWidget {
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(AppRadii.modal),
         boxShadow: theme.cardShadow,
         border: Border.all(color: theme.border.withValues(alpha: 0.45)),
       ),
@@ -47,7 +49,7 @@ class CategoryBarChart extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadii.xs),
                 ),
                 child: Text(
                   t.categoriesTasksCount(totalValue.toInt()),
@@ -62,7 +64,7 @@ class CategoryBarChart extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadii.md),
             child: SizedBox(
               height: 56,
               child: Row(
@@ -156,11 +158,11 @@ class CategoryDetailCard extends StatelessWidget {
     final t = AppLocalizations.of(context);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(AppRadii.modal),
         boxShadow: theme.cardShadow,
         border: Border.all(color: theme.border.withValues(alpha: 0.45)),
       ),
@@ -178,7 +180,7 @@ class CategoryDetailCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
             ),
             child: Center(
               child: Text(icon, style: const TextStyle(fontSize: 28)),

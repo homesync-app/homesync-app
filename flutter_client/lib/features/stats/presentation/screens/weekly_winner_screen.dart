@@ -8,6 +8,7 @@ import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
@@ -532,7 +533,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
           backgroundColor: theme.primary,
           foregroundColor: Colors.white,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.lg),
           ),

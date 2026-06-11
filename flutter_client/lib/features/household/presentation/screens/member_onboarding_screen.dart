@@ -4,6 +4,7 @@ import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
@@ -246,7 +247,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
               height: 88,
               decoration: BoxDecoration(
                 color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(AppRadii.xxl),
               ),
               child: const Icon(
                 Icons.waving_hand_rounded,
@@ -276,7 +277,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
               style: TextStyle(
                 fontSize: 16,
                 height: 1.4,
-                color: AppColors.textSecondary.withValues(alpha: 0.9),
+                color: context.theme.textSecondary.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -387,7 +388,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
             style: TextStyle(
               fontSize: 15.5,
               height: 1.28,
-              color: AppColors.textSecondary.withValues(alpha: 0.9),
+              color: context.theme.textSecondary.withValues(alpha: 0.9),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -435,7 +436,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.primaryLight,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
       ),
       child: Text(
         text,
@@ -463,19 +464,19 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
         duration: const Duration(milliseconds: 220),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.94),
-          borderRadius: BorderRadius.circular(28),
+          color: context.theme.surface.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(AppRadii.xxl),
           border: Border.all(
             color: isSelected
                 ? tone.withValues(alpha: 0.5)
-                : AppColors.border.withValues(alpha: 0.8),
+                : context.theme.border.withValues(alpha: 0.8),
             width: isSelected ? 1.8 : 1.2,
           ),
           boxShadow: [
             BoxShadow(
               color: isSelected
                   ? tone.withValues(alpha: 0.08)
-                  : AppColors.shadowBase.withValues(alpha: 0.04),
+                  : context.theme.shadowBase.withValues(alpha: 0.04),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),
@@ -508,7 +509,8 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
                   Text(
                     desc,
                     style: TextStyle(
-                      color: AppColors.textSecondary.withValues(alpha: 0.84),
+                      color:
+                          context.theme.textSecondary.withValues(alpha: 0.84),
                       fontSize: 14,
                       height: 1.35,
                     ),
@@ -526,7 +528,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
                 border: Border.all(
                   color: isSelected
                       ? tone
-                      : AppColors.border.withValues(alpha: 0.9),
+                      : context.theme.border.withValues(alpha: 0.9),
                   width: 1.4,
                 ),
               ),
@@ -557,7 +559,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
           ),
           elevation: 0,
         ),

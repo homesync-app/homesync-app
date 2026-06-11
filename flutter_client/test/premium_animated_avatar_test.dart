@@ -1,25 +1,21 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:homesync_client/shared/widgets/premium_animated_avatar.dart';
 
 void main() {
-  final webp = File(
-    '../tools/avatar_animation/dist/premium_orange_cat.webp',
-  ).absolute;
+  // El gato va empaquetado en el APK: este es el asset real de produccion.
+  const webpAsset =
+      'assets/images/premium_3d_avatars/animated/premium_orange_cat.webp';
 
-  testWidgets('reproduce frames desde archivo local descargado',
+  testWidgets('reproduce frames del webp empaquetado (asset)',
       (tester) async {
-    expect(webp.existsSync(), isTrue, reason: 'falta el webp de prueba');
-
     // Montar y dejar cargar DENTRO de runAsync: la carga del codec es IO
     // real y no completa dentro de la zona fake-async del tester.
     await tester.runAsync(() async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: PremiumAnimatedAvatar(
-            motionAssets: {AvatarMotion.idle: webp.path},
+            motionAssets: {AvatarMotion.idle: webpAsset},
             fallbackAsset: 'assets/images/premium_3d_avatars/no_existe.png',
             size: 120,
           ),

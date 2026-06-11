@@ -6,6 +6,7 @@ import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -25,6 +26,7 @@ import '../../../stats/presentation/widgets/weekly_progress_tab.dart';
 import '../../../tasks/presentation/providers/task_provider.dart';
 import '../../domain/models/couple_challenge.dart';
 import '../../domain/models/reward_model.dart';
+import '../providers/couple_challenge_provider.dart';
 import '../providers/reward_provider.dart';
 import '../utils/reward_localization.dart';
 import '../widgets/couple_challenge_card.dart';
@@ -470,7 +472,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             height: 300,
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(32),
+              borderRadius: BorderRadius.circular(AppRadii.modal),
             ),
           ),
         ),
@@ -480,7 +482,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             height: 98,
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(AppRadii.xl),
             ),
           ),
         ),
@@ -490,7 +492,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             height: 98,
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(AppRadii.xl),
             ),
           ),
         ),
@@ -505,10 +507,13 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     required Color background,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -533,7 +538,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Text(
         label,
@@ -559,12 +564,24 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             CoupleChallenge.currentWeeklyChallenge(household?.createdAt);
         final challengeIndex =
             CoupleChallenge.currentWeeklyChallengeIndex(household?.createdAt);
+        final weekIndex =
+            CoupleChallenge.currentWeekIndex(household?.createdAt);
         final totalChallenges = CoupleChallenge.allChallenges.length;
+        final isCompleted = ref
+                .watch(
+                  coupleChallengeCompletedProvider(
+                    (householdId: householdId, weekIndex: weekIndex),
+                  ),
+                )
+                .value ??
+            false;
         return CoupleChallengeCard(
           challenge: challenge,
           challengeNumber: challengeIndex + 1,
           totalChallenges: totalChallenges,
-          onComplete: () => _handleChallengeCompletion(challenge, householdId),
+          isCompleted: isCompleted,
+          onComplete: () =>
+              _handleChallengeCompletion(challenge, householdId, weekIndex),
         );
       },
       loading: () => const Center(child: AppLoader()),
@@ -637,7 +654,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       children: categories.map((category) {
         final catRewards = grouped[category] ?? const <RewardModel>[];
         return Padding(
-          padding: const EdgeInsets.only(bottom: 24),
+          padding: const EdgeInsets.only(bottom: AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -716,17 +733,17 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       color: Colors.transparent,
       child: InkWell(
         onTap: isMine ? null : () => _showProposalDecisionSheet(reward),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         child: Container(
           decoration: BoxDecoration(
             color: theme.surface,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppRadii.xl),
             border: Border.all(
               color: accent.withValues(alpha: 0.18),
             ),
             boxShadow: theme.cardShadow,
           ),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -834,7 +851,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(18),
@@ -910,7 +930,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: AppColors.accentGold.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadii.pill),
             ),
             child: const Text(
               'Saldo',
@@ -974,7 +994,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.55),
         ),
@@ -984,7 +1004,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _confirmRedeem(reward, canAfford),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           child: Stack(
             children: [
               Positioned(
@@ -1039,7 +1059,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     const SizedBox(height: 10),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                       decoration: BoxDecoration(
                         color: canAfford
                             ? theme.primary.withValues(alpha: 0.12)
@@ -1091,7 +1112,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(color: theme.border.withValues(alpha: 0.45)),
       ),
       child: Column(
@@ -1110,7 +1131,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
               foregroundColor: AppColors.primary,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadii.md),
               ),
             ),
             child: const Text(
@@ -1149,7 +1170,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.45),
         ),
@@ -1203,7 +1224,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                       : AppColors.sage.withValues(alpha: 0.22),
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
                 ),
               ),
             ),
@@ -1216,12 +1237,31 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   Future<void> _handleChallengeCompletion(
     CoupleChallenge challenge,
     String householdId,
+    int weekIndex,
   ) async {
     final t = AppLocalizations.of(context);
+    // Guardia contra carreras (doble tap / el otro miembro lo completó y la
+    // card todavía no se refrescó): el desafío es uno por semana por hogar.
+    final alreadyDone = ref
+            .read(
+              coupleChallengeCompletedProvider(
+                (householdId: householdId, weekIndex: weekIndex),
+              ),
+            )
+            .value ??
+        false;
+    if (alreadyDone) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(t.coupleChallengeAlreadyDone)),
+      );
+      return;
+    }
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+        ),
         title: Text(t.rewardsChallengeCompletePrompt),
         content: Text(
           t.rewardsChallengeCompleteBody(challenge.coinReward),
@@ -1240,7 +1280,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
             ),
             child: Text(t.rewardsYesWeDid),
@@ -1250,13 +1290,14 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     );
 
     if (confirm == true) {
-      await _executeChallengeCompletion(challenge, householdId);
+      await _executeChallengeCompletion(challenge, householdId, weekIndex);
     }
   }
 
   Future<void> _executeChallengeCompletion(
     CoupleChallenge challenge,
     String householdId,
+    int weekIndex,
   ) async {
     showDialog(
       context: context,
@@ -1275,12 +1316,13 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
       final challengeTitle = challenge.localizedTitle(t);
       final challengeDescription = challenge.localizedDescription(t);
-      final challengeCategory = challenge.localizedCategory(t);
       final taskRpc = ref.read(taskRpcServiceProvider);
+      // Sin categoría: tasks.category tiene FK contra categories(id) (ids de
+      // quehaceres como 'cocina'); la categoría del desafío es solo un label
+      // localizado de display y el insert violaría fk_tasks_category.
       final newTaskId = await taskRpc.createTask(
         title: t.rewardsChallengeTitle(challengeTitle),
         description: challengeDescription,
-        category: challengeCategory,
         coinReward: challenge.coinReward,
         xpReward: 10,
         type: 'one_time',
@@ -1295,6 +1337,22 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         householdId: householdId,
         userIds: userIds,
       );
+
+      // Marca la semana como completada para ambos miembros. Si falla, los
+      // coins ya se acreditaron: loguear y seguir (la card queda activa, pero
+      // la guardia de _handleChallengeCompletion evita duplicar al reintentar
+      // cuando vuelva la red).
+      try {
+        await recordCoupleChallengeCompletion(
+          ref,
+          householdId: householdId,
+          weekIndex: weekIndex,
+          challengeId: challenge.id,
+          completedBy: currentUserId ?? userIds.first,
+        );
+      } catch (e) {
+        log.w('No se pudo registrar el desafío semanal completado: $e');
+      }
 
       if (!mounted) return;
       Navigator.pop(context);
@@ -1323,7 +1381,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.lg),
+        ),
         title: Text(t.rewardsDeletePrompt),
         content: Text(t.rewardsDeleteBody(reward.title)),
         actions: [
@@ -1340,7 +1400,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
             ),
             child: Text(t.commonDelete),
@@ -1462,7 +1522,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
           decoration: BoxDecoration(
             color: theme.background,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(AppRadii.xxl)),
           ),
           child: SafeArea(
             top: false,
@@ -1477,7 +1538,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     margin: const EdgeInsets.only(bottom: 18),
                     decoration: BoxDecoration(
                       color: AppColors.divider,
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
                   ),
                 ),
@@ -1549,7 +1610,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                           side: const BorderSide(color: AppColors.error),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(AppRadii.md),
                           ),
                         ),
                         child: const Text(
@@ -1573,7 +1634,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(AppRadii.md),
                           ),
                         ),
                         child: const Text(
@@ -1625,7 +1686,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         builder: (context, setModalState) {
           final theme = context.theme;
           OutlineInputBorder inputBorder(Color color) => OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadii.lg),
                 borderSide: BorderSide(color: color),
               );
 
@@ -1655,10 +1716,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                       child: Container(
                         width: 42,
                         height: 5,
-                        margin: const EdgeInsets.only(bottom: 24),
+                        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
                         decoration: BoxDecoration(
                           color: theme.divider,
-                          borderRadius: BorderRadius.circular(999),
+                          borderRadius: BorderRadius.circular(AppRadii.pill),
                         ),
                       ),
                     ),
@@ -1843,13 +1904,15 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                                 : () =>
                                     setModalState(() => selectedIcon = icon),
                             child: Container(
-                              margin: const EdgeInsets.only(right: 12),
-                              padding: const EdgeInsets.all(16),
+                              margin:
+                                  const EdgeInsets.only(right: AppSpacing.sm),
+                              padding: const EdgeInsets.all(AppSpacing.md),
                               decoration: BoxDecoration(
                                 color: selected
                                     ? AppColors.primary.withValues(alpha: 0.10)
                                     : theme.surface,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadii.lg),
                                 border: Border.all(
                                   color: selected
                                       ? AppColors.primary
@@ -1957,7 +2020,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         ),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.md),
+        ),
       ),
     );
   }

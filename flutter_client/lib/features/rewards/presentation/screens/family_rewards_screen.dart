@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/widgets/concept_icon.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -100,7 +102,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   ...pendingRewards.map(
                     (reward) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: _PendingRewardCard(
                         reward: reward,
                         onApprove: () => _approveReward(context, ref, reward),
@@ -228,8 +230,9 @@ class FamilyRewardsScreen extends ConsumerWidget {
             ),
             decoration: BoxDecoration(
               color: theme.background,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppRadii.xxl),
+              ),
             ),
             child: SingleChildScrollView(
               child: Column(
@@ -241,7 +244,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
                       height: 4,
                       decoration: BoxDecoration(
                         color: theme.divider,
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadii.pill),
                       ),
                     ),
                   ),
@@ -328,7 +331,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
                             color: selected
                                 ? AppColors.primary.withValues(alpha: 0.12)
                                 : theme.surface,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(AppRadii.md),
                             border: Border.all(
                               color: selected
                                   ? AppColors.primary
@@ -472,7 +475,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
           decoration: BoxDecoration(
             color: theme.background,
             borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(28),
+              top: Radius.circular(AppRadii.xxl),
             ),
           ),
           child: Column(
@@ -485,7 +488,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
                   height: 4,
                   decoration: BoxDecoration(
                     color: theme.divider,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
                   ),
                 ),
               ),
@@ -770,7 +773,7 @@ class _CountPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Text(
         label,
@@ -847,7 +850,7 @@ class _EmptyBoutique extends StatelessWidget {
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(color: theme.border.withValues(alpha: 0.45)),
       ),
       child: Column(
@@ -883,7 +886,7 @@ class _EmptyBoutique extends StatelessWidget {
                 foregroundColor: AppColors.primary,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
               ),
               child: const Text(
@@ -921,7 +924,7 @@ class _InlineEmptyState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(color: theme.border.withValues(alpha: 0.4)),
       ),
       child: Text(
@@ -986,7 +989,7 @@ class _RewardGrid extends ConsumerWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppRadii.xl),
                   border: Border.all(
                     color: theme.border.withValues(alpha: 0.55),
                   ),
@@ -997,7 +1000,7 @@ class _RewardGrid extends ConsumerWidget {
                   child: InkWell(
                     onTap: () => onRedeem(reward),
                     onLongPress: canDelete ? () => onManage(reward) : null,
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(AppRadii.xl),
                     child: Stack(
                       children: [
                         if (canDelete)
@@ -1053,8 +1056,9 @@ class _RewardGrid extends ConsumerWidget {
                               ),
                               Container(
                                 width: double.infinity,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.xs,
+                                ),
                                 decoration: BoxDecoration(
                                   color: canAfford
                                       ? theme.primary.withValues(alpha: 0.12)
@@ -1126,10 +1130,10 @@ class _PendingRewardCard extends StatelessWidget {
     final description = localizedRewardDescription(t, reward);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
         boxShadow: theme.cardShadow,
       ),
@@ -1229,7 +1233,7 @@ class _TargetChip extends StatelessWidget {
           color: selected
               ? AppColors.primary.withValues(alpha: 0.12)
               : theme.surface,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
           border: Border.all(
             color: selected
                 ? AppColors.primary

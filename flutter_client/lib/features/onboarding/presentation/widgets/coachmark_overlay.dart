@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
@@ -363,7 +364,7 @@ class _ModalIllustration extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.32),
@@ -680,7 +681,7 @@ class _TooltipCard extends StatelessWidget {
                   const SizedBox(height: 14),
                   ...step.bullets.map(
                     (b) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                       child: _BulletRow(bullet: b),
                     ),
                   ),
@@ -888,7 +889,10 @@ class _ProgressDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.32),
         borderRadius: BorderRadius.circular(AppRadii.pill),

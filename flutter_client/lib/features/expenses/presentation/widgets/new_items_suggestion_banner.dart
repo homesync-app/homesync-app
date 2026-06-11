@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/receipt_matcher.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
@@ -140,7 +141,7 @@ class _NewItemsSuggestionBannerState
       controller: _revealController,
       child: Container(
         margin: const EdgeInsets.only(top: 14),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: Color.alphaBlend(
             AppColors.sage.withValues(alpha: 0.036),

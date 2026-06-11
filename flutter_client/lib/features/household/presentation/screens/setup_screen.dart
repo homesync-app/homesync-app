@@ -7,6 +7,8 @@ import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -673,7 +675,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         content: Text(AppLocalizations.of(context).setupSnackCodeCopied),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+        ),
       ),
     );
   }
@@ -778,7 +782,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                               decoration: BoxDecoration(
                                 color:
                                     AppColors.primary.withValues(alpha: 0.10),
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadii.md),
                                 border: Border.all(
                                   color:
                                       AppColors.primary.withValues(alpha: 0.18),
@@ -855,7 +860,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     const totalSteps = 7; // steps 1-7
     final activeStep = _currentStep - 1; // normalize
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.xs,
+      ),
       child: Row(
         children: List.generate(totalSteps, (index) {
           final isActive = index <= activeStep;
@@ -865,12 +875,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeOutCubic,
               height: 6,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
+              margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
               decoration: BoxDecoration(
                 color: isActive
                     ? AppColors.primary
-                    : AppColors.border.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(999),
+                    : context.theme.border.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(AppRadii.pill),
                 boxShadow: index == activeStep
                     ? [
                         BoxShadow(
@@ -931,14 +941,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               hintText: 'ABCDEF',
               hintStyle: TextStyle(
                 letterSpacing: compact ? 5 : 8,
-                color: AppColors.textMuted.withValues(alpha: 0.3),
+                color: context.theme.textMuted.withValues(alpha: 0.3),
               ),
               filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.92),
+              fillColor: context.theme.surface.withValues(alpha: 0.92),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(compact ? 18 : 20),
-                borderSide:
-                    BorderSide(color: AppColors.border.withValues(alpha: 0.9)),
+                borderSide: BorderSide(
+                  color: context.theme.border.withValues(alpha: 0.9),
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(compact ? 18 : 20),
@@ -1031,7 +1042,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
     return Padding(
       key: const ValueKey('value_prop_v3'),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -1055,7 +1066,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               style: TextStyle(
                 fontSize: 18,
                 height: 1.45,
-                color: AppColors.textSecondary.withValues(alpha: 0.88),
+                color: context.theme.textSecondary.withValues(alpha: 0.88),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -1094,7 +1105,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             Text(
               t.setupValuePropTimeHint,
               style: TextStyle(
-                color: AppColors.textSecondary.withValues(alpha: 0.6),
+                color: context.theme.textSecondary.withValues(alpha: 0.6),
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
               ),
@@ -1113,14 +1124,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         return SingleChildScrollView(
           key: const ValueKey('welcome_v5'),
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SetupOnboardingIllustration(
-                  imagePath: 'assets/images/onboarding_welcome_cat.png',
+                  imagePath: 'assets/images/onboarding_welcome_cat.webp',
                 ),
                 const SizedBox(height: 18),
                 Text(
@@ -1139,7 +1150,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   style: TextStyle(
                     fontSize: 17,
                     height: 1.36,
-                    color: AppColors.textSecondary.withValues(alpha: 0.84),
+                    color: context.theme.textSecondary.withValues(alpha: 0.84),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1176,7 +1187,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     final t = AppLocalizations.of(context);
     return Padding(
       key: const ValueKey('identity_v3'),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -1207,7 +1218,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.shadowBase.withValues(alpha: 0.08),
+                          color:
+                              context.theme.shadowBase.withValues(alpha: 0.08),
                           blurRadius: 22,
                           offset: const Offset(0, 10),
                         ),
@@ -1228,7 +1240,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     decoration: BoxDecoration(
                       color: AppColors.primary,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
+                      // Anillo que separa el badge del avatar: imita el
+                      // fondo, no puede ser blanco fijo en dark mode.
+                      border: Border.all(
+                        color: context.theme.scaffoldBackground,
+                        width: 3,
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: AppColors.primary.withValues(alpha: 0.22),
@@ -1254,7 +1271,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               style: TextStyle(
                 fontSize: 14,
                 height: 1.45,
-                color: AppColors.textSecondary.withValues(alpha: 0.78),
+                color: context.theme.textSecondary.withValues(alpha: 0.78),
               ),
             ),
             const SizedBox(height: 22),
@@ -1266,11 +1283,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 hintText: t.authNameHint,
                 prefixIcon: const Icon(Icons.person_outline_rounded),
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.9),
+                fillColor: context.theme.surface.withValues(alpha: 0.9),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(22),
                   borderSide: BorderSide(
-                    color: AppColors.border.withValues(alpha: 0.9),
+                    color: context.theme.border.withValues(alpha: 0.9),
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
@@ -1295,7 +1312,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textSecondary.withValues(alpha: 0.9),
+                color: context.theme.textSecondary.withValues(alpha: 0.9),
               ),
             ),
             const SizedBox(height: 12),
@@ -1325,16 +1342,16 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 220),
                         width: 68,
-                        margin: const EdgeInsets.only(right: 12),
+                        margin: const EdgeInsets.only(right: AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.primary.withValues(alpha: 0.12)
-                              : Colors.white.withValues(alpha: 0.84),
+                              : context.theme.surface.withValues(alpha: 0.84),
                           borderRadius: BorderRadius.circular(22),
                           border: Border.all(
                             color: isSelected
                                 ? AppColors.primary
-                                : AppColors.border.withValues(alpha: 0.9),
+                                : context.theme.border.withValues(alpha: 0.9),
                             width: isSelected ? 1.8 : 1.2,
                           ),
                           boxShadow: isSelected
@@ -1381,7 +1398,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     final t = AppLocalizations.of(context);
     return Padding(
       key: const ValueKey('mode_v3'),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1439,8 +1456,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                               TextButton(
                                 style: TextButton.styleFrom(
                                   minimumSize: const Size(0, 34),
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.xs,
+                                  ),
                                   tapTargetSize:
                                       MaterialTapTargetSize.shrinkWrap,
                                 ),
@@ -1452,7 +1470,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                                 child: Text(
                                   t.setupSignOutLink,
                                   style: TextStyle(
-                                    color: AppColors.textSecondary
+                                    color: context.theme.textSecondary
                                         .withValues(alpha: 0.64),
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
@@ -1462,7 +1480,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                               Text(
                                 '·',
                                 style: TextStyle(
-                                  color: AppColors.textSecondary
+                                  color: context.theme.textSecondary
                                       .withValues(alpha: 0.38),
                                   fontSize: 16,
                                   fontWeight: FontWeight.w900,
@@ -1471,8 +1489,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                               TextButton(
                                 style: TextButton.styleFrom(
                                   minimumSize: const Size(0, 34),
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.xs,
+                                  ),
                                   tapTargetSize:
                                       MaterialTapTargetSize.shrinkWrap,
                                 ),
@@ -1481,7 +1500,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                                 child: Text(
                                   t.setupSeeFeaturesLink,
                                   style: TextStyle(
-                                    color: AppColors.textSecondary
+                                    color: context.theme.textSecondary
                                         .withValues(alpha: 0.52),
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
@@ -1520,19 +1539,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.94),
-          borderRadius: BorderRadius.circular(24),
+          color: context.theme.surface.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           border: Border.all(
             color: isSelected
                 ? AppColors.primary.withValues(alpha: 0.52)
-                : AppColors.border.withValues(alpha: 0.82),
+                : context.theme.border.withValues(alpha: 0.82),
             width: isSelected ? 1.7 : 1.1,
           ),
           boxShadow: [
             BoxShadow(
               color: isSelected
                   ? AppColors.primary.withValues(alpha: 0.07)
-                  : AppColors.shadowBase.withValues(alpha: 0.04),
+                  : context.theme.shadowBase.withValues(alpha: 0.04),
               blurRadius: 14,
               offset: const Offset(0, 6),
             ),
@@ -1560,7 +1579,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: AppColors.textSecondary.withValues(alpha: 0.84),
+                      color:
+                          context.theme.textSecondary.withValues(alpha: 0.84),
                       fontSize: 13,
                       height: 1.28,
                     ),
@@ -1579,7 +1599,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 border: Border.all(
                   color: isSelected
                       ? AppColors.primary
-                      : AppColors.border.withValues(alpha: 0.9),
+                      : context.theme.border.withValues(alpha: 0.9),
                   width: 1.3,
                 ),
               ),
@@ -1647,7 +1667,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     return SingleChildScrollView(
       key: const ValueKey('team_options_v3'),
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1670,7 +1690,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             style: TextStyle(
               fontSize: 15.5,
               height: 1.28,
-              color: AppColors.textSecondary.withValues(alpha: 0.9),
+              color: context.theme.textSecondary.withValues(alpha: 0.9),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -1744,159 +1764,164 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         Expanded(
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 12),
-              SetupStepEyebrow(text: t.setupInvitationEyebrow),
-              const SizedBox(height: 10),
-              SetupHeading(
-                title: t.setupInvitationTitle(modeKey),
-                subtitle: t.setupInvitationSubtitle(modeKey),
-              ),
-              const SizedBox(height: 28),
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 320),
-                  child: AspectRatio(
-                    aspectRatio: 1.6,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.96),
-                        borderRadius: BorderRadius.circular(32),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.18),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.shadowBase.withValues(alpha: 0.07),
-                            blurRadius: 24,
-                            offset: const Offset(0, 12),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(32),
-                        child: Stack(
-                          children: [
-                            Positioned(
-                              top: -20,
-                              right: -20,
-                              child: Container(
-                                width: 120,
-                                height: 120,
-                                decoration: BoxDecoration(
-                                  color:
-                                      AppColors.primary.withValues(alpha: 0.05),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
+                children: [
+                  const SizedBox(height: 12),
+                  SetupStepEyebrow(text: t.setupInvitationEyebrow),
+                  const SizedBox(height: 10),
+                  SetupHeading(
+                    title: t.setupInvitationTitle(modeKey),
+                    subtitle: t.setupInvitationSubtitle(modeKey),
+                  ),
+                  const SizedBox(height: 28),
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 320),
+                      child: AspectRatio(
+                        aspectRatio: 1.6,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color:
+                                context.theme.surface.withValues(alpha: 0.96),
+                            borderRadius: BorderRadius.circular(AppRadii.modal),
+                            border: Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.18),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.all(32),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    t.setupInvitationCodeEyebrow,
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 12,
-                                      letterSpacing: 2,
+                            boxShadow: [
+                              BoxShadow(
+                                color: context.theme.shadowBase
+                                    .withValues(alpha: 0.07),
+                                blurRadius: 24,
+                                offset: const Offset(0, 12),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(AppRadii.modal),
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  top: -20,
+                                  right: -20,
+                                  child: Container(
+                                    width: 120,
+                                    height: 120,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.05),
+                                      shape: BoxShape.circle,
                                     ),
                                   ),
-                                  if (_isGeneratingCode)
-                                    const AppLoader(size: 26)
-                                  else
-                                    FittedBox(
-                                      child: Text(
-                                        _myInviteCode ?? '------',
-                                        style: const TextStyle(
-                                          color: AppColors.primary,
-                                          fontSize: 56,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(AppSpacing.xl),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        t.setupInvitationCodeEyebrow,
+                                        style: TextStyle(
+                                          color: context.theme.textSecondary,
                                           fontWeight: FontWeight.w900,
-                                          letterSpacing: 8,
+                                          fontSize: 12,
+                                          letterSpacing: 2,
                                         ),
                                       ),
-                                    ),
-                                ],
-                              ),
+                                      if (_isGeneratingCode)
+                                        const AppLoader(size: 26)
+                                      else
+                                        FittedBox(
+                                          child: Text(
+                                            _myInviteCode ?? '------',
+                                            style: const TextStyle(
+                                              color: AppColors.primary,
+                                              fontSize: 56,
+                                              fontWeight: FontWeight.w900,
+                                              letterSpacing: 8,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: AppColors.border.withValues(alpha: 0.85),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: AppColors.sage.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(
-                        Icons.info_outline_rounded,
-                        color: AppColors.sage,
-                        size: 18,
+                  const SizedBox(height: 18),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.theme.surface.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: context.theme.border.withValues(alpha: 0.85),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        t.setupInvitationFooter,
-                        style: TextStyle(
-                          fontSize: 13,
-                          height: 1.4,
-                          color:
-                              AppColors.textSecondary.withValues(alpha: 0.82),
-                          fontWeight: FontWeight.w600,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: AppColors.sage.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(
+                            Icons.info_outline_rounded,
+                            color: AppColors.sage,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            t.setupInvitationFooter,
+                            style: TextStyle(
+                              fontSize: 13,
+                              height: 1.4,
+                              color: context.theme.textSecondary
+                                  .withValues(alpha: 0.82),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SetupSecondaryButton(
+                          text: t.setupInvitationCopyButton,
+                          icon: Icons.copy_rounded,
+                          onTap: _copyCode,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: SetupSecondaryButton(
-                      text: t.setupInvitationCopyButton,
-                      icon: Icons.copy_rounded,
-                      onTap: _copyCode,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: SetupSecondaryButton(
-                      text: t.setupInvitationShareButton,
-                      icon: Icons.share_rounded,
-                      onTap: _shareViaWhatsApp,
-                    ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: SetupSecondaryButton(
+                          text: t.setupInvitationShareButton,
+                          icon: Icons.share_rounded,
+                          onTap: _shareViaWhatsApp,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
               ),
             ),
           ),
@@ -1933,7 +1958,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     final t = AppLocalizations.of(context);
     return Padding(
       key: const ValueKey('family_setup_v2'),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1968,11 +1993,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                           decoration: InputDecoration(
                             hintText: t.setupFamilyHouseholdNameHint,
                             filled: true,
-                            fillColor: Colors.white.withValues(alpha: 0.92),
+                            fillColor:
+                                context.theme.surface.withValues(alpha: 0.92),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(18),
                               borderSide: BorderSide(
-                                color: AppColors.border.withValues(alpha: 0.9),
+                                color:
+                                    context.theme.border.withValues(alpha: 0.9),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
@@ -2057,7 +2084,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     final t = AppLocalizations.of(context);
     return Padding(
       key: const ValueKey('split_friends_v2'),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2077,8 +2104,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     width: double.infinity,
                     padding: const EdgeInsets.all(28),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.94),
-                      borderRadius: BorderRadius.circular(24),
+                      color: context.theme.surface.withValues(alpha: 0.94),
+                      borderRadius: BorderRadius.circular(AppRadii.xl),
                       border: Border.all(
                         color: AppColors.cardBorder.withValues(alpha: 0.85),
                       ),
@@ -2090,7 +2117,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                           height: 64,
                           decoration: BoxDecoration(
                             color: AppColors.sage.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppRadii.lg),
                           ),
                           child: const Icon(
                             Icons.balance_rounded,
@@ -2114,8 +2141,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                           style: TextStyle(
                             fontSize: 13.5,
                             height: 1.45,
-                            color:
-                                AppColors.textSecondary.withValues(alpha: 0.84),
+                            color: context.theme.textSecondary
+                                .withValues(alpha: 0.84),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -2178,7 +2205,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
     return Padding(
       key: const ValueKey('split_v2'),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2211,14 +2238,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               try {
                 final householdId = await ref.read(householdIdProvider.future);
                 if (householdId != null) {
-                  final result = await ref
-                      .read(updateFinanceSettingsUseCaseProvider)
-                      .call(
-                        householdId,
-                        financeMode: _setupFinanceMode,
-                        defaultSplitRatio:
-                            _setupFinanceMode == 'shared' ? 0.5 : _tempRatio,
-                      );
+                  final result =
+                      await ref.read(updateFinanceSettingsUseCaseProvider).call(
+                            householdId,
+                            financeMode: _setupFinanceMode,
+                            defaultSplitRatio: _setupFinanceMode == 'shared'
+                                ? 0.5
+                                : _tempRatio,
+                          );
                   result.fold((failure) => throw failure, (_) {});
                 }
               } catch (e) {
@@ -2252,7 +2279,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       key: const ValueKey('tasks_v2'),
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -2269,7 +2296,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         ),
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.xs,
+            ),
             itemCount: _categories.length,
             physics: const BouncingScrollPhysics(),
             itemBuilder: (context, index) {
@@ -2286,15 +2316,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding:
-                        const EdgeInsets.only(top: 24, bottom: 16, left: 4),
+                    padding: const EdgeInsets.only(
+                      top: AppSpacing.lg,
+                      bottom: AppSpacing.md,
+                      left: AppSpacing.xxs,
+                    ),
                     child: Text(
                       '${category.icon}  ${categoryName.toUpperCase()}',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
-                        color: AppColors.textSecondary.withValues(alpha: 0.82),
+                        color:
+                            context.theme.textSecondary.withValues(alpha: 0.82),
                       ),
                     ),
                   ),
@@ -2310,12 +2344,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           ),
         ),
         Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.96),
+            color: context.theme.surface.withValues(alpha: 0.96),
             boxShadow: [
               BoxShadow(
-                color: AppColors.shadowBase.withValues(alpha: 0.06),
+                color: context.theme.shadowBase.withValues(alpha: 0.06),
                 blurRadius: 20,
                 offset: const Offset(0, -6),
               ),
@@ -2355,16 +2389,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.14)
-              : Colors.white.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(16),
+              : context.theme.surface.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(
             color: isSelected
                 ? AppColors.primary.withValues(alpha: 0.28)
-                : AppColors.border.withValues(alpha: 0.9),
+                : context.theme.border.withValues(alpha: 0.9),
             width: 1.5,
           ),
           boxShadow: isSelected

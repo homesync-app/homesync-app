@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/tasks/domain/models/weekly_family_summary.dart';
@@ -43,7 +45,7 @@ class WeeklyFamilySummaryScreen extends ConsumerWidget {
         appBar: AppBar(title: Text(t.weeklySummaryAppBarTitle)),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Text(
               t.weeklySummaryLockedNotice,
               textAlign: TextAlign.center,
@@ -84,7 +86,7 @@ class WeeklyFamilySummaryScreen extends ConsumerWidget {
         loading: () => const Center(child: AppLoader()),
         error: (e, _) => Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Text(
               'No pudimos cargar el resumen: $e',
               style: TextStyle(color: theme.textSecondary),
@@ -170,7 +172,7 @@ class _WeeklyReadoutHero extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(color: theme.border.withValues(alpha: 0.7)),
         boxShadow: [
           BoxShadow(
@@ -289,7 +291,7 @@ class _MetricTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.075),
         borderRadius: BorderRadius.circular(18),
@@ -350,7 +352,7 @@ class _StoryCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: accent.withValues(alpha: 0.18), width: 0.7),
       ),
       child: Row(
@@ -519,8 +521,9 @@ class _ForgottenCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final days = (task.overdueSeconds / 86400).floor();
-    final overdueLabel =
-        days == 0 ? t.weeklySummaryOverdueToday : t.weeklySummaryOverdueDays(days);
+    final overdueLabel = days == 0
+        ? t.weeklySummaryOverdueToday
+        : t.weeklySummaryOverdueDays(days);
     return _StoryCard(
       accent: AppColors.accentOrange,
       icon: Icons.bookmark_remove_rounded,
@@ -592,7 +595,7 @@ class _EmptyState extends StatelessWidget {
     final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -632,7 +635,7 @@ class _LockedHero extends StatelessWidget {
     final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

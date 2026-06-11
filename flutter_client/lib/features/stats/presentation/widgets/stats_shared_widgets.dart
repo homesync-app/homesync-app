@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
@@ -29,7 +30,7 @@ class XPToggleButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: isSelected ? theme.surface : theme.surfaceContainer,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             boxShadow: isSelected ? theme.cardShadow : [],
             border: Border.all(
               color: isSelected
@@ -65,7 +66,7 @@ class PrivacyBadge extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(AppRadii.modal),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.05)),
         boxShadow: theme.cardShadow,
       ),
@@ -148,7 +149,7 @@ class MiniStatCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         boxShadow: theme.cardShadow,
         border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
       ),
@@ -200,7 +201,7 @@ class DuelHistoryWidget extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         boxShadow: theme.cardShadow,
       ),
       child: Column(
@@ -327,7 +328,7 @@ class DuelHistoryWidget extends StatelessWidget {
                         : userResult == 'loss'
                             ? Colors.red.withValues(alpha: 0.1)
                             : AppColors.accentGold.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

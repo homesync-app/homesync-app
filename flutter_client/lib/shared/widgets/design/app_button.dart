@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 
@@ -160,11 +161,11 @@ class AppButton extends StatelessWidget {
   EdgeInsets _getPadding() {
     switch (size) {
       case AppButtonSize.small:
-        return const EdgeInsets.symmetric(horizontal: 16);
+        return const EdgeInsets.symmetric(horizontal: AppSpacing.md);
       case AppButtonSize.medium:
-        return const EdgeInsets.symmetric(horizontal: 24);
+        return const EdgeInsets.symmetric(horizontal: AppSpacing.lg);
       case AppButtonSize.large:
-        return const EdgeInsets.symmetric(horizontal: 32);
+        return const EdgeInsets.symmetric(horizontal: AppSpacing.xl);
     }
   }
 

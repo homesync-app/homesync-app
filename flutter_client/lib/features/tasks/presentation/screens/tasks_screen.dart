@@ -5,6 +5,8 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -635,12 +637,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                           width: 1.5,
                                         ),
                                         padding: const EdgeInsets.symmetric(
-                                          horizontal: 32,
-                                          vertical: 16,
+                                          horizontal: AppSpacing.xl,
+                                          vertical: AppSpacing.md,
                                         ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(24),
+                                          borderRadius: BorderRadius.circular(
+                                            AppRadii.xl,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -743,13 +746,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
-        margin: const EdgeInsets.only(right: 8),
+        margin: const EdgeInsets.only(right: AppSpacing.xs),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
           color: isSelected
               ? theme.primary.withValues(alpha: 0.12)
               : theme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(
             color: isSelected
                 ? theme.primary.withValues(alpha: 0.45)
@@ -812,11 +815,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
-        margin: const EdgeInsets.only(right: 8),
+        margin: const EdgeInsets.only(right: AppSpacing.xs),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
           color: isSelected ? color.withValues(alpha: 0.12) : theme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(
             color: isSelected ? color.withValues(alpha: 0.45) : theme.border,
             width: isSelected ? 1.4 : 1.1,
@@ -1009,7 +1012,7 @@ class _TodayDoneCelebration extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: theme.surface,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
           border: Border.all(
             color: AppColors.accentGreen.withValues(alpha: 0.26),
           ),
@@ -1089,7 +1092,7 @@ class _SectionHeader extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: themeColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             child: Icon(
               icon,
@@ -1362,7 +1365,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                   alignment: Alignment.topCenter,
                   heightFactor: _isExpanded ? 1.0 : 0.0,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 16),
+                    padding: const EdgeInsets.only(top: AppSpacing.md),
                     child: Column(
                       children: [
                         Container(
@@ -1601,7 +1604,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
           color: onTap == null
               ? AppColors.textMuted.withValues(alpha: 0.08)
               : color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
           border: Border.all(
             color: onTap == null
                 ? AppColors.textMuted.withValues(alpha: 0.1)
@@ -1683,11 +1686,17 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
           builder: (context) => Container(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.xl,
+            ),
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(32)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppRadii.modal),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
@@ -1704,14 +1713,14 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                   Container(
                     width: 48,
                     height: 5,
-                    margin: const EdgeInsets.only(bottom: 24),
+                    margin: const EdgeInsets.only(bottom: AppSpacing.lg),
                     decoration: BoxDecoration(
                       color: theme.divider.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
                       color: AppColors.accentGold.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
@@ -1749,9 +1758,11 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                       Expanded(
                         child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.md,
+                            ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(AppRadii.md),
                             ),
                             side: BorderSide(color: theme.border),
                           ),
@@ -1772,10 +1783,12 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.md,
+                            ),
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(AppRadii.md),
                             ),
                           ),
                           onPressed: () => Navigator.pop(context, true),
@@ -1869,7 +1882,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(color: color.withValues(alpha: borderAlpha)),
       ),
       child: Row(
@@ -1900,7 +1913,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Text(
         label,

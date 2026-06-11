@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_amount.dart';
@@ -50,7 +51,7 @@ class SoloSummaryCard extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.68)),
         boxShadow: [
           BoxShadow(
@@ -149,7 +150,7 @@ class SoloSummaryCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 10),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadii.xs),
                     child: LinearProgressIndicator(
                       value: _levelProgress.clamp(0.0, 1.0),
                       minHeight: 8,
@@ -182,7 +183,7 @@ class _LevelBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.md),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

@@ -57,12 +57,10 @@ function processTake(file) {
   const suffix = motion === 'idle' ? '' : `_${motion}`;
   const output = join(OUT_DIR, `${avatarId}${suffix}_take${take}.webp`);
 
-  // Ping-pong: [v] -> forward + reverse concatenados = loop sin costura.
-  // Los oneshot (eventos) van solo de ida: el prompt pide terminar en la
-  // pose inicial, asi el player puede volver al idle sin salto.
+  // Cadena base hasta el alfa limpio y escalado.
   // despill de ffmpeg solo soporta green/blue; con magenta el borde blanco
   // tipo sticker de los avatares evita el spill, asi que se omite.
-  const filter = [
+  const pre = [
     // Normaliza la matriz de color de entrada para evitar corrimientos 601/709.
     `scale=in_color_matrix=auto:out_color_matrix=bt601,setparams=colorspace=bt470bg`,
     ...(trimSeconds ? [`trim=duration=${trimSeconds}`, `setpts=PTS-STARTPTS`] : []),
@@ -72,10 +70,26 @@ function processTake(file) {
     `fps=${FPS}`,
     `format=rgba`,
     `scale=${SIZE}:${SIZE}:flags=lanczos`,
-    ...(oneshot
-      ? []
-      : ['split[fwd][tmp];[tmp]reverse[rev];[fwd][rev]concat=n=2:v=1:a=0']),
   ].join(',');
+
+  // Ping-pong: forward + reverse = loop sin costura. Los oneshot (eventos)
+  // van solo de ida: el prompt pide terminar en la pose inicial.
+  const tail = oneshot
+    ? null
+    : 'split[fwd][tmp];[tmp]reverse[rev];[fwd][rev]concat=n=2:v=1:a=0';
+
+  // Erosion opcional del alfa para comer un borde sticker blanco (ver config).
+  const erode = avatar.erodeBorder || 0;
+  let filter;
+  if (erode > 0) {
+    const chain = Array(erode).fill('erosion').join(',');
+    filter =
+      `${pre}[pp];[pp]split[b][acp];[acp]alphaextract,${chain}[ae];` +
+      `[b][ae]alphamerge` +
+      (tail ? `,${tail}` : '');
+  } else {
+    filter = pre + (tail ? `,${tail}` : '');
+  }
 
   execFileSync('ffmpeg', [
     '-y', '-hide_banner', '-loglevel', 'error',

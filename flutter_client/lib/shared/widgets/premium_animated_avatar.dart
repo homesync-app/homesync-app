@@ -185,7 +185,10 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
 
   void _startAmbient() {
     if (_suspended) return;
-    final asset = widget.motionAssets[widget.ambientMotion];
+    // Si falta el movimiento ambiental pedido (avatar con set parcial),
+    // caer al idle animado antes que al PNG estatico.
+    final asset = widget.motionAssets[widget.ambientMotion] ??
+        widget.motionAssets[AvatarMotion.idle];
     if (asset == null) {
       setState(() => _failed = true);
       return;
@@ -258,12 +261,16 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
             SizedBox(width: widget.size, height: widget.size),
       );
     }
-    return RawImage(
-      image: _frame,
-      width: widget.size,
-      height: widget.size,
-      fit: BoxFit.contain,
-      filterQuality: FilterQuality.medium,
+    // RepaintBoundary: cada frame del WebP marca dirty solo esta capa en
+    // vez de repintar hasta el boundary ancestro (la card/pantalla entera).
+    return RepaintBoundary(
+      child: RawImage(
+        image: _frame,
+        width: widget.size,
+        height: widget.size,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.medium,
+      ),
     );
   }
 }

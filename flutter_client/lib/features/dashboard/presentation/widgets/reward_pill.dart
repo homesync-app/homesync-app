@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
 /// A small pill badge used to display XP or coin rewards in activity cards.
@@ -31,10 +33,13 @@ class RewardPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
+      ),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
@@ -45,7 +50,10 @@ class RewardPill extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-                fontSize: 10, fontWeight: FontWeight.w800, color: color,),
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
           ),
         ],
       ),

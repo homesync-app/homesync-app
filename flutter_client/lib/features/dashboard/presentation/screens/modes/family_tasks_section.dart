@@ -4,6 +4,8 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
@@ -276,7 +278,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
   Widget _buildTaskLoadingCard(AppThemeColors theme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(22),
@@ -588,7 +590,8 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
           decoration: BoxDecoration(
             color: theme.background,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(AppRadii.xxl)),
           ),
           child: SafeArea(
             top: false,
@@ -843,7 +846,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
               color: isChild
                   ? Colors.white.withValues(alpha: 0.8)
                   : AppColors.sage.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             child: Icon(
               isChild ? Icons.celebration_rounded : Icons.task_alt_rounded,

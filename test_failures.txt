@@ -1,0 +1,210 @@
++51: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/domain_models_test.dart: HouseholdType.fromString falls back to couple for unknown/null
+[38;5;208m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;208m│ ⚠️ Unknown HouseholdType received from backend: "weird", falling back to couple[0m
+[38;5;208m└───────────────────────────────────────────────────────────────────────────────[0m
++88: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/feature_gap_regression_test.dart: Household householdCapabilitiesProvider respects forced admin type
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 Admin testing login activated[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++89: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/feature_gap_regression_test.dart: Household householdMembersProvider returns empty list when household is unresolved
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 HouseholdMembersNotifier.build skipped: no user yet
+└───────────────────────────────────────────────────────────────────────────────
++191: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/provider_failure_regression_test.dart: expenseControllerProvider exposes ServerFailure as provider error
+[Perf] provider.expense_controller.initial_expenses 5ms (householdId=h1)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.expense_controller.initial_expenses 5ms (householdId=h1)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++194: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/login_screen_test.dart: LoginScreen submits credentials and surfaces auth failures
+[38;5;208m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;208m│ [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()[0m
+[38;5;208m├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄[0m
+[38;5;208m│ #0   MethodChannelFirebase.app (package:firebase_core_platform_interface/src/method_channel/method_channel_firebase.dart:190:5)[0m
+[38;5;208m│ #1   Firebase.app (package:firebase_core/src/firebase.dart:92:41)[0m
+[38;5;208m│ #2   FirebaseAnalytics.instance (package:firebase_analytics/src/firebase_analytics.dart:52:47)[0m
+[38;5;208m│ #3   AnalyticsService._analytics (package:homesync_client/core/services/analytics_service.dart:13:47)[0m
+[38;5;208m│ #4   AnalyticsService.logEvent.<anonymous closure> (package:homesync_client/core/services/analytics_service.dart:218:13)[0m
+[38;5;208m├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄[0m
+[38;5;208m│ ⚠️ Analytics skipped in logEvent:auth_sign_in_started: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()[0m
+[38;5;208m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;196m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;196m│ ⛔ Login error: Credenciales invalidas o cuenta no existente[0m
+[38;5;196m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;208m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;208m│ [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()[0m
+[38;5;208m├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄[0m
+[38;5;208m│ #0   MethodChannelFirebase.app (package:firebase_core_platform_interface/src/method_channel/method_channel_firebase.dart:190:5)[0m
+[38;5;208m│ #1   Firebase.app (package:firebase_core/src/firebase.dart:92:41)[0m
+[38;5;208m│ #2   FirebaseAnalytics.instance (package:firebase_analytics/src/firebase_analytics.dart:52:47)[0m
+[38;5;208m│ #3   AnalyticsService._analytics (package:homesync_client/core/services/analytics_service.dart:13:47)[0m
+[38;5;208m│ #4   AnalyticsService.logEvent.<anonymous closure> (package:homesync_client/core/services/analytics_service.dart:218:13)[0m
+[38;5;208m├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄[0m
+[38;5;208m│ ⚠️ Analytics skipped in logEvent:auth_sign_in_failed: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()[0m
+[38;5;208m└───────────────────────────────────────────────────────────────────────────────[0m
++253: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/task_critical_flows_test.dart: critical task flow creates, completes, and approves tasks
+[Perf] provider.tasks.initial_page 5ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 5ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [task-complete][before_complete] id=active-1 title="Clean windows" status=active recurrence=null dueAt=null completedAt=2026-06-10T20:47:32.663779 lastCompletedAt=null allowMultipleDaily=false isDueToday=false isOverdue=false[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [tasks-visibility][after_optimistic_complete] count=3 focus=active-1 interesting=[{id=active-1, title="Clean windows", status=active, recurrence=null, dueAt=null, completedAt=2026-06-10T20:47:32.663779, lastCompletedAt=null, allowMultipleDaily=false, isDueToday=false, isOverdue=false}][0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [task-complete] success id=active-1 queued=false effectiveCompletedAt=2026-06-10T20:47:32.663779 isDueToday=false isOverdue=false[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] repository.recent_activity.query 30ms (householdId=house-1)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] repository.recent_activity.query 30ms (householdId=house-1)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++255: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/task_critical_flows_test.dart: task completion ignores duplicate taps while request is in flight
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [task-complete][before_complete] id=active-1 title="Clean windows" status=active recurrence=null dueAt=null completedAt=2026-06-10T20:47:33.090346 lastCompletedAt=null allowMultipleDaily=false isDueToday=false isOverdue=false[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [tasks-visibility][after_optimistic_complete] count=1 focus=active-1 interesting=[{id=active-1, title="Clean windows", status=active, recurrence=null, dueAt=null, completedAt=2026-06-10T20:47:33.090346, lastCompletedAt=null, allowMultipleDaily=false, isDueToday=false, isOverdue=false}][0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [task-complete] success id=active-1 queued=false effectiveCompletedAt=2026-06-10T20:47:33.090346 isDueToday=false isOverdue=false[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++256: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/task_critical_flows_test.dart: task completion keeps activity feed populated while remote stream is stable
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [task-complete][before_complete] id=active-1 title="Clean windows" status=active recurrence=null dueAt=null completedAt=2026-06-10T20:47:33.136647 lastCompletedAt=null allowMultipleDaily=false isDueToday=false isOverdue=false[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [tasks-visibility][after_optimistic_complete] count=1 focus=active-1 interesting=[{id=active-1, title="Clean windows", status=active, recurrence=null, dueAt=null, completedAt=2026-06-10T20:47:33.136647, lastCompletedAt=null, allowMultipleDaily=false, isDueToday=false, isOverdue=false}][0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [task-complete] success id=active-1 queued=false effectiveCompletedAt=2026-06-10T20:47:33.136647 isDueToday=false isOverdue=false[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++257: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/task_critical_flows_test.dart: task completion stays completed after silent refresh when startup bootstrap is stale
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [task-complete][before_complete] id=active-1 title="Clean windows" status=active recurrence=null dueAt=2026-06-10T20:47:33.191974 completedAt=2026-06-10T20:47:33.231311 lastCompletedAt=null allowMultipleDaily=false isDueToday=true isOverdue=false[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [tasks-visibility][after_optimistic_complete] count=1 focus=active-1 interesting=[{id=active-1, title="Clean windows", status=active, recurrence=null, dueAt=2026-06-10T20:47:33.191974, completedAt=2026-06-10T20:47:33.231311, lastCompletedAt=null, allowMultipleDaily=false, isDueToday=true, isOverdue=false}][0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] repository.recent_activity.query 11ms (householdId=house-1)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] repository.recent_activity.query 11ms (householdId=house-1)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [task-complete] success id=active-1 queued=false effectiveCompletedAt=2026-06-10T20:47:33.231311 isDueToday=true isOverdue=false[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++258: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/task_critical_flows_test.dart: today tasks excludes tasks already present in today activity feed
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] repository.recent_activity.query 3ms (householdId=house-1)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] repository.recent_activity.query 3ms (householdId=house-1)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++259: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/task_critical_flows_test.dart: today tasks hides repeatable daily tasks once completed today
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] repository.recent_activity.query 5ms (householdId=house-1)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] repository.recent_activity.query 5ms (householdId=house-1)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++260: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/task_critical_flows_test.dart: today tasks hides recurring tasks already advanced to tomorrow
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] repository.recent_activity.query 4ms (householdId=house-1)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] repository.recent_activity.query 4ms (householdId=house-1)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++261: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/task_critical_flows_test.dart: today tasks hides repeatable daily tasks after completion even when advanced to tomorrow
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] repository.recent_activity.query 3ms (householdId=house-1)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] repository.recent_activity.query 3ms (householdId=house-1)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++262: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/task_critical_flows_test.dart: completing a task online records exactly one optimistic feed entry
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [task-complete][before_complete] id=active-1 title="Clean windows" status=active recurrence=null dueAt=null completedAt=2026-06-10T20:47:33.476697 lastCompletedAt=null allowMultipleDaily=false isDueToday=false isOverdue=false[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [tasks-visibility][after_optimistic_complete] count=1 focus=active-1 interesting=[{id=active-1, title="Clean windows", status=active, recurrence=null, dueAt=null, completedAt=2026-06-10T20:47:33.476697, lastCompletedAt=null, allowMultipleDaily=false, isDueToday=false, isOverdue=false}][0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [task-complete] success id=active-1 queued=false effectiveCompletedAt=2026-06-10T20:47:33.476697 isDueToday=false isOverdue=false[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++263: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/task_critical_flows_test.dart: today tasks hides tasks assigned to another member
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] repository.recent_activity.query 3ms (householdId=house-1)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] repository.recent_activity.query 3ms (householdId=house-1)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++264: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/task_critical_flows_test.dart: family child today tasks only include their own + unassigned tasks
+[Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 0ms (householdId=house-1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[Perf] repository.recent_activity.query 3ms (householdId=house-1)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] repository.recent_activity.query 3ms (householdId=house-1)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++265: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/task_provider_failure_test.dart: tasksProvider exposes ServerFailure as provider error
+[Perf] provider.tasks.initial_page 3ms (householdId=h1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 3ms (householdId=h1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++278: C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/test/tasks_flow_test.dart: TasksScreen renders tasks and shows inline actions on tap
+[Perf] provider.tasks.initial_page 26ms (householdId=h1 limit=50)
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 [Perf] provider.tasks.initial_page 26ms (householdId=h1 limit=50)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
++279: All tests passed!

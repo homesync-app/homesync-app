@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
@@ -63,9 +65,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(
-      text: widget.item == null
-          ? widget.initialName ?? ''
-          : widget.item!.name,
+      text: widget.item == null ? widget.initialName ?? '' : widget.item!.name,
     );
     _quantityController = TextEditingController(
       text: widget.item?.quantity ?? '',
@@ -120,7 +120,8 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
       ),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -140,10 +141,10 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: theme.background,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 child: ShoppingIcon(
                   productKey: productKey,
@@ -231,7 +232,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                     side: BorderSide(
                       color:
                           isSelected ? AppColors.primary : Colors.transparent,
@@ -252,7 +253,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 elevation: 0,
               ),

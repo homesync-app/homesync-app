@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/receipt_matcher.dart';
 import 'package:homesync_client/features/shopping/data/shopping_predefined.dart';
@@ -270,7 +271,7 @@ class _ExpenseShoppingIntegrationCardState
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -736,7 +737,7 @@ class _ItemChip extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
               decoration: BoxDecoration(
                 color: AppColors.primaryLight.withValues(alpha: 0.82),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadii.xs),
               ),
               child: Text(
                 AppLocalizations.of(context).expensesFormShoppingBadgeNew,
@@ -852,7 +853,8 @@ class _ShoppingItemsSelectorSheetState
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
       child: SafeArea(
         child: Padding(
@@ -863,7 +865,12 @@ class _ShoppingItemsSelectorSheetState
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.md,
+                  ),
                   child: Text(
                     t.expensesFormShoppingItemsSheetTitle,
                     style: const TextStyle(
@@ -874,13 +881,16 @@ class _ShoppingItemsSelectorSheetState
                   ),
                 ),
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.xs,
+                  ),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
                       border: Border.all(color: AppColors.divider),
                     ),
                     child: TextField(
@@ -928,7 +938,8 @@ class _ShoppingItemsSelectorSheetState
                 ),
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                     children: [
                       if (showAddOption)
                         ListTile(
@@ -1018,7 +1029,12 @@ class _ShoppingItemsSelectorSheetState
                       }),
                       if (predefinedMatches.isNotEmpty) ...[
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.md,
+                            AppSpacing.lg,
+                            AppSpacing.md,
+                            AppSpacing.xs,
+                          ),
                           child: Text(
                             t.expensesFormShoppingGlobalSuggestions,
                             style: const TextStyle(
@@ -1085,7 +1101,7 @@ class _ShoppingItemsSelectorSheetState
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   child: SizedBox(
                     width: double.infinity,
                     height: 56,

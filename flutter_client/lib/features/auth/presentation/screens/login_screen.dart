@@ -6,6 +6,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
@@ -218,7 +220,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         backgroundColor: Theme.of(context).cardColor,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(AppRadii.xxl),
         ),
         title: Text(
           t.authForgotDialogTitle,
@@ -251,7 +253,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ? const Color(0xFF1E1E1E)
                     : const Color(0xFFF6F2ED),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -270,7 +272,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             child: Text(t.commonCancel),
           ),
           Padding(
-            padding: const EdgeInsets.only(left: 8),
+            padding: const EdgeInsets.only(left: AppSpacing.xs),
             child: ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(
@@ -279,7 +281,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
               ),
               child: Text(t.authForgotDialogSendButton),
@@ -407,10 +409,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     return Column(
       children: [
         Image.asset(
-          'assets/images/login_home_hero.png',
+          'assets/images/login_home_hero.webp',
           width: 286,
           height: 286,
           fit: BoxFit.contain,
+          // Decodificar al tamaño mostrado: el PNG es 1179x1334 y sin esto
+          // se decodifica entero (~6 MB de RAM para un widget de 286px).
+          cacheWidth: (286 * MediaQuery.devicePixelRatioOf(context)).round(),
           filterQuality: FilterQuality.high,
           isAntiAlias: true,
         ),
@@ -447,7 +452,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget _buildAuthPanel(ThemeData theme) {
     final appTheme = context.theme;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(32),
+      borderRadius: BorderRadius.circular(AppRadii.modal),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
@@ -466,7 +471,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       AppColors.elevatedSurface.withValues(alpha: 0.93),
                     ],
             ),
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: BorderRadius.circular(AppRadii.modal),
             border: Border.all(
               color: appTheme.border.withValues(alpha: 0.58),
               width: 0.7,
@@ -559,7 +564,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             alignment: Alignment.centerRight,
             child: InkWell(
               onTap: _handleForgotPassword,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadii.xs),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(6, 4, 6, 2),
                 child: Text(
@@ -706,7 +711,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
         suffixIcon: isPassword
             ? Padding(
-                padding: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.only(right: AppSpacing.sm),
                 child: IconButton(
                   tooltip: _obscurePassword
                       ? AppLocalizations.of(context).authShowPasswordTooltip
@@ -725,29 +730,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               )
             : null,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           borderSide: BorderSide(
             color: appTheme.border.withValues(alpha: 0.82),
             width: 1.2,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           borderSide: BorderSide(
             color: AppColors.primary.withValues(alpha: 0.35),
             width: 1.4,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
         ),
       ),
@@ -762,7 +767,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     return ElevatedButton(
       onPressed: _isSubmitting ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
@@ -833,7 +838,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       children: [
         Expanded(child: Divider(color: color, thickness: 1)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Text(
             AppLocalizations.of(context).authOrContinueWith,
             style: TextStyle(
@@ -866,9 +871,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ),
         InkWell(
           onTap: _isSubmitting ? null : _toggleMode,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadii.xs),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xxs,
+              vertical: AppSpacing.xxs,
+            ),
             child: Text(
               _isSignUpMode ? t.authToggleSignInLink : t.authToggleSignUpLink,
               style: const TextStyle(
@@ -935,10 +943,10 @@ class _PremiumLoadingOverlay extends StatelessWidget {
               color: theme.colorScheme.surface.withValues(alpha: 0.6 * value),
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(AppSpacing.xl),
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                    borderRadius: BorderRadius.circular(32),
+                    borderRadius: BorderRadius.circular(AppRadii.modal),
                     boxShadow: [
                       BoxShadow(
                         color:

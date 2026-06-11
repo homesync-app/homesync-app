@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -131,9 +133,15 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.xxl,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -171,7 +179,7 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
           const SizedBox(height: 32),
           if (_isLoading)
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
               child: AppLoader(),
             )
           else if (_invitationCode != null) ...[
@@ -214,9 +222,9 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF25D366),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                   ),
                 ),
                 icon: const Icon(Icons.share_rounded),

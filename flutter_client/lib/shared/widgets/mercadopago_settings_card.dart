@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class MercadoPagoSettingsCard extends ConsumerStatefulWidget {
@@ -89,7 +91,7 @@ class _MercadoPagoSettingsCardState
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppRadii.xl),
             border: Border.all(color: Theme.of(context).dividerColor),
             boxShadow: const [
               BoxShadow(
@@ -108,7 +110,7 @@ class _MercadoPagoSettingsCardState
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.lightBlue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadii.sm),
                     ),
                     child: const Icon(
                       Icons.account_balance_wallet_rounded,
@@ -163,12 +165,12 @@ class _MercadoPagoSettingsCardState
                         filled: true,
                         fillColor: AppColors.primary.withValues(alpha: 0.05),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadii.sm),
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
                         ),
                       ),
                     ),
@@ -180,11 +182,11 @@ class _MercadoPagoSettingsCardState
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
                       ),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.sm,
                       ),
                       minimumSize: const Size(80, 48),
                     ),

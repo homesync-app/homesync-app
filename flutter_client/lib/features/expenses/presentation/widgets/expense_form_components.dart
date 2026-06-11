@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -173,10 +175,10 @@ class ExpenseActionTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: theme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           border: Border.all(color: theme.border.withValues(alpha: 0.85)),
           boxShadow: [
             BoxShadow(
@@ -238,7 +240,7 @@ class ExpenseInfoBox extends StatelessWidget {
     final theme = context.theme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.045),
         border: Border.all(color: color.withValues(alpha: 0.12)),
@@ -392,7 +394,7 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
       padding: const EdgeInsets.fromLTRB(24, 14, 24, 14),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.82),
           width: 1,
@@ -510,7 +512,7 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
                       color: theme.primary.withValues(
                         alpha: 0.12 + value * 0.12,
                       ),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
                   );
                 },
@@ -586,7 +588,7 @@ class _ReceiptScanButtonState extends State<_ReceiptScanButton>
         decoration: BoxDecoration(
           color:
               accent.withValues(alpha: widget.isScanningReceipt ? 0.14 : 0.10),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
           border: Border.all(
             color: accent.withValues(
               alpha: widget.isScanningReceipt ? 0.34 : 0.18,
@@ -799,7 +801,7 @@ class ExpenseTitleField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(color: theme.border.withValues(alpha: 0.82)),
         boxShadow: theme.cardShadow,
       ),
@@ -841,7 +843,8 @@ class ExpenseTitleField extends StatelessWidget {
                 errorBorder: InputBorder.none,
                 focusedErrorBorder: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
               ),
             ),
           ),

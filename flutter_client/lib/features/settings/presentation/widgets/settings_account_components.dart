@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/feedback_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsNotificationsCard extends StatelessWidget {
   final bool isEnabled;
@@ -23,7 +26,7 @@ class SettingsNotificationsCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -42,7 +45,7 @@ class SettingsNotificationsCard extends StatelessWidget {
                 padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
                   color: theme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Icon(
                   Icons.notifications_active_rounded,
@@ -102,7 +105,7 @@ class SettingsFaqCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -118,7 +121,7 @@ class SettingsFaqCard extends StatelessWidget {
           padding: const EdgeInsets.all(9),
           decoration: BoxDecoration(
             color: theme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadii.sm),
           ),
           child: Icon(
             Icons.help_outline_rounded,
@@ -169,7 +172,7 @@ class SettingsLogoutButton extends StatelessWidget {
             width: 1.5,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
           ),
           foregroundColor: theme.error,
         ),
@@ -212,7 +215,8 @@ class SettingsDangerZone extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 8, bottom: 12),
+          padding:
+              const EdgeInsets.only(left: AppSpacing.xs, bottom: AppSpacing.sm),
           child: Text(
             t.settingsDangerZoneEyebrow,
             style: TextStyle(
@@ -234,7 +238,7 @@ class SettingsDangerZone extends StatelessWidget {
                 width: 1.5,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadii.lg),
               ),
               foregroundColor: theme.error,
             ),
@@ -265,7 +269,7 @@ class SettingsDangerZone extends StatelessWidget {
               style: TextButton.styleFrom(
                 foregroundColor: theme.error,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
                 ),
               ),
               child: Row(
@@ -321,12 +325,20 @@ class SettingsVersionFooter extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              'Version 1.0.0',
-              style: TextStyle(
-                fontSize: 11,
-                color: theme.textSecondary,
-              ),
+            FutureBuilder<PackageInfo>(
+              future: PackageInfo.fromPlatform(),
+              builder: (context, snapshot) {
+                final info = snapshot.data;
+                return Text(
+                  info == null
+                      ? ''
+                      : 'Version ${info.version}+${info.buildNumber}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: theme.textSecondary,
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -346,7 +358,7 @@ class SettingsFeedbackCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -365,7 +377,7 @@ class SettingsFeedbackCard extends StatelessWidget {
               padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
                 color: theme.error.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
               child:
                   Icon(Icons.bug_report_outlined, color: theme.error, size: 20),
@@ -401,7 +413,7 @@ class SettingsFeedbackCard extends StatelessWidget {
               padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
                 color: theme.primary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
               child: Icon(
                 Icons.lightbulb_outline_rounded,
@@ -470,7 +482,7 @@ Future<bool?> showSettingsLogoutDialog(BuildContext context) {
                     height: 46,
                     decoration: BoxDecoration(
                       color: theme.error.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
                     ),
                     child: Icon(
                       Icons.logout_rounded,
@@ -577,7 +589,9 @@ Future<bool?> showSettingsResetAccountDialog(BuildContext context) {
     context: context,
     builder: (dialogContext) => AlertDialog(
       backgroundColor: theme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+      ),
       title: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: theme.error),
@@ -601,7 +615,7 @@ Future<bool?> showSettingsResetAccountDialog(BuildContext context) {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 8),
+          padding: const EdgeInsets.only(left: AppSpacing.xs),
           child: ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
@@ -609,7 +623,7 @@ Future<bool?> showSettingsResetAccountDialog(BuildContext context) {
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
             ),
             child: Text(
@@ -631,7 +645,9 @@ Future<bool?> showSettingsDeleteAccountDialog(BuildContext context) {
     context: context,
     builder: (dialogContext) => AlertDialog(
       backgroundColor: theme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+      ),
       title: Row(
         children: [
           Icon(Icons.person_off_rounded, color: theme.error),
@@ -657,7 +673,7 @@ Future<bool?> showSettingsDeleteAccountDialog(BuildContext context) {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 8),
+          padding: const EdgeInsets.only(left: AppSpacing.xs),
           child: ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
@@ -665,7 +681,7 @@ Future<bool?> showSettingsDeleteAccountDialog(BuildContext context) {
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
             ),
             child: Text(

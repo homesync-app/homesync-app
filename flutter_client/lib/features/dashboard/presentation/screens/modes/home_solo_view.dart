@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/home_header_avatar.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/solo_summary_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
@@ -37,7 +39,6 @@ class HomeSoloView extends ConsumerStatefulWidget {
 
 class _HomeSoloViewState extends ConsumerState<HomeSoloView>
     with TaskCompletionFlowMixin<HomeSoloView> {
-
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -100,14 +101,10 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
               ).animateEntrance(),
             ),
             const SizedBox(width: AppSpacing.sm),
-            GestureDetector(
+            HomeHeaderAvatar(
+              name: currentMember?.displayName,
+              avatarUrl: currentMember?.avatarUrl,
               onTap: widget.onAvatarTap,
-              behavior: HitTestBehavior.opaque,
-              child: CustomUserAvatar(
-                name: currentMember?.displayName,
-                avatarUrl: currentMember?.avatarUrl,
-                radius: 24,
-              ),
             ).animateScaleIn(delay: 70),
           ],
         ),
@@ -200,8 +197,9 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
     final balanceAsync = ref.watch(userBalanceProvider);
     final summaryAsync = ref.watch(personalFinanceSummaryProvider);
 
-    final monthlySpent =
-        summaryAsync.whenOrNull(data: (s) => (s['expense'] as num?)?.toDouble());
+    final monthlySpent = summaryAsync.whenOrNull(
+      data: (s) => (s['expense'] as num?)?.toDouble(),
+    );
     final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
 
     return SoloSummaryCard(
@@ -347,10 +345,10 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
         (_) => ShimmerLoading(
           child: Container(
             height: 70,
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: AppSpacing.xs),
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
             ),
           ),
         ),
@@ -376,7 +374,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
         color: isQuiet
             ? theme.surface.withValues(alpha: 0.42)
             : theme.surface.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(
           color: theme.border.withValues(alpha: isQuiet ? 0.18 : 0.34),
         ),

@@ -7,11 +7,14 @@ import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/custom_avatar_generation_service.dart';
 import 'package:homesync_client/core/services/premium_avatar_motion_cache.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -103,22 +106,18 @@ class AvatarPickerSheet extends ConsumerWidget {
 
       if (context.mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).avatarPickerUpdated),
-            backgroundColor: AppColors.success,
-          ),
+        AppSnackBar.show(
+          context,
+          message: AppLocalizations.of(context).avatarPickerUpdated,
+          type: AppSnackBarType.success,
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context).avatarPickerUpdateError('$e'),
-            ),
-            backgroundColor: AppColors.error,
-          ),
+        AppSnackBar.show(
+          context,
+          message: AppLocalizations.of(context).avatarPickerUpdateError('$e'),
+          type: AppSnackBarType.error,
         );
       }
     }
@@ -144,7 +143,12 @@ class AvatarPickerSheet extends ConsumerWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
       ),
-      padding: EdgeInsets.fromLTRB(24, 12, 24, 24 + safeBottom),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.lg + safeBottom,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -181,7 +185,7 @@ class AvatarPickerSheet extends ConsumerWidget {
           const SizedBox(height: 32),
           Flexible(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
               child: Column(
                 children: [
                   if (googlePhotoUrl != null) ...[
@@ -341,11 +345,11 @@ class AvatarPickerSheet extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => SafeArea(
         child: Container(
-          margin: const EdgeInsets.all(16),
+          margin: const EdgeInsets.all(AppSpacing.md),
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(AppRadii.xxl),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.08),
@@ -528,9 +532,11 @@ class _CustomAvatarLoadingDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -750,14 +756,14 @@ class _GoogleAvatarOption extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(AppRadii.xl),
       child: Ink(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerHighest.withValues(
             alpha: 0.45,
           ),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.transparent,
             width: 2,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -50,7 +52,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
           onRefresh: () => ref.refresh(savingsGoalsProvider.future),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -87,7 +89,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
           ),
         ),
         loading: () => ListView.separated(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           itemCount: 3,
           separatorBuilder: (_, __) => const SizedBox(height: 16),
           itemBuilder: (_, __) => ShimmerLoading(
@@ -95,7 +97,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               height: 120,
               decoration: BoxDecoration(
                 color: theme.surface,
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(AppRadii.xxl),
               ),
             ),
           ),
@@ -108,7 +110,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
   Widget _buildEmptyState() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
+      padding: const EdgeInsets.symmetric(
+        vertical: AppSpacing.lg,
+        horizontal: AppSpacing.sm,
+      ),
       child: Column(
         children: [
           Container(
@@ -133,7 +138,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
           ),
           const SizedBox(height: 10),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
             child: Text(
               'Empezá a guardar para algo que de verdad les entusiasme.',
               textAlign: TextAlign.center,
@@ -166,7 +171,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(AppRadii.modal),
         boxShadow: context.theme.cardShadow,
       ),
       child: Column(
@@ -240,10 +245,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     final color = _parseColor(goal.color);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(color: theme.border),
       ),
       child: Theme(
@@ -303,7 +308,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppRadii.md),
                       ),
                     ),
                     child: const Text('Ingresar Ahorro'),
@@ -343,7 +348,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
           data: (list) {
             if (list.isEmpty) {
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                 child: Text(
                   'Aún no hay aportes en este pocito.',
                   style: TextStyle(
@@ -360,7 +365,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               itemBuilder: (context, index) {
                 final contribution = list[index];
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                   child: Row(
                     children: [
                       CustomUserAvatar(
@@ -477,8 +482,9 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                 hintText: '0',
                 filled: true,
                 fillColor: context.theme.surfaceVariant,
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -499,7 +505,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
               ),
               child: const Text(
@@ -575,17 +581,17 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                         height: 6,
                         decoration: BoxDecoration(
                           color: theme.divider,
-                          borderRadius: BorderRadius.circular(999),
+                          borderRadius: BorderRadius.circular(AppRadii.pill),
                         ),
                       ),
                       const SizedBox(height: 18),
                       Expanded(
                         child: SingleChildScrollView(
                           padding: EdgeInsets.fromLTRB(
-                            24,
-                            8,
-                            24,
-                            24 + bottomInset,
+                            AppSpacing.lg,
+                            AppSpacing.xs,
+                            AppSpacing.lg,
+                            AppSpacing.lg + bottomInset,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -599,7 +605,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                     decoration: BoxDecoration(
                                       color: AppColors.primary
                                           .withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(28),
+                                      borderRadius:
+                                          BorderRadius.circular(AppRadii.xxl),
                                     ),
                                     child: const Icon(
                                       Icons.flag_rounded,
@@ -676,21 +683,24 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                     vertical: 22,
                                   ),
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.xxl),
                                     borderSide: BorderSide(
                                       color: AppColors.primary
                                           .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.xxl),
                                     borderSide: BorderSide(
                                       color: AppColors.primary
                                           .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.xxl),
                                     borderSide: const BorderSide(
                                       color: AppColors.primary,
                                       width: 1.5,
@@ -725,21 +735,24 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                     vertical: 22,
                                   ),
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.xxl),
                                     borderSide: BorderSide(
                                       color: AppColors.primary
                                           .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.xxl),
                                     borderSide: BorderSide(
                                       color: AppColors.primary
                                           .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.xxl),
                                     borderSide: const BorderSide(
                                       color: AppColors.primary,
                                       width: 1.5,
@@ -883,7 +896,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                     backgroundColor: AppColors.primary,
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(24),
+                                      borderRadius:
+                                          BorderRadius.circular(AppRadii.xl),
                                     ),
                                     elevation: 0,
                                   ),
@@ -922,10 +936,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: theme.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadii.md),
             border: Border.all(color: theme.border),
           ),
           child: Column(
@@ -972,10 +986,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
       context: context,
       backgroundColor: theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
       ),
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1004,7 +1018,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: theme.surface,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                   alignment: Alignment.center,
                   child: Text(
@@ -1029,10 +1043,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
       context: context,
       backgroundColor: context.theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
       ),
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

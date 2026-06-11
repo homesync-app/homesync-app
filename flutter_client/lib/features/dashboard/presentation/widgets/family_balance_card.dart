@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -61,7 +63,7 @@ class FamilyBalanceCard extends StatelessWidget {
             theme.elevatedSurface,
           ],
         ),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(AppRadii.modal),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.68),
           width: 1.05,
@@ -130,7 +132,7 @@ class FamilyBalanceCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.11),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -215,7 +217,8 @@ class FamilyBalanceCard extends StatelessWidget {
                         _buildMemberBalance(entry.value, theme, t),
                         if (entry.key != visibleBalances.length - 1)
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
+                            padding:
+                                const EdgeInsets.only(bottom: AppSpacing.sm),
                             child: Divider(
                               height: 1,
                               indent: 8,
@@ -336,8 +339,11 @@ class FamilyBalanceCard extends StatelessWidget {
         : (isPositive ? AppColors.sage : AppColors.accentTeal);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: rowTint.withValues(alpha: 0.035),
         borderRadius: BorderRadius.circular(18),

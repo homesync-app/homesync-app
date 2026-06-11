@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:video_player/video_player.dart';
 
@@ -333,12 +334,12 @@ class _ElegantProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(AppRadii.pill),
       child: Container(
         height: 7,
         decoration: BoxDecoration(
           color: const Color(0x1A8E6F5A),
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
         ),
         child: Stack(
           children: [

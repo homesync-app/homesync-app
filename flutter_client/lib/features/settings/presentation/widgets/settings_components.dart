@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/theme_palettes.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -21,7 +23,7 @@ class SettingsLoadingCard extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(color: theme.border.withValues(alpha: 0.45)),
       ),
       alignment: Alignment.center,
@@ -49,7 +51,7 @@ class SettingsSectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -115,7 +117,7 @@ class SettingsAppearanceCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -134,7 +136,7 @@ class SettingsAppearanceCard extends StatelessWidget {
                 padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
                   color: theme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Icon(
                   Icons.palette_rounded,
@@ -268,7 +270,7 @@ class SettingsThemePalettePicker extends StatelessWidget {
               return GestureDetector(
                 onTap: () => isLocked ? onLockedTap() : onPaletteTap(palette),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     width: 40,
@@ -336,7 +338,7 @@ class SettingsLanguageCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -355,7 +357,7 @@ class SettingsLanguageCard extends StatelessWidget {
                 padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
                   color: theme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Icon(
                   Icons.translate_rounded,
@@ -479,7 +481,7 @@ class SettingsCurrencyCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -498,7 +500,7 @@ class SettingsCurrencyCard extends StatelessWidget {
                 padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
                   color: theme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Icon(
                   Icons.payments_rounded,
@@ -652,7 +654,7 @@ class SettingsThemeModeSelector extends StatelessWidget {
                       color: isSelected
                           ? theme.primary.withValues(alpha: 0.12)
                           : theme.surfaceContainer,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadii.sm),
                       border: Border.all(
                         color: isSelected
                             ? theme.primary
@@ -705,7 +707,9 @@ Future<String?> showSettingsRenameProfileDialog(
     context: context,
     builder: (dialogContext) => AlertDialog(
       backgroundColor: theme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+      ),
       title: const Text(
         'Cambiar nombre',
         style: TextStyle(fontWeight: FontWeight.bold),
@@ -715,9 +719,11 @@ Future<String?> showSettingsRenameProfileDialog(
         autofocus: true,
         decoration: InputDecoration(
           labelText: 'Nombre',
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+          ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadii.sm),
             borderSide: BorderSide(color: theme.primary, width: 2),
           ),
         ),
@@ -733,7 +739,7 @@ Future<String?> showSettingsRenameProfileDialog(
             backgroundColor: theme.primary,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
           ),
           child: const Text('Guardar'),
@@ -785,16 +791,16 @@ class SettingsPremiumCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTapPlans,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         child: Ink(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: gradientColors,
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppRadii.xl),
             border: Border.all(
               color: AppColors.accentGold.withValues(
                 alpha: theme.isDarkMode ? 0.34 : (isPremium ? 0.55 : 0.42),
@@ -921,7 +927,7 @@ class SettingsPremiumFeatureChip extends StatelessWidget {
         color: theme.isDarkMode
             ? AppColors.accentGold.withValues(alpha: 0.10)
             : Colors.white.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(
           color: AppColors.accentGold.withValues(
             alpha: theme.isDarkMode ? 0.20 : 0.18,
@@ -971,7 +977,7 @@ class SettingsPremiumFeatureItem extends StatelessWidget {
     final textColor =
         theme.isDarkMode ? theme.textSecondary : const Color(0xFF92400E);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
       child: Row(
         children: [
           Icon(
@@ -1015,7 +1021,7 @@ class SettingsProfileCard extends StatelessWidget {
     final theme = context.theme;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(22),
@@ -1229,7 +1235,7 @@ class SettingsMinorPremiumCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(
           color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
         ),
@@ -1248,7 +1254,7 @@ class SettingsMinorPremiumCard extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             child: const Icon(
               Icons.star_outline_rounded,

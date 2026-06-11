@@ -27,7 +27,6 @@ dependencies:
 
   # UI Framework / Icons
   font_awesome_flutter: ^11.0.0
-  google_fonts: ^8.0.2
 
   # Date and formatting
   intl: ^0.20.2
@@ -51,19 +50,14 @@ dependencies:
   path_provider: ^2.1.4
   cached_network_image: ^3.4.1
   flutter_cache_manager: ^3.4.1
-  shimmer: ^3.0.0
   confetti: ^0.8.0
   url_launcher: ^6.3.0
   app_links: ^7.0.0
-  share_plus: ^13.1.0
-  vibration: ^3.1.8
-  local_auth: ^3.0.1
   google_sign_in: ^7.2.0
   fpdart: ^1.2.0
   connectivity_plus: ^7.0.0
   timeago: ^3.7.1
   video_player: ^2.11.0
-  table_calendar: ^3.2.0
 
   # Offline Storage
   sqflite: ^2.3.3+1
@@ -96,8 +90,8 @@ dev_dependencies:
   riverpod_lint: ^3.1.3
 
   # i18n: AI-assisted ARB translation. Activate globally instead of as a
-  # dev dep — locking it here forced intl ^0.19, which clashes with
-  # table_calendar (intl ^0.20). Run via:
+  # dev dep — locking it here forced intl ^0.19, which clashes with the
+  # intl 0.20.x pinned by flutter_localizations. Run via:
   #   dart pub global activate arb_translate
   #   dart pub global run arb_translate
   # See AGENTS.md for the workflow.
@@ -111,6 +105,7 @@ flutter:
     - assets/images/
     - assets/images/shopping_icons/products/
     - assets/images/premium_3d_avatars/
+    - assets/images/premium_3d_avatars/animated/
     - assets/images/custom_avatars/
     - assets/fonts/outfit/
     - shorebird.yaml

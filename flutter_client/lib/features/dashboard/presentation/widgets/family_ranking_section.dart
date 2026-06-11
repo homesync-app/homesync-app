@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
@@ -47,7 +49,7 @@ class _FamilyRankingSectionState extends ConsumerState<FamilyRankingSection> {
         );
       },
       loading: () => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
         child: AppLoadingState(
           message: AppLocalizations.of(context).householdSocialHubLoading,
         ),
@@ -155,7 +157,7 @@ class _RankingContent extends StatelessWidget {
               height: 32,
               decoration: BoxDecoration(
                 color: AppColors.accentGold.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
               child: const Icon(
                 Icons.emoji_events_rounded,
@@ -231,7 +233,7 @@ class _RankingContent extends StatelessWidget {
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
                     color: theme.surfaceContainer.withValues(alpha: 0.72),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                     border: Border.all(
                       color: theme.border.withValues(alpha: 0.36),
                     ),
@@ -245,7 +247,9 @@ class _RankingContent extends StatelessWidget {
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 220),
                             curve: Curves.easeOutCubic,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.xs,
+                            ),
                             decoration: BoxDecoration(
                               color:
                                   selected ? theme.surface : Colors.transparent,
@@ -299,7 +303,8 @@ class _RankingContent extends StatelessWidget {
                         selectedTab == 0
                             ? t.householdSocialHubRankingEmpty
                             : t.householdSocialHubRankingEmptyTab(
-                                tabs[selectedTab],),
+                                tabs[selectedTab],
+                              ),
                         style: TextStyle(
                           fontSize: 13,
                           color: theme.textSecondary,
@@ -456,7 +461,7 @@ class _RankingRow extends ConsumerWidget {
                       ),
                       decoration: BoxDecoration(
                         color: _roleColor(memberType).withValues(alpha: 0.11),
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadii.pill),
                       ),
                       child: Text(
                         role,
@@ -472,7 +477,7 @@ class _RankingRow extends ConsumerWidget {
                     // Solo icono, sin la palabra "Admin" (mas tecnica).
                     if (isAdmin)
                       Container(
-                        padding: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(AppSpacing.xxs),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
@@ -504,7 +509,7 @@ class _RankingRow extends ConsumerWidget {
                           ? AppColors.accentPurple.withValues(alpha: 0.10)
                           : AppColors.primary.withValues(alpha: 0.12))
                       : theme.surfaceContainer,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                   border: Border.all(
                     color: xp > 0
                         ? (hideLiveScores
@@ -678,7 +683,7 @@ class _HeaderPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.14)),
       ),
       child: Text(

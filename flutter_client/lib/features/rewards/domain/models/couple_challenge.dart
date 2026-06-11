@@ -57,18 +57,25 @@ class CoupleChallenge {
     CoupleChallenge(id: 'weekly_challenge_50', icon: '🖼️', coinReward: 15),
   ];
 
-  static CoupleChallenge currentWeeklyChallenge(
-      [DateTime? householdCreatedAt,]) {
+  static CoupleChallenge currentWeeklyChallenge([
+    DateTime? householdCreatedAt,
+  ]) {
     final index = currentWeeklyChallengeIndex(householdCreatedAt);
     return allChallenges[index];
   }
 
   static int currentWeeklyChallengeIndex([DateTime? householdCreatedAt]) {
+    return currentWeekIndex(householdCreatedAt) % allChallenges.length;
+  }
+
+  /// Semanas completas desde la creación del hogar, SIN módulo: es la clave
+  /// de `couple_challenge_completions` (no se repite aunque la rotación de
+  /// desafíos dé la vuelta).
+  static int currentWeekIndex([DateTime? householdCreatedAt]) {
     if (householdCreatedAt == null) return 0;
     final difference = DateTime.now().difference(householdCreatedAt);
     final weekIndex = (difference.inDays / 7).floor();
-    if (weekIndex < 0) return 0;
-    return weekIndex % allChallenges.length;
+    return weekIndex < 0 ? 0 : weekIndex;
   }
 }
 

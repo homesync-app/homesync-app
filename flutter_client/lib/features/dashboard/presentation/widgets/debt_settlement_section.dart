@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/utils/debt_simplifier.dart';
@@ -37,7 +39,7 @@ class DebtSettlementSection extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.divider.withValues(alpha: 0.08)),
         boxShadow: theme.cardShadow,
       ),
@@ -51,7 +53,7 @@ class DebtSettlementSection extends ConsumerWidget {
                 height: 36,
                 decoration: BoxDecoration(
                   color: AppColors.accentTeal.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: const Icon(
                   Icons.swap_horiz_rounded,
@@ -105,7 +107,7 @@ class DebtSettlementSection extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.success.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: AppColors.success.withValues(alpha: 0.15)),
       ),
       child: Row(
@@ -158,7 +160,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
     final t = AppLocalizations.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: AnimatedPress(
         onPressed: _isSettling ? null : _confirmSettle,
         child: Container(
@@ -207,7 +209,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppColors.accentTeal.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Text(
                   currency.format(debt.amount),
@@ -259,7 +261,9 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: theme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+        ),
         title: Text(
           t.settleConfirmTitle,
           style: TextStyle(

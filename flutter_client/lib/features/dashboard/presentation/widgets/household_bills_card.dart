@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
@@ -39,7 +40,7 @@ class HouseholdBillsCard extends ConsumerWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.6)),
       ),
       child: Column(
@@ -124,7 +125,7 @@ class HouseholdBillsCard extends ConsumerWidget {
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 13),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadii.md),
               ),
               textStyle: const TextStyle(
                 fontSize: 14,
@@ -177,7 +178,7 @@ class HouseholdBillsCard extends ConsumerWidget {
   ) {
     final emoji = CategoryMapping.categoryIcons[bill.category] ?? '🏠';
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadii.md),
       onTap: () => RecurringExpenseFormSheet.show(context, template: bill),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -244,7 +245,7 @@ class HouseholdBillsCard extends ConsumerWidget {
           side: BorderSide(color: AppColors.primary.withValues(alpha: 0.4)),
           padding: const EdgeInsets.symmetric(vertical: 13),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadii.md),
           ),
           textStyle: const TextStyle(
             fontSize: 14,

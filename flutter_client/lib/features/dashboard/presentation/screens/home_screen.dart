@@ -5,6 +5,8 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
@@ -259,10 +261,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (context) {
         final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
         return Container(
-          padding: EdgeInsets.fromLTRB(24, 12, 24, 32 + bottomInset),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.xl + bottomInset,
+          ),
           decoration: BoxDecoration(
             color: theme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadii.modal),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -325,14 +334,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         onTap: onTap,
         child: Ink(
           height: 96,
           padding: const EdgeInsets.fromLTRB(18, 18, 14, 18),
           decoration: BoxDecoration(
             color: theme.isDarkMode ? theme.surface : Colors.white,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(AppRadii.xxl),
             border: Border.all(
               color: color.withValues(alpha: theme.isDarkMode ? 0.2 : 0.12),
             ),

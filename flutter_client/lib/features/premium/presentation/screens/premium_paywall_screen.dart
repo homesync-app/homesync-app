@@ -6,6 +6,7 @@ import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -288,7 +289,7 @@ class _BenefitCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
         decoration: BoxDecoration(
@@ -385,7 +386,7 @@ class _ProductListState extends ConsumerState<_ProductList> {
     final t = AppLocalizations.of(context);
     if (widget.products.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: theme.surface.withValues(alpha: theme.isDarkMode ? 1 : 0.86),
           borderRadius: BorderRadius.circular(AppRadii.xl),
@@ -718,7 +719,7 @@ class _AlreadyPremiumCard extends ConsumerWidget {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: theme.surface.withValues(alpha: theme.isDarkMode ? 1 : 0.86),
         borderRadius: BorderRadius.circular(AppRadii.modal),

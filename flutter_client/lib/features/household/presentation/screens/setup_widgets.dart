@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 
 class SetupStepEyebrow extends StatelessWidget {
@@ -10,16 +13,19 @@ class SetupStepEyebrow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.85)),
+        color: context.theme.surface.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
+        border: Border.all(color: context.theme.border.withValues(alpha: 0.85)),
       ),
       child: Text(
         text,
         style: TextStyle(
-          color: AppColors.textSecondary.withValues(alpha: 0.9),
+          color: context.theme.textSecondary.withValues(alpha: 0.9),
           fontSize: 12,
           fontWeight: FontWeight.w800,
           letterSpacing: 0.2,
@@ -58,13 +64,13 @@ class SetupSupportBullet extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
             child: Text(
               text,
               style: TextStyle(
                 fontSize: 15,
                 height: 1.35,
-                color: AppColors.textSecondary.withValues(alpha: 0.9),
+                color: context.theme.textSecondary.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -100,7 +106,7 @@ class SetupHeading extends StatelessWidget {
           subtitle,
           style: TextStyle(
             fontSize: 19,
-            color: AppColors.textSecondary.withValues(alpha: 0.84),
+            color: context.theme.textSecondary.withValues(alpha: 0.84),
             height: 1.45,
             fontWeight: FontWeight.w500,
           ),
@@ -144,18 +150,18 @@ class SetupPrimaryButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: isEnabled
               ? AppColors.primary.withValues(alpha: 0.2)
-              : Colors.white.withValues(alpha: 0.5),
+              : context.theme.surface.withValues(alpha: 0.5),
           foregroundColor:
-              isEnabled ? AppColors.primaryDark : AppColors.textMuted,
-          disabledBackgroundColor: Colors.white.withValues(alpha: 0.5),
-          disabledForegroundColor: AppColors.textMuted,
+              isEnabled ? AppColors.primaryDark : context.theme.textMuted,
+          disabledBackgroundColor: context.theme.surface.withValues(alpha: 0.5),
+          disabledForegroundColor: context.theme.textMuted,
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(22),
             side: BorderSide(
               color: isEnabled
                   ? AppColors.primary.withValues(alpha: 0.38)
-                  : AppColors.border.withValues(alpha: 0.85),
+                  : context.theme.border.withValues(alpha: 0.85),
               width: 1.4,
             ),
           ),
@@ -202,10 +208,10 @@ class SetupSecondaryButton extends StatelessWidget {
       icon: Icon(icon, size: 20),
       label: Text(text),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white.withValues(alpha: 0.9),
+        backgroundColor: context.theme.surface.withValues(alpha: 0.9),
         foregroundColor: AppColors.primary,
         elevation: 0,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
           side: BorderSide(
@@ -235,15 +241,15 @@ class SetupFeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.85)),
+        color: context.theme.surface.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        border: Border.all(color: context.theme.border.withValues(alpha: 0.85)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowBase.withValues(alpha: 0.05),
+            color: context.theme.shadowBase.withValues(alpha: 0.05),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -280,7 +286,7 @@ class SetupFeatureCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     height: 1.4,
-                    color: AppColors.textSecondary.withValues(alpha: 0.82),
+                    color: context.theme.textSecondary.withValues(alpha: 0.82),
                   ),
                 ),
               ],
@@ -308,13 +314,13 @@ class SetupStrategyTip extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: active
             ? AppColors.primary.withValues(alpha: 0.08)
-            : Colors.white.withValues(alpha: 0.84),
-        borderRadius: BorderRadius.circular(16),
+            : context.theme.surface.withValues(alpha: 0.84),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         border: Border.all(
           color: active
               ? AppColors.primary.withValues(alpha: 0.28)
@@ -325,7 +331,7 @@ class SetupStrategyTip extends StatelessWidget {
         children: [
           Icon(
             active ? Icons.check_circle_rounded : Icons.circle_outlined,
-            color: active ? AppColors.primary : AppColors.textMuted,
+            color: active ? AppColors.primary : context.theme.textMuted,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -343,7 +349,7 @@ class SetupStrategyTip extends StatelessWidget {
                   desc,
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary.withValues(alpha: 0.82),
+                    color: context.theme.textSecondary.withValues(alpha: 0.82),
                   ),
                 ),
               ],
@@ -366,12 +372,12 @@ class SetupFamilyPanel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(24),
+        color: context.theme.surface.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: AppColors.cardBorder.withValues(alpha: 0.85)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowBase.withValues(alpha: 0.05),
+            color: context.theme.shadowBase.withValues(alpha: 0.05),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -408,7 +414,7 @@ class SetupFamilyChoiceChip extends StatelessWidget {
           color: selected
               ? AppColors.primary.withValues(alpha: 0.14)
               : Colors.white,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
           border: Border.all(
             color: selected
                 ? AppColors.primary.withValues(alpha: 0.3)
@@ -456,19 +462,19 @@ class SetupOptionTile extends StatelessWidget {
         duration: const Duration(milliseconds: 220),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.94),
+          color: context.theme.surface.withValues(alpha: 0.94),
           borderRadius: BorderRadius.circular(26),
           border: Border.all(
             color: isSelected
                 ? tone.withValues(alpha: 0.5)
-                : AppColors.border.withValues(alpha: 0.8),
+                : context.theme.border.withValues(alpha: 0.8),
             width: isSelected ? 1.8 : 1.2,
           ),
           boxShadow: [
             BoxShadow(
               color: isSelected
                   ? tone.withValues(alpha: 0.08)
-                  : AppColors.shadowBase.withValues(alpha: 0.045),
+                  : context.theme.shadowBase.withValues(alpha: 0.045),
               blurRadius: 16,
               offset: const Offset(0, 7),
             ),
@@ -481,7 +487,7 @@ class SetupOptionTile extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: tone.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadii.md),
               ),
               child: Icon(icon, color: tone, size: 24),
             ),
@@ -504,7 +510,8 @@ class SetupOptionTile extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: AppColors.textSecondary.withValues(alpha: 0.84),
+                      color:
+                          context.theme.textSecondary.withValues(alpha: 0.84),
                       fontSize: 13.5,
                       height: 1.24,
                     ),
@@ -523,7 +530,7 @@ class SetupOptionTile extends StatelessWidget {
                 border: Border.all(
                   color: isSelected
                       ? tone
-                      : AppColors.border.withValues(alpha: 0.9),
+                      : context.theme.border.withValues(alpha: 0.9),
                   width: 1.3,
                 ),
               ),
@@ -561,7 +568,7 @@ class SetupOnboardingIllustration extends StatelessWidget {
             child: AspectRatio(
               aspectRatio: 4 / 5,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppRadii.xl),
                 child: Image.asset(
                   imagePath,
                   fit: BoxFit.cover,

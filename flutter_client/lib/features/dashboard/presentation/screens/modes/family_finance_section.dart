@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/date_extensions.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
@@ -187,7 +189,7 @@ class FamilyFinanceSection extends ConsumerWidget {
             theme.elevatedSurface.withValues(alpha: 0.92),
           ],
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.62),
         ),
@@ -226,10 +228,10 @@ class FamilyFinanceSection extends ConsumerWidget {
   static Widget _buildFinanceEmptyState(AppThemeColors theme, String subtitle) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: theme.surfaceContainer.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
       ),
       child: Row(
@@ -304,7 +306,7 @@ class _SharedFamilyFinanceCard extends ConsumerWidget {
             theme.elevatedSurface.withValues(alpha: 0.96),
           ],
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.62),
           width: 1.05,

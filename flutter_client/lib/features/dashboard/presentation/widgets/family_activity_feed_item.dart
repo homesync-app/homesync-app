@@ -4,6 +4,8 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
@@ -95,7 +97,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       onTap: () => _openDetail(context, ref, type, data),
       borderRadius: BorderRadius.circular(22),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: isPendingApproval
               ? (theme.isDarkMode
@@ -235,10 +237,13 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     required String label,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(
           color: color.withValues(alpha: 0.12),
         ),
@@ -547,7 +552,7 @@ class _PendingApprovalActivityCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(22),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(22),
@@ -711,7 +716,7 @@ class _ReviewMetaPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(color: color.withValues(alpha: 0.12)),
       ),
       child: Row(
@@ -780,7 +785,7 @@ class _ReviewActionButton extends StatelessWidget {
             onTap: onPressed,
             borderRadius: BorderRadius.circular(17),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
@@ -277,7 +279,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: highlightColor.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadii.sm),
                     ),
                     child: ShoppingIcon(
                       categoryId: categoryId,
@@ -307,7 +309,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: highlightColor.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
                     child: Text(
                       '$count',
@@ -374,7 +376,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
                 ),
                 child: Text(
                   '$count',
@@ -404,7 +406,12 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     final catColor = Color(cat['color'] as int);
 
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.md,
+      ),
       sliver: SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
@@ -461,10 +468,10 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
             return ConstrainedBox(
               constraints: BoxConstraints(maxHeight: maxSuggestionsHeight),
               child: Container(
-                margin: const EdgeInsets.all(8),
+                margin: const EdgeInsets.all(AppSpacing.xs),
                 decoration: BoxDecoration(
                   color: context.theme.surface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.15),
@@ -524,8 +531,12 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           },
         ),
         Container(
-          padding:
-              const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 16),
+          padding: const EdgeInsets.only(
+            left: AppSpacing.md,
+            right: AppSpacing.md,
+            top: AppSpacing.sm,
+            bottom: AppSpacing.md,
+          ),
           decoration: BoxDecoration(
             color: context.theme.surface,
             boxShadow: [
@@ -560,7 +571,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                         vertical: 14,
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(AppRadii.xl),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -684,190 +695,133 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                           parent: AlwaysScrollableScrollPhysics(),
                         ),
                         slivers: [
-                        _buildStaticSectionTitle(
-                          t.shoppingListTitle,
-                          count: pending.length,
-                          accentColor: AppColors.primary,
-                        ),
-                        // -- EMPTY STATE / PENDING LIST HEADER ------------------------
-                        if (pending.isEmpty)
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(24, 10, 24, 28),
-                              child: TweenAnimationBuilder<double>(
-                                duration: const Duration(seconds: 1),
-                                tween: Tween(begin: 0.0, end: 1.0),
-                                builder: (context, value, child) => Opacity(
-                                  opacity: value,
-                                  child: Transform.scale(
-                                    scale: 0.94 + (0.06 * value),
-                                    child: child,
+                          _buildStaticSectionTitle(
+                            t.shoppingListTitle,
+                            count: pending.length,
+                            accentColor: AppColors.primary,
+                          ),
+                          // -- EMPTY STATE / PENDING LIST HEADER ------------------------
+                          if (pending.isEmpty)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(24, 10, 24, 28),
+                                child: TweenAnimationBuilder<double>(
+                                  duration: const Duration(seconds: 1),
+                                  tween: Tween(begin: 0.0, end: 1.0),
+                                  builder: (context, value, child) => Opacity(
+                                    opacity: value,
+                                    child: Transform.scale(
+                                      scale: 0.94 + (0.06 * value),
+                                      child: child,
+                                    ),
                                   ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(28),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            AppColors.primary
-                                                .withValues(alpha: 0.14),
-                                            AppColors.accentGreen
-                                                .withValues(alpha: 0.10),
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(28),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              AppColors.primary
+                                                  .withValues(alpha: 0.14),
+                                              AppColors.accentGreen
+                                                  .withValues(alpha: 0.10),
+                                            ],
+                                          ),
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: AppColors.primary
+                                                  .withValues(alpha: 0.10),
+                                              blurRadius: 24,
+                                              offset: const Offset(0, 10),
+                                            ),
                                           ],
                                         ),
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.primary
-                                                .withValues(alpha: 0.10),
-                                            blurRadius: 24,
-                                            offset: const Offset(0, 10),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.shopping_basket_outlined,
-                                        size: 56,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 22),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary
-                                            .withValues(alpha: 0.10),
-                                        borderRadius:
-                                            BorderRadius.circular(999),
-                                      ),
-                                      child: Text(
-                                        done.isEmpty
-                                            ? t.shoppingAllDone
-                                            : t.shoppingListResolved,
-                                        style: const TextStyle(
+                                        child: const Icon(
+                                          Icons.shopping_basket_outlined,
+                                          size: 56,
                                           color: AppColors.primary,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: 0.1,
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      done.isEmpty
-                                          ? t.shoppingEmptyFirstLineDone
-                                          : t.shoppingEmptyFirstLineBought,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: context.theme.textPrimary,
-                                        fontSize: 22,
-                                        height: 1.3,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: -0.5,
+                                      const SizedBox(height: 22),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.10),
+                                          borderRadius: BorderRadius.circular(
+                                            AppRadii.pill,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          done.isEmpty
+                                              ? t.shoppingAllDone
+                                              : t.shoppingListResolved,
+                                          style: const TextStyle(
+                                            color: AppColors.primary,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 0.1,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      t.shoppingEmptyHint,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: context.theme.textSecondary,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        height: 1.45,
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        done.isEmpty
+                                            ? t.shoppingEmptyFirstLineDone
+                                            : t.shoppingEmptyFirstLineBought,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: context.theme.textPrimary,
+                                          fontSize: 22,
+                                          height: 1.3,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: -0.5,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        t.shoppingEmptyHint,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: context.theme.textSecondary,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          height: 1.45,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          )
-                        else ...[
-                          // Mostramos la grilla de pendientes si no esta vacio.
-                          SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                            sliver: SliverGrid(
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                childAspectRatio: 0.85,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
-                              ),
-                              delegate: SliverChildBuilderDelegate(
-                                (ctx, i) {
-                                  final item = pending[i];
-                                  return TweenAnimationBuilder<double>(
-                                    key: ValueKey(item.id),
-                                    duration: const Duration(milliseconds: 300),
-                                    tween: Tween(begin: 0.0, end: 1.0),
-                                    curve: Curves.easeOutCubic,
-                                    builder: (context, value, child) => Opacity(
-                                      opacity: value,
-                                      child: Transform.translate(
-                                        offset: Offset(0, 15 * (1 - value)),
-                                        child: child,
-                                      ),
-                                    ),
-                                    child: _ShoppingItemTile(
-                                      item: item,
-                                      onToggle: () => _toggleItem(item),
-                                      onDelete: () => _deleteItem(item),
-                                    ),
-                                  );
-                                },
-                                childCount: pending.length,
-                              ),
-                            ),
-                          ),
-                        ],
-                        if (_completedThisSession.length >= 3)
-                          SliverToBoxAdapter(
-                            child: _PostShoppingBanner(
-                              completedCount: _completedThisSession.length,
-                              onScanTap: () {
-                                // OCR para pre-rellenar el gasto (monto +
-                                // categoría) es GRATIS para todos. La
-                                // vinculación con la lista de compras ya está
-                                // gated dentro del ExpenseFormSheet.
-                                ExpenseFormSheet.show(
-                                  context,
-                                  triggerScanOnOpen: true,
-                                );
-                              },
-                            ),
-                          ),
-
-                        if (done.isNotEmpty) ...[
-                          _buildSectionHeader(
-                            t.shoppingRecentSection,
-                            'recent',
-                            accentColor: AppColors.accentGreen,
-                            count: done.length,
-                          ),
-                          if (_expandedSections.contains('recent'))
+                            )
+                          else ...[
+                            // Mostramos la grilla de pendientes si no esta vacio.
                             SliverPadding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpacing.md,
+                                AppSpacing.md,
+                                AppSpacing.md,
+                                AppSpacing.lg,
+                              ),
                               sliver: SliverGrid(
                                 gridDelegate:
                                     const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 4,
+                                  crossAxisCount: 3,
                                   childAspectRatio: 0.85,
                                   crossAxisSpacing: 10,
                                   mainAxisSpacing: 10,
                                 ),
                                 delegate: SliverChildBuilderDelegate(
                                   (ctx, i) {
-                                    final item = done[i];
+                                    final item = pending[i];
                                     return TweenAnimationBuilder<double>(
                                       key: ValueKey(item.id),
                                       duration:
@@ -877,58 +831,129 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                       builder: (context, value, child) =>
                                           Opacity(
                                         opacity: value,
-                                        child: child,
+                                        child: Transform.translate(
+                                          offset: Offset(0, 15 * (1 - value)),
+                                          child: child,
+                                        ),
                                       ),
                                       child: _ShoppingItemTile(
                                         item: item,
                                         onToggle: () => _toggleItem(item),
                                         onDelete: () => _deleteItem(item),
-                                        isCompleted: true,
-                                        isFreshlyCompleted:
-                                            _completedThisSession.contains(
-                                          item.id,
-                                        ),
                                       ),
                                     );
                                   },
-                                  childCount: done.length,
+                                  childCount: pending.length,
                                 ),
                               ),
                             ),
-                        ],
-
-                        _buildStaticSectionTitle(
-                          t.shoppingCategoriesSection,
-                        ),
-                        // -- CATEGORIES SECTIONS ---------------------------------
-                        for (final cat in ShoppingCategories.all
-                            .where((cat) => cat['id'] != 'general')) ...[
-                          _buildSectionHeader(
-                            localizedShoppingCategoryName(
-                              context,
-                              cat['id'] as String,
-                              fallback: cat['name'] as String?,
+                          ],
+                          if (_completedThisSession.length >= 3)
+                            SliverToBoxAdapter(
+                              child: _PostShoppingBanner(
+                                completedCount: _completedThisSession.length,
+                                onScanTap: () {
+                                  // OCR para pre-rellenar el gasto (monto +
+                                  // categoría) es GRATIS para todos. La
+                                  // vinculación con la lista de compras ya está
+                                  // gated dentro del ExpenseFormSheet.
+                                  ExpenseFormSheet.show(
+                                    context,
+                                    triggerScanOnOpen: true,
+                                  );
+                                },
+                              ),
                             ),
-                            cat['id'],
-                            emoji: cat['emoji'],
-                            accentColor: Color(cat['color'] as int),
-                            categoryId: cat['id'] as String,
-                            count: ShoppingPredefined.itemsForCategory(
-                              cat['id'],
-                              context,
-                            ).length,
-                          ),
-                          if (_expandedSections.contains(cat['id']))
-                            _buildPredefinedGrid(cat, pending, done),
-                        ],
 
-                        const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                      ],
+                          if (done.isNotEmpty) ...[
+                            _buildSectionHeader(
+                              t.shoppingRecentSection,
+                              'recent',
+                              accentColor: AppColors.accentGreen,
+                              count: done.length,
+                            ),
+                            if (_expandedSections.contains('recent'))
+                              SliverPadding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  AppSpacing.md,
+                                  AppSpacing.sm,
+                                  AppSpacing.md,
+                                  AppSpacing.md,
+                                ),
+                                sliver: SliverGrid(
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 4,
+                                    childAspectRatio: 0.85,
+                                    crossAxisSpacing: 10,
+                                    mainAxisSpacing: 10,
+                                  ),
+                                  delegate: SliverChildBuilderDelegate(
+                                    (ctx, i) {
+                                      final item = done[i];
+                                      return TweenAnimationBuilder<double>(
+                                        key: ValueKey(item.id),
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        tween: Tween(begin: 0.0, end: 1.0),
+                                        curve: Curves.easeOutCubic,
+                                        builder: (context, value, child) =>
+                                            Opacity(
+                                          opacity: value,
+                                          child: child,
+                                        ),
+                                        child: _ShoppingItemTile(
+                                          item: item,
+                                          onToggle: () => _toggleItem(item),
+                                          onDelete: () => _deleteItem(item),
+                                          isCompleted: true,
+                                          isFreshlyCompleted:
+                                              _completedThisSession.contains(
+                                            item.id,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    childCount: done.length,
+                                  ),
+                                ),
+                              ),
+                          ],
+
+                          _buildStaticSectionTitle(
+                            t.shoppingCategoriesSection,
+                          ),
+                          // -- CATEGORIES SECTIONS ---------------------------------
+                          for (final cat in ShoppingCategories.all
+                              .where((cat) => cat['id'] != 'general')) ...[
+                            _buildSectionHeader(
+                              localizedShoppingCategoryName(
+                                context,
+                                cat['id'] as String,
+                                fallback: cat['name'] as String?,
+                              ),
+                              cat['id'],
+                              emoji: cat['emoji'],
+                              accentColor: Color(cat['color'] as int),
+                              categoryId: cat['id'] as String,
+                              count: ShoppingPredefined.itemsForCategory(
+                                cat['id'],
+                                context,
+                              ).length,
+                            ),
+                            if (_expandedSections.contains(cat['id']))
+                              _buildPredefinedGrid(cat, pending, done),
+                          ],
+
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: 100),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
               _buildBottomOverlay(pending, done),
             ],
           );
@@ -940,7 +965,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   Widget _buildShimmerGrid() {
     return ShimmerLoading(
       child: GridView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
           childAspectRatio: 0.85,
@@ -951,7 +976,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         itemBuilder: (context, index) => Container(
           decoration: BoxDecoration(
             color: context.theme.surface,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
           ),
         ),
       ),
@@ -1021,7 +1046,7 @@ class _PredefinedItemTile extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
               child: Text(
                 item['name']!,
                 textAlign: TextAlign.center,
@@ -1148,7 +1173,9 @@ class _ShoppingItemTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xxs,
+                      ),
                       child: Text(
                         localizedShoppingItemName(context, item),
                         textAlign: TextAlign.center,
@@ -1175,7 +1202,7 @@ class _ShoppingItemTile extends StatelessWidget {
                   child: Transform.scale(
                     scale: 1 + (pulse * 0.18),
                     child: Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(AppSpacing.xxs),
                       decoration: BoxDecoration(
                         color: Color.lerp(
                           AppColors.accentGreen,
@@ -1221,7 +1248,12 @@ class _PostShoppingBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.xs,
+        AppSpacing.md,
+        AppSpacing.xxs,
+      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -1240,7 +1272,10 @@ class _PostShoppingBanner extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           onTap: onScanTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
             child: Row(
               children: [
                 const Text('🧾', style: TextStyle(fontSize: 24)),

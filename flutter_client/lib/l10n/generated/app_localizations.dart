@@ -6603,6 +6603,18 @@ abstract class AppLocalizations {
   /// **'Lo hicimos'**
   String get coupleChallengeWeDidIt;
 
+  /// No description provided for @coupleChallengeDoneThisWeek.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Completado esta semana!'**
+  String get coupleChallengeDoneThisWeek;
+
+  /// No description provided for @coupleChallengeAlreadyDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya completaron el desafío de esta semana 💚'**
+  String get coupleChallengeAlreadyDone;
+
   /// No description provided for @familyRewardsCoinsLabel.
   ///
   /// In es, this message translates to:

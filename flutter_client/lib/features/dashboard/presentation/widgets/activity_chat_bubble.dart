@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
@@ -80,10 +82,10 @@ class ActivityChatBubble extends ConsumerWidget {
         theme.isDarkMode ? AppColors.accentGold : const Color(0xFFC47A18);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: InkWell(
         onTap: () => _openDetail(context, ref, type, data),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisAlignment:
@@ -101,7 +103,12 @@ class ActivityChatBubble extends ConsumerWidget {
             Flexible(
               child: Container(
                 constraints: const BoxConstraints(minHeight: 84),
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                  AppSpacing.md,
+                  AppSpacing.xs,
+                ),
                 decoration: BoxDecoration(
                   color: isReward
                       ? rewardSurface
@@ -119,8 +126,8 @@ class ActivityChatBubble extends ConsumerWidget {
                     width: 0.9,
                   ),
                   borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(20),
-                    topRight: const Radius.circular(20),
+                    topLeft: const Radius.circular(AppRadii.lg),
+                    topRight: const Radius.circular(AppRadii.lg),
                     bottomLeft: Radius.circular(isMe ? 20 : 4),
                     bottomRight: Radius.circular(isMe ? 4 : 20),
                   ),
@@ -285,10 +292,11 @@ class ActivityChatBubble extends ConsumerWidget {
     required AppThemeColors theme,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: 3.5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(
           color: color.withValues(alpha: 0.1),
           width: 0.7,
@@ -396,7 +404,7 @@ class ActivityChatBubble extends ConsumerWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: accent.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadii.xs),
         ),
         child: Icon(Icons.card_giftcard_rounded, size: 15, color: accent),
       );

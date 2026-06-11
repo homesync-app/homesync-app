@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_approval_model.dart';
@@ -37,7 +38,7 @@ class PendingApprovalsScreen extends ConsumerWidget {
         appBar: AppBar(title: Text(t.pendingApprovalsAppBarShortTitle)),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Text(
               t.pendingApprovalsLockedNotice,
               textAlign: TextAlign.center,
@@ -74,7 +75,7 @@ class PendingApprovalsScreen extends ConsumerWidget {
         loading: () => const Center(child: AppLoader()),
         error: (e, _) => Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Text(
               t.pendingApprovalsLoadError(e.toString()),
               style: TextStyle(color: theme.textSecondary),
@@ -213,7 +214,8 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.accentRed,
                     minimumSize: const Size(0, 46),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                     side: BorderSide(
                       color: AppColors.accentRed.withValues(alpha: 0.76),
                       width: 1.2,
@@ -381,7 +383,7 @@ class _RewardChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(color: color.withValues(alpha: 0.08)),
       ),
       child: Row(
@@ -412,7 +414,7 @@ class _EmptyState extends StatelessWidget {
     final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -452,7 +454,7 @@ class _LockedHero extends StatelessWidget {
     final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

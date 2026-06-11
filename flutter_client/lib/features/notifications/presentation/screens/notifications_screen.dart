@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/notifications/domain/entities/app_notification.dart';
@@ -47,7 +49,7 @@ class NotificationsScreen extends ConsumerWidget {
         child: notificationsAsync.when(
           skipLoadingOnReload: true,
           loading: () => ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             itemCount: 6,
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
@@ -56,7 +58,7 @@ class NotificationsScreen extends ConsumerWidget {
                   height: 80,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                   ),
                 ),
               );
@@ -98,7 +100,7 @@ class NotificationsScreen extends ConsumerWidget {
                     physics: const AlwaysScrollableScrollPhysics(
                       parent: BouncingScrollPhysics(),
                     ),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     itemCount: notificationsState.items.length +
                         (notificationsState.isLoadingMore ? 1 : 0),
                     separatorBuilder: (context, index) =>
@@ -106,7 +108,8 @@ class NotificationsScreen extends ConsumerWidget {
                     itemBuilder: (context, index) {
                       if (index >= notificationsState.items.length) {
                         return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
+                          padding:
+                              EdgeInsets.symmetric(vertical: AppSpacing.xs),
                           child: Center(
                             child: CircularProgressIndicator(
                               color: AppColors.primary,
@@ -152,14 +155,14 @@ class _NotificationCard extends ConsumerWidget {
           );
         }
       },
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadii.md),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: notification.isRead
               ? AppColors.surface
               : AppColors.surfaceVariant.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(
             color: notification.isRead
                 ? AppColors.border
@@ -171,7 +174,7 @@ class _NotificationCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
@@ -221,7 +224,7 @@ class _NotificationCard extends ConsumerWidget {
               Container(
                 width: 8,
                 height: 8,
-                margin: const EdgeInsets.only(top: 8),
+                margin: const EdgeInsets.only(top: AppSpacing.xs),
                 decoration: const BoxDecoration(
                   color: AppColors.primary,
                   shape: BoxShape.circle,
@@ -246,7 +249,7 @@ class _NotificationsEmptyState extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: theme.surface,
               shape: BoxShape.circle,
@@ -292,7 +295,7 @@ class _NotificationsErrorState extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: theme.surface,
               shape: BoxShape.circle,

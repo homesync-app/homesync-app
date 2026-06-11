@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
@@ -112,11 +114,11 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     return AnimatedPress(
       onPressed: tappable ? () => _openRolePicker(member) : null,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: theme.surfaceContainer,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
         ),
         child: Row(
@@ -210,7 +212,8 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
         decoration: BoxDecoration(
           color: theme.background,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(AppRadii.xxl)),
         ),
         child: SafeArea(
           top: false,
@@ -288,13 +291,13 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     return AnimatedPress(
       onPressed: () => Navigator.pop(context, option),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
+        margin: const EdgeInsets.only(bottom: AppSpacing.xs),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isCurrent
               ? theme.primary.withValues(alpha: 0.08)
               : theme.surfaceContainer,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(
             color: isCurrent
                 ? theme.primary.withValues(alpha: 0.4)
@@ -343,7 +346,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: theme.surfaceContainer.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
         ),
         child: Row(
@@ -353,7 +356,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
               height: 48,
               decoration: BoxDecoration(
                 color: theme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadii.md),
               ),
               child: Icon(
                 Icons.person_add_rounded,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -83,7 +85,7 @@ class HomeShoppingPreviewCard extends ConsumerWidget {
               width: double.infinity,
               decoration: BoxDecoration(
                 color: theme.surface,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppRadii.xl),
                 border: Border.all(
                   color: theme.border.withValues(alpha: 0.35),
                 ),
@@ -195,7 +197,7 @@ class _ShoppingPreviewLoading extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
       ),
       child: const Column(
         children: [
@@ -223,7 +225,7 @@ class _ShoppingPreviewLoadingRow extends StatelessWidget {
             height: 24,
             decoration: BoxDecoration(
               color: theme.surfaceContainer,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadii.xs),
             ),
           ),
           const SizedBox(width: 12),
@@ -232,7 +234,7 @@ class _ShoppingPreviewLoadingRow extends StatelessWidget {
               height: 14,
               decoration: BoxDecoration(
                 color: theme.surfaceContainer,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadii.pill),
               ),
             ),
           ),
@@ -256,13 +258,13 @@ class _ShoppingPreviewEmpty extends StatelessWidget {
     final theme = context.theme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(AppRadii.xl),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: theme.surface,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           border: Border.all(
             color: theme.border.withValues(alpha: 0.3),
           ),
@@ -304,13 +306,13 @@ class _ShoppingPreviewError extends StatelessWidget {
     final theme = context.theme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(AppRadii.xl),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: theme.surface,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
         ),
         child: Text(
           message,

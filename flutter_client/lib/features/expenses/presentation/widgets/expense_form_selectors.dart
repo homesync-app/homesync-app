@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -18,7 +20,7 @@ Future<void> showExpenseMemberSelectorSheet({
     context: context,
     backgroundColor: context.theme.scaffoldBackground,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
     ),
     builder: (context) {
       final t = AppLocalizations.of(context);
@@ -77,7 +79,7 @@ Future<void> showExpenseCategorySelectorSheet({
     context: context,
     backgroundColor: context.theme.scaffoldBackground,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
     ),
     builder: (context) {
       final t = AppLocalizations.of(context);
@@ -85,7 +87,7 @@ Future<void> showExpenseCategorySelectorSheet({
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Text(
                 t.expensesFormSelectCategoryTitle,
                 style: const TextStyle(
@@ -97,7 +99,7 @@ Future<void> showExpenseCategorySelectorSheet({
             ),
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 itemCount: categories.length,
                 itemBuilder: (context, index) {
                   final category = categories[index];
@@ -108,7 +110,7 @@ Future<void> showExpenseCategorySelectorSheet({
                       : localizedExpenseCategoryName(t, categoryId);
                   return ListTile(
                     leading: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(AppSpacing.xs),
                       decoration: BoxDecoration(
                         color:
                             (category['color'] as Color).withValues(alpha: 0.1),

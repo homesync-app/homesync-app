@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/shared/widgets/app_loader.dart';
 
@@ -15,7 +17,7 @@ class AppLoadingState extends StatelessWidget {
     final theme = context.theme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -53,7 +55,7 @@ class AppErrorState extends StatelessWidget {
     final theme = context.theme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -116,13 +118,13 @@ class AppEmptyState extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Container(
           constraints: const BoxConstraints(maxWidth: 360),
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
           decoration: BoxDecoration(
             color: theme.surface,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(AppRadii.xxl),
             border: Border.all(color: highlight.withValues(alpha: 0.12)),
             boxShadow: [
               BoxShadow(
@@ -207,7 +209,7 @@ class AppEmptyState extends StatelessWidget {
                       vertical: 12,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
                     textStyle: const TextStyle(
                       fontWeight: FontWeight.w800,

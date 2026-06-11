@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -39,7 +41,7 @@ class SavingsTab extends ConsumerWidget {
             fadeStart: false,
             fadeEnd: true,
             child: ListView.separated(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               itemCount: goals.length,
               separatorBuilder: (context, index) => const SizedBox(height: 20),
               itemBuilder: (context, index) =>
@@ -63,7 +65,7 @@ class SavingsTab extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
@@ -83,7 +85,7 @@ class SavingsTab extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 48),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl),
             child: Text(
               subtitle ??
                   fallbackSubtitle ??
@@ -111,10 +113,10 @@ class SavingsTab extends ConsumerWidget {
     return AnimatedPress(
       onTap: () => _showContributionDialog(context, goal, ref),
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: theme.surface,
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(AppRadii.modal),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -127,7 +129,7 @@ class SavingsTab extends ConsumerWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: AppColors.fromHex(goal.color).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
@@ -206,11 +208,13 @@ class SavingsTab extends ConsumerWidget {
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                   ),
                   child: Row(
                     children: [
@@ -274,17 +278,17 @@ class SavingsTab extends ConsumerWidget {
                         height: 6,
                         decoration: BoxDecoration(
                           color: theme.divider,
-                          borderRadius: BorderRadius.circular(999),
+                          borderRadius: BorderRadius.circular(AppRadii.pill),
                         ),
                       ),
                       const SizedBox(height: 18),
                       Expanded(
                         child: SingleChildScrollView(
                           padding: EdgeInsets.fromLTRB(
-                            24,
-                            8,
-                            24,
-                            24 + bottomInset,
+                            AppSpacing.lg,
+                            AppSpacing.xs,
+                            AppSpacing.lg,
+                            AppSpacing.lg + bottomInset,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,7 +302,8 @@ class SavingsTab extends ConsumerWidget {
                                     decoration: BoxDecoration(
                                       color: AppColors.primary
                                           .withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(28),
+                                      borderRadius:
+                                          BorderRadius.circular(AppRadii.xxl),
                                     ),
                                     child: const Icon(
                                       Icons.flag_rounded,
@@ -380,19 +385,22 @@ class SavingsTab extends ConsumerWidget {
                                     vertical: 22,
                                   ),
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.xxl),
                                     borderSide: BorderSide(
                                       color: theme.border,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.xxl),
                                     borderSide: BorderSide(
                                       color: theme.border,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.xxl),
                                     borderSide: const BorderSide(
                                       color: AppColors.primary,
                                       width: 1.5,
@@ -429,19 +437,22 @@ class SavingsTab extends ConsumerWidget {
                                     vertical: 22,
                                   ),
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.xxl),
                                     borderSide: BorderSide(
                                       color: theme.border,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.xxl),
                                     borderSide: BorderSide(
                                       color: theme.border,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.xxl),
                                     borderSide: const BorderSide(
                                       color: AppColors.primary,
                                       width: 1.5,
@@ -590,7 +601,8 @@ class SavingsTab extends ConsumerWidget {
                                     backgroundColor: AppColors.primary,
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(24),
+                                      borderRadius:
+                                          BorderRadius.circular(AppRadii.xl),
                                     ),
                                     elevation: 0,
                                   ),
@@ -640,7 +652,9 @@ class SavingsTab extends ConsumerWidget {
           ),
           decoration: BoxDecoration(
             color: theme.background,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadii.modal),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -649,7 +663,7 @@ class SavingsTab extends ConsumerWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
                       color:
                           AppColors.fromHex(goal.color).withValues(alpha: 0.1),
@@ -722,7 +736,7 @@ class SavingsTab extends ConsumerWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppRadii.lg),
                     ),
                     elevation: 0,
                   ),
@@ -755,10 +769,10 @@ class SavingsTab extends ConsumerWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: theme.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadii.md),
             border: Border.all(color: theme.border),
           ),
           child: Column(
@@ -810,12 +824,12 @@ class SavingsTab extends ConsumerWidget {
       context: context,
       backgroundColor: context.theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
       ),
       builder: (context) {
         final theme = context.theme;
         return Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -841,7 +855,7 @@ class SavingsTab extends ConsumerWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       color: theme.surface,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadii.sm),
                       border: Border.all(color: theme.border),
                     ),
                     alignment: Alignment.center,
@@ -869,12 +883,12 @@ class SavingsTab extends ConsumerWidget {
       context: context,
       backgroundColor: context.theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
       ),
       builder: (context) {
         final theme = context.theme;
         return Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

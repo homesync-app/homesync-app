@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -195,8 +197,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 _buildWeekHeader(),
                 Expanded(
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24)
-                        .copyWith(bottom: 120),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.lg)
+                            .copyWith(bottom: 120),
                     physics: const BouncingScrollPhysics(),
                     itemCount: 7,
                     itemBuilder: (context, index) {
@@ -229,7 +232,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(AppRadii.modal),
+        ),
         boxShadow: [
           BoxShadow(
             color: theme.shadowBase.withValues(
@@ -321,7 +326,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 32, bottom: 16),
+          padding:
+              const EdgeInsets.only(top: AppSpacing.xl, bottom: AppSpacing.md),
           child: Row(
             children: [
               Text(
@@ -359,7 +365,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               color: theme.surfaceVariant.withValues(
                 alpha: theme.isDarkMode ? 0.72 : 0.5,
               ),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(AppRadii.xl),
               border: Border.all(
                 color: theme.border
                     .withValues(alpha: theme.isDarkMode ? 0.75 : 0.3),
@@ -456,10 +462,10 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeOutCubic,
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(
           color: _isExpanded
               ? categoryColor.withValues(alpha: 0.3)
@@ -482,12 +488,12 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
         ],
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         onTap: () {
           setState(() => _isExpanded = !_isExpanded);
         },
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -580,7 +586,7 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                   alignment: Alignment.topCenter,
                   heightFactor: _isExpanded ? 1.0 : 0.0,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 16),
+                    padding: const EdgeInsets.only(top: AppSpacing.md),
                     child: Column(
                       children: [
                         Divider(
@@ -636,10 +642,10 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
         onTap();
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         child: Row(

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -265,7 +266,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                       ),
                       decoration: BoxDecoration(
                         color: theme.surface,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
                         border: Border.all(
                           color: statusColor.withValues(alpha: 0.14),
                           width: 1.1,
@@ -540,4 +541,3 @@ class _IntegratedEconomyBadge extends StatelessWidget {
     );
   }
 }
-

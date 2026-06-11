@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
@@ -81,7 +83,7 @@ class FamilyTaskCard extends StatelessWidget {
           isPendingReview ? accent.withValues(alpha: 0.08) : theme.surface,
       borderColor: accent.withValues(alpha: isPendingReview ? 0.22 : 0.12),
       boxShadow: theme.cardShadow,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(AppRadii.xl),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       completionSurfaceAlpha: 0.080,
       completionBorderAlpha: 0.36,
@@ -348,10 +350,13 @@ class _FamilyTaskPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

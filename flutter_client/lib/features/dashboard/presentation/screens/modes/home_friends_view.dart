@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -216,7 +217,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                 right: 0,
                 top: 0,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(AppSpacing.xxs),
                   decoration: const BoxDecoration(
                     color: AppColors.error,
                     shape: BoxShape.circle,
@@ -250,7 +251,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.warning.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         border: Border.all(color: AppColors.warning.withValues(alpha: 0.25)),
       ),
       child: Row(
@@ -278,7 +279,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             },
             style: TextButton.styleFrom(
               foregroundColor: AppColors.warning,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
@@ -308,10 +309,10 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             if (balances.isEmpty) {
               return Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: theme.surfaceContainer.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppRadii.xl),
                   border: Border.all(
                     color: theme.divider.withValues(alpha: 0.05),
                     width: 1,
@@ -398,7 +399,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: AppColors.error.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           border: Border.all(color: AppColors.error.withValues(alpha: 0.18)),
         ),
         child: Row(
@@ -557,7 +558,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             return Container(
               decoration: BoxDecoration(
                 color: theme.surfaceContainer.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppRadii.xl),
                 border: Border.all(
                   color: theme.divider.withValues(alpha: 0.05),
                 ),
@@ -687,7 +688,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: theme.surfaceContainer.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
                   border: Border.all(
                     color: theme.divider.withValues(alpha: 0.05),
                   ),

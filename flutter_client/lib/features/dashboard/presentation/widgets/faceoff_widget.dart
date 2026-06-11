@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -48,7 +50,7 @@ class AIFaceoffWidget extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(AppRadii.modal),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.55),
         ),
@@ -60,11 +62,13 @@ class AIFaceoffWidget extends ConsumerWidget {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.sage.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -179,7 +183,7 @@ class AIFaceoffWidget extends ConsumerWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(
           color: accent.withValues(alpha: isLeader ? 0.18 : 0.12),
         ),
@@ -219,7 +223,7 @@ class AIFaceoffWidget extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
               color: accent.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadii.pill),
             ),
             child: Text(
               showExactXp ? t.faceoffXpValue(xp) : t.faceoffHiddenXp,
@@ -267,7 +271,7 @@ class AIFaceoffWidget extends ConsumerWidget {
         ),
         const SizedBox(height: 10),
         ClipRRect(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
           child: Container(
             height: 16,
             decoration: BoxDecoration(
@@ -329,7 +333,7 @@ class AIFaceoffWidget extends ConsumerWidget {
                       : isPast
                           ? theme.surface
                           : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                   border: Border.all(
                     color: isToday
                         ? AppColors.primary.withValues(alpha: 0.35)

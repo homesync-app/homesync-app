@@ -4001,6 +4001,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallengeWeDidIt => 'Lo hicimos';
 
   @override
+  String get coupleChallengeDoneThisWeek => '¡Completado esta semana!';
+
+  @override
+  String get coupleChallengeAlreadyDone =>
+      'Ya completaron el desafío de esta semana 💚';
+
+  @override
   String get familyRewardsCoinsLabel => 'monedas';
 
   @override

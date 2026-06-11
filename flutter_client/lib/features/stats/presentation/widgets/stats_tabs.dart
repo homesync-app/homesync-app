@@ -57,7 +57,9 @@ class WeeklyTab extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.xxl),
+        ),
         backgroundColor: theme.surface,
         surfaceTintColor: Colors.transparent,
         title: Row(
@@ -82,7 +84,7 @@ class WeeklyTab extends ConsumerWidget {
             filled: true,
             fillColor: Colors.red.withValues(alpha: 0.05),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               borderSide: BorderSide.none,
             ),
           ),
@@ -131,7 +133,7 @@ class WeeklyTab extends ConsumerWidget {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
             ),
             child: Text(t.commonSend),
@@ -181,7 +183,7 @@ class WeeklyTab extends ConsumerWidget {
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(32),
+              borderRadius: BorderRadius.circular(AppRadii.modal),
               border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
               boxShadow: theme.cardShadow,
             ),
@@ -245,7 +247,7 @@ class WeeklyTab extends ConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(AppRadii.modal),
                 border: Border.all(
                   color: isPremium
                       ? const Color(0xFFFCA5A5).withValues(alpha: 0.5)
@@ -256,7 +258,7 @@ class WeeklyTab extends ConsumerWidget {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: isPremium
                           ? const Color(0xFFFECACA)
@@ -467,7 +469,7 @@ class _ProgressTabState extends State<ProgressTab> {
             ),
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(32),
+              borderRadius: BorderRadius.circular(AppRadii.modal),
               boxShadow: theme.cardShadow,
               border: Border.all(color: theme.border.withValues(alpha: 0.45)),
             ),
@@ -640,7 +642,7 @@ class CategoriesTab extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
@@ -697,7 +699,7 @@ class CategoriesTab extends StatelessWidget {
                   vertical: AppSpacing.sm,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
               ),
               child: Text(t.commonRefresh),
@@ -741,7 +743,7 @@ class CategoriesTab extends StatelessWidget {
                   AppColors.primary.withValues(alpha: 0.02),
                 ],
               ),
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(AppRadii.xxl),
               border:
                   Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
             ),

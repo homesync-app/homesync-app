@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
@@ -402,7 +404,7 @@ class _RecurringExpenseFormSheetState
               height: 84,
               decoration: BoxDecoration(
                 color: accentColor.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(AppRadii.xxl),
                 border: Border.all(
                   color: accentColor.withValues(alpha: 0.14),
                 ),
@@ -481,7 +483,7 @@ class _RecurringExpenseFormSheetState
               side: BorderSide(color: AppColors.error.withValues(alpha: 0.22)),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadii.lg),
               ),
             ),
           ),
@@ -494,9 +496,9 @@ class _RecurringExpenseFormSheetState
     return Container(
       decoration: BoxDecoration(
         color: AppColors.divider.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.md),
       ),
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(AppSpacing.xxs),
       child: Row(
         children: [
           _buildTypeOption(
@@ -534,7 +536,7 @@ class _RecurringExpenseFormSheetState
           decoration: BoxDecoration(
             color:
                 isSelected ? color.withValues(alpha: 0.12) : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadii.sm),
             border: isSelected
                 ? Border.all(color: color.withValues(alpha: 0.35))
                 : null,
@@ -620,15 +622,17 @@ class _RecurringExpenseFormSheetState
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context).recurringExpenseNameLabel,
         hintText: AppLocalizations.of(context).recurringExpenseNameHint,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadii.lg),
+        ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           borderSide: BorderSide(
             color: AppColors.primary.withValues(alpha: 0.14),
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
         ),
         filled: true,
@@ -657,15 +661,17 @@ class _RecurringExpenseFormSheetState
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context).recurringExpenseAmountLabel,
         prefixText: r'$ ',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadii.lg),
+        ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           borderSide: BorderSide(
             color: AppColors.primary.withValues(alpha: 0.14),
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
         ),
         filled: true,
@@ -701,10 +707,10 @@ class _RecurringExpenseFormSheetState
                 onTap: () => setState(() => _dayOfMonth = day),
                 child: Container(
                   width: 44,
-                  margin: const EdgeInsets.only(right: 8),
+                  margin: const EdgeInsets.only(right: AppSpacing.xs),
                   decoration: BoxDecoration(
                     color: isSelected ? AppColors.primary : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                     border: Border.all(
                       color: isSelected
                           ? AppColors.primary
@@ -847,12 +853,12 @@ class _RecurringExpenseFormSheetState
       child: GestureDetector(
         onTap: () => setState(() => _splitType = type),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           decoration: BoxDecoration(
             color: isSelected
                 ? AppColors.primary.withValues(alpha: 0.1)
                 : Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadii.sm),
             border: Border.all(
               color: isSelected
                   ? AppColors.primary
@@ -914,7 +920,7 @@ class _RecurringExpenseFormSheetState
               child: Opacity(
                 opacity: isSelected ? 1.0 : 0.58,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(AppSpacing.xxs),
                   decoration: isSelected
                       ? BoxDecoration(
                           border: Border.all(
@@ -961,7 +967,7 @@ class _RecurringExpenseFormSheetState
           backgroundColor: accentColor,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppRadii.xl),
           ),
           elevation: 0,
           shadowColor: Colors.transparent,

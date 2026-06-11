@@ -13,6 +13,8 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/ocr_log_service.dart';
 import 'package:homesync_client/core/services/receipt_scan_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
@@ -802,7 +804,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                     },
                     child: SingleChildScrollView(
                       controller: _formScrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                       child: Form(
                         key: _formKey,
                         child: AppShake(
@@ -1002,8 +1005,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         final t = AppLocalizations.of(context);
         return AlertDialog(
           backgroundColor: AppColors.surface,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.xxl),
+          ),
           title: Text(
             t.expensesFormDeleteDialogTitle,
             style: const TextStyle(fontWeight: FontWeight.w900),
@@ -1192,7 +1196,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
         color: theme.surfaceContainer,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.62)),
         boxShadow: [
           BoxShadow(
@@ -1215,7 +1219,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 height: 52,
                 decoration: BoxDecoration(
                   color: _isIncome ? AppColors.success : AppColors.primary,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
                   boxShadow: [
                     BoxShadow(
                       color: (_isIncome ? AppColors.success : AppColors.primary)
@@ -1299,7 +1303,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(color: theme.border.withValues(alpha: 0.82)),
         boxShadow: theme.cardShadow,
       ),
@@ -1341,7 +1345,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 errorBorder: InputBorder.none,
                 focusedErrorBorder: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
               ),
             ),
           ),
@@ -1421,10 +1426,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         },
       ),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: theme.surface,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           border: Border.all(color: theme.border.withValues(alpha: 0.85)),
           boxShadow: [
             BoxShadow(
@@ -1439,7 +1444,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: (_selectedCategory!['color'] as Color)
                     .withValues(alpha: 0.1),

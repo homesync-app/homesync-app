@@ -10,6 +10,8 @@ import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/breadcrumb_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -188,7 +190,8 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
       padding: EdgeInsets.only(bottom: bottom),
       decoration: BoxDecoration(
         color: theme.scaffoldBackground,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.18),
@@ -314,11 +317,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
             filled: true,
             fillColor: theme.surfaceContainer,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               borderSide: BorderSide(color: theme.primary, width: 1.5),
             ),
             counterStyle: TextStyle(fontSize: 11, color: theme.textMuted),
@@ -339,11 +342,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
             filled: true,
             fillColor: theme.surfaceContainer,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               borderSide: BorderSide(color: theme.primary, width: 1.5),
             ),
             counterStyle: TextStyle(fontSize: 11, color: theme.textMuted),
@@ -431,12 +434,12 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.primary.withValues(alpha: 0.12)
                 : theme.surfaceContainer,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadii.md),
             border: Border.all(
               color: isSelected
                   ? theme.primary.withValues(alpha: 0.6)

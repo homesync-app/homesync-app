@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
 class PersonalMetricCard extends StatelessWidget {
@@ -21,10 +23,10 @@ class PersonalMetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         boxShadow: theme.cardShadow,
         border: Border.all(color: theme.border.withValues(alpha: 0.45)),
       ),
@@ -34,7 +36,7 @@ class PersonalMetricCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.xs),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.08),
                   shape: BoxShape.circle,

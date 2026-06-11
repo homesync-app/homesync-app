@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -122,7 +124,8 @@ class _ExpenseDetailSheetContentState
       height: MediaQuery.of(context).size.height * 0.75,
       decoration: BoxDecoration(
         color: theme.background,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
       child: Column(
         children: [
@@ -172,7 +175,7 @@ class _ExpenseDetailSheetContentState
                   children: [
                     if (_isRefreshingDetails)
                       Padding(
-                        padding: const EdgeInsets.only(right: 12),
+                        padding: const EdgeInsets.only(right: AppSpacing.sm),
                         child: SizedBox(
                           width: 18,
                           height: 18,
@@ -228,7 +231,7 @@ class _ExpenseDetailSheetContentState
                 children: [
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
                       color: Color.alphaBlend(
                         accentColor.withValues(alpha: 0.018),
@@ -251,7 +254,8 @@ class _ExpenseDetailSheetContentState
                               height: 46,
                               decoration: BoxDecoration(
                                 color: accentColor.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadii.md),
                               ),
                               child: Center(
                                 child: isShoppingList
@@ -345,10 +349,10 @@ class _ExpenseDetailSheetContentState
                     const SizedBox(height: 8),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
                         color: theme.surface,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppRadii.md),
                         border: Border.all(color: theme.border),
                       ),
                       child: Text(
@@ -416,7 +420,8 @@ class _ExpenseDetailSheetContentState
                         borderRadius: BorderRadius.circular(22),
                         border: Border.all(color: theme.border),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                       child: Column(
                         children: expense.splits!.map((split) {
                           final isPayer = split.userId == expense.paidBy;
@@ -524,7 +529,7 @@ class _ExpenseDetailSheetContentState
       ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadii.xs),
       ),
       child: Text(
         label,
@@ -613,7 +618,7 @@ class _ExpenseDetailSheetContentState
                   height: 31,
                   decoration: BoxDecoration(
                     color: theme.background.withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                   child: Center(
                     child: ShoppingIcon(

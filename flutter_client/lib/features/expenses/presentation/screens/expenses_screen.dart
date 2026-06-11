@@ -4,6 +4,8 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -23,7 +25,6 @@ import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/app_swipe_to_delete.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
-import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:intl/intl.dart';
 
 import '../providers/estimated_income_provider.dart';
@@ -114,10 +115,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
         if (_tabController.index == 1) {
           final isPremium = ref.watch(premiumProvider).value ?? false;
+          if (!isPremium) return const SizedBox.shrink();
           label = t.expensesFabNewSubscription;
-          onPressed = isPremium
-              ? () => _showTemplateForm(context)
-              : () => PremiumPaywall.show(context);
+          onPressed = () => _showTemplateForm(context);
         } else if (_tabController.index == 2) {
           label = t.expensesFabNewGoal;
           onPressed = () => SavingsTab.showGoalSheet(context, ref);
@@ -243,7 +243,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     if (sortedItems.isNotEmpty)
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.lg,
+                            AppSpacing.lg,
+                            AppSpacing.lg,
+                            AppSpacing.xs,
+                          ),
                           child: Row(
                             children: [
                               Container(
@@ -251,7 +256,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                 decoration: BoxDecoration(
                                   color: theme.textSecondary
                                       .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadii.xs),
                                 ),
                                 child: Icon(
                                   Icons.history_rounded,
@@ -292,10 +298,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                 if (isFirstOfDate)
                                   Padding(
                                     padding: const EdgeInsets.fromLTRB(
-                                      24,
-                                      24,
-                                      24,
-                                      12,
+                                      AppSpacing.lg,
+                                      AppSpacing.lg,
+                                      AppSpacing.lg,
+                                      AppSpacing.sm,
                                     ),
                                     child: Text(
                                       _formatFeedDate(item.date),
@@ -324,7 +330,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     if (sortedItems.isEmpty)
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.xxl,
+                          ),
                           child: _buildEmptyState(
                             AppLocalizations.of(context).expensesActivityEmpty,
                           ),
@@ -473,7 +481,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadii.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -511,7 +519,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(color: theme.border.withValues(alpha: 0.62)),
         boxShadow: theme.cardShadow,
       ),
@@ -543,12 +551,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   Widget _buildFeedLoadingSliver() {
     final theme = context.theme;
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.lg,
+      ),
       sliver: SliverList.separated(
         itemCount: 5,
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) => Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: theme.surface,
             borderRadius: BorderRadius.circular(22),
@@ -698,7 +711,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ),
           if (hasIncome)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.md,
+              ),
               decoration: BoxDecoration(
                 color: theme.surfaceVariant.withValues(alpha: 0.38),
                 borderRadius:
@@ -767,7 +783,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       builder: (context) => Container(
         decoration: BoxDecoration(
           color: theme.background,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -840,7 +857,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(AppRadii.xs),
                           ),
                           child: const Icon(
                             Icons.pending_actions_rounded,
@@ -863,11 +880,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     const SizedBox(height: 16),
                     ...pendingItems.map(
                       (item) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                         child: Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(AppSpacing.xs),
                               decoration: BoxDecoration(
                                 color:
                                     AppColors.primary.withValues(alpha: 0.05),
@@ -915,7 +932,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(AppRadii.lg),
                         ),
                         elevation: 0,
                       ),
@@ -1161,7 +1178,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           children: items.isEmpty
               ? [
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 32),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: AppSpacing.xl),
                     child: Text(
                       AppLocalizations.of(context).expensesBreakdownEmpty,
                       style: const TextStyle(color: AppColors.textMuted),
@@ -1206,7 +1224,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
       child: SafeArea(
         child: SingleChildScrollView(
@@ -1247,10 +1266,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 ),
                 const SizedBox(height: 32),
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(AppRadii.xl),
                     border:
                         Border.all(color: accentColor.withValues(alpha: 0.1)),
                   ),
@@ -1283,7 +1302,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: accentColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadii.xs),
                       ),
                       child: Icon(
                         Icons.list_alt_rounded,
@@ -1316,7 +1335,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
                       ),
                       elevation: 0,
                     ),
@@ -1345,14 +1364,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     required Color color,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             child: Icon(icon, size: 18, color: color),
           ),
@@ -1447,7 +1466,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       splitType: item.splitType,
     );
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(22),
@@ -1462,7 +1481,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             height: 54,
             decoration: BoxDecoration(
               color: categoryColor.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.md),
             ),
             child: Icon(
               categoryIcon,
@@ -1627,7 +1646,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: badgeColor.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadii.xs),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1852,12 +1871,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   Widget _buildSettlementCard(ExpenseModel expense) {
     final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.accentBlue.withValues(
           alpha: theme.isDarkMode ? 0.12 : 0.04,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(
           color: AppColors.accentBlue.withValues(
             alpha: theme.isDarkMode ? 0.24 : 0.1,
@@ -1867,7 +1886,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
               color: theme.surface,
               shape: BoxShape.circle,
@@ -1985,7 +2004,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ),
           const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 48),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl),
             child: Text(
               subtitle ??
                   AppLocalizations.of(context).expensesEmptyDefaultSubtitle,

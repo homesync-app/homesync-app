@@ -15,6 +15,8 @@ import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/theme_palettes.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
@@ -629,7 +631,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: theme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+        ),
         title: Text(
           t.settingsRemoveMemberTitle,
           style: const TextStyle(fontWeight: FontWeight.w900),
@@ -646,7 +650,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               backgroundColor: theme.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
               minimumSize: const Size(100, 48), // Prevents infinite width error
             ),
@@ -693,7 +697,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: theme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+        ),
         title: const Text(
           '¿Eliminar dummy QA?',
           style: TextStyle(fontWeight: FontWeight.w900),
@@ -712,7 +718,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               backgroundColor: theme.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
               minimumSize: const Size(128, 48),
             ),
@@ -768,7 +774,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: theme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.lg),
+        ),
         title: const Text(
           'Nombre del hogar',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -781,7 +789,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             labelText: 'Tu nombre',
             filled: true,
             fillColor: theme.primary.withValues(alpha: 0.05),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+            ),
           ),
         ),
         actions: [
@@ -890,7 +900,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final String? newRole = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.lg),
+        ),
         title: const Text(
           'Asignar Rol / Apodo',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -910,8 +922,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         : 'Nombre del rol (ej: Padre)',
                 filled: true,
                 fillColor: theme.primary.withValues(alpha: 0.05),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
+                ),
               ),
             ),
             if (suggestions.isNotEmpty) ...[
@@ -1012,7 +1025,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
         decoration: BoxDecoration(
           color: theme.background,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(AppRadii.xxl)),
         ),
         child: SafeArea(
           top: false,
@@ -1148,15 +1162,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     return InkWell(
       onTap: () => Navigator.pop(context, option),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadii.md),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
+        margin: const EdgeInsets.only(bottom: AppSpacing.xs),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isCurrent
               ? theme.primary.withValues(alpha: 0.08)
               : theme.surfaceContainer,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(
             color: isCurrent
                 ? theme.primary.withValues(alpha: 0.4)
@@ -1371,7 +1385,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     color: theme.isDarkMode
                         ? AppColors.primary.withValues(alpha: 0.16)
                         : Colors.white.withValues(alpha: 0.74),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                   child: const Icon(
                     Icons.bug_report_outlined,
@@ -1619,12 +1633,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: theme.surfaceContainer,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           onTap: () {
             AppHaptics.tap();
             FeedbackSheet.show(context, screen: 'settings');
@@ -1638,7 +1652,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: const Color(0xFF6366F1).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                   child: const Icon(
                     Icons.chat_bubble_outline_rounded,
@@ -1689,7 +1703,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -1705,7 +1719,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: AppColors.accentGold.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadii.sm),
           ),
           child: const Icon(
             Icons.auto_awesome_rounded,
@@ -1787,7 +1801,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: theme.surfaceContainer,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
       ),
       child: Column(
         children: [
@@ -1990,7 +2004,7 @@ class _SettingsHeader extends StatelessWidget {
               ),
               const SizedBox(height: 18),
               Padding(
-                padding: const EdgeInsets.only(left: 12),
+                padding: const EdgeInsets.only(left: AppSpacing.sm),
                 child: Text(
                   t.settingsAppBarTitle,
                   style: TextStyle(

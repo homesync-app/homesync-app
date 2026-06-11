@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/estimated_income_provider.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
@@ -77,7 +79,8 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
     return Container(
       decoration: BoxDecoration(
         color: theme.background,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
       padding: const EdgeInsets.fromLTRB(28, 12, 28, 40),
       child: Column(
@@ -192,7 +195,7 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.success,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
@@ -266,7 +269,7 @@ class _DayPicker extends StatelessWidget {
                 color: isSelected
                     ? AppColors.success
                     : AppColors.success.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
               child: Text(
                 '$day',

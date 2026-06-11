@@ -28,8 +28,11 @@ export const AVATARS = [
   {
     id: 'premium_market_dog',
     keyColor: 'magenta',
+    // El arte de este perro trae un borde blanco tipo sticker (los otros no);
+    // se erosiona el alfa N pasadas para dejarlo al ras como el resto.
+    erodeBorder: 6,
     motion:
-      'The puppy breathes gently, blinks, wags its tail slowly, and its ears perk up briefly.',
+      'The golden puppy slowly wags its tail, its floppy ears perk up for a moment, it blinks, and tilts its head curiously toward the grocery bag it holds, then settles. Mouth stays closed in a calm happy expression.',
   },
   {
     id: 'premium_orange_cat',
@@ -53,7 +56,7 @@ export const AVATARS = [
     id: 'premium_key_bird',
     keyColor: 'magenta',
     motion:
-      'The little bird breathes gently, blinks, ruffles its feathers slightly and the key it holds swings softly.',
+      'The little yellow chick ruffles its feathers, gives a tiny hop, blinks, and the house key on the ribbon it holds swings softly side to side. Beak stays closed in a calm happy expression.',
   },
   {
     id: 'premium_tool_adult_man',
@@ -74,6 +77,60 @@ export const AVATARS = [
 //   loop 'pingpong' -> ida y vuelta, para estados ambientales sostenidos
 //   loop 'oneshot'  -> una sola pasada; el prompt DEBE volver a la pose inicial
 export const EVENT_MOTIONS = {
+  premium_market_dog: {
+    victory: {
+      loop: 'oneshot',
+      prompt:
+        'The golden puppy gives a happy little victory bounce, its ears flop up, tail wagging fast, and it lifts one front paw triumphantly with bright sparkling eyes, then settles back down into exactly its original calm sitting pose. Mouth stays closed.',
+    },
+    versus: {
+      loop: 'pingpong',
+      prompt:
+        'The golden puppy lowers its front into a playful determined play-bow, tail up and wagging, ears alert, with focused competitive eyes, like it is about to win a friendly game. Mouth stays closed.',
+    },
+    celebrate: {
+      loop: 'pingpong',
+      trimSeconds: 2.6,
+      prompt:
+        'The golden puppy does a happy full-body wiggle of joy, tail wagging in circles and ears bouncing, then returns to exactly its original calm sitting pose. Mouth stays closed.',
+    },
+  },
+  premium_key_bird: {
+    victory: {
+      loop: 'oneshot',
+      prompt:
+        'The little yellow chick does a joyful victory hop with a quick flap of its tiny wings, puffing its chest proudly, the house key jingling, then settles back into exactly its original standing pose. Beak stays closed.',
+    },
+    versus: {
+      loop: 'pingpong',
+      prompt:
+        'The little yellow chick leans forward with its wings slightly spread and a determined confident look, holding the house key up like a trophy, ready for a friendly contest. Beak stays closed.',
+    },
+    celebrate: {
+      loop: 'pingpong',
+      trimSeconds: 2.6,
+      prompt:
+        'The little yellow chick flaps its wings excitedly with a cheerful little jump, the house key swinging happily, then returns to exactly its original standing pose. Beak stays closed.',
+    },
+  },
+  premium_tool_adult_man: {
+    victory: {
+      loop: 'oneshot',
+      prompt:
+        'The man gives a proud confident victory gesture: he raises his hand holding the toolbox slightly and gives a satisfied approving nod with a big warm smile and bright happy eyes, like a job well done, then settles back into exactly his original calm pose.',
+    },
+    versus: {
+      loop: 'pingpong',
+      prompt:
+        'The man leans slightly forward with a determined, friendly competitive look, raising one eyebrow with a confident smirk as if ready to take on a challenge, holding his tools steadily.',
+    },
+    celebrate: {
+      loop: 'pingpong',
+      trimSeconds: 2.6,
+      prompt:
+        'The man does a cheerful little celebration: a happy shoulder shrug and an enthusiastic nod with a bright joyful smile, then returns to exactly his original calm pose.',
+    },
+  },
   premium_orange_cat: {
     victory: {
       loop: 'oneshot',
@@ -110,6 +167,7 @@ export function buildPrompt(avatar, { motionText, oneshot = false } = {}) {
     'Preserve the exact art style, colors, proportions and lighting of the input image.',
     `The background is a completely flat, uniform, solid ${key.name} color (${key.hex}) with no gradients, no shadows, no vignette and no texture.`,
     'Camera is completely static and locked. No camera movement, no zoom, no pan.',
+    'The scene is completely silent: the character does not speak, talk, sing or make any vocal sound, mouth stays closed.',
     oneshot
       ? 'Gentle, friendly motion. Soft and warm mood.'
       : 'Slow, calm, loopable motion. Soft and friendly mood.',
@@ -120,4 +178,5 @@ export function buildPrompt(avatar, { motionText, oneshot = false } = {}) {
 
 export const NEGATIVE_PROMPT =
   'camera movement, zoom, pan, background change, gradients, shadows on background, ' +
-  'extra limbs, deformation, style change, text, watermark, fast motion, jump cut';
+  'extra limbs, deformation, style change, text, watermark, fast motion, jump cut, ' +
+  'speaking, talking, singing, humming, voice, vocal sounds, open mouth';

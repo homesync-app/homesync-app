@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
 class AppSegmentedTabs extends StatelessWidget {
@@ -41,7 +42,7 @@ class AppSegmentedTabs extends StatelessWidget {
                     right: index == labels.length - 1 ? 0 : 6,
                   ),
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppRadii.lg),
                     onTap: () => controller.animateTo(index),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 220),
@@ -51,7 +52,7 @@ class AppSegmentedTabs extends StatelessWidget {
                         color: isSelected
                             ? AppColors.primary.withValues(alpha: 0.12)
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
                         border: Border.all(
                           color: isSelected
                               ? AppColors.primary.withValues(alpha: 0.18)

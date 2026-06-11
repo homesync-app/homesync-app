@@ -5,6 +5,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -15,6 +16,7 @@ import 'package:homesync_client/features/dashboard/presentation/providers/love_n
 import 'package:homesync_client/features/dashboard/presentation/providers/mascot_motion_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/home_header_avatar.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/love_note_envelope.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
@@ -261,7 +263,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
                     width: 54,
                     height: 2,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
                       gradient: LinearGradient(
                         colors: [
                           theme.primary.withValues(alpha: 0.55),
@@ -350,27 +352,11 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
   }
 
   Widget _buildProfileAvatar(MemberModel? member) {
-    return AnimatedPress(
+    return HomeHeaderAvatar(
+      name: member?.displayName,
+      avatarUrl: member?.avatarUrl,
       onTap: widget.onAvatarTap,
-      child: Transform.translate(
-        offset: const Offset(6, 0),
-        child: SizedBox(
-          width: 104,
-          height: 96,
-          child: OverflowBox(
-            alignment: Alignment.centerRight,
-            maxWidth: 142,
-            maxHeight: 142,
-            child: CustomUserAvatar(
-              name: member?.displayName,
-              avatarUrl: member?.avatarUrl,
-              radius: 36,
-              isAnimated: true,
-              motionController: ref.read(homeMascotMotionProvider),
-            ),
-          ),
-        ),
-      ),
+      motionController: ref.read(homeMascotMotionProvider),
     );
   }
 
@@ -541,7 +527,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
             child: Center(child: AppLoader()),
           ),
           error: (e, _) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: Text(t.commonErrorWithDetails(e.toString())),
           ),
           data: (activities) {
@@ -606,7 +592,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: AppSpacing.xs),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -616,7 +602,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(color: theme.border.withValues(alpha: 0.22)),
       ),
       child: Row(
@@ -676,10 +662,10 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
         (_) => ShimmerLoading(
           child: Container(
             height: 70,
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: AppSpacing.xs),
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
             ),
           ),
         ),
@@ -759,7 +745,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
             return AlertDialog(
               backgroundColor: theme.surface,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppRadii.xl),
               ),
               title: Text(
                 isOwedByMe
