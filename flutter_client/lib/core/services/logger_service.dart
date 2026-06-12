@@ -5,10 +5,27 @@ import 'package:logger/logger.dart';
 /// Centralized logging service for the application.
 /// Replaces print() and debugPrint() with structured logging.
 /// Integrated with Firebase Crashlytics for production error reporting.
+/// Sink remoto para errores (ej. Supabase `application_logs`). Se cablea desde
+/// `main()` una vez que existe el RPC service, así los errores ATRAPADOS
+/// (try/catch + `log.e`) llegan al mismo pipeline que los no atrapados. Sin
+/// esto, un catch con snackbar era invisible en el backend.
+typedef RemoteErrorSink = void Function(
+  String message, {
+  Object? error,
+  StackTrace? stackTrace,
+  bool fatal,
+});
+
 class LoggerService {
   LoggerService._privateConstructor();
   static final LoggerService _instance = LoggerService._privateConstructor();
   static LoggerService get instance => _instance;
+
+  /// Cableado desde `main()`. Fire-and-forget; nunca debe romper el logging.
+  static RemoteErrorSink? remoteErrorSink;
+
+  /// Evita recursión si el sink (o algo aguas abajo) vuelve a llamar a log.e.
+  static bool _inSink = false;
 
   final Logger _logger = Logger(
     printer: PrettyPrinter(
@@ -54,6 +71,7 @@ class LoggerService {
   void e(dynamic message, {Object? error, StackTrace? stackTrace}) {
     _logger.e(message, error: error, stackTrace: stackTrace);
     _reportToCrashlytics(message, error, stackTrace, isFatal: false);
+    _forwardToRemote(message, error, stackTrace, fatal: false);
   }
 
   /// Log a fatal error (the app is about to crash and we know it).
@@ -61,6 +79,33 @@ class LoggerService {
   void f(dynamic message, {Object? error, StackTrace? stackTrace}) {
     _logger.f(message, error: error, stackTrace: stackTrace);
     _reportToCrashlytics(message, error, stackTrace, isFatal: true);
+    _forwardToRemote(message, error, stackTrace, fatal: true);
+  }
+
+  /// Reenvía errores al sink remoto (Supabase admin logs) si está cableado.
+  /// Fire-and-forget y con guard de reentrancia: un fallo del sink jamás debe
+  /// tumbar el logging ni provocar recursión.
+  void _forwardToRemote(
+    dynamic message,
+    Object? error,
+    StackTrace? stackTrace, {
+    required bool fatal,
+  }) {
+    final sink = remoteErrorSink;
+    if (sink == null || _inSink) return;
+    _inSink = true;
+    try {
+      sink(
+        message.toString(),
+        error: error,
+        stackTrace: stackTrace,
+        fatal: fatal,
+      );
+    } catch (_) {
+      // Nunca propagar un fallo del sink al call site del log.
+    } finally {
+      _inSink = false;
+    }
   }
 
   /// Reports errors to Crashlytics in production (mobile only).

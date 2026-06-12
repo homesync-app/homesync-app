@@ -1713,44 +1713,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppColors.accentGold.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(AppRadii.sm),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.accentGold.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+            ),
+            child: const Icon(
+              Icons.auto_awesome_rounded,
+              color: AppColors.accentGold,
+              size: 22,
+            ),
           ),
-          child: const Icon(
-            Icons.auto_awesome_rounded,
-            color: AppColors.accentGold,
-            size: 22,
+          title: Text(
+            t.settingsReplayTourTitle,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: theme.textPrimary,
+            ),
           ),
-        ),
-        title: Text(
-          t.settingsReplayTourTitle,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: theme.textPrimary,
+          subtitle: Text(
+            t.settingsReplayTourSubtitle,
+            style: TextStyle(color: theme.textSecondary, fontSize: 12),
           ),
+          trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
+          onTap: () async {
+            AppHaptics.tap();
+            final controller =
+                ref.read(coupleHomeTourControllerProvider.notifier);
+            await controller.reset();
+            ref.invalidate(coupleHomeTourSeenProvider);
+            if (!mounted) return;
+            final tasks =
+                ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
+            controller.start(hasTasks: tasks?.isNotEmpty ?? false);
+            Navigator.of(context).pop();
+          },
         ),
-        subtitle: Text(
-          t.settingsReplayTourSubtitle,
-          style: TextStyle(color: theme.textSecondary, fontSize: 12),
-        ),
-        trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
-        onTap: () async {
-          AppHaptics.tap();
-          final controller =
-              ref.read(coupleHomeTourControllerProvider.notifier);
-          await controller.reset();
-          ref.invalidate(coupleHomeTourSeenProvider);
-          if (!mounted) return;
-          final tasks = ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
-          controller.start(hasTasks: tasks?.isNotEmpty ?? false);
-          Navigator.of(context).pop();
-        },
       ),
     );
   }
@@ -1803,45 +1810,50 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         color: theme.surfaceContainer,
         borderRadius: BorderRadius.circular(AppRadii.lg),
       ),
-      child: Column(
-        children: [
-          ListTile(
-            leading:
-                Icon(Icons.privacy_tip_outlined, color: theme.textSecondary),
-            title: Text(
-              t.settingsLegalPrivacyPolicy,
-              style: TextStyle(color: theme.textPrimary, fontSize: 15),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            ListTile(
+              leading:
+                  Icon(Icons.privacy_tip_outlined, color: theme.textSecondary),
+              title: Text(
+                t.settingsLegalPrivacyPolicy,
+                style: TextStyle(color: theme.textPrimary, fontSize: 15),
+              ),
+              trailing: Icon(
+                Icons.open_in_new_rounded,
+                color: theme.textMuted,
+                size: 18,
+              ),
+              onTap: () =>
+                  openUrl('https://homesync-app.github.io/homesync-privacy/'),
             ),
-            trailing: Icon(
-              Icons.open_in_new_rounded,
-              color: theme.textMuted,
-              size: 18,
+            Divider(
+              height: 1,
+              color: theme.divider.withValues(alpha: 0.1),
+              indent: 16,
+              endIndent: 16,
             ),
-            onTap: () =>
-                openUrl('https://homesync-app.github.io/homesync-privacy/'),
-          ),
-          Divider(
-            height: 1,
-            color: theme.divider.withValues(alpha: 0.1),
-            indent: 16,
-            endIndent: 16,
-          ),
-          ListTile(
-            leading:
-                Icon(Icons.description_outlined, color: theme.textSecondary),
-            title: Text(
-              t.settingsLegalTermsOfUse,
-              style: TextStyle(color: theme.textPrimary, fontSize: 15),
+            ListTile(
+              leading:
+                  Icon(Icons.description_outlined, color: theme.textSecondary),
+              title: Text(
+                t.settingsLegalTermsOfUse,
+                style: TextStyle(color: theme.textPrimary, fontSize: 15),
+              ),
+              trailing: Icon(
+                Icons.open_in_new_rounded,
+                color: theme.textMuted,
+                size: 18,
+              ),
+              onTap: () =>
+                  openUrl('https://homesync-app.github.io/homesync-privacy/'),
             ),
-            trailing: Icon(
-              Icons.open_in_new_rounded,
-              color: theme.textMuted,
-              size: 18,
-            ),
-            onTap: () =>
-                openUrl('https://homesync-app.github.io/homesync-privacy/'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

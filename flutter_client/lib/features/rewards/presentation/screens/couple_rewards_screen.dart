@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -23,13 +22,13 @@ import '../../../household/presentation/providers/household_providers.dart';
 import '../../../stats/presentation/providers/stats_provider.dart';
 import '../../../stats/presentation/screens/weekly_winner_screen.dart';
 import '../../../stats/presentation/widgets/weekly_progress_tab.dart';
-import '../../../tasks/presentation/providers/task_provider.dart';
 import '../../domain/models/couple_challenge.dart';
 import '../../domain/models/reward_model.dart';
 import '../providers/couple_challenge_provider.dart';
 import '../providers/reward_provider.dart';
 import '../utils/reward_localization.dart';
 import '../widgets/couple_challenge_card.dart';
+import '../widgets/couple_challenge_completion_mixin.dart';
 
 class CoupleRewardsScreen extends ConsumerStatefulWidget {
   final String householdId;
@@ -46,7 +45,9 @@ class CoupleRewardsScreen extends ConsumerStatefulWidget {
 }
 
 class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
-    with SingleTickerProviderStateMixin {
+    with
+        SingleTickerProviderStateMixin,
+        CoupleChallengeCompletionMixin<CoupleRewardsScreen> {
   late TabController _tabController;
 
   bool _isStatsLoading = true;
@@ -580,8 +581,11 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
           challengeNumber: challengeIndex + 1,
           totalChallenges: totalChallenges,
           isCompleted: isCompleted,
-          onComplete: () =>
-              _handleChallengeCompletion(challenge, householdId, weekIndex),
+          onComplete: () => handleCoupleChallengeCompletion(
+            challenge,
+            householdId,
+            weekIndex,
+          ),
         );
       },
       loading: () => const Center(child: AppLoader()),
@@ -1232,148 +1236,6 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         ],
       ),
     );
-  }
-
-  Future<void> _handleChallengeCompletion(
-    CoupleChallenge challenge,
-    String householdId,
-    int weekIndex,
-  ) async {
-    final t = AppLocalizations.of(context);
-    // Guardia contra carreras (doble tap / el otro miembro lo completó y la
-    // card todavía no se refrescó): el desafío es uno por semana por hogar.
-    final alreadyDone = ref
-            .read(
-              coupleChallengeCompletedProvider(
-                (householdId: householdId, weekIndex: weekIndex),
-              ),
-            )
-            .value ??
-        false;
-    if (alreadyDone) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.coupleChallengeAlreadyDone)),
-      );
-      return;
-    }
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.xl),
-        ),
-        title: Text(t.rewardsChallengeCompletePrompt),
-        content: Text(
-          t.rewardsChallengeCompleteBody(challenge.coinReward),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              t.rewardsNotYet,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-              ),
-            ),
-            child: Text(t.rewardsYesWeDid),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await _executeChallengeCompletion(challenge, householdId, weekIndex);
-    }
-  }
-
-  Future<void> _executeChallengeCompletion(
-    CoupleChallenge challenge,
-    String householdId,
-    int weekIndex,
-  ) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: AppLoader()),
-    );
-
-    final t = AppLocalizations.of(context);
-    try {
-      final members = ref.read(householdMembersProvider).value ?? [];
-      final userIds = members.map((m) => m.userId).toList();
-      final currentUserId = ref.read(currentUserIdProvider);
-      if (userIds.isEmpty && currentUserId != null) {
-        userIds.add(currentUserId);
-      }
-
-      final challengeTitle = challenge.localizedTitle(t);
-      final challengeDescription = challenge.localizedDescription(t);
-      final taskRpc = ref.read(taskRpcServiceProvider);
-      // Sin categoría: tasks.category tiene FK contra categories(id) (ids de
-      // quehaceres como 'cocina'); la categoría del desafío es solo un label
-      // localizado de display y el insert violaría fk_tasks_category.
-      final newTaskId = await taskRpc.createTask(
-        title: t.rewardsChallengeTitle(challengeTitle),
-        description: challengeDescription,
-        coinReward: challenge.coinReward,
-        xpReward: 10,
-        type: 'one_time',
-      );
-
-      final rpc = ref.read(rpcServiceProvider);
-      await rpc.completeTaskTransaction(
-        taskId: newTaskId,
-        taskTitle: t.rewardsChallengeTitle(challengeTitle),
-        xpReward: 10,
-        coinReward: challenge.coinReward,
-        householdId: householdId,
-        userIds: userIds,
-      );
-
-      // Marca la semana como completada para ambos miembros. Si falla, los
-      // coins ya se acreditaron: loguear y seguir (la card queda activa, pero
-      // la guardia de _handleChallengeCompletion evita duplicar al reintentar
-      // cuando vuelva la red).
-      try {
-        await recordCoupleChallengeCompletion(
-          ref,
-          householdId: householdId,
-          weekIndex: weekIndex,
-          challengeId: challenge.id,
-          completedBy: currentUserId ?? userIds.first,
-        );
-      } catch (e) {
-        log.w('No se pudo registrar el desafío semanal completado: $e');
-      }
-
-      if (!mounted) return;
-      Navigator.pop(context);
-      SuccessCelebration.show(
-        context,
-        title: t.rewardsChallengeCompleted,
-        message: t.rewardsChallengeCompletedBody(challenge.coinReward),
-        icon: '\u2728',
-      );
-      ref.invalidate(userBalanceProvider);
-      ref.invalidate(tasksProvider);
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.rewardsChallengeError(e.toString())),
-          backgroundColor: AppColors.error,
-        ),
-      );
-    }
   }
 
   Future<void> _confirmDeleteReward(RewardModel reward) async {

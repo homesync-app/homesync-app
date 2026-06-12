@@ -5520,20 +5520,140 @@ abstract class AppLocalizations {
   /// No description provided for @faqSheetSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Todo lo que necesitás saber sobre HomeSync'**
+  /// **'Ayuda pensada para tu hogar'**
   String get faqSheetSubtitle;
+
+  /// No description provided for @faqSearchHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscá una pregunta...'**
+  String get faqSearchHint;
+
+  /// No description provided for @faqSearchEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'No encontramos nada con esa búsqueda. Probá con otra palabra o contanos desde “Enviar feedback”.'**
+  String get faqSearchEmpty;
+
+  /// No description provided for @faqContextPill.
+  ///
+  /// In es, this message translates to:
+  /// **'Ayuda para: {label}'**
+  String faqContextPill(String label);
+
+  /// No description provided for @faqCatHousehold.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu hogar'**
+  String get faqCatHousehold;
+
+  /// No description provided for @faqCatTasks.
+  ///
+  /// In es, this message translates to:
+  /// **'Tareas'**
+  String get faqCatTasks;
+
+  /// No description provided for @faqCatRewards.
+  ///
+  /// In es, this message translates to:
+  /// **'Puntos y premios'**
+  String get faqCatRewards;
+
+  /// No description provided for @faqCatFinances.
+  ///
+  /// In es, this message translates to:
+  /// **'Finanzas'**
+  String get faqCatFinances;
+
+  /// No description provided for @faqCatApp.
+  ///
+  /// In es, this message translates to:
+  /// **'La app y tu cuenta'**
+  String get faqCatApp;
 
   /// No description provided for @faqHowSharedHome.
   ///
   /// In es, this message translates to:
-  /// **'¿Cómo funciona el hogar compartido?'**
+  /// **'¿Cómo funciona mi hogar en HomeSync?'**
   String get faqHowSharedHome;
 
   /// No description provided for @faqHowSharedHomeAnswer.
   ///
   /// In es, this message translates to:
-  /// **'HomeSync está pensado para parejas y personas que conviven. Cuando te unís a un hogar con un código, ambos comparten la misma lista de tareas, gastos y ahorros. Todo lo que hace uno se refleja para el otro.'**
-  String get faqHowSharedHomeAnswer;
+  /// **'{mode, select, couple{Vos y tu pareja comparten un mismo hogar digital: tareas, gastos, lista de compras y ahorros viven en un solo lugar y se sincronizan al instante. Lo que carga uno, el otro lo ve al toque.} family{Toda la familia comparte un mismo hogar digital. Cada miembro tiene su rol (padre, madre, tutor/a, adolescente o hijo/a) y la app adapta lo que cada uno ve y puede hacer: los adultos administran, los chicos suman completando tareas.} friends{Quienes conviven comparten tareas, gastos y compras en un solo lugar, entre pares: sin jerarquías ni premios infantiles, solo un reparto claro de lo que cada uno aporta.} solo{Tu hogar es tu espacio personal: organizás tus tareas, tus gastos y tu lista de compras a tu ritmo. Si más adelante convivís con alguien, lo invitás con un código y listo.} other{Comparten un mismo hogar digital: tareas, gastos, compras y ahorros sincronizados al instante entre todos los miembros.}}'**
+  String faqHowSharedHomeAnswer(String mode);
+
+  /// No description provided for @faqInviteMembers.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo invito a alguien a mi hogar?'**
+  String get faqInviteMembers;
+
+  /// No description provided for @faqInviteMembersAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, family{En Configuración está el código de invitación de tu hogar: compartilo y, al ingresarlo en su app, esa persona entra con todo sincronizado. Después, desde la lista de miembros, los adultos le asignan su rol (padre, madre, tutor/a, adolescente o hijo/a).} other{En Configuración está el código de invitación de tu hogar: compartilo con quien quieras sumar y, al ingresarlo en su app, entra directo con tareas, gastos y compras sincronizados.}}'**
+  String faqInviteMembersAnswer(String mode);
+
+  /// No description provided for @faqFamilyRoles.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué significan los roles de la familia?'**
+  String get faqFamilyRoles;
+
+  /// No description provided for @faqFamilyRolesAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Padre, madre y tutor/a son los adultos: administran el hogar, aprueban tareas, manejan las finanzas compartidas y la tienda de premios. Los adolescentes tienen más autonomía y su propio espacio de finanzas personales. Los hijos e hijas viven la experiencia más simple y divertida: completan tareas, juntan coins y canjean premios.'**
+  String get faqFamilyRolesAnswer;
+
+  /// No description provided for @faqWhoSeesWhat.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué ve cada miembro del hogar?'**
+  String get faqWhoSeesWhat;
+
+  /// No description provided for @faqWhoSeesWhatAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Cada rol ve lo que le corresponde: los adultos ven todo, incluidas las finanzas compartidas; los adolescentes ven sus finanzas personales pero no los gastos de los adultos; y los hijos/as no ven finanzas — su mundo son las tareas, los puntos y los premios.'**
+  String get faqWhoSeesWhatAnswer;
+
+  /// No description provided for @faqTasksBasics.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo funcionan las tareas?'**
+  String get faqTasksBasics;
+
+  /// No description provided for @faqTasksBasicsAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Creá tareas puntuales o recurrentes (diarias, semanales, mensuales), asignalas a alguien o dejalas libres para quien las agarre. Cada tarea da XP y coins al completarse, el calendario muestra lo que viene, y las recurrentes se reprograman solas.'**
+  String get faqTasksBasicsAnswer;
+
+  /// No description provided for @faqApprovals.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo funcionan las aprobaciones de tareas?'**
+  String get faqApprovals;
+
+  /// No description provided for @faqApprovalsAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'{role, select, parent{Cuando un hijo/a o adolescente marca una tarea como hecha, queda pendiente de tu aprobación: la revisás desde Aprobaciones y, al confirmarla, recién ahí se acreditan los XP y coins. Quién necesita aprobación se ajusta en la configuración del hogar.} teen{Según cómo esté configurado el hogar, al marcar una tarea como hecha puede quedar pendiente hasta que un adulto la confirme. Recién ahí se te acreditan los XP y coins.} child{Cuando marcás una tarea como hecha, un adulto la revisa y la confirma. ¡Apenas la apruebe te llegan los XP y los coins!} other{Las tareas de hijos/as y adolescentes pueden requerir la confirmación de un adulto antes de acreditar XP y coins, según la configuración del hogar.}}'**
+  String faqApprovalsAnswer(String role);
+
+  /// No description provided for @faqHowEarnXp.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo gano XP y subo de nivel?'**
+  String get faqHowEarnXp;
+
+  /// No description provided for @faqHowEarnXpAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Cada tarea completada suma XP (las más difíciles dan más). Con el XP subís de nivel y desbloqueás logros: medallas por hitos como completar 50 tareas. Todo tu progreso se ve en Estadísticas.'**
+  String get faqHowEarnXpAnswer;
 
   /// No description provided for @faqWhatCoins.
   ///
@@ -5544,8 +5664,8 @@ abstract class AppLocalizations {
   /// No description provided for @faqWhatCoinsAnswer.
   ///
   /// In es, this message translates to:
-  /// **'Los Coins son la recompensa por completar tareas. Podés usarlos en la sección de premios para canjear vouchers creados por tu pareja, como una cena romántica o un día de descanso.'**
-  String get faqWhatCoinsAnswer;
+  /// **'{mode, select, family{Los coins son la moneda del hogar: los chicos los ganan completando tareas y los canjean en la tienda de premios por las recompensas que crearon los adultos — una salida, tiempo de pantalla, su comida favorita.} other{Los coins que ganás completando tareas se canjean en Premios por los vouchers que crea tu pareja: una cena, un masaje, una salida sorpresa. La idea es premiarse mutuamente por bancar el hogar.}}'**
+  String faqWhatCoinsAnswer(String mode);
 
   /// No description provided for @faqWhatWeeklyDuels.
   ///
@@ -5556,20 +5676,56 @@ abstract class AppLocalizations {
   /// No description provided for @faqWhatWeeklyDuelsAnswer.
   ///
   /// In es, this message translates to:
-  /// **'Cada semana empieza un duelo de XP nuevo. El miembro que complete más tareas y gane más puntos de experiencia será el ganador. Es una forma divertida de motivarse mutuamente.'**
+  /// **'Cada semana arranca un duelo de XP contra tu pareja con marcador oculto: ves tu propio avance, pero el resultado real se descubre recién al cierre del domingo. Quien más sumó se lleva la corona y un bonus de coins.'**
   String get faqWhatWeeklyDuelsAnswer;
 
-  /// No description provided for @faqHowEarnXp.
+  /// No description provided for @faqFamilyRanking.
   ///
   /// In es, this message translates to:
-  /// **'¿Cómo gano XP?'**
-  String get faqHowEarnXp;
+  /// **'¿Cómo funciona el ranking familiar?'**
+  String get faqFamilyRanking;
 
-  /// No description provided for @faqHowEarnXpAnswer.
+  /// No description provided for @faqFamilyRankingAnswer.
   ///
   /// In es, this message translates to:
-  /// **'Ganás XP cada vez que completás una tarea. Las tareas más difíciles o importantes suelen dar más XP. Subir de nivel muestra tu progreso dentro del hogar.'**
-  String get faqHowEarnXpAnswer;
+  /// **'Cada semana la familia compite sano: el ranking muestra quién sumó más XP completando tareas. Al cierre hay un ganador con corona y bonus, y el resumen semanal les cuenta cómo le fue a cada uno.'**
+  String get faqFamilyRankingAnswer;
+
+  /// No description provided for @faqWhatSpecialEvents.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué es el evento semanal de pareja?'**
+  String get faqWhatSpecialEvents;
+
+  /// No description provided for @faqWhatSpecialEventsAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Cada semana aparece un desafío pensado para los dos: recrear la primera cita, cocinar juntos, una noche sin pantallas. Al completarlo, ambos reciben coins y el evento queda marcado como logrado para los dos hasta que llegue el siguiente.'**
+  String get faqWhatSpecialEventsAnswer;
+
+  /// No description provided for @faqContributionBalance.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué es el equilibrio de aporte?'**
+  String get faqContributionBalance;
+
+  /// No description provided for @faqContributionBalanceAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Es la foto neutral del mes: combina tareas hechas y gastos compartidos para mostrar cuánto viene aportando cada uno a la convivencia. Sin ganadores ni perdedores — sirve para charlar con datos, no para competir.'**
+  String get faqContributionBalanceAnswer;
+
+  /// No description provided for @faqRewardsStore.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo funciona la tienda de premios?'**
+  String get faqRewardsStore;
+
+  /// No description provided for @faqRewardsStoreAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'{role, select, parent{Vos creás los premios (una salida, tiempo de juego, su postre favorito) y les ponés un precio en coins. Los chicos los canjean con lo que ganaron completando tareas, y vos confirmás el canje.} other{En la tienda están los premios que crearon los adultos del hogar. Juntá coins completando tareas y canjealos cuando te alcance: el premio queda pendiente hasta que un adulto lo confirme.}}'**
+  String faqRewardsStoreAnswer(String role);
 
   /// No description provided for @faqHowFinancesWork.
   ///
@@ -5580,44 +5736,92 @@ abstract class AppLocalizations {
   /// No description provided for @faqHowFinancesWorkAnswer.
   ///
   /// In es, this message translates to:
-  /// **'En HomeSync podés registrar gastos reales y también anticipar gastos que aún no pagaste. Los gastos confirmados son los que afectan el balance real entre ustedes. Los pendientes sirven como recordatorio y proyección, pero no cambian la deuda hasta que se paguen.'**
-  String get faqHowFinancesWorkAnswer;
+  /// **'{mode, select, friends{Cada gasto compartido se divide según lo que configuren (partes iguales o porcentajes). El balance muestra quién está al día y quién debe, y cualquiera puede registrar un pago para saldar cuentas.} family{Las finanzas compartidas son territorio de los adultos: los gastos del hogar se dividen entre ellos. Los adolescentes tienen su espacio personal de finanzas, separado de las cuentas grandes.} other{Registrás gastos reales y también anticipás gastos que todavía no pagaste. Los confirmados afectan el balance real entre ustedes; los pendientes sirven de recordatorio y proyección, pero no cambian la deuda hasta que se paguen.}}'**
+  String faqHowFinancesWorkAnswer(String mode);
 
   /// No description provided for @faqHowRecurringCount.
   ///
   /// In es, this message translates to:
-  /// **'¿Cómo cuentan los gastos recurrentes y el balance estimado?'**
+  /// **'¿Cómo cuentan los recurrentes y el balance estimado?'**
   String get faqHowRecurringCount;
 
   /// No description provided for @faqHowRecurringCountAnswer.
   ///
   /// In es, this message translates to:
-  /// **'Un gasto recurrente nuevo arranca desde su primera fecha válida. Si lo creás antes o en la fecha de vencimiento, puede contar este mes. Si lo creás después, arranca en el próximo ciclo. \"Tu parte pendiente\" muestra solo lo que te corresponde según la división, y \"Balance estimado\" usa tu balance actual menos esa parte pendiente.'**
+  /// **'Un gasto recurrente nuevo arranca desde su primera fecha válida. Si lo creás antes o en la fecha de vencimiento, puede contar este mes; si lo creás después, arranca en el próximo ciclo. “Tu parte pendiente” muestra solo lo que te corresponde según la división, y “Balance estimado” usa tu balance actual menos esa parte pendiente.'**
   String get faqHowRecurringCountAnswer;
 
-  /// No description provided for @faqWhatSpecialEvents.
+  /// No description provided for @faqWhoCanPay.
   ///
   /// In es, this message translates to:
-  /// **'¿Qué son los Eventos Especiales?'**
-  String get faqWhatSpecialEvents;
+  /// **'¿Quién puede registrar un pago?'**
+  String get faqWhoCanPay;
 
-  /// No description provided for @faqWhatSpecialEventsAnswer.
+  /// No description provided for @faqWhoCanPayAnswer.
   ///
   /// In es, this message translates to:
-  /// **'Cada semana aparece un desafío de pareja en la tienda. Son actividades diseñadas para fortalecer la relación. Cuando los completan, ambos reciben Coins y desbloquean medallas en su perfil de logros.'**
-  String get faqWhatSpecialEventsAnswer;
+  /// **'Cualquiera de los dos lados puede registrar un pago compartido, incluso en nombre del otro — útil cuando uno paga y el otro lo carga. “Pagado” y “Pendiente” muestran siempre el total del hogar, así todos ven la misma foto.'**
+  String get faqWhoCanPayAnswer;
 
-  /// No description provided for @faqLevelsAndAchievements.
+  /// No description provided for @faqSavingsGoals.
   ///
   /// In es, this message translates to:
-  /// **'¿Niveles y logros?'**
-  String get faqLevelsAndAchievements;
+  /// **'¿Cómo funcionan las metas de ahorro?'**
+  String get faqSavingsGoals;
 
-  /// No description provided for @faqLevelsAndAchievementsAnswer.
+  /// No description provided for @faqSavingsGoalsAnswer.
   ///
   /// In es, this message translates to:
-  /// **'A medida que ganás XP, subís de nivel. En la sección de estadísticas podés ver tus logros, que son medallas por hitos alcanzados, como completar 50 tareas o ganar desafíos semanales.'**
-  String get faqLevelsAndAchievementsAnswer;
+  /// **'Creás una meta con su monto objetivo (un viaje, un fondo de emergencia) y vas registrando aportes. El progreso se ve clarito y, en hogares compartidos, todos pueden aportar a la misma meta.'**
+  String get faqSavingsGoalsAnswer;
+
+  /// No description provided for @faqPremium.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué incluye HomeSync Premium?'**
+  String get faqPremium;
+
+  /// No description provided for @faqPremiumAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Premium se activa para todo el hogar con una sola compra: mascotas premium animadas, colores de tema exclusivos y todo lo que vayamos sumando. Se gestiona desde Configuración y solo los adultos pueden comprarlo.'**
+  String get faqPremiumAnswer;
+
+  /// No description provided for @faqCustomization.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Puedo personalizar la app?'**
+  String get faqCustomization;
+
+  /// No description provided for @faqCustomizationAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Sí: tema claro, oscuro o automático según el sistema, color principal (con Premium), idioma (español o inglés) y la moneda en que se muestran las finanzas. Todo desde Configuración → Apariencia.'**
+  String get faqCustomizationAnswer;
+
+  /// No description provided for @faqNotifications.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué notificaciones llegan?'**
+  String get faqNotifications;
+
+  /// No description provided for @faqNotificationsAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Avisos de lo que pasa en tu hogar: tareas que te asignan, novedades de gastos y aprobaciones pendientes. Podés activarlas o silenciarlas desde Configuración → Notificaciones.'**
+  String get faqNotificationsAnswer;
+
+  /// No description provided for @faqAccountSafety.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo cuido mi cuenta y mis datos?'**
+  String get faqAccountSafety;
+
+  /// No description provided for @faqAccountSafetyAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu sesión es personal: cerrala cuando quieras desde Configuración. Si necesitás empezar de cero, “Reiniciar datos” borra el contenido del hogar, y “Eliminar mi cuenta” la elimina definitivamente. Tus datos viven cifrados en la nube y solo los miembros de tu hogar ven lo que comparten.'**
+  String get faqAccountSafetyAnswer;
 
   /// No description provided for @feedbackThanksBug.
   ///

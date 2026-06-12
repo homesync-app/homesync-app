@@ -115,34 +115,40 @@ class SettingsFaqCard extends StatelessWidget {
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-        leading: Container(
-          padding: const EdgeInsets.all(9),
-          decoration: BoxDecoration(
-            color: theme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppRadii.sm),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+          leading: Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              color: theme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+            ),
+            child: Icon(
+              Icons.help_outline_rounded,
+              color: theme.primary,
+              size: 20,
+            ),
           ),
-          child: Icon(
-            Icons.help_outline_rounded,
-            color: theme.primary,
-            size: 20,
+          title: Text(
+            t.settingsFaqTitle,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: theme.textPrimary,
+            ),
           ),
-        ),
-        title: Text(
-          t.settingsFaqTitle,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: theme.textPrimary,
+          subtitle: Text(
+            t.settingsFaqSubtitle,
+            style: TextStyle(color: theme.textSecondary, fontSize: 12),
           ),
+          trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
+          onTap: onTap,
         ),
-        subtitle: Text(
-          t.settingsFaqSubtitle,
-          style: TextStyle(color: theme.textSecondary, fontSize: 12),
-        ),
-        trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
-        onTap: onTap,
       ),
     );
   }
@@ -368,78 +374,88 @@ class SettingsFeedbackCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-            leading: Container(
-              padding: const EdgeInsets.all(9),
-              decoration: BoxDecoration(
-                color: theme.error.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(AppRadii.sm),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+              leading: Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: theme.error.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
+                ),
+                child: Icon(
+                  Icons.bug_report_outlined,
+                  color: theme.error,
+                  size: 20,
+                ),
               ),
-              child:
-                  Icon(Icons.bug_report_outlined, color: theme.error, size: 20),
-            ),
-            title: Text(
-              t.settingsFeedbackBugTitle,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: theme.textPrimary,
+              title: Text(
+                t.settingsFeedbackBugTitle,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary,
+                ),
               ),
-            ),
-            subtitle: Text(
-              t.settingsFeedbackBugSubtitle,
-              style: TextStyle(color: theme.textSecondary, fontSize: 12),
-            ),
-            trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
-            onTap: () {
-              AppHaptics.tap();
-              FeedbackSheet.show(context, type: FeedbackType.bug);
-            },
-          ),
-          Divider(
-            height: 1,
-            color: theme.divider.withValues(alpha: 0.1),
-            indent: 16,
-            endIndent: 16,
-          ),
-          ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-            leading: Container(
-              padding: const EdgeInsets.all(9),
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(AppRadii.sm),
+              subtitle: Text(
+                t.settingsFeedbackBugSubtitle,
+                style: TextStyle(color: theme.textSecondary, fontSize: 12),
               ),
-              child: Icon(
-                Icons.lightbulb_outline_rounded,
-                color: theme.primary,
-                size: 20,
+              trailing:
+                  Icon(Icons.chevron_right_rounded, color: theme.textMuted),
+              onTap: () {
+                AppHaptics.tap();
+                FeedbackSheet.show(context, type: FeedbackType.bug);
+              },
+            ),
+            Divider(
+              height: 1,
+              color: theme.divider.withValues(alpha: 0.1),
+              indent: 16,
+              endIndent: 16,
+            ),
+            ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+              leading: Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: theme.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
+                ),
+                child: Icon(
+                  Icons.lightbulb_outline_rounded,
+                  color: theme.primary,
+                  size: 20,
+                ),
               ),
-            ),
-            title: Text(
-              t.settingsFeedbackSuggestionTitle,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: theme.textPrimary,
+              title: Text(
+                t.settingsFeedbackSuggestionTitle,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary,
+                ),
               ),
+              subtitle: Text(
+                t.settingsFeedbackSuggestionSubtitle,
+                style: TextStyle(color: theme.textSecondary, fontSize: 12),
+              ),
+              trailing:
+                  Icon(Icons.chevron_right_rounded, color: theme.textMuted),
+              onTap: () {
+                AppHaptics.tap();
+                FeedbackSheet.show(context, type: FeedbackType.suggestion);
+              },
             ),
-            subtitle: Text(
-              t.settingsFeedbackSuggestionSubtitle,
-              style: TextStyle(color: theme.textSecondary, fontSize: 12),
-            ),
-            trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
-            onTap: () {
-              AppHaptics.tap();
-              FeedbackSheet.show(context, type: FeedbackType.suggestion);
-            },
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

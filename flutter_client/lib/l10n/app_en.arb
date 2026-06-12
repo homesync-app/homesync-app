@@ -2034,24 +2034,107 @@
   "premiumDeactivateTesting": "Deactivate Premium (testing)",
   "premiumStoreErrorTitle": "Error connecting to store",
   "premiumDeveloperModeButton": "Developer Mode: Activate Premium",
-  "faqSheetTitle": "FAQ",
-  "faqSheetSubtitle": "Everything you need to know about HomeSync",
-  "faqHowSharedHome": "How does the shared home work?",
-  "faqHowSharedHomeAnswer": "HomeSync is designed for couples and people living together. When you join a household with a code, you both share the same task list, expenses, and savings. Everything one person does is reflected for the other.",
+  "faqSheetTitle": "Frequently Asked Questions",
+  "faqSheetSubtitle": "Help tailored to your home",
+  "faqSearchHint": "Search for a question...",
+  "faqSearchEmpty": "Nothing matched your search. Try another word or tell us via “Send feedback”.",
+  "faqContextPill": "Help for: {label}",
+  "@faqContextPill": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "faqCatHousehold": "Your home",
+  "faqCatTasks": "Tasks",
+  "faqCatRewards": "Points & rewards",
+  "faqCatFinances": "Finances",
+  "faqCatApp": "The app & your account",
+  "faqHowSharedHome": "How does my home work in HomeSync?",
+  "faqHowSharedHomeAnswer": "{mode, select, couple{You and your partner share one digital home: tasks, expenses, the shopping list and savings live in one place and sync instantly. Whatever one adds, the other sees right away.} family{The whole family shares one digital home. Every member has a role (father, mother, guardian, teen or kid) and the app adapts what each one sees and can do: adults manage, kids contribute by completing tasks.} friends{Everyone living together shares tasks, expenses and shopping in one place, as equals: no hierarchies and no kid-style prizes, just a clear picture of what each person contributes.} solo{Your home is your personal space: organize your tasks, expenses and shopping list at your own pace. If you ever live with someone, invite them with a code and you're set.} other{You share one digital home: tasks, expenses, shopping and savings synced instantly across all members.}}",
+  "@faqHowSharedHomeAnswer": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "faqInviteMembers": "How do I invite someone to my home?",
+  "faqInviteMembersAnswer": "{mode, select, family{Your home's invitation code is in Settings: share it and, once entered in their app, that person joins with everything synced. Then, from the members list, adults assign their role (father, mother, guardian, teen or kid).} other{Your home's invitation code is in Settings: share it with whoever you want to add and, once entered in their app, they join with tasks, expenses and shopping already synced.}}",
+  "@faqInviteMembersAnswer": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "faqFamilyRoles": "What do the family roles mean?",
+  "faqFamilyRolesAnswer": "Father, mother and guardians are the adults: they manage the home, approve tasks, handle shared finances and the rewards store. Teens get more autonomy and their own personal finance space. Kids get the simplest, most playful experience: complete tasks, earn coins and redeem rewards.",
+  "faqWhoSeesWhat": "What does each member see?",
+  "faqWhoSeesWhatAnswer": "Each role sees what belongs to them: adults see everything, shared finances included; teens see their personal finances but not the adults' shared expenses; and kids don't see finances at all — their world is tasks, points and rewards.",
+  "faqTasksBasics": "How do tasks work?",
+  "faqTasksBasicsAnswer": "Create one-time or recurring tasks (daily, weekly, monthly), assign them to someone or leave them open for whoever grabs them. Every task pays XP and coins when completed, the calendar shows what's coming, and recurring ones reschedule themselves.",
+  "faqApprovals": "How do task approvals work?",
+  "faqApprovalsAnswer": "{role, select, parent{When a kid or teen marks a task as done, it waits for your approval: review it under Approvals and, once you confirm, the XP and coins are credited. Who needs approval is set in the household settings.} teen{Depending on how the home is set up, marking a task as done may leave it pending until an adult confirms it. Only then are your XP and coins credited.} child{When you mark a task as done, an adult reviews and confirms it. As soon as they approve, your XP and coins arrive!} other{Tasks completed by kids and teens may require an adult's confirmation before XP and coins are credited, depending on household settings.}}",
+  "@faqApprovalsAnswer": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "faqHowEarnXp": "How do I earn XP and level up?",
+  "faqHowEarnXpAnswer": "Every completed task earns XP (harder ones pay more). XP levels you up and unlocks achievements: medals for milestones like completing 50 tasks. All your progress lives in Stats.",
   "faqWhatCoins": "What are Coins for?",
-  "faqWhatCoinsAnswer": "Coins are the reward for completing tasks. You can use them in the rewards section to redeem vouchers created by your partner, like a romantic dinner or a day of relaxation.",
+  "faqWhatCoinsAnswer": "{mode, select, family{Coins are the home currency: kids earn them by completing tasks and spend them in the rewards store on prizes the adults created — an outing, screen time, their favorite meal.} other{The coins you earn completing tasks are redeemed in Rewards for vouchers your partner creates: a dinner, a massage, a surprise date. The idea is to reward each other for keeping the home running.}}",
+  "@faqWhatCoinsAnswer": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
   "faqWhatWeeklyDuels": "What are Weekly Duels?",
-  "faqWhatWeeklyDuelsAnswer": "Each week a new XP duel begins. The member who completes more tasks and earns more experience points will be the winner. It's a fun way to motivate each other.",
-  "faqHowEarnXp": "How do I earn XP?",
-  "faqHowEarnXpAnswer": "You earn XP every time you complete a task. Harder or more important tasks usually give more XP. Leveling up shows your progress within the household.",
+  "faqWhatWeeklyDuelsAnswer": "Every week a new XP duel against your partner starts, with a hidden score: you see your own progress, but the real result is revealed at Sunday's close. Whoever earned more takes the crown and a coin bonus.",
+  "faqFamilyRanking": "How does the family ranking work?",
+  "faqFamilyRankingAnswer": "Every week the family competes in a healthy way: the ranking shows who earned the most XP completing tasks. At week's close there's a winner with a crown and bonus, and the weekly summary shows how everyone did.",
+  "faqWhatSpecialEvents": "What is the weekly couple event?",
+  "faqWhatSpecialEventsAnswer": "Every week brings a challenge designed for the two of you: recreate your first date, cook together, a screen-free night. When you complete it, you both receive coins and the event is marked as done for both until the next one arrives.",
+  "faqContributionBalance": "What is the contribution balance?",
+  "faqContributionBalanceAnswer": "It's the month's neutral snapshot: it combines completed tasks and shared expenses to show how much each person is contributing to the household. No winners or losers — it's for talking with data, not competing.",
+  "faqRewardsStore": "How does the rewards store work?",
+  "faqRewardsStoreAnswer": "{role, select, parent{You create the rewards (an outing, game time, their favorite dessert) and set a coin price. Kids redeem them with what they earned completing tasks, and you confirm the redemption.} other{The store holds the rewards created by the adults of your home. Earn coins by completing tasks and redeem them when you have enough: the reward stays pending until an adult confirms it.}}",
+  "@faqRewardsStoreAnswer": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
   "faqHowFinancesWork": "How do finances work?",
-  "faqHowFinancesWorkAnswer": "In HomeSync you can record real expenses and also anticipate expenses you haven't paid yet. Confirmed expenses are the ones that affect the actual balance between you. Pending ones serve as a reminder and projection, but they don't change the debt until they're paid.",
+  "faqHowFinancesWorkAnswer": "{mode, select, friends{Every shared expense is split the way you configure it (equal parts or percentages). The balance shows who's up to date and who owes, and anyone can register a payment to settle up.} family{Shared finances are adult territory: household expenses are split among them. Teens get their own personal finance space, separate from the big accounts.} other{Record real expenses and also plan ones you haven't paid yet. Confirmed expenses affect the real balance between you; pending ones work as reminders and projections, but don't change the debt until paid.}}",
+  "@faqHowFinancesWorkAnswer": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
   "faqHowRecurringCount": "How do recurring expenses and the estimated balance count?",
-  "faqHowRecurringCountAnswer": "A new recurring expense starts from its first valid date. If you create it before or on the due date, it may count this month. If you create it after, it starts on the next cycle. \"Your pending share\" shows only what corresponds to you according to the split, and \"Estimated balance\" uses your current balance minus that pending share.",
-  "faqWhatSpecialEvents": "What are Special Events?",
-  "faqWhatSpecialEventsAnswer": "Each week a couple challenge appears in the store. They're activities designed to strengthen the relationship. When you complete them, both receive Coins and unlock medals on their achievements profile.",
-  "faqLevelsAndAchievements": "Levels and achievements?",
-  "faqLevelsAndAchievementsAnswer": "As you earn XP, you level up. In the statistics section you can see your achievements, which are medals for milestones reached, like completing 50 tasks or beating weekly challenges.",
+  "faqHowRecurringCountAnswer": "A new recurring expense starts from its first valid date. If you create it before or on the due date, it can count this month; if you create it after, it starts next cycle. “Your pending share” shows only what corresponds to you per the split, and “Estimated balance” takes your current balance minus that pending share.",
+  "faqWhoCanPay": "Who can register a payment?",
+  "faqWhoCanPayAnswer": "Either side can register a shared payment, even on behalf of the other — handy when one pays and the other logs it. “Paid” and “Pending” always show the household total, so everyone sees the same picture.",
+  "faqSavingsGoals": "How do savings goals work?",
+  "faqSavingsGoalsAnswer": "Create a goal with a target amount (a trip, an emergency fund) and add contributions over time. Progress is crystal clear and, in shared homes, everyone can contribute to the same goal.",
+  "faqPremium": "What's included in HomeSync Premium?",
+  "faqPremiumAnswer": "Premium activates for the whole home with a single purchase: animated premium mascots, exclusive theme colors and everything we keep adding. It's managed from Settings and only adults can purchase it.",
+  "faqCustomization": "Can I customize the app?",
+  "faqCustomizationAnswer": "Yes: light, dark or system theme, primary color (with Premium), language (Spanish or English) and the currency used to display finances. All under Settings → Appearance.",
+  "faqNotifications": "Which notifications will I get?",
+  "faqNotificationsAnswer": "Updates about your home: tasks assigned to you, expense news and pending approvals. Turn them on or off under Settings → Notifications.",
+  "faqAccountSafety": "How do I keep my account and data safe?",
+  "faqAccountSafetyAnswer": "Your session is personal: sign out anytime from Settings. If you need a fresh start, “Reset data” clears the home's content, and “Delete my account” removes it permanently. Your data lives encrypted in the cloud and only your home's members see what's shared.",
   "feedbackThanksBug": "Thanks for reporting it!",
   "feedbackThanksSuggestion": "Thanks for the idea!",
   "feedbackReviewBug": "We'll look into it shortly.",

@@ -3338,45 +3338,207 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumDeveloperModeButton => 'Developer Mode: Activate Premium';
 
   @override
-  String get faqSheetTitle => 'FAQ';
+  String get faqSheetTitle => 'Frequently Asked Questions';
 
   @override
-  String get faqSheetSubtitle => 'Everything you need to know about HomeSync';
+  String get faqSheetSubtitle => 'Help tailored to your home';
 
   @override
-  String get faqHowSharedHome => 'How does the shared home work?';
+  String get faqSearchHint => 'Search for a question...';
 
   @override
-  String get faqHowSharedHomeAnswer =>
-      'HomeSync is designed for couples and people living together. When you join a household with a code, you both share the same task list, expenses, and savings. Everything one person does is reflected for the other.';
+  String get faqSearchEmpty =>
+      'Nothing matched your search. Try another word or tell us via “Send feedback”.';
+
+  @override
+  String faqContextPill(String label) {
+    return 'Help for: $label';
+  }
+
+  @override
+  String get faqCatHousehold => 'Your home';
+
+  @override
+  String get faqCatTasks => 'Tasks';
+
+  @override
+  String get faqCatRewards => 'Points & rewards';
+
+  @override
+  String get faqCatFinances => 'Finances';
+
+  @override
+  String get faqCatApp => 'The app & your account';
+
+  @override
+  String get faqHowSharedHome => 'How does my home work in HomeSync?';
+
+  @override
+  String faqHowSharedHomeAnswer(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'couple':
+            'You and your partner share one digital home: tasks, expenses, the shopping list and savings live in one place and sync instantly. Whatever one adds, the other sees right away.',
+        'family':
+            'The whole family shares one digital home. Every member has a role (father, mother, guardian, teen or kid) and the app adapts what each one sees and can do: adults manage, kids contribute by completing tasks.',
+        'friends':
+            'Everyone living together shares tasks, expenses and shopping in one place, as equals: no hierarchies and no kid-style prizes, just a clear picture of what each person contributes.',
+        'solo':
+            'Your home is your personal space: organize your tasks, expenses and shopping list at your own pace. If you ever live with someone, invite them with a code and you\'re set.',
+        'other':
+            'You share one digital home: tasks, expenses, shopping and savings synced instantly across all members.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get faqInviteMembers => 'How do I invite someone to my home?';
+
+  @override
+  String faqInviteMembersAnswer(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family':
+            'Your home\'s invitation code is in Settings: share it and, once entered in their app, that person joins with everything synced. Then, from the members list, adults assign their role (father, mother, guardian, teen or kid).',
+        'other':
+            'Your home\'s invitation code is in Settings: share it with whoever you want to add and, once entered in their app, they join with tasks, expenses and shopping already synced.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get faqFamilyRoles => 'What do the family roles mean?';
+
+  @override
+  String get faqFamilyRolesAnswer =>
+      'Father, mother and guardians are the adults: they manage the home, approve tasks, handle shared finances and the rewards store. Teens get more autonomy and their own personal finance space. Kids get the simplest, most playful experience: complete tasks, earn coins and redeem rewards.';
+
+  @override
+  String get faqWhoSeesWhat => 'What does each member see?';
+
+  @override
+  String get faqWhoSeesWhatAnswer =>
+      'Each role sees what belongs to them: adults see everything, shared finances included; teens see their personal finances but not the adults\' shared expenses; and kids don\'t see finances at all — their world is tasks, points and rewards.';
+
+  @override
+  String get faqTasksBasics => 'How do tasks work?';
+
+  @override
+  String get faqTasksBasicsAnswer =>
+      'Create one-time or recurring tasks (daily, weekly, monthly), assign them to someone or leave them open for whoever grabs them. Every task pays XP and coins when completed, the calendar shows what\'s coming, and recurring ones reschedule themselves.';
+
+  @override
+  String get faqApprovals => 'How do task approvals work?';
+
+  @override
+  String faqApprovalsAnswer(String role) {
+    String _temp0 = intl.Intl.selectLogic(
+      role,
+      {
+        'parent':
+            'When a kid or teen marks a task as done, it waits for your approval: review it under Approvals and, once you confirm, the XP and coins are credited. Who needs approval is set in the household settings.',
+        'teen':
+            'Depending on how the home is set up, marking a task as done may leave it pending until an adult confirms it. Only then are your XP and coins credited.',
+        'child':
+            'When you mark a task as done, an adult reviews and confirms it. As soon as they approve, your XP and coins arrive!',
+        'other':
+            'Tasks completed by kids and teens may require an adult\'s confirmation before XP and coins are credited, depending on household settings.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get faqHowEarnXp => 'How do I earn XP and level up?';
+
+  @override
+  String get faqHowEarnXpAnswer =>
+      'Every completed task earns XP (harder ones pay more). XP levels you up and unlocks achievements: medals for milestones like completing 50 tasks. All your progress lives in Stats.';
 
   @override
   String get faqWhatCoins => 'What are Coins for?';
 
   @override
-  String get faqWhatCoinsAnswer =>
-      'Coins are the reward for completing tasks. You can use them in the rewards section to redeem vouchers created by your partner, like a romantic dinner or a day of relaxation.';
+  String faqWhatCoinsAnswer(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family':
+            'Coins are the home currency: kids earn them by completing tasks and spend them in the rewards store on prizes the adults created — an outing, screen time, their favorite meal.',
+        'other':
+            'The coins you earn completing tasks are redeemed in Rewards for vouchers your partner creates: a dinner, a massage, a surprise date. The idea is to reward each other for keeping the home running.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get faqWhatWeeklyDuels => 'What are Weekly Duels?';
 
   @override
   String get faqWhatWeeklyDuelsAnswer =>
-      'Each week a new XP duel begins. The member who completes more tasks and earns more experience points will be the winner. It\'s a fun way to motivate each other.';
+      'Every week a new XP duel against your partner starts, with a hidden score: you see your own progress, but the real result is revealed at Sunday\'s close. Whoever earned more takes the crown and a coin bonus.';
 
   @override
-  String get faqHowEarnXp => 'How do I earn XP?';
+  String get faqFamilyRanking => 'How does the family ranking work?';
 
   @override
-  String get faqHowEarnXpAnswer =>
-      'You earn XP every time you complete a task. Harder or more important tasks usually give more XP. Leveling up shows your progress within the household.';
+  String get faqFamilyRankingAnswer =>
+      'Every week the family competes in a healthy way: the ranking shows who earned the most XP completing tasks. At week\'s close there\'s a winner with a crown and bonus, and the weekly summary shows how everyone did.';
+
+  @override
+  String get faqWhatSpecialEvents => 'What is the weekly couple event?';
+
+  @override
+  String get faqWhatSpecialEventsAnswer =>
+      'Every week brings a challenge designed for the two of you: recreate your first date, cook together, a screen-free night. When you complete it, you both receive coins and the event is marked as done for both until the next one arrives.';
+
+  @override
+  String get faqContributionBalance => 'What is the contribution balance?';
+
+  @override
+  String get faqContributionBalanceAnswer =>
+      'It\'s the month\'s neutral snapshot: it combines completed tasks and shared expenses to show how much each person is contributing to the household. No winners or losers — it\'s for talking with data, not competing.';
+
+  @override
+  String get faqRewardsStore => 'How does the rewards store work?';
+
+  @override
+  String faqRewardsStoreAnswer(String role) {
+    String _temp0 = intl.Intl.selectLogic(
+      role,
+      {
+        'parent':
+            'You create the rewards (an outing, game time, their favorite dessert) and set a coin price. Kids redeem them with what they earned completing tasks, and you confirm the redemption.',
+        'other':
+            'The store holds the rewards created by the adults of your home. Earn coins by completing tasks and redeem them when you have enough: the reward stays pending until an adult confirms it.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get faqHowFinancesWork => 'How do finances work?';
 
   @override
-  String get faqHowFinancesWorkAnswer =>
-      'In HomeSync you can record real expenses and also anticipate expenses you haven\'t paid yet. Confirmed expenses are the ones that affect the actual balance between you. Pending ones serve as a reminder and projection, but they don\'t change the debt until they\'re paid.';
+  String faqHowFinancesWorkAnswer(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'friends':
+            'Every shared expense is split the way you configure it (equal parts or percentages). The balance shows who\'s up to date and who owes, and anyone can register a payment to settle up.',
+        'family':
+            'Shared finances are adult territory: household expenses are split among them. Teens get their own personal finance space, separate from the big accounts.',
+        'other':
+            'Record real expenses and also plan ones you haven\'t paid yet. Confirmed expenses affect the real balance between you; pending ones work as reminders and projections, but don\'t change the debt until paid.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get faqHowRecurringCount =>
@@ -3384,21 +3546,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faqHowRecurringCountAnswer =>
-      'A new recurring expense starts from its first valid date. If you create it before or on the due date, it may count this month. If you create it after, it starts on the next cycle. \"Your pending share\" shows only what corresponds to you according to the split, and \"Estimated balance\" uses your current balance minus that pending share.';
+      'A new recurring expense starts from its first valid date. If you create it before or on the due date, it can count this month; if you create it after, it starts next cycle. “Your pending share” shows only what corresponds to you per the split, and “Estimated balance” takes your current balance minus that pending share.';
 
   @override
-  String get faqWhatSpecialEvents => 'What are Special Events?';
+  String get faqWhoCanPay => 'Who can register a payment?';
 
   @override
-  String get faqWhatSpecialEventsAnswer =>
-      'Each week a couple challenge appears in the store. They\'re activities designed to strengthen the relationship. When you complete them, both receive Coins and unlock medals on their achievements profile.';
+  String get faqWhoCanPayAnswer =>
+      'Either side can register a shared payment, even on behalf of the other — handy when one pays and the other logs it. “Paid” and “Pending” always show the household total, so everyone sees the same picture.';
 
   @override
-  String get faqLevelsAndAchievements => 'Levels and achievements?';
+  String get faqSavingsGoals => 'How do savings goals work?';
 
   @override
-  String get faqLevelsAndAchievementsAnswer =>
-      'As you earn XP, you level up. In the statistics section you can see your achievements, which are medals for milestones reached, like completing 50 tasks or beating weekly challenges.';
+  String get faqSavingsGoalsAnswer =>
+      'Create a goal with a target amount (a trip, an emergency fund) and add contributions over time. Progress is crystal clear and, in shared homes, everyone can contribute to the same goal.';
+
+  @override
+  String get faqPremium => 'What\'s included in HomeSync Premium?';
+
+  @override
+  String get faqPremiumAnswer =>
+      'Premium activates for the whole home with a single purchase: animated premium mascots, exclusive theme colors and everything we keep adding. It\'s managed from Settings and only adults can purchase it.';
+
+  @override
+  String get faqCustomization => 'Can I customize the app?';
+
+  @override
+  String get faqCustomizationAnswer =>
+      'Yes: light, dark or system theme, primary color (with Premium), language (Spanish or English) and the currency used to display finances. All under Settings → Appearance.';
+
+  @override
+  String get faqNotifications => 'Which notifications will I get?';
+
+  @override
+  String get faqNotificationsAnswer =>
+      'Updates about your home: tasks assigned to you, expense news and pending approvals. Turn them on or off under Settings → Notifications.';
+
+  @override
+  String get faqAccountSafety => 'How do I keep my account and data safe?';
+
+  @override
+  String get faqAccountSafetyAnswer =>
+      'Your session is personal: sign out anytime from Settings. If you need a fresh start, “Reset data” clears the home\'s content, and “Delete my account” removes it permanently. Your data lives encrypted in the cloud and only your home\'s members see what\'s shared.';
 
   @override
   String get feedbackThanksBug => 'Thanks for reporting it!';

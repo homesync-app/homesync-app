@@ -233,6 +233,13 @@ void main() async {
   // sigue ejecutándose. Marcarlos como fatal contamina los "crash-free users".
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
+
+    // Advertencias benignas del framework (ej. el aviso de ink splash de
+    // ListTile) no son bugs: se imprimen en consola pero NO van a Crashlytics
+    // ni a application_logs, para no ahogar los errores reales. Eran el 100%
+    // del ruido de `error` en la tabla (56 filas del mismo warning).
+    if (_isBenignFrameworkWarning(details)) return;
+
     if (!kIsWeb && Firebase.apps.isNotEmpty) {
       FirebaseCrashlytics.instance.recordFlutterError(details);
     }
@@ -280,6 +287,27 @@ void main() async {
     return true;
   };
 
+  // Cablear el sink remoto del logger: a partir de acá, todo `log.e`/`log.f`
+  // atrapado en un try/catch llega a application_logs (antes solo iba a
+  // Crashlytics y era invisible en el backend).
+  LoggerService.remoteErrorSink = (
+    message, {
+    Object? error,
+    StackTrace? stackTrace,
+    bool fatal = false,
+  }) {
+    rpc.logApplicationError(
+      message: message,
+      stackTrace: stackTrace?.toString(),
+      level: fatal ? 'fatal' : 'error',
+      context: {
+        ...richContext,
+        'source': 'logger',
+        if (error != null) 'error': error.toString(),
+      },
+    );
+  };
+
   await Future.wait([dateFormattingFuture, googleSignInWarmupFuture]);
   final prefs = await prefsFuture;
 
@@ -296,6 +324,21 @@ void main() async {
       ),
     ),
   );
+}
+
+/// Advertencias del framework que son advisories de UI, no bugs accionables.
+/// Se filtran del pipeline remoto/Crashlytics para no enterrar errores reales.
+/// Mantener la lista chica y específica: solo strings inequívocamente benignos.
+const _benignFrameworkWarnings = <String>[
+  'ListTile background color or ink splashes may be invisible',
+];
+
+bool _isBenignFrameworkWarning(FlutterErrorDetails details) {
+  final message = details.exceptionAsString();
+  for (final pattern in _benignFrameworkWarnings) {
+    if (message.contains(pattern)) return true;
+  }
+  return false;
 }
 
 /// Contexto del dispositivo para logs/Crashlytics. Falla suave: si un

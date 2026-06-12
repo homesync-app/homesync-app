@@ -56,8 +56,8 @@ class DeleteAccountUseCase {
     if (response['success'] != true) {
       return DeleteAccountResult(
         DeleteAccountStatus.backendFailed,
-        message: response['message']?.toString() ??
-            'No se pudo eliminar la cuenta.',
+        message:
+            response['message']?.toString() ?? 'No se pudo eliminar la cuenta.',
       );
     }
 
@@ -69,7 +69,11 @@ class DeleteAccountUseCase {
       if (e.code == 'requires-recent-login') {
         // Data is already purged; we just couldn't drop the credential without
         // a fresh login. Surface this so the UI can guide the user.
-        log.w('Firebase delete needs recent login', error: e, stackTrace: stack);
+        log.w(
+          'Firebase delete needs recent login',
+          error: e,
+          stackTrace: stack,
+        );
         return const DeleteAccountResult(
           DeleteAccountStatus.requiresRecentLogin,
         );
