@@ -183,7 +183,9 @@ shorebird release android --dart-define=APP_ENV=production --dart-define=AUTH_MO
 - [ ] Commit migración en `develop` + merge a `main`
 
 ### 🟡 Esta semana (no bloqueante)
-- [ ] Activar leaked password protection — §1.4
+- [x] ~~Activar leaked password protection~~ — **N/A**: el auth es Firebase
+  third-party, no Supabase Auth. El toggle solo cubre signups de Supabase
+  Auth, que no usamos. Sin acción.
 - [ ] Restringir Firebase API key en GCP — §3.2
 - [ ] Backup del keystore fuera de la máquina — §3.4
 - [ ] Completar/validar Data Safety form vs. código — §4
@@ -209,3 +211,29 @@ shorebird release android --dart-define=APP_ENV=production --dart-define=AUTH_MO
 - `git ls-files` → keystores/.env no trackeados; `pubspec.lock` sí.
 
 **Herramientas:** Supabase MCP (`list_tables`, `get_advisors`, `execute_sql`, `list_migrations`) + revisión de `lib/`, `homesync_admin/`, `android/`, `.github/workflows/`.
+
+---
+
+## Apéndice — Hardening aplicado (2026-06-11)
+
+Migración `20260611231411_harden_qa_admin_and_avatar_storage.sql`:
+
+- **`qa_admin_get_household_members`** tenía `EXECUTE` para `PUBLIC` (incluye
+  `anon`) — la única de las ~30 funciones `qa_admin_*` que se coló sin el
+  `REVOKE PUBLIC`. Tiene guardia interna (`qa_admin_require_access()`), pero
+  igual no debe ser invocable sin login. Revocado; ahora solo `authenticated`.
+- **Bucket `avatars`** tenía dos policies abiertas a `public`:
+  `Public Access` (SELECT → enumeración del bucket) y `Allow Public Uploads`
+  (INSERT con `with_check bucket_id='avatars'` → **cualquiera sin login podía
+  subir archivos**). Ambas re-creadas para `authenticated`. Las descargas de
+  avatares usan la URL pública (`/object/public/...`) que saltea RLS, así que
+  mostrar avatares sigue funcionando; la subida la hace el usuario logueado
+  (JWT Firebase ⇒ rol `authenticated`), mismo patrón que `receipts`.
+
+Pendiente verificado como **no accionable**:
+
+- Los 114 warnings `*_security_definer_function_executable` son las RPC del
+  app (SECURITY DEFINER invocadas por `authenticated`, con sus checks
+  internos). Esperado por diseño, no hay fix en masa.
+- `pg_net` en `public`: mover una extensión de schema es riesgoso (rompe
+  referencias) y de bajo valor — queda en post-launch §1.5, no antes.
