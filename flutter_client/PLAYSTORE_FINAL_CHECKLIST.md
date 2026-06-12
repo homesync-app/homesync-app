@@ -33,6 +33,19 @@
 - [ ] Content rating + target audience + anuncios definidos.
 - [ ] Testing track configurado (internal/closed) con testers activos.
 
+## 5b. Compras / RevenueCat ✅ verificado funcionando (2026-06-11)
+Verificado en device: el paywall carga precios reales de Play y las compras
+procesan de punta a punta (`POST /v1/receipts → 200`, purchase acknowledged).
+El `UnknownBackendError` que se veía en logs era un 404 en un endpoint
+secundario no usado (`/workflows/...`) — ruido, no bloquea compras. Ver
+`docs/PRELAUNCH_CONFIG_GUIDE.md` §1 para el detalle y el checklist de
+referencia por si el paywall apareciera vacío en el futuro.
+- [x] Productos Active en Play Console (`premium_family/household/solo`).
+- [x] Offerings + entitlement `premium` en RevenueCat resuelven.
+- [x] Compra de prueba procesa OK.
+- [ ] (Recordatorio) Premium es por hogar: confirmar en QA que al comprar uno,
+      el otro miembro también lo ve activo.
+
 ## 6. Pre-lanzamiento (recomendado fuerte)
 - [ ] Correr Pre-launch report de Google y corregir bloqueantes.
 - [ ] Verificar performance básica (cold start, navegación principal).

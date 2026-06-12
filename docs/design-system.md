@@ -78,6 +78,12 @@ Usar estas piezas antes de crear UI local:
 - `AppRadii.modal`: sheets y diálogos.
 - `AppRadii.pill`: pills, chips y badges.
 
+Estado de migración (2026-06-11): todos los valores que coincidían EXACTO con
+la escala ya usan tokens (`AppRadii`/`AppSpacing`, ~880 sitios). Los valores
+fuera de escala que quedan (14, 18, 22…) son en su mayoría radios internos
+calculados (radio externo − padding) u decisiones locales: NO snapearlos a
+ciegas — se migran con criterio pantalla por pantalla al tocarlas.
+
 ### Tipografía
 
 - `w900`: títulos principales, montos o datos hero.

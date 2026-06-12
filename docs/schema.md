@@ -269,6 +269,23 @@ Unique: (template_id, due_date)
 | household_id | UUID | FK → households(id) |
 | reward_id | UUID | FK → rewards(id) |
 
+#### `couple_challenge_completions`
+| Columna | Tipo | Restricciones |
+|---------|------|---------------|
+| household_id | UUID | PK (compuesta), FK → households(id) ON DELETE CASCADE |
+| week_index | INTEGER | PK (compuesta) |
+| challenge_id | TEXT | NOT NULL (ej. 'weekly_challenge_1') |
+| completed_by | UUID | NOT NULL |
+| completed_at | TIMESTAMPTZ | default now() |
+
+Registro de desafíos semanales de pareja completados (uno por hogar por
+semana). `week_index` = floor(días desde creación del hogar / 7), SIN módulo
+— el mismo cálculo que rota el desafío en el cliente
+(`CoupleChallenge.currentWeekIndex`). RLS: gate restrictiva por JWT +
+SELECT/INSERT para miembros del hogar. El cliente inserta con upsert
+`ignoreDuplicates` (carrera entre los dos teléfonos) y la card del desafío
+lee este registro para mostrarse completada y bloquear re-completar.
+
 ---
 
 ### SAVINGS
@@ -567,6 +584,7 @@ expense_templates.id ← planned_expenses.template_id
 | get_xp_history(p_user_id) | TABLE | Historial de XP |
 | get_coin_history(p_user_id) | TABLE | Historial de coins |
 | get_member_activity_stats(p_user_id) | TABLE | Stats de actividad |
+| complete_couple_challenge_v1(...) | JSONB | Completa el desafío semanal de pareja atómicamente: registra `couple_challenge_completions` + acredita XP/coins a cada miembro vía ledger + actividad en el feed. Idempotente por `(household_id, week_index)` y `request_id`. Reemplaza el flujo client-side de 3 llamadas; NO crea tarea. |
 
 ---
 
