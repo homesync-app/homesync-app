@@ -41,6 +41,7 @@ import 'package:homesync_client/features/settings/presentation/widgets/settings_
 import 'package:homesync_client/features/settings/presentation/widgets/settings_admin_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_household_components.dart';
+import 'package:homesync_client/features/settings/presentation/widgets/settings_nav_components.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/family_member_dashboard_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -348,80 +349,159 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildSectionLabel(
-                            eyebrow: t.settingsSectionProfileEyebrow,
-                            title: t.settingsSectionProfileTitle,
-                            subtitle: t.settingsSectionProfileSubtitle,
-                          ),
-                          const SizedBox(height: 14),
-                          _buildProfileCard(),
-                          const SizedBox(height: 28),
-                          _buildSectionLabel(
-                            eyebrow: t.settingsSectionHouseholdEyebrow,
-                            title: t.settingsSectionHouseholdTitle,
-                            subtitle: t.settingsSectionHouseholdSubtitle,
-                          ),
-                          const SizedBox(height: 14),
-                          if (_householdId != null) ...[
-                            _buildCombinedHouseholdCard(),
-                          ] else if (!_hasLoadedOnce && _isLoading) ...[
-                            _buildLoadingCard(height: 220),
-                          ] else ...[
-                            _buildNoHouseholdCard(),
-                          ],
-                          const SizedBox(height: 28),
-                          _buildSectionLabel(
-                            eyebrow: t.settingsSectionAppEyebrow,
-                            title: t.settingsSectionAppTitle,
-                            subtitle: t.settingsSectionAppSubtitle,
-                          ),
-                          const SizedBox(height: 14),
-                          // Menores no pueden comprar premium — solo ven una
-                          // tarjeta informativa que los redirige a sus padres.
+                          // Premium: superficie de conversión, anclada arriba.
                           if (isMinor)
                             SettingsMinorPremiumCard(isChild: isChild)
                           else
                             _buildPremiumCard(),
-                          const SizedBox(height: 24),
-                          _buildAppearanceCard(isMinor: isMinor),
-                          const SizedBox(height: 16),
-                          _buildLanguageCard(),
-                          const SizedBox(height: 16),
-                          if (!isMinor) ...[
-                            _buildCurrencyCard(),
-                            const SizedBox(height: 24),
-                          ] else
-                            const SizedBox(height: 8),
-                          _buildNotificationsCard(),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
+
+                          // Perfil y hogar: cards "hero" con su contenido rico.
+                          _anchorLabel(t.settingsSectionProfileTitle),
+                          _buildProfileCard(),
+                          const SizedBox(height: 18),
+                          _anchorLabel(t.settingsSectionHouseholdTitle),
+                          if (_householdId != null)
+                            _buildCombinedHouseholdCard()
+                          else if (!_hasLoadedOnce && _isLoading)
+                            _buildLoadingCard(height: 220)
+                          else
+                            _buildNoHouseholdCard(),
+                          const SizedBox(height: AppSpacing.lg),
+
+                          // Preferencias: filas compactas que abren un sheet.
+                          SettingsNavGroup(
+                            label: t.settingsSectionAppTitle,
+                            children: [
+                              SettingsNavRow(
+                                icon: Icons.palette_outlined,
+                                iconColor: AppColors.accentTeal,
+                                title: t.settingsAppearanceTitle,
+                                value: _themeModeLabel(
+                                  ref.watch(themeModeProvider),
+                                  t,
+                                ),
+                                onTap: () => _openPreferenceSheet(
+                                  t.settingsAppearanceTitle,
+                                  (sheetRef) => _buildAppearanceCard(
+                                    sheetRef,
+                                    isMinor: isMinor,
+                                  ),
+                                ),
+                              ),
+                              SettingsNavRow(
+                                icon: Icons.translate_rounded,
+                                iconColor: AppColors.accentBlue,
+                                title: t.settingsLanguageTitle,
+                                value:
+                                    _languageLabel(ref.watch(localeProvider)),
+                                onTap: () => _openPreferenceSheet(
+                                  t.settingsLanguageTitle,
+                                  (sheetRef) => _buildLanguageCard(sheetRef),
+                                ),
+                              ),
+                              if (!isMinor)
+                                SettingsNavRow(
+                                  icon: Icons.payments_outlined,
+                                  iconColor: AppColors.accentGold,
+                                  title: t.settingsCurrencyTitle,
+                                  value: ref.watch(currencyProvider).code,
+                                  onTap: () => _openPreferenceSheet(
+                                    t.settingsCurrencyTitle,
+                                    (sheetRef) => _buildCurrencyCard(sheetRef),
+                                  ),
+                                ),
+                              SettingsNavRow(
+                                icon: Icons.notifications_outlined,
+                                iconColor: AppColors.accentRed,
+                                title: t.settingsNotificationsTitle,
+                                trailing: Switch.adaptive(
+                                  value: ref.watch(notificationEnabledProvider),
+                                  onChanged: _toggleNotifications,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SettingsNavGap(),
+
+                          // Ayuda: FAQ, feedback y tour (abren sus sheets).
+                          SettingsNavGroup(
+                            children: [
+                              SettingsNavRow(
+                                icon: Icons.help_outline_rounded,
+                                iconColor: AppColors.primary,
+                                title: t.settingsFaqTitle,
+                                onTap: () {
+                                  AppHaptics.tap();
+                                  FAQSheet.show(context);
+                                },
+                              ),
+                              SettingsNavRow(
+                                icon: Icons.chat_bubble_outline_rounded,
+                                iconColor: const Color(0xFF6366F1),
+                                title: t.settingsFeedbackTitle,
+                                onTap: () {
+                                  AppHaptics.tap();
+                                  FeedbackSheet.show(
+                                    context,
+                                    screen: 'settings',
+                                  );
+                                },
+                              ),
+                              SettingsNavRow(
+                                icon: Icons.auto_awesome_rounded,
+                                iconColor: AppColors.accentGold,
+                                title: t.settingsReplayTourTitle,
+                                onTap: _replayTour,
+                              ),
+                            ],
+                          ),
+                          const SettingsNavGap(),
+
                           if (AppEnvironment.enableAdminTesting) ...[
                             _buildAdminTestingCard(),
-                            const SizedBox(height: 16),
+                            const SettingsNavGap(),
                           ],
-                          _buildFAQButton(),
-                          const SizedBox(height: 16),
-                          _buildFeedbackCard(),
-                          const SizedBox(height: 14),
-                          _buildReplayTourButton(),
-                          const SizedBox(height: 48),
-                          _buildSectionLabel(
-                            eyebrow: t.settingsSectionAccountEyebrow,
-                            title: t.settingsSectionAccountTitle,
-                            subtitle: t.settingsSectionAccountSubtitle,
+
+                          // Cuenta: cerrar sesión + zona de peligro.
+                          SettingsNavGroup(
+                            label: t.settingsSectionAccountTitle,
+                            children: [
+                              SettingsNavRow(
+                                icon: Icons.logout_rounded,
+                                title: t.settingsLogoutButton,
+                                destructive: true,
+                                onTap: _doLogout,
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 14),
-                          _buildLogoutButton(),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 12),
                           _buildResetAccountButton(),
-                          const SizedBox(height: 48),
-                          _buildSectionLabel(
-                            eyebrow: t.settingsSectionLegalEyebrow,
-                            title: t.settingsSectionLegalTitle,
-                            subtitle: t.settingsSectionLegalSubtitle,
+                          const SettingsNavGap(),
+
+                          // Legal
+                          SettingsNavGroup(
+                            label: t.settingsSectionLegalTitle,
+                            children: [
+                              SettingsNavRow(
+                                icon: Icons.privacy_tip_outlined,
+                                iconColor: AppColors.textSecondary,
+                                title: t.settingsLegalPrivacyPolicy,
+                                onTap: () => _openUrl(
+                                  'https://homesync-app.github.io/homesync-privacy/',
+                                ),
+                              ),
+                              SettingsNavRow(
+                                icon: Icons.description_outlined,
+                                iconColor: AppColors.textSecondary,
+                                title: t.settingsLegalTermsOfUse,
+                                onTap: () => _openUrl(
+                                  'https://homesync-app.github.io/homesync-privacy/',
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 14),
-                          _buildLegalCard(),
-                          const SizedBox(height: 48),
+                          const SizedBox(height: 40),
                           SettingsVersionFooter(
                             isAdminEnabled: AppEnvironment.enableAdminTesting &&
                                 ref.watch(adminProvider).isAdminUser,
@@ -452,18 +532,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   // Profile Card
 
   // Profile Card
-
-  Widget _buildSectionLabel({
-    required String eyebrow,
-    required String title,
-    required String subtitle,
-  }) {
-    return SettingsSectionLabel(
-      eyebrow: eyebrow,
-      title: title,
-      subtitle: subtitle,
-    );
-  }
 
   Widget _buildProfileCard() {
     final profileAsync = ref.watch(userProfileProvider);
@@ -1259,7 +1327,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildLanguageCard() {
+  Widget _buildLanguageCard(WidgetRef ref) {
     return SettingsLanguageCard(
       currentLocale: ref.watch(localeProvider),
       onLocaleChanged: (locale) {
@@ -1269,7 +1337,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildCurrencyCard() {
+  Widget _buildCurrencyCard(WidgetRef ref) {
     return SettingsCurrencyCard(
       currentCurrency: ref.watch(currencyProvider),
       onCurrencyChanged: (currency) {
@@ -1279,7 +1347,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildAppearanceCard({bool isMinor = false}) {
+  Widget _buildAppearanceCard(WidgetRef ref, {bool isMinor = false}) {
     final isPremium = ref.watch(premiumProvider).value ?? false;
     final currentColor = ref.watch(primaryColorProvider);
     final defaultPalette = ThemePalette.all.firstWhere(
@@ -1325,6 +1393,141 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  // ── Selectores de preferencias como sheets (list-detail) ──────────────────
+  // Cada fila del home abre el card existente en un sheet. El Consumer da un
+  // ref válido para los ref.watch internos del card.
+  void _openPreferenceSheet(String title, Widget Function(WidgetRef ref) body) {
+    final theme = context.theme;
+    AppSheet.show(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackground,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppRadii.modal),
+          ),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          12,
+          20,
+          20 + MediaQuery.of(context).viewPadding.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.textMuted.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+                color: theme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Consumer(builder: (_, ref, __) => body(ref)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _themeModeLabel(ThemeMode mode, AppLocalizations t) {
+    return switch (mode) {
+      ThemeMode.light => t.settingsThemeModeLight,
+      ThemeMode.dark => t.settingsThemeModeDark,
+      ThemeMode.system => t.settingsThemeModeSystem,
+    };
+  }
+
+  String? _languageLabel(Locale? locale) {
+    if (locale == null) return null; // sigue el sistema → sin valor en la fila
+    return switch (locale.languageCode) {
+      'es' => 'Español',
+      'en' => 'English',
+      _ => locale.languageCode.toUpperCase(),
+    };
+  }
+
+  Future<void> _replayTour() async {
+    AppHaptics.tap();
+    final controller = ref.read(coupleHomeTourControllerProvider.notifier);
+    await controller.reset();
+    ref.invalidate(coupleHomeTourSeenProvider);
+    if (!mounted) return;
+    final tasks = ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
+    controller.start(hasTasks: tasks?.isNotEmpty ?? false);
+    Navigator.of(context).pop();
+  }
+
+  Future<void> _doLogout() async {
+    AppHaptics.success();
+    final confirm = await showSettingsLogoutDialog(context);
+    if (confirm != true) return;
+    await ref.read(authControllerProvider.notifier).signOut();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    widget.onLogout();
+  }
+
+  Future<void> _openUrl(String url) async {
+    AppHaptics.tap();
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _toggleNotifications(bool value) {
+    AppHaptics.tap();
+    ref.read(notificationEnabledProvider.notifier).toggle(value);
+    final t = AppLocalizations.of(context);
+    final theme = context.theme;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          value
+              ? t.settingsNotificationsEnabled
+              : t.settingsNotificationsDisabled,
+        ),
+        duration: const Duration(seconds: 2),
+        backgroundColor: value ? theme.success : theme.textMuted,
+      ),
+    );
+  }
+
+  /// Label tenue arriba de las cards "hero" (Perfil, Hogar). Sentence case.
+  Widget _anchorLabel(String text) {
+    final theme = context.theme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.1,
+          color: theme.textMuted,
+        ),
       ),
     );
   }
@@ -1468,31 +1671,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Widget _buildNotificationsCard() {
-    final isEnabled = ref.watch(notificationEnabledProvider);
-    final theme = context.theme;
-
-    return SettingsNotificationsCard(
-      isEnabled: isEnabled,
-      onChanged: (value) {
-        AppHaptics.tap();
-        ref.read(notificationEnabledProvider.notifier).toggle(value);
-        final t = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              value
-                  ? t.settingsNotificationsEnabled
-                  : t.settingsNotificationsDisabled,
-            ),
-            duration: const Duration(seconds: 2),
-            backgroundColor: value ? theme.success : theme.textMuted,
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildAdminTestingCard() {
     final admin = ref.watch(adminProvider);
     final selectedScenario =
@@ -1618,168 +1796,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildFAQButton() {
-    return SettingsFaqCard(
-      onTap: () {
-        AppHaptics.tap();
-        FAQSheet.show(context);
-      },
-    );
-  }
-
-  Widget _buildFeedbackCard() {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.surfaceContainer,
-        borderRadius: BorderRadius.circular(AppRadii.lg),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppRadii.lg),
-          onTap: () {
-            AppHaptics.tap();
-            FeedbackSheet.show(context, screen: 'settings');
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6366F1).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(AppRadii.sm),
-                  ),
-                  child: const Icon(
-                    Icons.chat_bubble_outline_rounded,
-                    color: Color(0xFF6366F1),
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        t.settingsFeedbackTitle,
-                        style: TextStyle(
-                          color: theme.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        t.settingsFeedbackSubtitle,
-                        style: TextStyle(
-                          color: theme.textMuted,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: theme.textMuted,
-                  size: 20,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReplayTourButton() {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadow.withValues(alpha: 0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        clipBehavior: Clip.antiAlias,
-        child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          leading: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.accentGold.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(AppRadii.sm),
-            ),
-            child: const Icon(
-              Icons.auto_awesome_rounded,
-              color: AppColors.accentGold,
-              size: 22,
-            ),
-          ),
-          title: Text(
-            t.settingsReplayTourTitle,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: theme.textPrimary,
-            ),
-          ),
-          subtitle: Text(
-            t.settingsReplayTourSubtitle,
-            style: TextStyle(color: theme.textSecondary, fontSize: 12),
-          ),
-          trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
-          onTap: () async {
-            AppHaptics.tap();
-            final controller =
-                ref.read(coupleHomeTourControllerProvider.notifier);
-            await controller.reset();
-            ref.invalidate(coupleHomeTourSeenProvider);
-            if (!mounted) return;
-            final tasks =
-                ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
-            controller.start(hasTasks: tasks?.isNotEmpty ?? false);
-            Navigator.of(context).pop();
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLogoutButton() {
-    return SettingsLogoutButton(
-      onPressed: () async {
-        AppHaptics.success();
-        final confirm = await showSettingsLogoutDialog(context);
-
-        if (confirm == true) {
-          await ref.read(authControllerProvider.notifier).signOut();
-          if (!mounted) return;
-          // Pop ALL routes to root so the auth state change can drive
-          // MyApp to show LoginScreen cleanly, without stale routes on stack.
-          Navigator.of(context).popUntil((route) => route.isFirst);
-          widget.onLogout();
-        }
-      },
-    );
-  }
-
   Widget _buildResetAccountButton() {
     return SettingsDangerZone(
       onResetPressed: () {
@@ -1790,71 +1806,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         AppHaptics.error();
         _deleteAccount();
       },
-    );
-  }
-
-  Widget _buildLegalCard() {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-
-    Future<void> openUrl(String url) async {
-      AppHaptics.tap();
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.surfaceContainer,
-        borderRadius: BorderRadius.circular(AppRadii.lg),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadii.lg),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          children: [
-            ListTile(
-              leading:
-                  Icon(Icons.privacy_tip_outlined, color: theme.textSecondary),
-              title: Text(
-                t.settingsLegalPrivacyPolicy,
-                style: TextStyle(color: theme.textPrimary, fontSize: 15),
-              ),
-              trailing: Icon(
-                Icons.open_in_new_rounded,
-                color: theme.textMuted,
-                size: 18,
-              ),
-              onTap: () =>
-                  openUrl('https://homesync-app.github.io/homesync-privacy/'),
-            ),
-            Divider(
-              height: 1,
-              color: theme.divider.withValues(alpha: 0.1),
-              indent: 16,
-              endIndent: 16,
-            ),
-            ListTile(
-              leading:
-                  Icon(Icons.description_outlined, color: theme.textSecondary),
-              title: Text(
-                t.settingsLegalTermsOfUse,
-                style: TextStyle(color: theme.textPrimary, fontSize: 15),
-              ),
-              trailing: Icon(
-                Icons.open_in_new_rounded,
-                color: theme.textMuted,
-                size: 18,
-              ),
-              onTap: () =>
-                  openUrl('https://homesync-app.github.io/homesync-privacy/'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
