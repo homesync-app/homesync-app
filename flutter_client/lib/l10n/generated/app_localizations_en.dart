@@ -291,7 +291,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPremiumTitle => 'HomeSync Premium';
 
   @override
-  String get settingsPremiumActiveSubtitle => 'Premium active';
+  String get settingsPremiumActiveSubtitle => 'Manage plan';
 
   @override
   String get settingsPremiumInactiveSubtitle => 'Advanced features';
@@ -628,6 +628,457 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSoloActivityTitle => 'Your activity';
 
   @override
+  String get homeGreetingMorning => 'Good morning,';
+
+  @override
+  String get homeGreetingAfternoon => 'Good afternoon,';
+
+  @override
+  String get homeGreetingEvening => 'Good evening,';
+
+  @override
+  String get homeSoloSpentEmpty => 'No spending yet ✨';
+
+  @override
+  String homeSoloSpentDailyAvg(String month, String amount) {
+    return '$month · $amount/day';
+  }
+
+  @override
+  String get soloSpaceEyebrow => 'My space';
+
+  @override
+  String soloSpaceLevel(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String soloSpaceXpToNext(int xp) {
+    return '$xp XP to the next level.';
+  }
+
+  @override
+  String get soloSpaceStageRecentMove => 'Fresh start';
+
+  @override
+  String get soloSpaceStageRecentMoveSubtitle =>
+      'Your space is starting to take shape. Choose one simple action and build from there.';
+
+  @override
+  String get soloSpaceStageInMotion => 'Home in motion';
+
+  @override
+  String get soloSpaceStageInMotionSubtitle =>
+      'There is movement now: a few routines, expenses, or tasks are starting to organize your days.';
+
+  @override
+  String get soloSpaceStageSteadyRoutine => 'Steady routine';
+
+  @override
+  String get soloSpaceStageSteadyRoutineSubtitle =>
+      'You already have a base; now it is about keeping it going without overthinking it.';
+
+  @override
+  String get soloSpaceStageOrganizedHome => 'Organized home';
+
+  @override
+  String get soloSpaceStageOrganizedHomeSubtitle =>
+      'Your tasks, spending, and activity are starting to read like a clear system.';
+
+  @override
+  String get soloSpaceStageOwnRhythm => 'Your space, your rhythm';
+
+  @override
+  String get soloSpaceStageOwnRhythmSubtitle =>
+      'This is no longer just tracking things: you are building your own way to live at home.';
+
+  @override
+  String get soloSpaceSignalsTitle => 'Weekly signals';
+
+  @override
+  String get soloSpaceStreakTitle => 'Streak';
+
+  @override
+  String soloSpaceStreakMetric(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+      zero: 'No streak',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String soloSpaceActiveDays14(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days active days in 14 days',
+      one: '1 active day in 14 days',
+      zero: 'No recent active days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get soloSpaceWeeklyXpTitle => 'Weekly XP';
+
+  @override
+  String get soloSpaceWeeklyTasksTitle => 'Weekly tasks';
+
+  @override
+  String soloSpaceDeltaUp(int value) {
+    return '+$value vs previous week';
+  }
+
+  @override
+  String soloSpaceDeltaDown(int value) {
+    return '$value vs previous week';
+  }
+
+  @override
+  String get soloSpaceDeltaSame => 'Same as previous week';
+
+  @override
+  String soloSpaceTopTaskCategory(String category) {
+    return 'Tasks: $category';
+  }
+
+  @override
+  String soloSpaceTopExpenseCategory(String category) {
+    return 'Spending: $category';
+  }
+
+  @override
+  String get soloSpaceSignalsSyncing =>
+      'Refreshing real signals from your home.';
+
+  @override
+  String get soloSpaceDimensionsTitle => 'How your home is doing';
+
+  @override
+  String get soloSpaceOrderTitle => 'Order';
+
+  @override
+  String get soloSpaceOrderSubtitle =>
+      'Tasks, pending items, and closing the day.';
+
+  @override
+  String get soloSpaceClarityTitle => 'Clarity';
+
+  @override
+  String get soloSpaceClaritySubtitle =>
+      'Tracked spending and monthly context.';
+
+  @override
+  String get soloSpaceContinuityTitle => 'Continuity';
+
+  @override
+  String get soloSpaceContinuitySubtitle =>
+      'Recent activity and real consistency.';
+
+  @override
+  String get soloSpaceNextTitle => 'Next gesture';
+
+  @override
+  String get soloSpaceNextCreateTask => 'Create a base task';
+
+  @override
+  String get soloSpaceNextCreateTaskSubtitle =>
+      'One small routine is enough to start shaping your space.';
+
+  @override
+  String get soloSpaceNextCompleteTask => 'Close a task for today';
+
+  @override
+  String get soloSpaceNextCompleteTaskSubtitle =>
+      'Reducing pending items is the most direct way to improve Order.';
+
+  @override
+  String get soloSpaceNextRegisterExpense =>
+      'Track your first expense this month';
+
+  @override
+  String get soloSpaceNextRegisterExpenseSubtitle =>
+      'With one movement logged, your Clarity starts to have context.';
+
+  @override
+  String get soloSpaceNextReviewShopping => 'Review your shopping list';
+
+  @override
+  String get soloSpaceNextReviewShoppingSubtitle =>
+      'An organized shop keeps noise down and the month lighter.';
+
+  @override
+  String get soloSpaceNextKeepGoing => 'Add one simple action';
+
+  @override
+  String get soloSpaceNextKeepGoingSubtitle =>
+      'One small gesture today keeps your home continuity going.';
+
+  @override
+  String get soloSpaceMilestonesTitle => 'Personal milestones';
+
+  @override
+  String get soloSpaceMilestoneFirstStep => 'First step';
+
+  @override
+  String get soloSpaceMilestoneFirstStepDesc =>
+      'You completed your first task.';
+
+  @override
+  String get soloSpaceMilestoneWeekInMotion => 'Week in motion';
+
+  @override
+  String get soloSpaceMilestoneWeekInMotionDesc =>
+      'You had enough recent activity to mark a rhythm.';
+
+  @override
+  String get soloSpaceMilestoneClearerHome => 'Clearer home';
+
+  @override
+  String get soloSpaceMilestoneClearerHomeDesc =>
+      'Your finances already have useful signals this month.';
+
+  @override
+  String get soloSpaceMilestoneSteadyRoutine => 'Sustained routine';
+
+  @override
+  String get soloSpaceMilestoneSteadyRoutineDesc =>
+      'Order and continuity are starting to work together.';
+
+  @override
+  String get soloSpaceMilestoneOwnRhythm => 'Own rhythm';
+
+  @override
+  String get soloSpaceMilestoneOwnRhythmDesc =>
+      'Your progress is already showing a personal identity.';
+
+  @override
+  String get soloSpaceFutureHint =>
+      'Your space adjusts with your tasks, spending, and weekly rhythm.';
+
+  @override
+  String get soloSpaceRitualTitle => 'Weekly review';
+
+  @override
+  String soloSpaceRitualProgress(int done, int total) {
+    return '$done of $total gestures';
+  }
+
+  @override
+  String get soloSpaceRitualReviewTasks => 'Review open tasks';
+
+  @override
+  String get soloSpaceRitualCheckSpending => 'Check monthly spending';
+
+  @override
+  String get soloSpaceRitualPlanShopping => 'Adjust the shopping list';
+
+  @override
+  String get soloSpaceRitualChooseNextRoutine => 'Choose one routine to keep';
+
+  @override
+  String get soloSpaceInsightsTitle => 'Weekly read';
+
+  @override
+  String get soloSpaceInsightNoActivity => 'Starting point';
+
+  @override
+  String get soloSpaceInsightNoActivityDesc =>
+      'There are no strong signals this week yet. One simple gesture is enough to begin.';
+
+  @override
+  String get soloSpaceInsightStreak => 'Streak building';
+
+  @override
+  String soloSpaceInsightStreakDesc(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days active days in a row are starting to form a rhythm.',
+      one: 'One active day already marks continuity.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get soloSpaceInsightWeekImproved => 'Stronger week';
+
+  @override
+  String soloSpaceInsightWeekImprovedDesc(int value) {
+    return '+$value XP versus the previous week. There is more movement at home.';
+  }
+
+  @override
+  String get soloSpaceInsightWeekSlowed => 'Quieter week';
+
+  @override
+  String get soloSpaceInsightWeekSlowedDesc =>
+      'Movement slowed down. Choose one small action and close the day.';
+
+  @override
+  String get soloSpaceInsightFinanceVisible => 'Finances with context';
+
+  @override
+  String get soloSpaceInsightFinanceVisibleDesc =>
+      'There are enough movements now to read the month more clearly.';
+
+  @override
+  String get soloSpaceInsightNoFinance => 'Missing finance read';
+
+  @override
+  String get soloSpaceInsightNoFinanceDesc =>
+      'Tracking one real expense activates better Clarity signals.';
+
+  @override
+  String get soloSpaceInsightTaskCategory => 'Task pattern';
+
+  @override
+  String soloSpaceInsightTaskCategoryDesc(String category) {
+    return '$category is showing up as a strong focus this month.';
+  }
+
+  @override
+  String get soloSpaceInsightExpenseCategory => 'Spending pattern';
+
+  @override
+  String soloSpaceInsightExpenseCategoryDesc(String category) {
+    return '$category has the most movement this month.';
+  }
+
+  @override
+  String get soloSpaceSuggestionsTitle => 'Suggested tools';
+
+  @override
+  String get soloSpaceSuggestionRecurringTask =>
+      'Turn something into a routine';
+
+  @override
+  String get soloSpaceSuggestionRecurringTaskDesc =>
+      'A recurring task lowers friction and supports Order.';
+
+  @override
+  String get soloSpaceSuggestionClosePending => 'Close what is pending';
+
+  @override
+  String get soloSpaceSuggestionClosePendingDesc =>
+      'Resolving one task today clears mental space.';
+
+  @override
+  String get soloSpaceSuggestionRegisterExpense => 'Track a real expense';
+
+  @override
+  String get soloSpaceSuggestionRegisterExpenseDesc =>
+      'With one movement, the month no longer reads empty.';
+
+  @override
+  String get soloSpaceSuggestionReviewShopping => 'Review shopping';
+
+  @override
+  String get soloSpaceSuggestionReviewShoppingDesc =>
+      'A clear list avoids duplicate or last-minute purchases.';
+
+  @override
+  String get soloSpaceSuggestionProtectStreak => 'Protect the streak';
+
+  @override
+  String get soloSpaceSuggestionProtectStreakDesc =>
+      'One small action today keeps continuity alive.';
+
+  @override
+  String get soloSpaceSuggestionWeeklyReview => 'Run the weekly review';
+
+  @override
+  String get soloSpaceSuggestionWeeklyReviewDesc =>
+      'Check the ritual gestures and leave the week organized.';
+
+  @override
+  String get soloSpaceUnlocksTitle => 'Soft unlocks';
+
+  @override
+  String get soloSpaceUnlockActive => 'Active';
+
+  @override
+  String get soloSpaceUnlockNext => 'Next';
+
+  @override
+  String get soloSpaceUnlockWeeklyReview => 'Review view';
+
+  @override
+  String get soloSpaceUnlockWeeklyReviewDesc =>
+      'Available from the start to organize the week without pressure.';
+
+  @override
+  String get soloSpaceUnlockRecurringTemplates => 'Recurring templates';
+
+  @override
+  String get soloSpaceUnlockRecurringTemplatesDesc =>
+      'Appear when there is enough base to repeat routines.';
+
+  @override
+  String get soloSpaceUnlockHabitInsights => 'Habit insights';
+
+  @override
+  String get soloSpaceUnlockHabitInsightsDesc =>
+      'Activate after several days of real activity.';
+
+  @override
+  String get soloSpaceUnlockPersonalMedal => 'Personal medal';
+
+  @override
+  String get soloSpaceUnlockPersonalMedalDesc =>
+      'Recognizes a sustained stage without competing with anyone.';
+
+  @override
+  String get soloSpaceUnlockRhythmRecommendations => 'Rhythm recommendations';
+
+  @override
+  String get soloSpaceUnlockRhythmRecommendationsDesc =>
+      'Connect financial clarity with weekly continuity.';
+
+  @override
+  String activityCoinsPlus(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count coins',
+      one: '+1 coin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityCoinsMinus(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '-$count coins',
+      one: '-1 coin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeFamilyApprovalsTileLabel => 'Approvals';
+
+  @override
+  String homeFamilyApprovalsPendingLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'pending',
+      one: 'pending',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeFamilyApprovalsAllClear => 'All clear';
+
+  @override
   String get homeCoupleHeadlineSecondary => 'of your home';
 
   @override
@@ -894,7 +1345,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeFamilyAdultFallbackName => 'Family';
 
   @override
-  String get homeFamilyChildHello => 'Hi, ';
+  String get homeFamilyChildHello => 'Let\'s go, ';
+
+  @override
+  String get homeFamilyChildGreetingSuffix => '!';
 
   @override
   String get homeFamilyChildFallbackName => 'champ';
@@ -2859,6 +3313,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Too many scans in a row. Wait a few seconds and try again.';
 
   @override
+  String expensesFormOcrImageTooLarge(String sizeMb) {
+    return 'The image is too large ($sizeMb MB, max 5 MB). Try another photo or pick one from the gallery.';
+  }
+
+  @override
+  String get expensesFormOcrSessionExpired =>
+      'Session expired. Sign in again to scan.';
+
+  @override
+  String get expensesFormOcrTimeout =>
+      'The scan took too long. Check your connection and try again.';
+
+  @override
   String get expensesFormValidationAmountRequired => 'Enter a valid amount.';
 
   @override
@@ -3319,11 +3786,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumContinueWithPlan => 'Continue';
 
   @override
-  String get premiumAlreadyActiveTitle => 'You\'re already Premium!';
+  String get premiumAlreadyActiveTitle => 'Premium is active in your household';
 
   @override
   String get premiumAlreadyActiveBody =>
-      'Thanks for supporting HomeSync development.';
+      'You\'re all set: premium features are now available for this household.';
+
+  @override
+  String get premiumActiveStatusPill => 'Plan active';
+
+  @override
+  String get premiumActiveBenefitsTitle => 'Enabled benefits';
 
   @override
   String get premiumContinueButton => 'Continue';
@@ -4179,6 +4652,180 @@ class AppLocalizationsEn extends AppLocalizations {
       'You two already completed this week\'s challenge 💚';
 
   @override
+  String tourStepLabel(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get tourWelcomeEyebrow => 'Welcome';
+
+  @override
+  String get tourCtaStart => 'Start';
+
+  @override
+  String get tourCtaNext => 'Next';
+
+  @override
+  String get tourCtaLater => 'Later';
+
+  @override
+  String get tourFinaleTitle => 'All set!';
+
+  @override
+  String get tourFinaleCta => 'Start using';
+
+  @override
+  String get tourCoupleWelcomeTitle => 'Your home, in 30 seconds';
+
+  @override
+  String get tourCoupleWelcomeBody =>
+      'A quick look at the essentials: tasks, coins, the duel and expenses. Short and sweet.';
+
+  @override
+  String tourCoupleWelcomeBodyNamed(String partnerName) {
+    return 'A quick look at the essentials to organize everything with $partnerName: tasks, coins, the duel and expenses.';
+  }
+
+  @override
+  String get tourTasksTitleHas => 'Do tasks, earn points';
+
+  @override
+  String get tourTasksBodyHas =>
+      'Tap ✓ to complete. Every task earns coins and XP just for you.';
+
+  @override
+  String get tourTasksTitleEmpty => 'Today at home is empty';
+
+  @override
+  String get tourTasksBodyEmpty =>
+      'Your daily tasks will live here. Schedule the first one now and watch it appear — or keep the tour going and do it later.';
+
+  @override
+  String get tourTasksCtaCreate => 'Schedule a task';
+
+  @override
+  String get tourBalanceTitle => 'The home\'s pulse';
+
+  @override
+  String tourBalanceBody(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'shared':
+            'You have an integrated economy: no debts between you here. You see what the home spent this month and, below, each one\'s points.',
+        'other':
+            'Here you see what you owe each other in shared expenses and, below, what each one earned. “Settle” squares things up in one tap.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tourBalanceBulletSettle => 'Settle → square up shared expenses';
+
+  @override
+  String get tourBalanceBulletMonth => 'Monthly spend → the home\'s pulse';
+
+  @override
+  String get tourBalanceBulletXp => 'XP → for the weekly duel';
+
+  @override
+  String get tourBalanceBulletCoins => 'Coins → to redeem rewards';
+
+  @override
+  String get tourDuelTitle => 'Weekly duel';
+
+  @override
+  String get tourDuelBody =>
+      'Every week you compete for XP with a hidden score. Sunday reveals the winner. Resets on Mondays.';
+
+  @override
+  String get tourRewardsTitle => 'Redeem your coins';
+
+  @override
+  String get tourRewardsBody =>
+      'Rewards live here: movie night, a massage, a day off. You two build the store and treat each other.';
+
+  @override
+  String tourExpensesTitle(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'shared': 'The home\'s finances',
+        'other': 'Split your expenses',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tourExpensesBody(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'shared':
+            'Record the home\'s expenses here: recurring bills, purchases and savings goals, all in one place.',
+        'other':
+            'Add home expenses and the app calculates who owes whom, using the split you configured.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tourCoupleFinaleBody =>
+      'Enjoy your home. If anything comes up, the FAQ adapts to you both.';
+
+  @override
+  String get tourFamilyWelcomeTitle => 'Your family, organized';
+
+  @override
+  String get tourFamilyWelcomeBody =>
+      'A one-minute look at how to manage the whole family\'s tasks, points and rewards.';
+
+  @override
+  String get tourFamilyTasksTitleHas => 'The family\'s tasks';
+
+  @override
+  String tourFamilyTasksBody(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'approvals':
+            'Assign tasks to everyone. When the kids complete theirs, they come to you for approval — only then do they collect their coins.',
+        'other':
+            'Assign tasks to everyone and follow the whole family\'s progress from here.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tourFamilyFinanceTitle => 'Expenses, adults only';
+
+  @override
+  String get tourFamilyFinanceBody =>
+      'The home\'s shared expenses are managed here, between adults only. Kids never see them.';
+
+  @override
+  String get tourFamilyRankingTitle => 'Weekly ranking';
+
+  @override
+  String get tourFamilyRankingBody =>
+      'Every week, whoever earns the most XP completing tasks takes the crown. Healthy family competition.';
+
+  @override
+  String get tourFamilyRewardsTitle => 'The rewards store';
+
+  @override
+  String get tourFamilyRewardsBody =>
+      'Create rewards (an outing, screen time, their favorite dessert) and the kids redeem them with the coins they earn.';
+
+  @override
+  String get tourFamilyFinaleBody =>
+      'Go organize the troop. The FAQ adapts to your role if you need help.';
+
+  @override
   String get familyRewardsCoinsLabel => 'coins';
 
   @override
@@ -4255,12 +4902,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get weeklyWinnerSubtitle =>
-      'This is how the weekly duel ended between you.';
+  String get weeklyWinnerSubtitle => 'This is how the week closed between you.';
 
   @override
   String get weeklyWinnerCardSubtitle =>
-      'Finished ahead in XP and took the weekly close.';
+      'A strong close: more consistency, more points, and more rhythm.';
 
   @override
   String get weeklyWinnerCoinsReward => '+20 coins';
@@ -4293,9 +4939,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weeklyWinnerContinue => 'Continue';
-
-  @override
-  String get weeklyWinnerTestButton => 'Generate weekly winner';
 
   @override
   String get loveNoteDialogTitle => 'New love note';
@@ -5405,6 +6048,53 @@ class AppLocalizationsEn extends AppLocalizations {
       'You designed your shared goals list.';
 
   @override
+  String get achievementsSoloMilestonesSection => 'Your milestones';
+
+  @override
+  String get achievementsSoloFirstStepTitle => 'First step';
+
+  @override
+  String get achievementsSoloFirstStepDesc =>
+      'You completed your first task in your space.';
+
+  @override
+  String get achievementsSoloRoutineTitle => 'Routine in motion';
+
+  @override
+  String get achievementsSoloRoutineDesc => 'You completed 50 personal tasks.';
+
+  @override
+  String get achievementsSoloHomeClearTitle => 'Clearer home';
+
+  @override
+  String get achievementsSoloHomeClearDesc =>
+      'You reached 5000 XP while building your rhythm.';
+
+  @override
+  String get achievementsSoloNextSection => 'Next milestones';
+
+  @override
+  String get achievementsSoloWeekTitle => 'Active week';
+
+  @override
+  String get achievementsSoloWeekDesc =>
+      'You sustained several actions in your home.';
+
+  @override
+  String get achievementsSoloRhythmTitle => 'Own rhythm';
+
+  @override
+  String get achievementsSoloRhythmDesc =>
+      'Your routine is starting to have continuity.';
+
+  @override
+  String get achievementsSoloOwnSpaceTitle => 'Own space';
+
+  @override
+  String get achievementsSoloOwnSpaceDesc =>
+      'Your personal progress already has identity.';
+
+  @override
   String get scheduleTitle => 'Schedule task';
 
   @override
@@ -5600,10 +6290,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get avatarPickerCustomName => 'Custom';
 
   @override
+  String get avatarPickerDeleteCustom => 'Delete custom avatar';
+
+  @override
+  String get avatarPickerDeleteCustomTitle => 'Delete avatar?';
+
+  @override
+  String get avatarPickerDeleteCustomBody =>
+      'This custom avatar will be deleted. If you\'re using it, we\'ll switch you back to the basic avatar.';
+
+  @override
+  String get avatarPickerCustomDeleted => 'Custom avatar deleted';
+
+  @override
+  String avatarPickerCustomDeleteError(String error) {
+    return 'Could not delete avatar: $error';
+  }
+
+  @override
   String get avatarPickerCreateCustom => 'Create custom avatar (1 per month)';
 
   @override
   String get avatarPickerUnlockCustom => 'Unlock custom avatar';
+
+  @override
+  String get avatarPickerAiCardTitle => 'Your AI avatar';
+
+  @override
+  String get avatarPickerAiCardBody =>
+      'Turn a photo into an illustrated HomeSync-style avatar. You get 1 creation per month.';
+
+  @override
+  String get avatarPickerAiCreateButton => 'Create my avatar';
+
+  @override
+  String avatarPickerAiUsedThisMonth(String date) {
+    return 'You already created this month\'s avatar. You can create a new one on $date.';
+  }
 
   @override
   String get avatarPickerGooglePhotoTitle => 'Google photo';

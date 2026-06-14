@@ -85,6 +85,7 @@ final List<_FaqCategory> _faqCategories = [
         question: (t) => t.faqInviteMembers,
         answer: (t, mode, role) => t.faqInviteMembersAnswer(mode),
         modes: _sharedModes,
+        roles: {_FaqRole.parent, _FaqRole.adult},
       ),
       _FaqEntry(
         icon: Icons.family_restroom_rounded,
@@ -97,6 +98,7 @@ final List<_FaqCategory> _faqCategories = [
         question: (t) => t.faqWhoSeesWhat,
         answer: (t, mode, role) => t.faqWhoSeesWhatAnswer,
         modes: {HouseholdType.family},
+        roles: {_FaqRole.parent, _FaqRole.teen},
       ),
     ],
   ),

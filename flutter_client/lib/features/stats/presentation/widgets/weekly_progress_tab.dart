@@ -26,7 +26,6 @@ class WeeklyProgressTab extends ConsumerWidget {
   final int totalXp;
   final int totalCoins;
   final bool showHeader;
-  final VoidCallback? onGenerateWeeklyWinner;
   final Future<void> Function() onRefresh;
 
   const WeeklyProgressTab({
@@ -39,7 +38,6 @@ class WeeklyProgressTab extends ConsumerWidget {
     required this.totalXp,
     required this.totalCoins,
     this.showHeader = true,
-    this.onGenerateWeeklyWinner,
     required this.onRefresh,
   });
 
@@ -165,13 +163,6 @@ class WeeklyProgressTab extends ConsumerWidget {
           ],
           if (weeklyRanking.isNotEmpty) ...[
             AIFaceoffWidget(weeklyRanking: weeklyRanking),
-            if (onGenerateWeeklyWinner != null) ...[
-              const SizedBox(height: AppSpacing.md),
-              _WeeklyWinnerTestButton(onTap: onGenerateWeeklyWinner!),
-            ],
-            const SizedBox(height: AppSpacing.xl),
-          ] else if (onGenerateWeeklyWinner != null) ...[
-            _WeeklyWinnerTestButton(onTap: onGenerateWeeklyWinner!),
             const SizedBox(height: AppSpacing.xl),
           ],
           SectionLabel(label: t.statsHouseholdSummary, icon: '•'),
@@ -465,65 +456,6 @@ class _SummaryMetric extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _WeeklyWinnerTestButton extends StatelessWidget {
-  const _WeeklyWinnerTestButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadii.lg),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            color: Color.alphaBlend(
-              AppColors.accentGold.withValues(alpha: 0.07),
-              theme.surface,
-            ),
-            borderRadius: BorderRadius.circular(AppRadii.lg),
-            border: Border.all(
-              color: AppColors.accentGold.withValues(alpha: 0.22),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.emoji_events_rounded,
-                color: AppColors.accentGold,
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  t.weeklyWinnerTestButton,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

@@ -103,10 +103,9 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       final stillUnseen =
           !(ref.read(sharedPreferencesProvider).getBool(tourFlagKey) ?? false);
       if (!stillUnseen) return;
-      final tasks = ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
-      ref.read(coupleHomeTourControllerProvider.notifier).start(
-            hasTasks: (tasks?.isNotEmpty ?? false),
-          );
+      ref
+          .read(coupleHomeTourControllerProvider.notifier)
+          .start(buildHomeTourContext(ref));
     });
   }
 

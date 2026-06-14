@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/utils/app_scroll_physics.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/stats/presentation/widgets/widgets.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -88,6 +90,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final statsAsync = ref.watch(statsControllerProvider);
+    final isSolo =
+        ref.watch(householdCapabilitiesProvider).type == HouseholdType.solo;
 
     ref.listen(userProfileProvider, (previous, next) {
       if (next.hasValue && previous?.value != next.value) {
@@ -148,6 +152,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                 AchievementsTab(
                   memberStats: stats.memberActivity,
                   taskStats: stats.taskStats,
+                  isSolo: isSolo,
                   onRefresh: ref.read(statsControllerProvider.notifier).refresh,
                 ),
               ],

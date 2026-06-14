@@ -178,7 +178,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     };
   }
 
-  Widget _buildFAB(
+  Widget? _buildFAB(
     String householdId,
     HouseholdCapabilities caps,
   ) {
@@ -189,6 +189,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final canCreateExpense = caps.type == HouseholdType.family
         ? currentMember?.canSeeFinanceTab == true
         : true;
+    if (caps.type == HouseholdType.family && currentMember?.isChild == true) {
+      return null;
+    }
     final canCompleteTask = caps.showTasks;
     final hasMultipleActions = canCreateExpense && canCompleteTask;
     final fabLabel = hasMultipleActions

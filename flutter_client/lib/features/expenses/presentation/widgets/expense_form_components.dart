@@ -322,8 +322,15 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
     super.didUpdateWidget(oldWidget);
     if (widget.ocrRevealTrigger != oldWidget.ocrRevealTrigger &&
         widget.ocrRevealTrigger > 0) {
-      _startOcrAmountCountUp();
-      _revealController.forward(from: 0);
+      // didUpdateWidget corre DURANTE el build del padre. Mutar el controller
+      // acá dispara el listener del Form ancestro → setState() durante build.
+      // Diferimos el arranque del count-up al post-frame, cuando el árbol ya
+      // está montado y mutar el controller es seguro.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _startOcrAmountCountUp();
+        _revealController.forward(from: 0);
+      });
     }
   }
 

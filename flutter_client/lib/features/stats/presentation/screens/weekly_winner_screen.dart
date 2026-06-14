@@ -24,7 +24,6 @@ class WeeklyWinnerScreen extends ConsumerStatefulWidget {
   final VoidCallback onClose;
   final DateTime? weekStartDate;
   final bool refreshBalanceOnAward;
-  final bool useDebugAward;
   final ValueChanged<Map<String, dynamic>>? onAwarded;
 
   const WeeklyWinnerScreen({
@@ -32,7 +31,6 @@ class WeeklyWinnerScreen extends ConsumerStatefulWidget {
     required this.onClose,
     this.weekStartDate,
     this.refreshBalanceOnAward = true,
-    this.useDebugAward = false,
     this.onAwarded,
   });
 
@@ -56,7 +54,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
     super.initState();
     _weekStartDate = widget.weekStartDate ?? weeklyDuelTargetWeekStart();
     _confettiController = ConfettiController(
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 1300),
     );
     _loadData();
   }
@@ -80,9 +78,8 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
 
       if (ranking.isNotEmpty) {
         _winner = ranking.first;
-        final awardResult = widget.useDebugAward
-            ? await statsRpc.debugAwardWeeklyWinnerBonus(_weekStartDate)
-            : await statsRpc.awardWeeklyWinnerForWeek(_weekStartDate);
+        final awardResult =
+            await statsRpc.awardWeeklyWinnerForWeek(_weekStartDate);
         _coinsAwarded =
             (awardResult['coins_awarded'] as num?)?.toInt() ?? _coinsAwarded;
         if (awardResult['success'] == true) {
@@ -162,23 +159,33 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
                   : _winner == null
                       ? _buildEmptyState(theme, t)
                       : _buildContent(theme, t),
-              Align(
-                alignment: Alignment.topCenter,
-                child: ConfettiWidget(
-                  confettiController: _confettiController,
-                  blastDirection: pi / 2,
-                  maxBlastForce: 7,
-                  minBlastForce: 2,
-                  emissionFrequency: 0.05,
-                  numberOfParticles: 32,
-                  gravity: 0.12,
-                  shouldLoop: false,
-                  colors: const [
-                    AppColors.accentGold,
-                    AppColors.sage,
-                    AppColors.primary,
-                    AppColors.accentOrange,
-                  ],
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: MediaQuery.sizeOf(context).height * 0.66,
+                child: IgnorePointer(
+                  child: ClipRect(
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: ConfettiWidget(
+                        confettiController: _confettiController,
+                        blastDirection: pi / 2,
+                        maxBlastForce: 5.2,
+                        minBlastForce: 1.6,
+                        emissionFrequency: 0.035,
+                        numberOfParticles: 18,
+                        gravity: 0.09,
+                        shouldLoop: false,
+                        colors: const [
+                          AppColors.accentGold,
+                          AppColors.sage,
+                          AppColors.primary,
+                          AppColors.accentOrange,
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -279,7 +286,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
             colors: [
               theme.surface,
               AppColors.accentGold
-                  .withValues(alpha: theme.isDarkMode ? 0.10 : 0.055),
+                  .withValues(alpha: theme.isDarkMode ? 0.07 : 0.035),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -318,10 +325,10 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
                   width: 112,
                   height: 112,
                   decoration: BoxDecoration(
-                    color: AppColors.accentGold.withValues(alpha: 0.10),
+                    color: AppColors.accentGold.withValues(alpha: 0.075),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.accentGold.withValues(alpha: 0.22),
+                      color: AppColors.accentGold.withValues(alpha: 0.16),
                       width: 2,
                     ),
                   ),
@@ -334,8 +341,8 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.accentGold.withValues(alpha: 0.18),
-                        blurRadius: 26,
+                        color: AppColors.accentGold.withValues(alpha: 0.12),
+                        blurRadius: 22,
                         offset: const Offset(0, 10),
                       ),
                     ],
@@ -374,7 +381,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
               t.weeklyWinnerHeadline(winnerName),
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 29,
+                fontSize: 27,
                 fontWeight: FontWeight.w900,
                 color: theme.textPrimary,
                 letterSpacing: -0.8,
@@ -418,7 +425,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
                 t.weeklyWinnerCardSubtitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                   color: theme.textMuted,
                   height: 1.25,
@@ -426,7 +433,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
               ),
             ],
             if (_ranking.length > 1) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               _buildRunnerUpStrip(theme, t).animateEntrance(delay: 500),
             ],
           ],
@@ -440,17 +447,17 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
     final runnerXp = (runnerUp['xp_earned'] as num?)?.toInt() ?? 0;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      padding: const EdgeInsets.fromLTRB(11, 9, 11, 9),
       decoration: BoxDecoration(
-        color: theme.surface.withValues(alpha: 0.66),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: theme.border.withValues(alpha: 0.55)),
+        color: theme.surface.withValues(alpha: 0.54),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(color: theme.border.withValues(alpha: 0.42)),
       ),
       child: Row(
         children: [
           Container(
-            width: 30,
-            height: 30,
+            width: 28,
+            height: 28,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: theme.background.withValues(alpha: 0.74),
@@ -460,19 +467,19 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
               '2',
               style: TextStyle(
                 color: theme.textSecondary,
-                fontSize: 13,
+                fontSize: 12.5,
                 fontWeight: FontWeight.w900,
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           CustomUserAvatar(
             name: runnerUp['user_name'] ?? t.weeklyWinnerFallbackParticipant,
             avatarUrl: runnerUp['avatar_url'],
-            radius: 21,
+            radius: 18,
             forceCircular: true,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -481,16 +488,16 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
                   t.weeklyWinnerSecondPlace,
                   style: TextStyle(
                     color: theme.textMuted,
-                    fontSize: 10.5,
+                    fontSize: 10,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   runnerUp['user_name'] ?? t.weeklyWinnerFallbackParticipant,
                   style: TextStyle(
                     color: theme.textPrimary,
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -501,7 +508,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
             '$runnerXp XP',
             style: TextStyle(
               color: theme.textSecondary,
-              fontSize: 13,
+              fontSize: 12.5,
               fontWeight: FontWeight.w800,
             ),
           ),

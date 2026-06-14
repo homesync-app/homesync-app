@@ -121,6 +121,51 @@ class CustomAvatarGenerationService {
     return avatarUrl;
   }
 
+  Future<void> deleteAvatar({required String avatarId}) async {
+    final accessToken =
+        await fa.FirebaseAuth.instance.currentUser?.getIdToken(true);
+    if (accessToken == null) {
+      throw const CustomAvatarGenerationException(
+        'Sesión expirada. Iniciá sesión nuevamente.',
+      );
+    }
+
+    try {
+      final response = await _supabase.functions.invoke(
+        'delete-custom-avatar',
+        body: {'avatarId': avatarId},
+        headers: {'Authorization': 'Bearer $accessToken'},
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw const CustomAvatarGenerationException(
+            'No se pudo eliminar el avatar. Probá de nuevo en un momento.',
+          );
+        },
+      );
+
+      if (response.status != 200) {
+        throw CustomAvatarGenerationException(
+          'No se pudo eliminar el avatar (status ${response.status}).',
+        );
+      }
+    } on FunctionException catch (e) {
+      debugPrint(
+        '[CustomAvatar] Delete FunctionException status=${e.status} '
+        'details=${e.details} error=$e',
+      );
+      throw const CustomAvatarGenerationException(
+        'No se pudo eliminar el avatar. Probá de nuevo.',
+      );
+    } catch (e) {
+      debugPrint('[CustomAvatar] Error eliminando avatar: $e');
+      if (e is CustomAvatarGenerationException) rethrow;
+      throw const CustomAvatarGenerationException(
+        'No se pudo eliminar el avatar. Probá de nuevo.',
+      );
+    }
+  }
+
   static String? _messageFromFunctionDetails(Object? details) {
     if (details is Map) {
       final error = details['error']?.toString();

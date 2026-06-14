@@ -10,12 +10,14 @@ import 'stats_shared_widgets.dart';
 class AchievementsTab extends StatelessWidget {
   final List<Map<String, dynamic>> memberStats;
   final List<Map<String, dynamic>> taskStats;
+  final bool isSolo;
   final Future<void> Function() onRefresh;
 
   const AchievementsTab({
     super.key,
     required this.memberStats,
     required this.taskStats,
+    this.isSolo = false,
     required this.onRefresh,
   });
 
@@ -43,6 +45,15 @@ class AchievementsTab extends StatelessWidget {
       (e) => e['category'] == 'Conexión',
       orElse: () => {'completed_count': 0},
     )['completed_count'] as int;
+
+    if (isSolo) {
+      return _buildSoloAchievements(
+        context,
+        totalTasks: totalTasks,
+        totalXp: totalXp,
+        onRefresh: onRefresh,
+      );
+    }
 
     return RefreshIndicator(
       onRefresh: onRefresh,
@@ -144,6 +155,84 @@ class AchievementsTab extends StatelessWidget {
             description: t.achievementsDreamArchitectsDesc,
             icon: '✨',
             isUnlocked: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSoloAchievements(
+    BuildContext context, {
+    required int totalTasks,
+    required int totalXp,
+    required Future<void> Function() onRefresh,
+  }) {
+    final t = AppLocalizations.of(context);
+
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      color: AppColors.primary,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+        children: [
+          SectionLabel(
+            label: t.achievementsSoloMilestonesSection,
+            icon: '\u{1F331}',
+          ),
+          const SizedBox(height: 20),
+          _buildAchievementCard(
+            context,
+            title: t.achievementsSoloFirstStepTitle,
+            description: t.achievementsSoloFirstStepDesc,
+            icon: '\u{1F331}',
+            isUnlocked: totalTasks >= 1,
+            progress: totalTasks >= 1 ? 1.0 : 0.0,
+            progressText: totalTasks >= 1 ? '1/1' : '0/1',
+          ),
+          _buildAchievementCard(
+            context,
+            title: t.achievementsSoloRoutineTitle,
+            description: t.achievementsSoloRoutineDesc,
+            icon: '\u{1F9F9}',
+            isUnlocked: totalTasks >= 50,
+            progress: (totalTasks / 50).clamp(0.0, 1.0),
+            progressText: '$totalTasks/50',
+          ),
+          _buildAchievementCard(
+            context,
+            title: t.achievementsSoloHomeClearTitle,
+            description: t.achievementsSoloHomeClearDesc,
+            icon: '\u{2728}',
+            isUnlocked: totalXp >= 5000,
+            progress: (totalXp / 5000).clamp(0.0, 1.0),
+            progressText: '$totalXp/5000',
+          ),
+          const SizedBox(height: 32),
+          SectionLabel(
+            label: t.achievementsSoloNextSection,
+            icon: '\u{1F4CD}',
+          ),
+          const SizedBox(height: 16),
+          _buildChallengeAchievement(
+            context,
+            title: t.achievementsSoloWeekTitle,
+            description: t.achievementsSoloWeekDesc,
+            icon: '\u{1F4C6}',
+            isUnlocked: totalTasks >= 7,
+          ),
+          _buildChallengeAchievement(
+            context,
+            title: t.achievementsSoloRhythmTitle,
+            description: t.achievementsSoloRhythmDesc,
+            icon: '\u{1F501}',
+            isUnlocked: totalTasks >= 20,
+          ),
+          _buildChallengeAchievement(
+            context,
+            title: t.achievementsSoloOwnSpaceTitle,
+            description: t.achievementsSoloOwnSpaceDesc,
+            icon: '\u{1F3E0}',
+            isUnlocked: totalXp >= 3000,
           ),
         ],
       ),

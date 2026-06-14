@@ -752,154 +752,184 @@ Future<String?> showSettingsRenameProfileDialog(
 class SettingsPremiumCard extends StatelessWidget {
   final bool isPremium;
   final VoidCallback onTapPlans;
-  final List<String> premiumFeatures;
+  final VoidCallback? onFeedbackTap;
 
   const SettingsPremiumCard({
     super.key,
     required this.isPremium,
     required this.onTapPlans,
-    required this.premiumFeatures,
+    this.onFeedbackTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
-    final gradientColors = theme.isDarkMode
-        ? [
-            const Color(0xFF2A211B),
-            const Color(0xFF211C19),
-          ]
-        : isPremium
-            ? [
-                const Color(0xFFFFF3C4),
-                const Color(0xFFFFFBEB),
-              ]
-            : [
-                const Color(0xFFFFF7DF),
-                const Color(0xFFFFFEF8),
-              ];
-    final premiumTextColor =
-        theme.isDarkMode ? theme.textPrimary : const Color(0xFF92400E);
-    final premiumMutedColor = theme.isDarkMode
-        ? theme.textSecondary
-        : const Color(0xFFB45309).withValues(alpha: 0.8);
     final goldAccent =
         theme.isDarkMode ? AppColors.accentGold : const Color(0xFFD97706);
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: onTapPlans,
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        child: Ink(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: gradientColors,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(AppRadii.xl),
-            border: Border.all(
-              color: AppColors.accentGold.withValues(
-                alpha: theme.isDarkMode ? 0.34 : (isPremium ? 0.55 : 0.42),
-              ),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: theme.isDarkMode
-                    ? Colors.black.withValues(alpha: 0.24)
-                    : (isPremium
-                            ? const Color(0xFFF59E0B)
-                            : const Color(0xFFD8A539))
-                        .withValues(alpha: 0.05),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
+      borderRadius: BorderRadius.circular(AppRadii.xl),
+      child: Ink(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+        decoration: BoxDecoration(
+          color: theme.surface.withValues(alpha: theme.isDarkMode ? 1 : 0.88),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+          border: Border.all(
+            color: theme.border.withValues(alpha: theme.isDarkMode ? 0.42 : 1),
+            width: 1,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(9),
-                    decoration: BoxDecoration(
-                      color: isPremium
-                          ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
-                          : AppColors.accentGold.withValues(
-                              alpha: theme.isDarkMode ? 0.16 : 0.16,
+          boxShadow: [
+            BoxShadow(
+              color: theme.isDarkMode
+                  ? Colors.black.withValues(alpha: 0.24)
+                  : AppColors.sage.withValues(alpha: 0.035),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: onTapPlans,
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 1),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: isPremium
+                            ? AppColors.sage.withValues(alpha: 0.10)
+                            : AppColors.accentGold.withValues(alpha: 0.11),
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
+                      ),
+                      child: Icon(
+                        isPremium
+                            ? Icons.auto_awesome_rounded
+                            : Icons.star_outline_rounded,
+                        color: goldAccent,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.settingsPremiumTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: theme.textPrimary,
                             ),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      isPremium
-                          ? Icons.auto_awesome_rounded
-                          : Icons.star_outline_rounded,
-                      color: isPremium ? goldAccent : goldAccent,
-                      size: 19,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.settingsPremiumTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                            color: isPremium
-                                ? premiumTextColor
-                                : theme.textPrimary,
                           ),
-                        ),
-                        Text(
-                          isPremium
-                              ? t.settingsPremiumActiveSubtitle
-                              : t.settingsPremiumInactiveSubtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isPremium
-                                ? premiumMutedColor
-                                : theme.textSecondary,
-                            fontWeight: FontWeight.w600,
+                          const SizedBox(height: 2),
+                          Text(
+                            isPremium
+                                ? t.settingsPremiumActiveSubtitle
+                                : t.settingsPremiumInactiveSubtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: theme.textSecondary,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: goldAccent,
-                    size: 24,
-                  ),
-                ],
-              ),
-              if (isPremium) ...[
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: premiumFeatures
-                      .take(2)
-                      .map(
-                        (feature) => SettingsPremiumFeatureChip(text: feature),
-                      )
-                      .toList(),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: isPremium ? theme.textMuted : goldAccent,
+                      size: 24,
+                    ),
+                  ],
                 ),
-              ],
+              ),
+            ),
+            if (!isPremium) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(58, 12, 2, 10),
+                child: Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: theme.border.withValues(alpha: 0.72),
+                ),
+              ),
+              _SettingsPremiumFeedbackStrip(onTap: onFeedbackTap),
             ],
-          ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsPremiumFeedbackStrip extends StatelessWidget {
+  final VoidCallback? onTap;
+
+  const _SettingsPremiumFeedbackStrip({this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadii.sm),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(2, 1, 0, 2),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
+              ),
+              child: Icon(
+                Icons.bug_report_outlined,
+                color: theme.isDarkMode
+                    ? AppColors.accentGold.withValues(alpha: 0.82)
+                    : AppColors.primary.withValues(alpha: 0.72),
+                size: 15,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                t.settingsPremiumFeedbackRewardNote,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: theme.textSecondary,
+                  fontSize: 11.8,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.arrow_forward_rounded,
+              color: theme.isDarkMode
+                  ? theme.textMuted
+                  : const Color(0xFFB45309).withValues(alpha: 0.68),
+              size: 16,
+            ),
+          ],
         ),
       ),
     );

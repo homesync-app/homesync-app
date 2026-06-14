@@ -9,10 +9,14 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
 import 'package:homesync_client/features/onboarding/presentation/widgets/spotlight_painter.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 /// Padding around the target rect when carving the spotlight hole.
 const _kSpotlightPadding = 12.0;
@@ -67,9 +71,10 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
     final tourState = ref.watch(coupleHomeTourControllerProvider);
     if (!tourState.isActive) return const SizedBox.shrink();
 
+    final t = AppLocalizations.of(context);
     final steps = ref
         .read(coupleHomeTourControllerProvider.notifier)
-        .stepsFor(hasTasks: tourState.hasTasks);
+        .stepsFor(t, tourState.context);
 
     if (tourState.currentStep >= steps.length) {
       return const SizedBox.shrink();
@@ -202,6 +207,24 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
     );
   }
 
+  /// Despacha el CTA primario según la acción del paso. [createTask] abre el
+  /// flujo real de creación y, al cerrarse el sheet, la guía avanza sola —
+  /// la tarea recién creada queda visible detrás del siguiente paso.
+  Future<void> _handlePrimary(CoachmarkStep step) async {
+    final t = AppLocalizations.of(context);
+    final controller = ref.read(coupleHomeTourControllerProvider.notifier);
+    switch (step.primaryAction) {
+      case CoachmarkAction.next:
+        controller.next(t);
+      case CoachmarkAction.createTask:
+        AppHaptics.tap();
+        final members = ref.read(householdMembersProvider).value ?? const [];
+        await AddTaskOptionsSheet.show(context, members);
+        if (!mounted) return;
+        controller.next(AppLocalizations.of(context));
+    }
+  }
+
   List<Widget> _buildStepContent(
     BuildContext context,
     CoachmarkStep step,
@@ -209,6 +232,10 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
     int totalSteps,
     int currentStep,
   ) {
+    void onSecondary() => ref
+        .read(coupleHomeTourControllerProvider.notifier)
+        .next(AppLocalizations.of(context));
+
     switch (step.kind) {
       case CoachmarkStepKind.welcomeModal:
       case CoachmarkStepKind.infoModal:
@@ -218,8 +245,7 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
             child: _ModalCard(
               key: ValueKey('modal_$currentStep'),
               step: step,
-              onPrimary: () =>
-                  ref.read(coupleHomeTourControllerProvider.notifier).next(),
+              onPrimary: () => _handlePrimary(step),
               isFinale: step.kind == CoachmarkStepKind.finale,
               isWelcome: step.kind == CoachmarkStepKind.welcomeModal,
             ),
@@ -231,8 +257,8 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
             key: ValueKey('tooltip_$currentStep'),
             step: step,
             targetRect: targetRect,
-            onPrimary: () =>
-                ref.read(coupleHomeTourControllerProvider.notifier).next(),
+            onPrimary: () => _handlePrimary(step),
+            onSecondary: step.secondaryCta != null ? onSecondary : null,
           ),
         ];
     }
@@ -554,12 +580,14 @@ class _SpotlightTooltip extends StatelessWidget {
   final CoachmarkStep step;
   final Rect? targetRect;
   final VoidCallback onPrimary;
+  final VoidCallback? onSecondary;
 
   const _SpotlightTooltip({
     super.key,
     required this.step,
     required this.targetRect,
     required this.onPrimary,
+    this.onSecondary,
   });
 
   @override
@@ -572,7 +600,11 @@ class _SpotlightTooltip extends StatelessWidget {
     final rect = targetRect;
     final placement = step.placement;
 
-    final tooltip = _TooltipCard(step: step, onPrimary: onPrimary);
+    final tooltip = _TooltipCard(
+      step: step,
+      onPrimary: onPrimary,
+      onSecondary: onSecondary,
+    );
 
     // When target is missing, just center the tooltip.
     if (rect == null) {
@@ -618,7 +650,12 @@ class _SpotlightTooltip extends StatelessWidget {
 class _TooltipCard extends StatelessWidget {
   final CoachmarkStep step;
   final VoidCallback onPrimary;
-  const _TooltipCard({required this.step, required this.onPrimary});
+  final VoidCallback? onSecondary;
+  const _TooltipCard({
+    required this.step,
+    required this.onPrimary,
+    this.onSecondary,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -687,13 +724,35 @@ class _TooltipCard extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 18),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: _PrimaryCta(
-                    label: step.primaryCta,
-                    onTap: onPrimary,
-                    compact: true,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (onSecondary != null && step.secondaryCta != null) ...[
+                      TextButton(
+                        onPressed: onSecondary,
+                        style: TextButton.styleFrom(
+                          foregroundColor: theme.textMuted,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                        ),
+                        child: Text(
+                          step.secondaryCta!,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    _PrimaryCta(
+                      label: step.primaryCta,
+                      onTap: onPrimary,
+                      compact: true,
+                    ),
+                  ],
                 ),
               ],
             ),

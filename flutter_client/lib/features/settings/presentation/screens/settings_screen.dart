@@ -115,37 +115,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Premium: superficie de conversión, anclada arriba.
-                          if (isMinor)
-                            SettingsMinorPremiumCard(isChild: isChild)
-                          else
-                            _buildPremiumCard(),
-                          const SizedBox(height: AppSpacing.lg),
-
                           // Perfil: card "hero" con avatar y nombre.
                           _anchorLabel(t.settingsSectionProfileTitle),
                           _buildProfileCard(),
                           const SizedBox(height: AppSpacing.lg),
 
+                          if (!isMinor) ...[
+                            _buildPremiumCard(),
+                            const SizedBox(height: AppSpacing.lg),
+                          ],
+
                           // Hogar: fila que abre su propia pantalla de detalle
                           // (miembros, roles, modo de tareas, invitación).
-                          SettingsNavGroup(
-                            children: [
-                              SettingsNavRow(
-                                icon: Icons.home_rounded,
-                                iconColor: AppColors.primary,
-                                title: t.settingsSectionHouseholdTitle,
-                                subtitle: t.settingsSectionHouseholdSubtitle,
-                                onTap: () => Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) =>
-                                        const HouseholdSettingsScreen(),
+                          if (!isMinor) ...[
+                            SettingsNavGroup(
+                              children: [
+                                SettingsNavRow(
+                                  icon: Icons.home_rounded,
+                                  iconColor: AppColors.primary,
+                                  title: t.settingsSectionHouseholdTitle,
+                                  subtitle: t.settingsSectionHouseholdSubtitle,
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          const HouseholdSettingsScreen(),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SettingsNavGap(),
+                              ],
+                            ),
+                            const SettingsNavGap(),
+                          ],
 
                           // Preferencias: filas compactas que abren un sheet.
                           SettingsNavGroup(
@@ -477,8 +477,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await controller.reset();
     ref.invalidate(coupleHomeTourSeenProvider);
     if (!mounted) return;
-    final tasks = ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
-    controller.start(hasTasks: tasks?.isNotEmpty ?? false);
+    controller.start(buildHomeTourContext(ref));
     Navigator.of(context).pop();
   }
 
@@ -537,8 +536,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildPremiumCard() {
     final isPremium = ref.watch(premiumProvider).value ?? false;
-    final t = AppLocalizations.of(context);
-    final theme = context.theme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -551,77 +548,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
             );
           },
-          premiumFeatures: [
-            t.settingsPremiumFeatureShoppingFinanceSync,
-            t.settingsPremiumFeatureRecurringPayments,
-            t.premiumBenefitAdvancedStats,
-            t.premiumBenefitFullCustomization,
-          ],
-        ),
-        const SizedBox(height: 10),
-        InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () {
-            AppHaptics.tap();
-            FeedbackSheet.show(
-              context,
-              type: FeedbackType.bug,
-              screen: 'settings',
-            );
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: theme.isDarkMode
-                  ? const Color(0xFF241E1B)
-                  : AppColors.primaryLight.withValues(alpha: 0.72),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: theme.isDarkMode
-                    ? AppColors.primary.withValues(alpha: 0.34)
-                    : AppColors.primary.withValues(alpha: 0.16),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: theme.isDarkMode
-                        ? AppColors.primary.withValues(alpha: 0.16)
-                        : Colors.white.withValues(alpha: 0.74),
-                    borderRadius: BorderRadius.circular(AppRadii.sm),
-                  ),
-                  child: const Icon(
-                    Icons.bug_report_outlined,
-                    color: AppColors.primary,
-                    size: 19,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    t.settingsPremiumFeedbackRewardNote,
-                    style: TextStyle(
-                      color: theme.isDarkMode
-                          ? theme.textPrimary.withValues(alpha: 0.82)
-                          : theme.textSecondary,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      height: 1.25,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Icon(
-                  Icons.arrow_forward_rounded,
-                  color: AppColors.primary,
-                  size: 18,
-                ),
-              ],
-            ),
-          ),
+          onFeedbackTap: isPremium
+              ? null
+              : () {
+                  AppHaptics.tap();
+                  FeedbackSheet.show(
+                    context,
+                    type: FeedbackType.bug,
+                    screen: 'settings',
+                  );
+                },
         ),
       ],
     );

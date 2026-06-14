@@ -183,7 +183,7 @@
   "@settingsPremiumTitle": {
     "description": "Brand name — keep as 'HomeSync Premium' in all locales."
   },
-  "settingsPremiumActiveSubtitle": "Premium activo",
+  "settingsPremiumActiveSubtitle": "Gestionar plan",
   "@settingsPremiumActiveSubtitle": {
     "description": "Card subtitle when the user already has premium."
   },
@@ -386,7 +386,7 @@
   "@homeWelcomeFeminine": {
     "description": "Welcome greeting on the dashboard header, feminine form. Spanish-only distinction; English collapses to 'Welcome'."
   },
-  "homeViewWeekButton": "Ver Semana",
+  "homeViewWeekButton": "Ver semana",
   "@homeViewWeekButton": {
     "description": "Small button next to the day-tasks list that takes the user to the full weekly view."
   },
@@ -460,6 +460,283 @@
     "description": "CTA in the solo dashboard empty task state. Opens the tasks tab so the user can create or manage tasks."
   },
   "homeSoloActivityTitle": "Tu actividad",
+  "homeGreetingMorning": "Buenos días,",
+  "@homeGreetingMorning": {
+    "description": "Time-of-day greeting on the editorial home header, shared by solo and family-adult modes (05:00–12:59). Ends with a comma; the user's first name renders below as the hero line."
+  },
+  "homeGreetingAfternoon": "Buenas tardes,",
+  "@homeGreetingAfternoon": {
+    "description": "Time-of-day greeting on the editorial home header (13:00–19:59)."
+  },
+  "homeGreetingEvening": "Buenas noches,",
+  "@homeGreetingEvening": {
+    "description": "Time-of-day greeting on the editorial home header (20:00–04:59)."
+  },
+  "homeSoloSpentEmpty": "Sin gastos aún ✨",
+  "@homeSoloSpentEmpty": {
+    "description": "Shown in place of the monthly-spend amount on the solo bento tile when the month's spend is exactly zero (a giant $0 reads like broken data)."
+  },
+  "homeSoloSpentDailyAvg": "{month} · {amount}/día",
+  "@homeSoloSpentDailyAvg": {
+    "description": "Footer of the solo spending tile once there is spending: current month plus the running daily average (already currency-formatted).",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "soloSpaceEyebrow": "Mi espacio",
+  "@soloSpaceEyebrow": {
+    "description": "Small eyebrow above the solo personal-space progress stage."
+  },
+  "soloSpaceLevel": "Nivel {level}",
+  "@soloSpaceLevel": {
+    "description": "Compact level pill on the solo space hero.",
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceXpToNext": "Te faltan {xp} XP para el próximo nivel.",
+  "@soloSpaceXpToNext": {
+    "description": "Progress helper text below the solo space level bar.",
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceStageRecentMove": "Mudanza reciente",
+  "soloSpaceStageRecentMoveSubtitle": "Tu espacio está empezando a tomar forma. Elegí una acción simple y construí desde ahí.",
+  "soloSpaceStageInMotion": "Hogar en marcha",
+  "soloSpaceStageInMotionSubtitle": "Ya hay movimiento: algunas rutinas, gastos o tareas empiezan a ordenar tus días.",
+  "soloSpaceStageSteadyRoutine": "Rutina estable",
+  "soloSpaceStageSteadyRoutineSubtitle": "Ya tenés una base; ahora se trata de sostenerla sin pensarlo tanto.",
+  "soloSpaceStageOrganizedHome": "Casa organizada",
+  "soloSpaceStageOrganizedHomeSubtitle": "Tus pendientes, gastos y actividad empiezan a leerse como un sistema claro.",
+  "soloSpaceStageOwnRhythm": "Tu espacio, tu ritmo",
+  "soloSpaceStageOwnRhythmSubtitle": "Ya no es solo registrar cosas: estás construyendo una forma propia de vivir tu hogar.",
+  "soloSpaceSignalsTitle": "Señales de la semana",
+  "soloSpaceStreakTitle": "Racha",
+  "soloSpaceStreakMetric": "{days, plural, =0{Sin racha} =1{1 día} other{{days} días}}",
+  "@soloSpaceStreakMetric": {
+    "description": "Solo space streak metric.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceActiveDays14": "{days, plural, =0{Sin días activos recientes} =1{1 día activo en 14 días} other{{days} días activos en 14 días}}",
+  "@soloSpaceActiveDays14": {
+    "description": "Active days in the last 14 days helper for solo progress.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceWeeklyXpTitle": "XP semanal",
+  "soloSpaceWeeklyTasksTitle": "Tareas semanales",
+  "soloSpaceDeltaUp": "+{value} vs semana anterior",
+  "@soloSpaceDeltaUp": {
+    "description": "Positive weekly delta helper for solo progress.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceDeltaDown": "{value} vs semana anterior",
+  "@soloSpaceDeltaDown": {
+    "description": "Negative weekly delta helper for solo progress.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceDeltaSame": "Igual que la semana anterior",
+  "soloSpaceTopTaskCategory": "Tareas: {category}",
+  "@soloSpaceTopTaskCategory": {
+    "description": "Top task category chip in solo progress.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "soloSpaceTopExpenseCategory": "Gastos: {category}",
+  "@soloSpaceTopExpenseCategory": {
+    "description": "Top expense category chip in solo progress.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "soloSpaceSignalsSyncing": "Actualizando señales reales de tu hogar.",
+  "soloSpaceDimensionsTitle": "Cómo viene tu hogar",
+  "soloSpaceOrderTitle": "Orden",
+  "soloSpaceOrderSubtitle": "Tareas, pendientes y cierre del día.",
+  "soloSpaceClarityTitle": "Claridad",
+  "soloSpaceClaritySubtitle": "Gastos registrados y lectura del mes.",
+  "soloSpaceContinuityTitle": "Continuidad",
+  "soloSpaceContinuitySubtitle": "Actividad reciente y constancia real.",
+  "soloSpaceNextTitle": "Próximo gesto",
+  "soloSpaceNextCreateTask": "Creá una tarea base",
+  "soloSpaceNextCreateTaskSubtitle": "Una rutina chica alcanza para empezar a darle forma a tu espacio.",
+  "soloSpaceNextCompleteTask": "Cerrá una tarea de hoy",
+  "soloSpaceNextCompleteTaskSubtitle": "Bajar pendientes es la forma más directa de mejorar tu Orden.",
+  "soloSpaceNextRegisterExpense": "Registrá tu primer gasto del mes",
+  "soloSpaceNextRegisterExpenseSubtitle": "Con un movimiento cargado, tu Claridad empieza a tener contexto.",
+  "soloSpaceNextReviewShopping": "Revisá tu lista de compras",
+  "soloSpaceNextReviewShoppingSubtitle": "Una compra ordenada evita ruido y mantiene el mes más liviano.",
+  "soloSpaceNextKeepGoing": "Sumá una acción simple",
+  "soloSpaceNextKeepGoingSubtitle": "Un gesto chico hoy sostiene la continuidad de tu hogar.",
+  "soloSpaceMilestonesTitle": "Hitos personales",
+  "soloSpaceMilestoneFirstStep": "Primer paso",
+  "soloSpaceMilestoneFirstStepDesc": "Completaste tu primera tarea.",
+  "soloSpaceMilestoneWeekInMotion": "Semana en marcha",
+  "soloSpaceMilestoneWeekInMotionDesc": "Tuviste actividad reciente suficiente para marcar ritmo.",
+  "soloSpaceMilestoneClearerHome": "Casa más clara",
+  "soloSpaceMilestoneClearerHomeDesc": "Tus finanzas ya tienen señales útiles este mes.",
+  "soloSpaceMilestoneSteadyRoutine": "Rutina sostenida",
+  "soloSpaceMilestoneSteadyRoutineDesc": "Orden y continuidad empiezan a trabajar juntos.",
+  "soloSpaceMilestoneOwnRhythm": "Ritmo propio",
+  "soloSpaceMilestoneOwnRhythmDesc": "Tu progreso ya muestra una identidad personal.",
+  "soloSpaceFutureHint": "Tu espacio se ajusta con tus tareas, gastos y ritmo semanal.",
+  "soloSpaceRitualTitle": "Cierre semanal",
+  "soloSpaceRitualProgress": "{done} de {total} gestos",
+  "@soloSpaceRitualProgress": {
+    "description": "Weekly solo ritual completion progress.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceRitualReviewTasks": "Revisar pendientes abiertos",
+  "soloSpaceRitualCheckSpending": "Mirar gastos del mes",
+  "soloSpaceRitualPlanShopping": "Ajustar la lista de compras",
+  "soloSpaceRitualChooseNextRoutine": "Elegir una rutina para sostener",
+  "soloSpaceInsightsTitle": "Lectura de la semana",
+  "soloSpaceInsightNoActivity": "Punto de partida",
+  "soloSpaceInsightNoActivityDesc": "Todavía no hay señales fuertes esta semana. Un gesto simple alcanza para arrancar.",
+  "soloSpaceInsightStreak": "Racha en construcción",
+  "soloSpaceInsightStreakDesc": "{days, plural, =1{Un día activo ya marca continuidad.} other{{days} días activos seguidos empiezan a formar ritmo.}}",
+  "@soloSpaceInsightStreakDesc": {
+    "description": "Insight text for a solo streak.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceInsightWeekImproved": "Semana más fuerte",
+  "soloSpaceInsightWeekImprovedDesc": "+{value} XP contra la semana anterior. Hay más movimiento en tu casa.",
+  "@soloSpaceInsightWeekImprovedDesc": {
+    "description": "Insight text when weekly XP improved.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceInsightWeekSlowed": "Semana más baja",
+  "soloSpaceInsightWeekSlowedDesc": "Bajó el movimiento. Conviene elegir una acción chica y cerrar el día.",
+  "soloSpaceInsightFinanceVisible": "Finanzas con contexto",
+  "soloSpaceInsightFinanceVisibleDesc": "Ya hay movimientos suficientes para leer el mes con más claridad.",
+  "soloSpaceInsightNoFinance": "Falta lectura financiera",
+  "soloSpaceInsightNoFinanceDesc": "Registrar un gasto real activa mejores señales de Claridad.",
+  "soloSpaceInsightTaskCategory": "Patrón de tareas",
+  "soloSpaceInsightTaskCategoryDesc": "{category} aparece como foco fuerte este mes.",
+  "@soloSpaceInsightTaskCategoryDesc": {
+    "description": "Insight text for the top task category.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "soloSpaceInsightExpenseCategory": "Patrón de gastos",
+  "soloSpaceInsightExpenseCategoryDesc": "{category} concentra más movimiento este mes.",
+  "@soloSpaceInsightExpenseCategoryDesc": {
+    "description": "Insight text for the top expense category.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "soloSpaceSuggestionsTitle": "Herramientas sugeridas",
+  "soloSpaceSuggestionRecurringTask": "Convertir algo en rutina",
+  "soloSpaceSuggestionRecurringTaskDesc": "Una tarea recurrente baja fricción y sostiene Orden.",
+  "soloSpaceSuggestionClosePending": "Cerrar lo pendiente",
+  "soloSpaceSuggestionClosePendingDesc": "Resolver una tarea de hoy libera espacio mental.",
+  "soloSpaceSuggestionRegisterExpense": "Cargar un gasto real",
+  "soloSpaceSuggestionRegisterExpenseDesc": "Con un movimiento, la lectura del mes deja de estar vacía.",
+  "soloSpaceSuggestionReviewShopping": "Revisar compras",
+  "soloSpaceSuggestionReviewShoppingDesc": "Una lista clara evita compras repetidas o de último minuto.",
+  "soloSpaceSuggestionProtectStreak": "Proteger la racha",
+  "soloSpaceSuggestionProtectStreakDesc": "Una acción chica hoy mantiene viva la continuidad.",
+  "soloSpaceSuggestionWeeklyReview": "Hacer cierre semanal",
+  "soloSpaceSuggestionWeeklyReviewDesc": "Marcá los gestos del ritual y dejá la semana ordenada.",
+  "soloSpaceUnlocksTitle": "Desbloqueos suaves",
+  "soloSpaceUnlockActive": "Activo",
+  "soloSpaceUnlockNext": "Luego",
+  "soloSpaceUnlockWeeklyReview": "Vista de cierre",
+  "soloSpaceUnlockWeeklyReviewDesc": "Disponible desde el inicio para ordenar la semana sin presión.",
+  "soloSpaceUnlockRecurringTemplates": "Plantillas recurrentes",
+  "soloSpaceUnlockRecurringTemplatesDesc": "Aparecen cuando ya hay base para repetir rutinas.",
+  "soloSpaceUnlockHabitInsights": "Insights de hábitos",
+  "soloSpaceUnlockHabitInsightsDesc": "Se activan con varios días de actividad real.",
+  "soloSpaceUnlockPersonalMedal": "Medalla personal",
+  "soloSpaceUnlockPersonalMedalDesc": "Reconoce una etapa sostenida sin competir con nadie.",
+  "soloSpaceUnlockRhythmRecommendations": "Recomendaciones de ritmo",
+  "soloSpaceUnlockRhythmRecommendationsDesc": "Cruzan claridad financiera con continuidad semanal.",
+  "activityCoinsPlus": "{count, plural, =1{+1 coin} other{+{count} coins}}",
+  "@activityCoinsPlus": {
+    "description": "Coins-earned figure on activity feed entries ('coin' is the app's game-currency name, kept in English in both locales).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "activityCoinsMinus": "{count, plural, =1{-1 coin} other{-{count} coins}}",
+  "@activityCoinsMinus": {
+    "description": "Coins-spent figure on activity feed entries (redeemed rewards).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFamilyApprovalsTileLabel": "Aprobaciones",
+  "@homeFamilyApprovalsTileLabel": {
+    "description": "Tiny uppercase eyebrow on the approvals bento tile of the family-adult dashboard (Parent Mode inbox)."
+  },
+  "homeFamilyApprovalsPendingLabel": "{count, plural, =1{pendiente} other{pendientes}}",
+  "@homeFamilyApprovalsPendingLabel": {
+    "description": "Caption under the pending-approvals count on the family dashboard approvals tile. The number renders separately in the tile chip.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFamilyApprovalsAllClear": "Al día",
+  "@homeFamilyApprovalsAllClear": {
+    "description": "Caption on the family dashboard approvals tile when there is nothing awaiting review."
+  },
   "homeCoupleHeadlineSecondary": "del hogar",
   "@homeCoupleHeadlineSecondary": {
     "description": "Second line of the couple-mode dashboard headline ('Todo lo importante / del hogar')."
@@ -772,9 +1049,13 @@
   "@homeFamilyAdultFallbackName": {
     "description": "Fallback display name on the adult/teen welcome line when the current user's name isn't loaded."
   },
-  "homeFamilyChildHello": "Hola, ",
+  "homeFamilyChildHello": "¡Vamos, ",
   "@homeFamilyChildHello": {
-    "description": "Greeting prefix shown to a child member. Includes trailing comma+space; the child's first name is appended after."
+    "description": "Motivational greeting prefix shown to a child member. Includes trailing comma+space; the child's first name is appended after."
+  },
+  "homeFamilyChildGreetingSuffix": "!",
+  "@homeFamilyChildGreetingSuffix": {
+    "description": "Greeting suffix shown after the child member's name."
   },
   "homeFamilyChildFallbackName": "campeon",
   "@homeFamilyChildFallbackName": {
@@ -1762,6 +2043,23 @@
   "@expensesFormOcrRateLimited": {
     "description": "Snackbar shown when the server throttles receipt scans (anti-abuse). Not a plan limit; OCR is free for everyone."
   },
+  "expensesFormOcrImageTooLarge": "La imagen es demasiado grande ({sizeMb} MB, máx 5 MB). Probá con otra foto o desde la galería.",
+  "@expensesFormOcrImageTooLarge": {
+    "description": "Snackbar shown when the compressed receipt image exceeds the 5 MB scan limit.",
+    "placeholders": {
+      "sizeMb": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesFormOcrSessionExpired": "Sesión expirada. Iniciá sesión nuevamente para escanear.",
+  "@expensesFormOcrSessionExpired": {
+    "description": "Snackbar shown when there is no valid Firebase session to authorize the receipt scan."
+  },
+  "expensesFormOcrTimeout": "El escaneo tardó demasiado. Revisá tu conexión y volvé a intentar.",
+  "@expensesFormOcrTimeout": {
+    "description": "Snackbar shown when the receipt scan request times out (slow or hung mobile network)."
+  },
   "expensesFormValidationAmountRequired": "Ingresá un monto válido.",
   "@expensesFormValidationAmountRequired": {
     "description": "Validation error when the amount field is empty or invalid."
@@ -2078,8 +2376,10 @@
     }
   },
   "premiumContinueWithPlan": "Continuar",
-  "premiumAlreadyActiveTitle": "¡Ya sos Premium!",
-  "premiumAlreadyActiveBody": "Gracias por apoyar el desarrollo de HomeSync.",
+  "premiumAlreadyActiveTitle": "Premium activo en tu hogar",
+  "premiumAlreadyActiveBody": "Todo listo: las funciones premium ya están disponibles para este hogar.",
+  "premiumActiveStatusPill": "Plan activo",
+  "premiumActiveBenefitsTitle": "Beneficios habilitados",
   "premiumContinueButton": "Continuar",
   "premiumDeactivateTesting": "Desactivar Premium (testing)",
   "premiumStoreErrorTitle": "Error al conectar con la tienda",
@@ -2527,6 +2827,90 @@
   "coupleChallengeWeDidIt": "Lo hicimos",
   "coupleChallengeDoneThisWeek": "¡Completado esta semana!",
   "coupleChallengeAlreadyDone": "Ya completaron el desafío de esta semana 💚",
+  "tourStepLabel": "Paso {current} de {total}",
+  "@tourStepLabel": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "tourWelcomeEyebrow": "Bienvenidos",
+  "tourCtaStart": "Empezar",
+  "tourCtaNext": "Siguiente",
+  "tourCtaLater": "Después",
+  "tourFinaleTitle": "¡Listo!",
+  "tourFinaleCta": "Empezar a usar",
+  "tourCoupleWelcomeTitle": "Su hogar, en 30 segundos",
+  "tourCoupleWelcomeBody": "Les muestro lo esencial: tareas, monedas, duelo y gastos. Corto y al punto.",
+  "tourCoupleWelcomeBodyNamed": "Te muestro lo esencial para organizar todo con {partnerName}: tareas, monedas, duelo y gastos.",
+  "@tourCoupleWelcomeBodyNamed": {
+    "placeholders": {
+      "partnerName": {
+        "type": "String"
+      }
+    }
+  },
+  "tourTasksTitleHas": "Hacé tareas, ganá puntos",
+  "tourTasksBodyHas": "Tocá ✓ para completar. Cada tarea suma monedas y XP solo para vos.",
+  "tourTasksTitleEmpty": "Hoy en casa está vacío",
+  "tourTasksBodyEmpty": "Acá van a vivir las tareas del día. Programá la primera ahora y vela aparecer — o seguí el recorrido y lo hacés después.",
+  "tourTasksCtaCreate": "Programar una tarea",
+  "tourBalanceTitle": "El pulso del hogar",
+  "tourBalanceBody": "{mode, select, shared{Tienen economía integrada: acá no hay deudas entre ustedes. Ven cuánto gastó el hogar este mes y, abajo, los puntos de cada uno.} other{Acá ven cuánto se deben en gastos compartidos y, abajo, lo que ganó cada uno. Con “Equilibrar” saldan cuentas en un toque.}}",
+  "@tourBalanceBody": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "tourBalanceBulletSettle": "Equilibrar → saldar gastos compartidos",
+  "tourBalanceBulletMonth": "Gasto del mes → el pulso de la casa",
+  "tourBalanceBulletXp": "XP → para el duelo semanal",
+  "tourBalanceBulletCoins": "Monedas → para canjear recompensas",
+  "tourDuelTitle": "Duelo semanal",
+  "tourDuelBody": "Cada semana compiten por XP con marcador oculto. El domingo se revela quién ganó. Se reinicia los lunes.",
+  "tourRewardsTitle": "Canjeá las monedas",
+  "tourRewardsBody": "Acá viven las recompensas: peli, masaje, día libre. Ustedes arman la tienda y se premian mutuamente.",
+  "tourExpensesTitle": "{mode, select, shared{Las finanzas del hogar} other{Dividan los gastos}}",
+  "@tourExpensesTitle": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "tourExpensesBody": "{mode, select, shared{Registren acá los gastos del hogar: recurrentes, compras y metas de ahorro, todo en un solo lugar.} other{Sumen gastos del hogar y la app calcula quién le debe a quién, según la división que configuraron.}}",
+  "@tourExpensesBody": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "tourCoupleFinaleBody": "A disfrutar su hogar. Cualquier duda, las Preguntas Frecuentes se adaptan a ustedes.",
+  "tourFamilyWelcomeTitle": "Tu familia, organizada",
+  "tourFamilyWelcomeBody": "Te muestro cómo manejar tareas, puntos y premios de toda la familia — en un minuto.",
+  "tourFamilyTasksTitleHas": "Las tareas de la familia",
+  "tourFamilyTasksBody": "{mode, select, approvals{Asigná tareas a cada uno. Cuando los chicos las completen, te llegan para aprobar — recién ahí cobran sus monedas.} other{Asigná tareas a cada uno y seguí el progreso de todos desde acá.}}",
+  "@tourFamilyTasksBody": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "tourFamilyFinanceTitle": "Los gastos, entre adultos",
+  "tourFamilyFinanceBody": "Los gastos compartidos del hogar se manejan acá, solo entre adultos. Los chicos no los ven.",
+  "tourFamilyRankingTitle": "Ranking semanal",
+  "tourFamilyRankingBody": "Cada semana, quien más XP suma completando tareas se lleva la corona. Sana competencia familiar.",
+  "tourFamilyRewardsTitle": "La tienda de premios",
+  "tourFamilyRewardsBody": "Creá premios (una salida, tiempo de pantalla, su postre favorito) y los chicos los canjean con las monedas que ganan.",
+  "tourFamilyFinaleBody": "A organizar la tropa. Las Preguntas Frecuentes se adaptan a tu rol si necesitás ayuda.",
   "familyRewardsCoinsLabel": "monedas",
   "statsTabWeek": "Semana",
   "statsTabEvolution": "Evolución",
@@ -2558,8 +2942,8 @@
       }
     }
   },
-  "weeklyWinnerSubtitle": "Así terminó el duelo semanal entre ustedes.",
-  "weeklyWinnerCardSubtitle": "Terminó adelante en XP y se llevó el cierre semanal.",
+  "weeklyWinnerSubtitle": "Así cerró la semana entre ustedes.",
+  "weeklyWinnerCardSubtitle": "Buen cierre: más constancia, más puntos y más ritmo.",
   "weeklyWinnerCoinsReward": "+20 coins",
   "weeklyWinnerCoinsAwarded": "+{coins} coins",
   "@weeklyWinnerCoinsAwarded": {
@@ -2578,10 +2962,6 @@
   "weeklyWinnerFallbackPlayer": "Jugador",
   "weeklyWinnerClose": "Cerrar",
   "weeklyWinnerContinue": "Continuar",
-  "weeklyWinnerTestButton": "Generar ganador semanal",
-  "@weeklyWinnerTestButton": {
-    "description": "Botón temporal de testing para forzar el cierre del duelo semanal y otorgar coins."
-  },
   "loveNoteDialogTitle": "Nueva nota de amor",
   "loveNoteHint": "Escribí algo tierno...",
   "loveNoteSent": "Nota enviada con amor",
@@ -3484,6 +3864,20 @@
   "@achievementsDreamArchitectsDesc": {
     "description": "Iconic moment achievement description for designing a shared goals list."
   },
+  "achievementsSoloMilestonesSection": "Tus hitos",
+  "achievementsSoloFirstStepTitle": "Primer paso",
+  "achievementsSoloFirstStepDesc": "Completaste tu primera tarea en tu espacio.",
+  "achievementsSoloRoutineTitle": "Rutina en marcha",
+  "achievementsSoloRoutineDesc": "Completaste 50 tareas personales.",
+  "achievementsSoloHomeClearTitle": "Casa más clara",
+  "achievementsSoloHomeClearDesc": "Llegaste a 5000 XP construyendo tu ritmo.",
+  "achievementsSoloNextSection": "Próximos hitos",
+  "achievementsSoloWeekTitle": "Semana activa",
+  "achievementsSoloWeekDesc": "Sostuviste varias acciones en tu hogar.",
+  "achievementsSoloRhythmTitle": "Ritmo propio",
+  "achievementsSoloRhythmDesc": "Tu rutina ya empieza a tener continuidad.",
+  "achievementsSoloOwnSpaceTitle": "Espacio propio",
+  "achievementsSoloOwnSpaceDesc": "Tu progreso personal ya tiene identidad.",
   "scheduleTitle": "Programar tarea",
   "@scheduleTitle": {
     "description": "Title of the schedule task bottom sheet."
@@ -3722,6 +4116,31 @@
   "@avatarPickerCustomName": {
     "description": "Label shown under a custom AI-generated avatar."
   },
+  "avatarPickerDeleteCustom": "Eliminar avatar personalizado",
+  "@avatarPickerDeleteCustom": {
+    "description": "Tooltip/action label for deleting a custom AI-generated avatar."
+  },
+  "avatarPickerDeleteCustomTitle": "¿Eliminar avatar?",
+  "@avatarPickerDeleteCustomTitle": {
+    "description": "Title of the confirmation dialog for deleting a custom avatar."
+  },
+  "avatarPickerDeleteCustomBody": "Vas a eliminar este avatar personalizado. Si lo estás usando, volvemos al avatar básico.",
+  "@avatarPickerDeleteCustomBody": {
+    "description": "Body of the confirmation dialog for deleting a custom avatar."
+  },
+  "avatarPickerCustomDeleted": "Avatar personalizado eliminado",
+  "@avatarPickerCustomDeleted": {
+    "description": "Snackbar shown after deleting a custom avatar."
+  },
+  "avatarPickerCustomDeleteError": "No se pudo eliminar el avatar: {error}",
+  "@avatarPickerCustomDeleteError": {
+    "description": "Snackbar shown when deleting a custom avatar fails.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "avatarPickerCreateCustom": "Crear avatar personalizado (1 por mes)",
   "@avatarPickerCreateCustom": {
     "description": "Button for premium users to create a custom avatar (1 per month)."
@@ -3729,6 +4148,27 @@
   "avatarPickerUnlockCustom": "Desbloquear avatar personalizado",
   "@avatarPickerUnlockCustom": {
     "description": "Button for non-premium users to unlock custom avatar creation."
+  },
+  "avatarPickerAiCardTitle": "Tu avatar con IA",
+  "@avatarPickerAiCardTitle": {
+    "description": "Title of the AI custom avatar creation card."
+  },
+  "avatarPickerAiCardBody": "Convertí una foto en un avatar ilustrado al estilo HomeSync. Tenés 1 creación por mes.",
+  "@avatarPickerAiCardBody": {
+    "description": "Body of the AI custom avatar creation card explaining the feature and monthly limit."
+  },
+  "avatarPickerAiCreateButton": "Crear mi avatar",
+  "@avatarPickerAiCreateButton": {
+    "description": "Button to start creating an AI custom avatar."
+  },
+  "avatarPickerAiUsedThisMonth": "Ya creaste tu avatar de este mes. Vas a poder crear otro el {date}.",
+  "@avatarPickerAiUsedThisMonth": {
+    "description": "Shown when the monthly AI avatar creation was already used; date is when it becomes available again.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   },
   "avatarPickerGooglePhotoTitle": "Foto de Google",
   "@avatarPickerGooglePhotoTitle": {

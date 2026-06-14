@@ -21,6 +21,7 @@ import 'package:homesync_client/features/dashboard/presentation/screens/admin_wo
 import 'package:homesync_client/features/dashboard/presentation/screens/couple_space_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/home_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/household_social_hub_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/solo_space_screen.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/screens/expenses_screen.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
@@ -696,9 +697,13 @@ class _MainScreenState extends ConsumerState<MainScreen>
           tab: tab,
           title: caps.socialTabLabel(t),
           icon: caps.partnerIcon,
-          screen: caps.usesCoupleRewardsExperience
-              ? const CoupleSpaceScreen(key: ValueKey(MainTab.social))
-              : const HouseholdSocialHubScreen(key: ValueKey(MainTab.social)),
+          screen: caps.type == HouseholdType.solo
+              ? const SoloSpaceScreen(key: ValueKey(MainTab.social))
+              : caps.usesCoupleRewardsExperience
+                  ? const CoupleSpaceScreen(key: ValueKey(MainTab.social))
+                  : const HouseholdSocialHubScreen(
+                      key: ValueKey(MainTab.social),
+                    ),
         ),
       MainTab.stats => NavItemConfig(
           tab: tab,

@@ -473,7 +473,7 @@ abstract class AppLocalizations {
   /// Card subtitle when the user already has premium.
   ///
   /// In es, this message translates to:
-  /// **'Premium activo'**
+  /// **'Gestionar plan'**
   String get settingsPremiumActiveSubtitle;
 
   /// Card subtitle when the user does NOT have premium yet — teaser to upsell.
@@ -941,7 +941,7 @@ abstract class AppLocalizations {
   /// Small button next to the day-tasks list that takes the user to the full weekly view.
   ///
   /// In es, this message translates to:
-  /// **'Ver Semana'**
+  /// **'Ver semana'**
   String get homeViewWeekButton;
 
   /// Empty-state message shown on the dashboard when there are no tasks left for today.
@@ -1099,6 +1099,690 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Tu actividad'**
   String get homeSoloActivityTitle;
+
+  /// Time-of-day greeting on the editorial home header, shared by solo and family-adult modes (05:00–12:59). Ends with a comma; the user's first name renders below as the hero line.
+  ///
+  /// In es, this message translates to:
+  /// **'Buenos días,'**
+  String get homeGreetingMorning;
+
+  /// Time-of-day greeting on the editorial home header (13:00–19:59).
+  ///
+  /// In es, this message translates to:
+  /// **'Buenas tardes,'**
+  String get homeGreetingAfternoon;
+
+  /// Time-of-day greeting on the editorial home header (20:00–04:59).
+  ///
+  /// In es, this message translates to:
+  /// **'Buenas noches,'**
+  String get homeGreetingEvening;
+
+  /// Shown in place of the monthly-spend amount on the solo bento tile when the month's spend is exactly zero (a giant $0 reads like broken data).
+  ///
+  /// In es, this message translates to:
+  /// **'Sin gastos aún ✨'**
+  String get homeSoloSpentEmpty;
+
+  /// Footer of the solo spending tile once there is spending: current month plus the running daily average (already currency-formatted).
+  ///
+  /// In es, this message translates to:
+  /// **'{month} · {amount}/día'**
+  String homeSoloSpentDailyAvg(String month, String amount);
+
+  /// Small eyebrow above the solo personal-space progress stage.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi espacio'**
+  String get soloSpaceEyebrow;
+
+  /// Compact level pill on the solo space hero.
+  ///
+  /// In es, this message translates to:
+  /// **'Nivel {level}'**
+  String soloSpaceLevel(int level);
+
+  /// Progress helper text below the solo space level bar.
+  ///
+  /// In es, this message translates to:
+  /// **'Te faltan {xp} XP para el próximo nivel.'**
+  String soloSpaceXpToNext(int xp);
+
+  /// No description provided for @soloSpaceStageRecentMove.
+  ///
+  /// In es, this message translates to:
+  /// **'Mudanza reciente'**
+  String get soloSpaceStageRecentMove;
+
+  /// No description provided for @soloSpaceStageRecentMoveSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu espacio está empezando a tomar forma. Elegí una acción simple y construí desde ahí.'**
+  String get soloSpaceStageRecentMoveSubtitle;
+
+  /// No description provided for @soloSpaceStageInMotion.
+  ///
+  /// In es, this message translates to:
+  /// **'Hogar en marcha'**
+  String get soloSpaceStageInMotion;
+
+  /// No description provided for @soloSpaceStageInMotionSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya hay movimiento: algunas rutinas, gastos o tareas empiezan a ordenar tus días.'**
+  String get soloSpaceStageInMotionSubtitle;
+
+  /// No description provided for @soloSpaceStageSteadyRoutine.
+  ///
+  /// In es, this message translates to:
+  /// **'Rutina estable'**
+  String get soloSpaceStageSteadyRoutine;
+
+  /// No description provided for @soloSpaceStageSteadyRoutineSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya tenés una base; ahora se trata de sostenerla sin pensarlo tanto.'**
+  String get soloSpaceStageSteadyRoutineSubtitle;
+
+  /// No description provided for @soloSpaceStageOrganizedHome.
+  ///
+  /// In es, this message translates to:
+  /// **'Casa organizada'**
+  String get soloSpaceStageOrganizedHome;
+
+  /// No description provided for @soloSpaceStageOrganizedHomeSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus pendientes, gastos y actividad empiezan a leerse como un sistema claro.'**
+  String get soloSpaceStageOrganizedHomeSubtitle;
+
+  /// No description provided for @soloSpaceStageOwnRhythm.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu espacio, tu ritmo'**
+  String get soloSpaceStageOwnRhythm;
+
+  /// No description provided for @soloSpaceStageOwnRhythmSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya no es solo registrar cosas: estás construyendo una forma propia de vivir tu hogar.'**
+  String get soloSpaceStageOwnRhythmSubtitle;
+
+  /// No description provided for @soloSpaceSignalsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Señales de la semana'**
+  String get soloSpaceSignalsTitle;
+
+  /// No description provided for @soloSpaceStreakTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Racha'**
+  String get soloSpaceStreakTitle;
+
+  /// Solo space streak metric.
+  ///
+  /// In es, this message translates to:
+  /// **'{days, plural, =0{Sin racha} =1{1 día} other{{days} días}}'**
+  String soloSpaceStreakMetric(int days);
+
+  /// Active days in the last 14 days helper for solo progress.
+  ///
+  /// In es, this message translates to:
+  /// **'{days, plural, =0{Sin días activos recientes} =1{1 día activo en 14 días} other{{days} días activos en 14 días}}'**
+  String soloSpaceActiveDays14(int days);
+
+  /// No description provided for @soloSpaceWeeklyXpTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'XP semanal'**
+  String get soloSpaceWeeklyXpTitle;
+
+  /// No description provided for @soloSpaceWeeklyTasksTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tareas semanales'**
+  String get soloSpaceWeeklyTasksTitle;
+
+  /// Positive weekly delta helper for solo progress.
+  ///
+  /// In es, this message translates to:
+  /// **'+{value} vs semana anterior'**
+  String soloSpaceDeltaUp(int value);
+
+  /// Negative weekly delta helper for solo progress.
+  ///
+  /// In es, this message translates to:
+  /// **'{value} vs semana anterior'**
+  String soloSpaceDeltaDown(int value);
+
+  /// No description provided for @soloSpaceDeltaSame.
+  ///
+  /// In es, this message translates to:
+  /// **'Igual que la semana anterior'**
+  String get soloSpaceDeltaSame;
+
+  /// Top task category chip in solo progress.
+  ///
+  /// In es, this message translates to:
+  /// **'Tareas: {category}'**
+  String soloSpaceTopTaskCategory(String category);
+
+  /// Top expense category chip in solo progress.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastos: {category}'**
+  String soloSpaceTopExpenseCategory(String category);
+
+  /// No description provided for @soloSpaceSignalsSyncing.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizando señales reales de tu hogar.'**
+  String get soloSpaceSignalsSyncing;
+
+  /// No description provided for @soloSpaceDimensionsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cómo viene tu hogar'**
+  String get soloSpaceDimensionsTitle;
+
+  /// No description provided for @soloSpaceOrderTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Orden'**
+  String get soloSpaceOrderTitle;
+
+  /// No description provided for @soloSpaceOrderSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tareas, pendientes y cierre del día.'**
+  String get soloSpaceOrderSubtitle;
+
+  /// No description provided for @soloSpaceClarityTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Claridad'**
+  String get soloSpaceClarityTitle;
+
+  /// No description provided for @soloSpaceClaritySubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastos registrados y lectura del mes.'**
+  String get soloSpaceClaritySubtitle;
+
+  /// No description provided for @soloSpaceContinuityTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuidad'**
+  String get soloSpaceContinuityTitle;
+
+  /// No description provided for @soloSpaceContinuitySubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Actividad reciente y constancia real.'**
+  String get soloSpaceContinuitySubtitle;
+
+  /// No description provided for @soloSpaceNextTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Próximo gesto'**
+  String get soloSpaceNextTitle;
+
+  /// No description provided for @soloSpaceNextCreateTask.
+  ///
+  /// In es, this message translates to:
+  /// **'Creá una tarea base'**
+  String get soloSpaceNextCreateTask;
+
+  /// No description provided for @soloSpaceNextCreateTaskSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Una rutina chica alcanza para empezar a darle forma a tu espacio.'**
+  String get soloSpaceNextCreateTaskSubtitle;
+
+  /// No description provided for @soloSpaceNextCompleteTask.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrá una tarea de hoy'**
+  String get soloSpaceNextCompleteTask;
+
+  /// No description provided for @soloSpaceNextCompleteTaskSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Bajar pendientes es la forma más directa de mejorar tu Orden.'**
+  String get soloSpaceNextCompleteTaskSubtitle;
+
+  /// No description provided for @soloSpaceNextRegisterExpense.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrá tu primer gasto del mes'**
+  String get soloSpaceNextRegisterExpense;
+
+  /// No description provided for @soloSpaceNextRegisterExpenseSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Con un movimiento cargado, tu Claridad empieza a tener contexto.'**
+  String get soloSpaceNextRegisterExpenseSubtitle;
+
+  /// No description provided for @soloSpaceNextReviewShopping.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisá tu lista de compras'**
+  String get soloSpaceNextReviewShopping;
+
+  /// No description provided for @soloSpaceNextReviewShoppingSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Una compra ordenada evita ruido y mantiene el mes más liviano.'**
+  String get soloSpaceNextReviewShoppingSubtitle;
+
+  /// No description provided for @soloSpaceNextKeepGoing.
+  ///
+  /// In es, this message translates to:
+  /// **'Sumá una acción simple'**
+  String get soloSpaceNextKeepGoing;
+
+  /// No description provided for @soloSpaceNextKeepGoingSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Un gesto chico hoy sostiene la continuidad de tu hogar.'**
+  String get soloSpaceNextKeepGoingSubtitle;
+
+  /// No description provided for @soloSpaceMilestonesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Hitos personales'**
+  String get soloSpaceMilestonesTitle;
+
+  /// No description provided for @soloSpaceMilestoneFirstStep.
+  ///
+  /// In es, this message translates to:
+  /// **'Primer paso'**
+  String get soloSpaceMilestoneFirstStep;
+
+  /// No description provided for @soloSpaceMilestoneFirstStepDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Completaste tu primera tarea.'**
+  String get soloSpaceMilestoneFirstStepDesc;
+
+  /// No description provided for @soloSpaceMilestoneWeekInMotion.
+  ///
+  /// In es, this message translates to:
+  /// **'Semana en marcha'**
+  String get soloSpaceMilestoneWeekInMotion;
+
+  /// No description provided for @soloSpaceMilestoneWeekInMotionDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Tuviste actividad reciente suficiente para marcar ritmo.'**
+  String get soloSpaceMilestoneWeekInMotionDesc;
+
+  /// No description provided for @soloSpaceMilestoneClearerHome.
+  ///
+  /// In es, this message translates to:
+  /// **'Casa más clara'**
+  String get soloSpaceMilestoneClearerHome;
+
+  /// No description provided for @soloSpaceMilestoneClearerHomeDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus finanzas ya tienen señales útiles este mes.'**
+  String get soloSpaceMilestoneClearerHomeDesc;
+
+  /// No description provided for @soloSpaceMilestoneSteadyRoutine.
+  ///
+  /// In es, this message translates to:
+  /// **'Rutina sostenida'**
+  String get soloSpaceMilestoneSteadyRoutine;
+
+  /// No description provided for @soloSpaceMilestoneSteadyRoutineDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Orden y continuidad empiezan a trabajar juntos.'**
+  String get soloSpaceMilestoneSteadyRoutineDesc;
+
+  /// No description provided for @soloSpaceMilestoneOwnRhythm.
+  ///
+  /// In es, this message translates to:
+  /// **'Ritmo propio'**
+  String get soloSpaceMilestoneOwnRhythm;
+
+  /// No description provided for @soloSpaceMilestoneOwnRhythmDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu progreso ya muestra una identidad personal.'**
+  String get soloSpaceMilestoneOwnRhythmDesc;
+
+  /// No description provided for @soloSpaceFutureHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu espacio se ajusta con tus tareas, gastos y ritmo semanal.'**
+  String get soloSpaceFutureHint;
+
+  /// No description provided for @soloSpaceRitualTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cierre semanal'**
+  String get soloSpaceRitualTitle;
+
+  /// Weekly solo ritual completion progress.
+  ///
+  /// In es, this message translates to:
+  /// **'{done} de {total} gestos'**
+  String soloSpaceRitualProgress(int done, int total);
+
+  /// No description provided for @soloSpaceRitualReviewTasks.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisar pendientes abiertos'**
+  String get soloSpaceRitualReviewTasks;
+
+  /// No description provided for @soloSpaceRitualCheckSpending.
+  ///
+  /// In es, this message translates to:
+  /// **'Mirar gastos del mes'**
+  String get soloSpaceRitualCheckSpending;
+
+  /// No description provided for @soloSpaceRitualPlanShopping.
+  ///
+  /// In es, this message translates to:
+  /// **'Ajustar la lista de compras'**
+  String get soloSpaceRitualPlanShopping;
+
+  /// No description provided for @soloSpaceRitualChooseNextRoutine.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegir una rutina para sostener'**
+  String get soloSpaceRitualChooseNextRoutine;
+
+  /// No description provided for @soloSpaceInsightsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Lectura de la semana'**
+  String get soloSpaceInsightsTitle;
+
+  /// No description provided for @soloSpaceInsightNoActivity.
+  ///
+  /// In es, this message translates to:
+  /// **'Punto de partida'**
+  String get soloSpaceInsightNoActivity;
+
+  /// No description provided for @soloSpaceInsightNoActivityDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay señales fuertes esta semana. Un gesto simple alcanza para arrancar.'**
+  String get soloSpaceInsightNoActivityDesc;
+
+  /// No description provided for @soloSpaceInsightStreak.
+  ///
+  /// In es, this message translates to:
+  /// **'Racha en construcción'**
+  String get soloSpaceInsightStreak;
+
+  /// Insight text for a solo streak.
+  ///
+  /// In es, this message translates to:
+  /// **'{days, plural, =1{Un día activo ya marca continuidad.} other{{days} días activos seguidos empiezan a formar ritmo.}}'**
+  String soloSpaceInsightStreakDesc(int days);
+
+  /// No description provided for @soloSpaceInsightWeekImproved.
+  ///
+  /// In es, this message translates to:
+  /// **'Semana más fuerte'**
+  String get soloSpaceInsightWeekImproved;
+
+  /// Insight text when weekly XP improved.
+  ///
+  /// In es, this message translates to:
+  /// **'+{value} XP contra la semana anterior. Hay más movimiento en tu casa.'**
+  String soloSpaceInsightWeekImprovedDesc(int value);
+
+  /// No description provided for @soloSpaceInsightWeekSlowed.
+  ///
+  /// In es, this message translates to:
+  /// **'Semana más baja'**
+  String get soloSpaceInsightWeekSlowed;
+
+  /// No description provided for @soloSpaceInsightWeekSlowedDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Bajó el movimiento. Conviene elegir una acción chica y cerrar el día.'**
+  String get soloSpaceInsightWeekSlowedDesc;
+
+  /// No description provided for @soloSpaceInsightFinanceVisible.
+  ///
+  /// In es, this message translates to:
+  /// **'Finanzas con contexto'**
+  String get soloSpaceInsightFinanceVisible;
+
+  /// No description provided for @soloSpaceInsightFinanceVisibleDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya hay movimientos suficientes para leer el mes con más claridad.'**
+  String get soloSpaceInsightFinanceVisibleDesc;
+
+  /// No description provided for @soloSpaceInsightNoFinance.
+  ///
+  /// In es, this message translates to:
+  /// **'Falta lectura financiera'**
+  String get soloSpaceInsightNoFinance;
+
+  /// No description provided for @soloSpaceInsightNoFinanceDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrar un gasto real activa mejores señales de Claridad.'**
+  String get soloSpaceInsightNoFinanceDesc;
+
+  /// No description provided for @soloSpaceInsightTaskCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Patrón de tareas'**
+  String get soloSpaceInsightTaskCategory;
+
+  /// Insight text for the top task category.
+  ///
+  /// In es, this message translates to:
+  /// **'{category} aparece como foco fuerte este mes.'**
+  String soloSpaceInsightTaskCategoryDesc(String category);
+
+  /// No description provided for @soloSpaceInsightExpenseCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Patrón de gastos'**
+  String get soloSpaceInsightExpenseCategory;
+
+  /// Insight text for the top expense category.
+  ///
+  /// In es, this message translates to:
+  /// **'{category} concentra más movimiento este mes.'**
+  String soloSpaceInsightExpenseCategoryDesc(String category);
+
+  /// No description provided for @soloSpaceSuggestionsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Herramientas sugeridas'**
+  String get soloSpaceSuggestionsTitle;
+
+  /// No description provided for @soloSpaceSuggestionRecurringTask.
+  ///
+  /// In es, this message translates to:
+  /// **'Convertir algo en rutina'**
+  String get soloSpaceSuggestionRecurringTask;
+
+  /// No description provided for @soloSpaceSuggestionRecurringTaskDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Una tarea recurrente baja fricción y sostiene Orden.'**
+  String get soloSpaceSuggestionRecurringTaskDesc;
+
+  /// No description provided for @soloSpaceSuggestionClosePending.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar lo pendiente'**
+  String get soloSpaceSuggestionClosePending;
+
+  /// No description provided for @soloSpaceSuggestionClosePendingDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Resolver una tarea de hoy libera espacio mental.'**
+  String get soloSpaceSuggestionClosePendingDesc;
+
+  /// No description provided for @soloSpaceSuggestionRegisterExpense.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargar un gasto real'**
+  String get soloSpaceSuggestionRegisterExpense;
+
+  /// No description provided for @soloSpaceSuggestionRegisterExpenseDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Con un movimiento, la lectura del mes deja de estar vacía.'**
+  String get soloSpaceSuggestionRegisterExpenseDesc;
+
+  /// No description provided for @soloSpaceSuggestionReviewShopping.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisar compras'**
+  String get soloSpaceSuggestionReviewShopping;
+
+  /// No description provided for @soloSpaceSuggestionReviewShoppingDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Una lista clara evita compras repetidas o de último minuto.'**
+  String get soloSpaceSuggestionReviewShoppingDesc;
+
+  /// No description provided for @soloSpaceSuggestionProtectStreak.
+  ///
+  /// In es, this message translates to:
+  /// **'Proteger la racha'**
+  String get soloSpaceSuggestionProtectStreak;
+
+  /// No description provided for @soloSpaceSuggestionProtectStreakDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Una acción chica hoy mantiene viva la continuidad.'**
+  String get soloSpaceSuggestionProtectStreakDesc;
+
+  /// No description provided for @soloSpaceSuggestionWeeklyReview.
+  ///
+  /// In es, this message translates to:
+  /// **'Hacer cierre semanal'**
+  String get soloSpaceSuggestionWeeklyReview;
+
+  /// No description provided for @soloSpaceSuggestionWeeklyReviewDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Marcá los gestos del ritual y dejá la semana ordenada.'**
+  String get soloSpaceSuggestionWeeklyReviewDesc;
+
+  /// No description provided for @soloSpaceUnlocksTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloqueos suaves'**
+  String get soloSpaceUnlocksTitle;
+
+  /// No description provided for @soloSpaceUnlockActive.
+  ///
+  /// In es, this message translates to:
+  /// **'Activo'**
+  String get soloSpaceUnlockActive;
+
+  /// No description provided for @soloSpaceUnlockNext.
+  ///
+  /// In es, this message translates to:
+  /// **'Luego'**
+  String get soloSpaceUnlockNext;
+
+  /// No description provided for @soloSpaceUnlockWeeklyReview.
+  ///
+  /// In es, this message translates to:
+  /// **'Vista de cierre'**
+  String get soloSpaceUnlockWeeklyReview;
+
+  /// No description provided for @soloSpaceUnlockWeeklyReviewDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Disponible desde el inicio para ordenar la semana sin presión.'**
+  String get soloSpaceUnlockWeeklyReviewDesc;
+
+  /// No description provided for @soloSpaceUnlockRecurringTemplates.
+  ///
+  /// In es, this message translates to:
+  /// **'Plantillas recurrentes'**
+  String get soloSpaceUnlockRecurringTemplates;
+
+  /// No description provided for @soloSpaceUnlockRecurringTemplatesDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Aparecen cuando ya hay base para repetir rutinas.'**
+  String get soloSpaceUnlockRecurringTemplatesDesc;
+
+  /// No description provided for @soloSpaceUnlockHabitInsights.
+  ///
+  /// In es, this message translates to:
+  /// **'Insights de hábitos'**
+  String get soloSpaceUnlockHabitInsights;
+
+  /// No description provided for @soloSpaceUnlockHabitInsightsDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Se activan con varios días de actividad real.'**
+  String get soloSpaceUnlockHabitInsightsDesc;
+
+  /// No description provided for @soloSpaceUnlockPersonalMedal.
+  ///
+  /// In es, this message translates to:
+  /// **'Medalla personal'**
+  String get soloSpaceUnlockPersonalMedal;
+
+  /// No description provided for @soloSpaceUnlockPersonalMedalDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Reconoce una etapa sostenida sin competir con nadie.'**
+  String get soloSpaceUnlockPersonalMedalDesc;
+
+  /// No description provided for @soloSpaceUnlockRhythmRecommendations.
+  ///
+  /// In es, this message translates to:
+  /// **'Recomendaciones de ritmo'**
+  String get soloSpaceUnlockRhythmRecommendations;
+
+  /// No description provided for @soloSpaceUnlockRhythmRecommendationsDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Cruzan claridad financiera con continuidad semanal.'**
+  String get soloSpaceUnlockRhythmRecommendationsDesc;
+
+  /// Coins-earned figure on activity feed entries ('coin' is the app's game-currency name, kept in English in both locales).
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{+1 coin} other{+{count} coins}}'**
+  String activityCoinsPlus(int count);
+
+  /// Coins-spent figure on activity feed entries (redeemed rewards).
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{-1 coin} other{-{count} coins}}'**
+  String activityCoinsMinus(int count);
+
+  /// Tiny uppercase eyebrow on the approvals bento tile of the family-adult dashboard (Parent Mode inbox).
+  ///
+  /// In es, this message translates to:
+  /// **'Aprobaciones'**
+  String get homeFamilyApprovalsTileLabel;
+
+  /// Caption under the pending-approvals count on the family dashboard approvals tile. The number renders separately in the tile chip.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{pendiente} other{pendientes}}'**
+  String homeFamilyApprovalsPendingLabel(int count);
+
+  /// Caption on the family dashboard approvals tile when there is nothing awaiting review.
+  ///
+  /// In es, this message translates to:
+  /// **'Al día'**
+  String get homeFamilyApprovalsAllClear;
 
   /// Second line of the couple-mode dashboard headline ('Todo lo importante / del hogar').
   ///
@@ -1509,11 +2193,17 @@ abstract class AppLocalizations {
   /// **'Familia'**
   String get homeFamilyAdultFallbackName;
 
-  /// Greeting prefix shown to a child member. Includes trailing comma+space; the child's first name is appended after.
+  /// Motivational greeting prefix shown to a child member. Includes trailing comma+space; the child's first name is appended after.
   ///
   /// In es, this message translates to:
-  /// **'Hola, '**
+  /// **'¡Vamos, '**
   String get homeFamilyChildHello;
+
+  /// Greeting suffix shown after the child member's name.
+  ///
+  /// In es, this message translates to:
+  /// **'!'**
+  String get homeFamilyChildGreetingSuffix;
 
   /// Fallback name for a child whose display name isn't loaded yet. Spanish 'campeón' (champ) — used both in the greeting and in the hero body.
   ///
@@ -4677,6 +5367,24 @@ abstract class AppLocalizations {
   /// **'Demasiados escaneos seguidos. Esperá unos segundos y volvé a intentar.'**
   String get expensesFormOcrRateLimited;
 
+  /// Snackbar shown when the compressed receipt image exceeds the 5 MB scan limit.
+  ///
+  /// In es, this message translates to:
+  /// **'La imagen es demasiado grande ({sizeMb} MB, máx 5 MB). Probá con otra foto o desde la galería.'**
+  String expensesFormOcrImageTooLarge(String sizeMb);
+
+  /// Snackbar shown when there is no valid Firebase session to authorize the receipt scan.
+  ///
+  /// In es, this message translates to:
+  /// **'Sesión expirada. Iniciá sesión nuevamente para escanear.'**
+  String get expensesFormOcrSessionExpired;
+
+  /// Snackbar shown when the receipt scan request times out (slow or hung mobile network).
+  ///
+  /// In es, this message translates to:
+  /// **'El escaneo tardó demasiado. Revisá tu conexión y volvé a intentar.'**
+  String get expensesFormOcrTimeout;
+
   /// Validation error when the amount field is empty or invalid.
   ///
   /// In es, this message translates to:
@@ -5478,14 +6186,26 @@ abstract class AppLocalizations {
   /// No description provided for @premiumAlreadyActiveTitle.
   ///
   /// In es, this message translates to:
-  /// **'¡Ya sos Premium!'**
+  /// **'Premium activo en tu hogar'**
   String get premiumAlreadyActiveTitle;
 
   /// No description provided for @premiumAlreadyActiveBody.
   ///
   /// In es, this message translates to:
-  /// **'Gracias por apoyar el desarrollo de HomeSync.'**
+  /// **'Todo listo: las funciones premium ya están disponibles para este hogar.'**
   String get premiumAlreadyActiveBody;
+
+  /// No description provided for @premiumActiveStatusPill.
+  ///
+  /// In es, this message translates to:
+  /// **'Plan activo'**
+  String get premiumActiveStatusPill;
+
+  /// No description provided for @premiumActiveBenefitsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Beneficios habilitados'**
+  String get premiumActiveBenefitsTitle;
 
   /// No description provided for @premiumContinueButton.
   ///
@@ -6819,6 +7539,240 @@ abstract class AppLocalizations {
   /// **'Ya completaron el desafío de esta semana 💚'**
   String get coupleChallengeAlreadyDone;
 
+  /// No description provided for @tourStepLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Paso {current} de {total}'**
+  String tourStepLabel(int current, int total);
+
+  /// No description provided for @tourWelcomeEyebrow.
+  ///
+  /// In es, this message translates to:
+  /// **'Bienvenidos'**
+  String get tourWelcomeEyebrow;
+
+  /// No description provided for @tourCtaStart.
+  ///
+  /// In es, this message translates to:
+  /// **'Empezar'**
+  String get tourCtaStart;
+
+  /// No description provided for @tourCtaNext.
+  ///
+  /// In es, this message translates to:
+  /// **'Siguiente'**
+  String get tourCtaNext;
+
+  /// No description provided for @tourCtaLater.
+  ///
+  /// In es, this message translates to:
+  /// **'Después'**
+  String get tourCtaLater;
+
+  /// No description provided for @tourFinaleTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Listo!'**
+  String get tourFinaleTitle;
+
+  /// No description provided for @tourFinaleCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Empezar a usar'**
+  String get tourFinaleCta;
+
+  /// No description provided for @tourCoupleWelcomeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Su hogar, en 30 segundos'**
+  String get tourCoupleWelcomeTitle;
+
+  /// No description provided for @tourCoupleWelcomeBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Les muestro lo esencial: tareas, monedas, duelo y gastos. Corto y al punto.'**
+  String get tourCoupleWelcomeBody;
+
+  /// No description provided for @tourCoupleWelcomeBodyNamed.
+  ///
+  /// In es, this message translates to:
+  /// **'Te muestro lo esencial para organizar todo con {partnerName}: tareas, monedas, duelo y gastos.'**
+  String tourCoupleWelcomeBodyNamed(String partnerName);
+
+  /// No description provided for @tourTasksTitleHas.
+  ///
+  /// In es, this message translates to:
+  /// **'Hacé tareas, ganá puntos'**
+  String get tourTasksTitleHas;
+
+  /// No description provided for @tourTasksBodyHas.
+  ///
+  /// In es, this message translates to:
+  /// **'Tocá ✓ para completar. Cada tarea suma monedas y XP solo para vos.'**
+  String get tourTasksBodyHas;
+
+  /// No description provided for @tourTasksTitleEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy en casa está vacío'**
+  String get tourTasksTitleEmpty;
+
+  /// No description provided for @tourTasksBodyEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Acá van a vivir las tareas del día. Programá la primera ahora y vela aparecer — o seguí el recorrido y lo hacés después.'**
+  String get tourTasksBodyEmpty;
+
+  /// No description provided for @tourTasksCtaCreate.
+  ///
+  /// In es, this message translates to:
+  /// **'Programar una tarea'**
+  String get tourTasksCtaCreate;
+
+  /// No description provided for @tourBalanceTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'El pulso del hogar'**
+  String get tourBalanceTitle;
+
+  /// No description provided for @tourBalanceBody.
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, shared{Tienen economía integrada: acá no hay deudas entre ustedes. Ven cuánto gastó el hogar este mes y, abajo, los puntos de cada uno.} other{Acá ven cuánto se deben en gastos compartidos y, abajo, lo que ganó cada uno. Con “Equilibrar” saldan cuentas en un toque.}}'**
+  String tourBalanceBody(String mode);
+
+  /// No description provided for @tourBalanceBulletSettle.
+  ///
+  /// In es, this message translates to:
+  /// **'Equilibrar → saldar gastos compartidos'**
+  String get tourBalanceBulletSettle;
+
+  /// No description provided for @tourBalanceBulletMonth.
+  ///
+  /// In es, this message translates to:
+  /// **'Gasto del mes → el pulso de la casa'**
+  String get tourBalanceBulletMonth;
+
+  /// No description provided for @tourBalanceBulletXp.
+  ///
+  /// In es, this message translates to:
+  /// **'XP → para el duelo semanal'**
+  String get tourBalanceBulletXp;
+
+  /// No description provided for @tourBalanceBulletCoins.
+  ///
+  /// In es, this message translates to:
+  /// **'Monedas → para canjear recompensas'**
+  String get tourBalanceBulletCoins;
+
+  /// No description provided for @tourDuelTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Duelo semanal'**
+  String get tourDuelTitle;
+
+  /// No description provided for @tourDuelBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Cada semana compiten por XP con marcador oculto. El domingo se revela quién ganó. Se reinicia los lunes.'**
+  String get tourDuelBody;
+
+  /// No description provided for @tourRewardsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Canjeá las monedas'**
+  String get tourRewardsTitle;
+
+  /// No description provided for @tourRewardsBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Acá viven las recompensas: peli, masaje, día libre. Ustedes arman la tienda y se premian mutuamente.'**
+  String get tourRewardsBody;
+
+  /// No description provided for @tourExpensesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, shared{Las finanzas del hogar} other{Dividan los gastos}}'**
+  String tourExpensesTitle(String mode);
+
+  /// No description provided for @tourExpensesBody.
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, shared{Registren acá los gastos del hogar: recurrentes, compras y metas de ahorro, todo en un solo lugar.} other{Sumen gastos del hogar y la app calcula quién le debe a quién, según la división que configuraron.}}'**
+  String tourExpensesBody(String mode);
+
+  /// No description provided for @tourCoupleFinaleBody.
+  ///
+  /// In es, this message translates to:
+  /// **'A disfrutar su hogar. Cualquier duda, las Preguntas Frecuentes se adaptan a ustedes.'**
+  String get tourCoupleFinaleBody;
+
+  /// No description provided for @tourFamilyWelcomeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu familia, organizada'**
+  String get tourFamilyWelcomeTitle;
+
+  /// No description provided for @tourFamilyWelcomeBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Te muestro cómo manejar tareas, puntos y premios de toda la familia — en un minuto.'**
+  String get tourFamilyWelcomeBody;
+
+  /// No description provided for @tourFamilyTasksTitleHas.
+  ///
+  /// In es, this message translates to:
+  /// **'Las tareas de la familia'**
+  String get tourFamilyTasksTitleHas;
+
+  /// No description provided for @tourFamilyTasksBody.
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, approvals{Asigná tareas a cada uno. Cuando los chicos las completen, te llegan para aprobar — recién ahí cobran sus monedas.} other{Asigná tareas a cada uno y seguí el progreso de todos desde acá.}}'**
+  String tourFamilyTasksBody(String mode);
+
+  /// No description provided for @tourFamilyFinanceTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Los gastos, entre adultos'**
+  String get tourFamilyFinanceTitle;
+
+  /// No description provided for @tourFamilyFinanceBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Los gastos compartidos del hogar se manejan acá, solo entre adultos. Los chicos no los ven.'**
+  String get tourFamilyFinanceBody;
+
+  /// No description provided for @tourFamilyRankingTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ranking semanal'**
+  String get tourFamilyRankingTitle;
+
+  /// No description provided for @tourFamilyRankingBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Cada semana, quien más XP suma completando tareas se lleva la corona. Sana competencia familiar.'**
+  String get tourFamilyRankingBody;
+
+  /// No description provided for @tourFamilyRewardsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'La tienda de premios'**
+  String get tourFamilyRewardsTitle;
+
+  /// No description provided for @tourFamilyRewardsBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Creá premios (una salida, tiempo de pantalla, su postre favorito) y los chicos los canjean con las monedas que ganan.'**
+  String get tourFamilyRewardsBody;
+
+  /// No description provided for @tourFamilyFinaleBody.
+  ///
+  /// In es, this message translates to:
+  /// **'A organizar la tropa. Las Preguntas Frecuentes se adaptan a tu rol si necesitás ayuda.'**
+  String get tourFamilyFinaleBody;
+
   /// No description provided for @familyRewardsCoinsLabel.
   ///
   /// In es, this message translates to:
@@ -6960,13 +7914,13 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyWinnerSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Así terminó el duelo semanal entre ustedes.'**
+  /// **'Así cerró la semana entre ustedes.'**
   String get weeklyWinnerSubtitle;
 
   /// No description provided for @weeklyWinnerCardSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Terminó adelante en XP y se llevó el cierre semanal.'**
+  /// **'Buen cierre: más constancia, más puntos y más ritmo.'**
   String get weeklyWinnerCardSubtitle;
 
   /// No description provided for @weeklyWinnerCoinsReward.
@@ -7028,12 +7982,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Continuar'**
   String get weeklyWinnerContinue;
-
-  /// Botón temporal de testing para forzar el cierre del duelo semanal y otorgar coins.
-  ///
-  /// In es, this message translates to:
-  /// **'Generar ganador semanal'**
-  String get weeklyWinnerTestButton;
 
   /// No description provided for @loveNoteDialogTitle.
   ///
@@ -8991,6 +9939,90 @@ abstract class AppLocalizations {
   /// **'Diseñaron su lista de metas compartidas.'**
   String get achievementsDreamArchitectsDesc;
 
+  /// No description provided for @achievementsSoloMilestonesSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus hitos'**
+  String get achievementsSoloMilestonesSection;
+
+  /// No description provided for @achievementsSoloFirstStepTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Primer paso'**
+  String get achievementsSoloFirstStepTitle;
+
+  /// No description provided for @achievementsSoloFirstStepDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Completaste tu primera tarea en tu espacio.'**
+  String get achievementsSoloFirstStepDesc;
+
+  /// No description provided for @achievementsSoloRoutineTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Rutina en marcha'**
+  String get achievementsSoloRoutineTitle;
+
+  /// No description provided for @achievementsSoloRoutineDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Completaste 50 tareas personales.'**
+  String get achievementsSoloRoutineDesc;
+
+  /// No description provided for @achievementsSoloHomeClearTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Casa más clara'**
+  String get achievementsSoloHomeClearTitle;
+
+  /// No description provided for @achievementsSoloHomeClearDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Llegaste a 5000 XP construyendo tu ritmo.'**
+  String get achievementsSoloHomeClearDesc;
+
+  /// No description provided for @achievementsSoloNextSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Próximos hitos'**
+  String get achievementsSoloNextSection;
+
+  /// No description provided for @achievementsSoloWeekTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Semana activa'**
+  String get achievementsSoloWeekTitle;
+
+  /// No description provided for @achievementsSoloWeekDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Sostuviste varias acciones en tu hogar.'**
+  String get achievementsSoloWeekDesc;
+
+  /// No description provided for @achievementsSoloRhythmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ritmo propio'**
+  String get achievementsSoloRhythmTitle;
+
+  /// No description provided for @achievementsSoloRhythmDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu rutina ya empieza a tener continuidad.'**
+  String get achievementsSoloRhythmDesc;
+
+  /// No description provided for @achievementsSoloOwnSpaceTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Espacio propio'**
+  String get achievementsSoloOwnSpaceTitle;
+
+  /// No description provided for @achievementsSoloOwnSpaceDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu progreso personal ya tiene identidad.'**
+  String get achievementsSoloOwnSpaceDesc;
+
   /// Title of the schedule task bottom sheet.
   ///
   /// In es, this message translates to:
@@ -9321,6 +10353,36 @@ abstract class AppLocalizations {
   /// **'Personalizado'**
   String get avatarPickerCustomName;
 
+  /// Tooltip/action label for deleting a custom AI-generated avatar.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar avatar personalizado'**
+  String get avatarPickerDeleteCustom;
+
+  /// Title of the confirmation dialog for deleting a custom avatar.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar avatar?'**
+  String get avatarPickerDeleteCustomTitle;
+
+  /// Body of the confirmation dialog for deleting a custom avatar.
+  ///
+  /// In es, this message translates to:
+  /// **'Vas a eliminar este avatar personalizado. Si lo estás usando, volvemos al avatar básico.'**
+  String get avatarPickerDeleteCustomBody;
+
+  /// Snackbar shown after deleting a custom avatar.
+  ///
+  /// In es, this message translates to:
+  /// **'Avatar personalizado eliminado'**
+  String get avatarPickerCustomDeleted;
+
+  /// Snackbar shown when deleting a custom avatar fails.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo eliminar el avatar: {error}'**
+  String avatarPickerCustomDeleteError(String error);
+
   /// Button for premium users to create a custom avatar (1 per month).
   ///
   /// In es, this message translates to:
@@ -9332,6 +10394,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Desbloquear avatar personalizado'**
   String get avatarPickerUnlockCustom;
+
+  /// Title of the AI custom avatar creation card.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu avatar con IA'**
+  String get avatarPickerAiCardTitle;
+
+  /// Body of the AI custom avatar creation card explaining the feature and monthly limit.
+  ///
+  /// In es, this message translates to:
+  /// **'Convertí una foto en un avatar ilustrado al estilo HomeSync. Tenés 1 creación por mes.'**
+  String get avatarPickerAiCardBody;
+
+  /// Button to start creating an AI custom avatar.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear mi avatar'**
+  String get avatarPickerAiCreateButton;
+
+  /// Shown when the monthly AI avatar creation was already used; date is when it becomes available again.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya creaste tu avatar de este mes. Vas a poder crear otro el {date}.'**
+  String avatarPickerAiUsedThisMonth(String date);
 
   /// Title of the option to use the Google account photo as avatar.
   ///

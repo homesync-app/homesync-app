@@ -17,6 +17,7 @@ import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'user_avatar.dart';
@@ -41,6 +42,26 @@ final customAvatarOptionsProvider =
       createdAt: DateTime.parse(row['created_at'] as String),
     );
   }).toList();
+});
+
+/// Fecha en la que se libera el cupo mensual de creación IA (1° del mes
+/// siguiente, en UTC como lo cuenta el server), o null si aún no se usó.
+final customAvatarQuotaResetProvider = FutureProvider<DateTime?>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return null;
+
+  final nowUtc = DateTime.now().toUtc();
+  final monthStart = DateTime.utc(nowUtc.year, nowUtc.month);
+  final row = await ref
+      .read(supabaseClientProvider)
+      .from('custom_avatar_monthly_usage')
+      .select('generation_month')
+      .eq('user_id', userId)
+      .eq('generation_month', monthStart.toIso8601String().substring(0, 10))
+      .maybeSingle();
+
+  if (row == null) return null;
+  return DateTime.utc(nowUtc.year, nowUtc.month + 1);
 });
 
 class CustomAvatarOption {
@@ -219,6 +240,10 @@ class AvatarPickerSheet extends ConsumerWidget {
                     }).toList(),
                   ),
                   const SizedBox(height: 28),
+                  _AiAvatarCreationCard(
+                    onCreate: () => _showCustomAvatarSourceSheet(context, ref),
+                  ),
+                  const SizedBox(height: 28),
                   Consumer(
                     builder: (context, ref, _) {
                       final isPremium =
@@ -232,6 +257,11 @@ class AvatarPickerSheet extends ConsumerWidget {
                               context,
                               ref,
                               avatarUrl,
+                            ),
+                            onDelete: (avatar) => _deleteCustomAvatar(
+                              context,
+                              ref,
+                              avatar,
                             ),
                           ),
                           Row(
@@ -283,26 +313,6 @@ class AvatarPickerSheet extends ConsumerWidget {
                             }).toList(),
                           ),
                         ],
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final isPremium =
-                          ref.watch(premiumProvider).value ?? false;
-                      return OutlinedButton.icon(
-                        onPressed: isPremium
-                            ? () => _showCustomAvatarSourceSheet(context, ref)
-                            : () => PremiumPaywall.show(context),
-                        icon: const Icon(Icons.auto_awesome_rounded),
-                        label: Text(
-                          isPremium
-                              ? AppLocalizations.of(context)
-                                  .avatarPickerCreateCustom
-                              : AppLocalizations.of(context)
-                                  .avatarPickerUnlockCustom,
-                        ),
                       );
                     },
                   ),
@@ -427,10 +437,12 @@ class AvatarPickerSheet extends ConsumerWidget {
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
+      ref.invalidate(customAvatarQuotaResetProvider);
       if (avatarUrl == null || !context.mounted) return;
       ref.invalidate(customAvatarOptionsProvider);
       await _updateAvatar(context, ref, avatarUrl);
     } catch (e) {
+      ref.invalidate(customAvatarQuotaResetProvider);
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -438,6 +450,62 @@ class AvatarPickerSheet extends ConsumerWidget {
             content: Text(e.toString()),
             backgroundColor: AppColors.error,
           ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteCustomAvatar(
+    BuildContext context,
+    WidgetRef ref,
+    CustomAvatarOption avatar,
+  ) async {
+    final t = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(t.avatarPickerDeleteCustomTitle),
+        content: Text(t.avatarPickerDeleteCustomBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(t.commonCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(t.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      final service = CustomAvatarGenerationService(Supabase.instance.client);
+      await service.deleteAvatar(avatarId: avatar.id);
+
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(householdMembersProvider);
+      ref.invalidate(recentActivityProvider);
+      ref.invalidate(customAvatarOptionsProvider);
+
+      if (context.mounted) {
+        AppSnackBar.show(
+          context,
+          message: t.avatarPickerCustomDeleted,
+          type: AppSnackBarType.success,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppSnackBar.show(
+          context,
+          message: t.avatarPickerCustomDeleteError('$e'),
+          type: AppSnackBarType.error,
         );
       }
     }
@@ -473,6 +541,135 @@ class AvatarPickerSheet extends ConsumerWidget {
             },
             child: Text(t.commonSave),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AiAvatarCreationCard extends ConsumerWidget {
+  final VoidCallback onCreate;
+
+  const _AiAvatarCreationCard({required this.onCreate});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isPremium = ref.watch(premiumProvider).value ?? false;
+    final quotaReset =
+        isPremium ? ref.watch(customAvatarQuotaResetProvider).value : null;
+    final quotaUsed = quotaReset != null;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.10),
+            AppColors.accentGold.withValues(alpha: 0.16),
+          ],
+        ),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: AppColors.accentGold,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.avatarPickerAiCardTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      t.avatarPickerAiCardBody,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: quotaUsed
+                  ? null
+                  : isPremium
+                      ? onCreate
+                      : () => PremiumPaywall.show(context),
+              icon: Icon(
+                isPremium
+                    ? Icons.auto_awesome_rounded
+                    : Icons.lock_rounded,
+                size: 18,
+              ),
+              label: Text(
+                isPremium
+                    ? t.avatarPickerAiCreateButton
+                    : t.avatarPickerUnlockCustom,
+              ),
+            ),
+          ),
+          if (quotaUsed) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(
+                  Icons.schedule_rounded,
+                  size: 16,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    t.avatarPickerAiUsedThisMonth(
+                      DateFormat.MMMMd(
+                        Localizations.localeOf(context).toString(),
+                      ).format(quotaReset),
+                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                      height: 1.25,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -570,11 +767,13 @@ class _CustomAvatarOptionsSection extends ConsumerWidget {
   final String? currentAvatar;
   final bool isPremium;
   final ValueChanged<String> onSelect;
+  final ValueChanged<CustomAvatarOption> onDelete;
 
   const _CustomAvatarOptionsSection({
     required this.currentAvatar,
     required this.isPremium,
     required this.onSelect,
+    required this.onDelete,
   });
 
   @override
@@ -628,6 +827,7 @@ class _CustomAvatarOptionsSection extends ConsumerWidget {
                   onTap: isPremium
                       ? () => onSelect(avatar.avatarUrl)
                       : () => PremiumPaywall.show(context),
+                  onDelete: isPremium ? () => onDelete(avatar) : null,
                 );
               }).toList(),
             ),
@@ -648,6 +848,7 @@ class _PremiumAvatarOption extends StatelessWidget {
   final bool isLocked;
   final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
   const _PremiumAvatarOption({
     required this.avatarValue,
@@ -656,84 +857,119 @@ class _PremiumAvatarOption extends StatelessWidget {
     required this.isLocked,
     required this.isSelected,
     required this.onTap,
+    this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        width: 96,
-        padding: const EdgeInsets.fromLTRB(8, 10, 8, 9),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: isLocked ? 0.35 : 0.7),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: isLocked ? 0.18 : 0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 9),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                Opacity(
-                  opacity: isLocked ? 0.42 : 1,
-                  // Solo la imagen: la variante animada se descarga recien
-                  // al seleccionar el avatar (no viene en el APK).
-                  child: CustomUserAvatar(
-                    avatarUrl: avatarValue,
-                    radius: 26,
-                    isAnimated: !isLocked,
-                    allowMotion: false,
-                  ),
+    return SizedBox(
+      width: 96,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          GestureDetector(
+            onTap: onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 96,
+              padding: const EdgeInsets.fromLTRB(8, 10, 8, 9),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: isLocked ? 0.35 : 0.7),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: isSelected ? AppColors.primary : Colors.transparent,
+                  width: 2,
                 ),
-                if (isLocked)
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.38),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.lock_rounded,
-                      color: Colors.white,
-                      size: 18,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: isLocked ? 0.18 : 0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 9),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Opacity(
+                        opacity: isLocked ? 0.42 : 1,
+                        // Solo la imagen: la variante animada se descarga recien
+                        // al seleccionar el avatar (no viene en el APK).
+                        child: CustomUserAvatar(
+                          avatarUrl: avatarValue,
+                          radius: 26,
+                          isAnimated: !isLocked,
+                          allowMotion: false,
+                        ),
+                      ),
+                      if (isLocked)
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.38),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.lock_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: isLocked
+                          ? Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withValues(alpha: 0.74)
+                          : Theme.of(context).colorScheme.onSurface,
+                      fontSize: 11,
+                      height: 1.05,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            Text(
-              name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isLocked
-                    ? Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant
-                        .withValues(alpha: 0.74)
-                    : Theme.of(context).colorScheme.onSurface,
-                fontSize: 11,
-                height: 1.05,
-                fontWeight: FontWeight.w800,
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+          if (onDelete != null)
+            Positioned(
+              top: -8,
+              right: -6,
+              child: Material(
+                color: AppColors.error,
+                shape: const CircleBorder(),
+                elevation: 4,
+                child: IconButton(
+                  tooltip:
+                      AppLocalizations.of(context).avatarPickerDeleteCustom,
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 30,
+                    height: 30,
+                  ),
+                  padding: EdgeInsets.zero,
+                  onPressed: onDelete,
+                  icon: const Icon(
+                    Icons.delete_rounded,
+                    color: Colors.white,
+                    size: 17,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

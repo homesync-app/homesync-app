@@ -19,7 +19,7 @@ bool isMainTabVisible(
     MainTab.home => true,
     MainTab.tasks => caps.showTasks,
     MainTab.expenses => currentMember?.canSeeFinanceTab ?? true,
-    MainTab.social => caps.showPartnerTab,
+    MainTab.social => caps.type == HouseholdType.solo || caps.showPartnerTab,
     MainTab.stats => caps.showStats,
     MainTab.shopping => true,
   };

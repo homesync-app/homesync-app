@@ -315,25 +315,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           result.amount != null && result.amount! > 0;
       _prefillFromScan(result);
 
-      // Logging asÃƒÂ­ncrono Ã¢â‚¬â€ no bloquea la UI ni rompe si falla.
-      final isPremium = ref.read(premiumProvider).value ?? false;
-      final householdId = ref.read(currentHouseholdProvider).value?.id;
-      OcrLogService(Supabase.instance.client)
-          .logScan(
-        merchant: result.merchant,
-        confidence: result.confidence,
-        rawItems: result.rawItems,
-        householdId: householdId,
-        tier: isPremium ? 'premium' : 'free',
-      )
-          .then((logId) {
-        if (logId != null && mounted) {
-          setState(() => _ocrLogId = logId);
-          // El matcher pudo haber terminado antes que el insert: flusheamos
-          // el resultado pendiente ahora que ya tenemos el id.
-          _flushMatcherLog();
-        }
-      });
+      // El servidor ya insertó la fila de ocr_scan_logs (merchant, confianza,
+      // items y telemetría) y devolvió su id; el cliente solo la actualiza con
+      // el resultado del matcher y la acción final del usuario.
+      final scanLogId = result.logId;
+      if (scanLogId != null) {
+        setState(() => _ocrLogId = scanLogId);
+        _flushMatcherLog();
+      }
 
       // Solo corremos el matcher para categorÃƒÂ­as donde tiene sentido vincular
       // con la lista de compras. Para cafeterÃƒÂ­as, transporte, servicios, etc.
@@ -351,9 +340,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     } catch (e, st) {
       debugPrint('[ReceiptScan] ERROR: $e\n$st');
       if (!mounted) return;
-      final message = e is ScanRateLimitException
-          ? t.expensesFormOcrRateLimited
-          : t.expensesFormOcrError(e.toString());
+      final message = switch (e) {
+        ScanRateLimitException() => t.expensesFormOcrRateLimited,
+        ScanImageTooLargeException(:final sizeMb) =>
+          t.expensesFormOcrImageTooLarge(sizeMb.toStringAsFixed(1)),
+        ScanAuthException() => t.expensesFormOcrSessionExpired,
+        ScanTimeoutException() => t.expensesFormOcrTimeout,
+        _ => t.expensesFormOcrError(e.toString()),
+      };
       AppSnackBar.show(
         context,
         message: message,

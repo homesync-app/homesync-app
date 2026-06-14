@@ -581,6 +581,7 @@ expense_templates.id ← planned_expenses.template_id
 |---------|---------|-----------|
 | get_weekly_ranking(p_household_id) | JSONB | Ranking semanal por miembro |
 | award_weekly_winner(p_household_id) | JSONB | Premia ganador semanal |
+| get_solo_progress_snapshot(p_user_id, p_household_id) | JSONB | Snapshot de progreso Solo: XP, racha, señales semanales y lectura financiera personal |
 | get_xp_history(p_user_id) | TABLE | Historial de XP |
 | get_coin_history(p_user_id) | TABLE | Historial de coins |
 | get_member_activity_stats(p_user_id) | TABLE | Stats de actividad |

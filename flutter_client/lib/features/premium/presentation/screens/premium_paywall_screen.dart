@@ -99,14 +99,17 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               child: Column(
                 children: [
-                  const _HeroHeader()
-                      .animate()
-                      .fadeIn(duration: 350.ms)
-                      .slideY(begin: 0.06),
-                  const SizedBox(height: 18),
                   if (isPremium)
-                    _AlreadyPremiumCard()
-                  else
+                    const _PremiumActiveContent()
+                        .animate()
+                        .fadeIn(duration: 350.ms)
+                        .slideY(begin: 0.04)
+                  else ...[
+                    const _HeroHeader()
+                        .animate()
+                        .fadeIn(duration: 350.ms)
+                        .slideY(begin: 0.06),
+                    const SizedBox(height: 18),
                     productsAsync.when(
                       data: (products) => _ProductList(products: products),
                       loading: () => const CircularProgressIndicator(
@@ -114,7 +117,6 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
                       ),
                       error: (err, _) => _StoreError(error: err.toString()),
                     ),
-                  if (!isPremium) ...[
                     const SizedBox(height: 2),
                     TextButton(
                       style: TextButton.styleFrom(
@@ -142,32 +144,32 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    _BenefitCard(
+                      icon: Icons.event_repeat_rounded,
+                      color: AppColors.primary,
+                      title: t.premiumBenefitRecurringPayments,
+                      desc: t.premiumBenefitRecurringPaymentsDesc,
+                    ).animate().fadeIn(delay: 120.ms).slideY(begin: 0.08),
+                    _BenefitCard(
+                      icon: Icons.shopping_cart_checkout_rounded,
+                      color: AppColors.sage,
+                      title: t.premiumBenefitShoppingFinanceSync,
+                      desc: t.premiumBenefitShoppingFinanceSyncDesc,
+                    ).animate().fadeIn(delay: 180.ms).slideY(begin: 0.08),
+                    _BenefitCard(
+                      icon: Icons.insights_rounded,
+                      color: AppColors.accentBlue,
+                      title: t.premiumBenefitAdvancedStats,
+                      desc: t.premiumBenefitAdvancedStatsDesc,
+                    ).animate().fadeIn(delay: 240.ms).slideY(begin: 0.08),
+                    _BenefitCard(
+                      icon: Icons.palette_rounded,
+                      color: AppColors.accentPurple,
+                      title: t.premiumBenefitFullCustomization,
+                      desc: t.premiumBenefitFullCustomizationDesc,
+                    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.08),
                   ],
-                  const SizedBox(height: 12),
-                  _BenefitCard(
-                    icon: Icons.event_repeat_rounded,
-                    color: AppColors.primary,
-                    title: t.premiumBenefitRecurringPayments,
-                    desc: t.premiumBenefitRecurringPaymentsDesc,
-                  ).animate().fadeIn(delay: 120.ms).slideY(begin: 0.08),
-                  _BenefitCard(
-                    icon: Icons.shopping_cart_checkout_rounded,
-                    color: AppColors.sage,
-                    title: t.premiumBenefitShoppingFinanceSync,
-                    desc: t.premiumBenefitShoppingFinanceSyncDesc,
-                  ).animate().fadeIn(delay: 180.ms).slideY(begin: 0.08),
-                  _BenefitCard(
-                    icon: Icons.insights_rounded,
-                    color: AppColors.accentBlue,
-                    title: t.premiumBenefitAdvancedStats,
-                    desc: t.premiumBenefitAdvancedStatsDesc,
-                  ).animate().fadeIn(delay: 240.ms).slideY(begin: 0.08),
-                  _BenefitCard(
-                    icon: Icons.palette_rounded,
-                    color: AppColors.accentPurple,
-                    title: t.premiumBenefitFullCustomization,
-                    desc: t.premiumBenefitFullCustomizationDesc,
-                  ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.08),
                 ],
               ),
             ),
@@ -713,65 +715,192 @@ class _PlanRadio extends StatelessWidget {
   }
 }
 
-class _AlreadyPremiumCard extends ConsumerWidget {
+class _PremiumActiveContent extends StatelessWidget {
+  const _PremiumActiveContent();
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _PremiumActiveHero(),
+        const SizedBox(height: 18),
+        Text(
+          t.premiumActiveBenefitsTitle,
+          style: TextStyle(
+            color: context.theme.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 10),
+        _BenefitCard(
+          icon: Icons.event_repeat_rounded,
+          color: AppColors.primary,
+          title: t.premiumBenefitRecurringPayments,
+          desc: t.premiumBenefitRecurringPaymentsDesc,
+        ).animate().fadeIn(delay: 90.ms).slideY(begin: 0.06),
+        _BenefitCard(
+          icon: Icons.shopping_cart_checkout_rounded,
+          color: AppColors.sage,
+          title: t.premiumBenefitShoppingFinanceSync,
+          desc: t.premiumBenefitShoppingFinanceSyncDesc,
+        ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.06),
+        _BenefitCard(
+          icon: Icons.insights_rounded,
+          color: AppColors.accentBlue,
+          title: t.premiumBenefitAdvancedStats,
+          desc: t.premiumBenefitAdvancedStatsDesc,
+        ).animate().fadeIn(delay: 210.ms).slideY(begin: 0.06),
+        _BenefitCard(
+          icon: Icons.palette_rounded,
+          color: AppColors.accentPurple,
+          title: t.premiumBenefitFullCustomization,
+          desc: t.premiumBenefitFullCustomizationDesc,
+        ).animate().fadeIn(delay: 270.ms).slideY(begin: 0.06),
+        const SizedBox(height: 12),
+        AnimatedPress(
+          scale: 0.98,
+          haptic: AppPressHaptic.light,
+          onTap: () => Navigator.pop(context),
+          child: Container(
+            height: 54,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(AppRadii.pill),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.16),
+              ),
+            ),
+            child: Text(
+              t.premiumContinueButton,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PremiumActiveHero extends StatelessWidget {
+  const _PremiumActiveHero();
+
+  @override
+  Widget build(BuildContext context) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: theme.surface.withValues(alpha: theme.isDarkMode ? 1 : 0.86),
-        borderRadius: BorderRadius.circular(AppRadii.modal),
-        border: Border.all(color: AppColors.primary, width: 1.5),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: theme.isDarkMode
+              ? [
+                  theme.surface,
+                  AppColors.accentGold.withValues(alpha: 0.10),
+                ]
+              : const [
+                  Color(0xFFFFFBF4),
+                  Color(0xFFFFF4DD),
+                  Color(0xFFFFFCF9),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+        border: Border.all(
+          color: AppColors.accentGold.withValues(alpha: 0.36),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accentGold.withValues(alpha: 0.13),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.stars_rounded,
-            color: AppColors.accentGold,
-            size: 64,
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.78),
+                  borderRadius: BorderRadius.circular(AppRadii.xl),
+                  border: Border.all(
+                    color: AppColors.accentGold.withValues(alpha: 0.24),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: AppColors.accentGold,
+                  size: 28,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.sage.withValues(alpha: 0.13),
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppColors.sage,
+                      size: 17,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      t.premiumActiveStatusPill,
+                      style: const TextStyle(
+                        color: AppColors.sage,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           Text(
             t.premiumAlreadyActiveTitle,
             style: TextStyle(
               color: theme.textPrimary,
-              fontSize: 22,
+              fontSize: 28,
               fontWeight: FontWeight.w900,
+              height: 1.05,
+              letterSpacing: -0.6,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             t.premiumAlreadyActiveBody,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: theme.textSecondary),
-          ),
-          const SizedBox(height: 24),
-          OutlinedButton(
-            onPressed: () => Navigator.pop(context),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: theme.textPrimary,
-              side: BorderSide(color: theme.border),
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.lg),
-              ),
+            style: TextStyle(
+              color: theme.textSecondary,
+              fontSize: 14.5,
+              fontWeight: FontWeight.w700,
+              height: 1.32,
             ),
-            child: Text(t.premiumContinueButton),
           ),
-          const SizedBox(height: 12),
-          if (!AppEnvironment.isProduction)
-            TextButton(
-              onPressed: () async {
-                await ref.read(premiumProvider.notifier).togglePremiumMock();
-                if (context.mounted) Navigator.pop(context);
-              },
-              child: Text(
-                t.premiumDeactivateTesting,
-                style: TextStyle(color: theme.textMuted, fontSize: 12),
-              ),
-            ),
         ],
       ),
     );

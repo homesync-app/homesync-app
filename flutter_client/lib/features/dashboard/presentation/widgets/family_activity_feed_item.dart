@@ -9,7 +9,7 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
-    show dashboardCategoryAccent, dashboardCategoryIcon;
+    show dashboardCategoryAccent;
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_detail_sheet.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -19,6 +19,8 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/animated_amount.dart';
+import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
@@ -93,175 +95,108 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       );
     }
 
-    return InkWell(
-      onTap: () => _openDetail(context, ref, type, data),
-      borderRadius: BorderRadius.circular(22),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: isPendingApproval
-              ? (theme.isDarkMode
-                  ? Color.alphaBlend(
-                      const Color(0xFFE59A2F).withValues(alpha: 0.08),
-                      theme.surface,
-                    )
-                  : const Color(0xFFFFF8ED))
-              : theme.surface,
-          borderRadius: BorderRadius.circular(isPendingApproval ? 24 : 22),
-          border: Border.all(
-            color: isPendingApproval
-                ? const Color(0xFFE59A2F).withValues(alpha: 0.2)
-                : theme.divider.withValues(alpha: 0.08),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
-            ),
-          ],
+    // Compact full-width timeline row (same density recipe as the solo
+    // timeline, plus avatar + "who" eyebrow because family is multi-person):
+    // avatar, eyebrow + title + plain relative time, and the key figures on
+    // the trailing edge instead of a row of bordered pills.
+    final figures = <_TrailingFigure>[
+      if (amount != null)
+        _TrailingFigure(_formatCurrency(ref, amount), theme.textPrimary),
+      if (xpReward != null && xpReward > 0)
+        _TrailingFigure('+$xpReward XP', const Color(0xFFE8943A)),
+      if (coinsReward != null && coinsReward > 0)
+        _TrailingFigure(
+          AppLocalizations.of(context).activityCoinsPlus(coinsReward),
+          AppColors.sage,
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CustomUserAvatar(
-              name: userName,
-              avatarUrl: avatarUrl,
-              radius: 20,
-              forceCircular: true,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _headlineFor(type, userName),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: isPendingApproval
-                                    ? const Color(0xFFC47A18)
-                                    : theme.textSecondary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.05,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              detailTitle,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: theme.textPrimary,
-                                fontSize: 15.5,
-                                fontWeight: FontWeight.w800,
-                                height: 1.18,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 30,
-                        height: 30,
-                        decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(11),
-                        ),
-                        child: Icon(
-                          _activityIcon(type, category),
-                          size: 16,
-                          color: accent,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      _metaPill(
-                        theme: theme,
-                        color: theme.textMuted,
-                        icon: Icons.access_time_rounded,
-                        label: _formatTime(createdAt),
-                      ),
-                      if (amount != null)
-                        _metaPill(
-                          theme: theme,
-                          color: accent,
-                          icon: Icons.payments_rounded,
-                          label: _formatCurrency(ref, amount),
-                        ),
-                      if (xpReward != null && xpReward > 0)
-                        _metaPill(
-                          theme: theme,
-                          color: const Color(0xFFE8943A),
-                          icon: Icons.star_rounded,
-                          label: '+$xpReward XP',
-                        ),
-                      if (coinsReward != null && coinsReward > 0)
-                        _metaPill(
-                          theme: theme,
-                          color: AppColors.sage,
-                          icon: Icons.monetization_on_rounded,
-                          label: '+$coinsReward coins',
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    ].take(2).toList();
 
-  Widget _metaPill({
-    required AppThemeColors theme,
-    required Color color,
-    required IconData icon,
-    required String label,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xs,
-        vertical: AppSpacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(AppRadii.pill),
-        border: Border.all(
-          color: color.withValues(alpha: 0.12),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: color),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-            ),
+    return Semantics(
+      button: true,
+      child: AnimatedPress(
+        onTap: () => _openDetail(context, ref, type, data),
+        scale: 0.985,
+        haptic: AppPressHaptic.selection,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+          decoration: BoxDecoration(
+            color: theme.surface,
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+            border: Border.all(color: theme.border.withValues(alpha: 0.4)),
           ),
-        ],
+          child: Row(
+            children: [
+              CustomUserAvatar(
+                name: userName,
+                avatarUrl: avatarUrl,
+                radius: 18,
+                forceCircular: true,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _headlineFor(type, userName),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.05,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      detailTitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: theme.textPrimary.withValues(alpha: 0.92),
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      _formatTime(createdAt),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: theme.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (figures.isNotEmpty) ...[
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (var i = 0; i < figures.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 3),
+                      Text(
+                        figures[i].label,
+                        style: TextStyle(
+                          color: figures[i].color,
+                          fontSize: i == 0 ? 13.5 : 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.2,
+                        ).tabular,
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -340,19 +275,6 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     if (type == 'expense') return const Color(0xFFF08B49);
     if (type == 'task_pending_approval') return const Color(0xFFE59A2F);
     return dashboardCategoryAccent(context, category);
-  }
-
-  IconData _activityIcon(String? type, String? category) {
-    switch (type) {
-      case 'expense':
-        return Icons.receipt_long_rounded;
-      case 'task_pending_approval':
-        return Icons.fact_check_rounded;
-      case 'task':
-        return dashboardCategoryIcon(category);
-      default:
-        return Icons.star_rounded;
-    }
   }
 
   int? _readInt(dynamic raw) {
@@ -509,6 +431,13 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       type: type,
     );
   }
+}
+
+class _TrailingFigure {
+  final String label;
+  final Color color;
+
+  const _TrailingFigure(this.label, this.color);
 }
 
 class _PendingApprovalActivityCard extends StatelessWidget {

@@ -554,6 +554,70 @@ Caso idempotente (mismo `p_request_id` reenviado):
 
 ---
 
+## `get_solo_progress_snapshot(p_user_id, p_household_id)`
+
+Snapshot de lectura para Modo Solo. Centraliza XP total, XP semanal, racha real, tareas completadas, dias activos, categorias fuertes y resumen financiero personal para que Home y `Mi espacio` no calculen progreso con reglas divergentes.
+
+**Inputs**
+
+| parametro | tipo | nota |
+|---|---|---|
+| `p_user_id` | `uuid` | usuario autenticado esperado; debe coincidir con `current_app_user_id()` |
+| `p_household_id` | `uuid` | hogar actual; el usuario debe ser miembro |
+
+**Output**
+
+Devuelve `jsonb`. En exito:
+
+- `authorized: true`
+- `xp`, `weekly_xp`, `previous_week_xp`, `weekly_xp_delta`
+- `tasks_completed`, `weekly_tasks_completed`, `previous_week_tasks_completed`, `tasks_completed_delta`
+- `current_streak_days`, `active_days_14`, `recent_activity_count`
+- `monthly_expense`, `monthly_income`
+- `top_task_category`, `top_expense_category`
+- `generated_at`, `week_start`, `household_type`
+
+Si falla la autorizacion devuelve `authorized: false` con contadores en cero y `reason`.
+
+**Tablas / RPCs**
+
+| objeto | R/W | nota |
+|---|---|---|
+| `public.households` | R | valida tipo de hogar y existencia |
+| `public.household_members` | R | valida membresia del caller |
+| `public.ledger_entries` | R | XP total y semanal |
+| `public.household_activities` | R | tareas completadas, racha, actividad reciente |
+| `public.expenses` | R | categoria fuerte de gasto del mes |
+| `public.get_personal_finance_summary` | R | ingreso/gasto personal existente |
+
+**Seguridad**
+
+- `security definer`, `set search_path = ''`, referencias `public.` completas.
+- Usa `current_app_user_id()` y exige `v_uid = p_user_id`.
+- Rechaza usuarios que no pertenecen al hogar pedido.
+- `EXECUTE` revocado a `public`/`anon`, concedido a `authenticated`.
+
+**Idempotencia**
+
+Solo lectura. No escribe datos ni necesita `request_id`.
+
+**Providers a invalidar en cliente**
+
+- `soloProgressServerSnapshotProvider`
+- `userBalanceProvider`
+- `personalFinanceSummaryProvider`
+- `recentActivityRemoteProvider`
+- `statsControllerProvider`
+- `tasksProvider`
+
+**Cliente**
+
+- Provider: `flutter_client/lib/features/dashboard/presentation/providers/solo_progress_provider.dart`
+- Modelo: `flutter_client/lib/features/dashboard/domain/models/solo_progress_snapshot.dart`
+- UI: `flutter_client/lib/features/dashboard/presentation/screens/solo_space_screen.dart`
+
+---
+
 ## Apendice: como agregar una entrada nueva
 
 1. Crear la migration con el RPC (`security definer`, `set search_path = public`, validar `current_app_user_id()`).

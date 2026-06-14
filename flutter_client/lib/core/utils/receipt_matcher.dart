@@ -32,6 +32,13 @@ class ReceiptMatcher {
     r'\$\s*[\d\.,]+|\b\d+[\.,]\d{2}\b|\s+\d{3,}\s*$',
   );
 
+  /// Porcentajes pegados a un número: "0%", "0 %", "25%". Se eliminan al
+  /// tokenizar porque son descriptores nutricionales ("LECHE 0% LACTOSA",
+  /// "YOGUR 25% MENOS GRASA"), no productos. Las promos reales ("2do al 50%",
+  /// "DESCUENTO %") las atrapa el quality gate por otras reglas (empieza con
+  /// dígito, palabra de blacklist), no por el símbolo % suelto.
+  static final _percentPattern = RegExp(r'\d+\s*%');
+
   static final _stopWords = {
     'de',
     'la',
@@ -84,7 +91,9 @@ class ReceiptMatcher {
     'dni',
     'gracias',
     'operacion',
-    'caja',
+    // 'caja' NO va acá: en tickets AR aparece como formato de producto
+    // ("CAPSULAS CAFE ... CAJA X 10"), no solo como nº de caja registradora.
+    // Eliminaba productos legítimos. 'cajero' sí queda (siempre es metadata).
     'cajero',
     'vendedor',
     'atencion',
@@ -126,7 +135,9 @@ class ReceiptMatcher {
   /// Tokens ya pasados por `_stem`.
   static const _ambiguousGenerics = {
     'jabon', // requiere 'ropa' o 'tocador'
-    'queso', // requiere 'fresco', 'rallado' o 'crema'
+    // 'queso' NO va acá: los tickets traen muchos quesos específicos que no
+    // están en el catálogo ("QUESO PORT SALUT", "QUESO BARRA"). Tratarlo como
+    // ambiguo los descartaba por completo; es mejor ofrecer "Queso" genérico.
   };
 
   // ─── Catálogo predefinido aplanado (lazy) ──────────────────────────────────
@@ -144,6 +155,11 @@ class ReceiptMatcher {
                 nameKey: shoppingCatalogKeyForName(name),
                 emoji: item['emoji'] ?? '🛒',
                 category: entry.key,
+                // Tokens precomputados una sola vez: findPredefined recorre el
+                // catálogo entero por cada línea OCR y re-tokenizar acá adentro
+                // (regex de precios + cantidades + normalización + stem) era
+                // trabajo repetido en el hilo de UI.
+                tokens: _tokenize(name),
               );
             },
           ),
@@ -170,7 +186,7 @@ class ReceiptMatcher {
     // (16 chars) > 'pepino' (6 chars).
 
     for (final entry in _flatCatalog) {
-      final catTokens = _tokenize(entry.name);
+      final catTokens = entry.tokens;
       if (catTokens.isEmpty) continue;
       final s = _scoreByCatalog(ocrTokens, catTokens);
       final catChars = catTokens.fold(0, (sum, t) => sum + t.length);
@@ -327,6 +343,7 @@ class ReceiptMatcher {
   static List<String> _tokenize(String raw) {
     final cleaned = raw
         .replaceAll(_pricePattern, ' ')
+        .replaceAll(_percentPattern, ' ')
         .replaceAll(_quantityPattern, ' ')
         // "sin azucar", "sin tacc", "sin sodio", etc. son descriptores del
         // producto, no el producto en sí. Se eliminan ambas palabras para
@@ -431,10 +448,10 @@ class ReceiptMatcher {
     final t = raw.trim();
     if (t.isEmpty) return false;
 
-    // Descarta líneas de descuento/promo con porcentaje
-    if (t.contains('%')) return false;
-
-    // Descarta si empieza con símbolo, guión o dígito
+    // Descarta si empieza con símbolo, guión o dígito. Esto ya atrapa las
+    // promos típicas ("2DO AL 50%", "-arcor"). NO descartamos por el símbolo
+    // '%' suelto: "LECHE 0% LACTOSA" es un producto real (los descuentos
+    // empiezan con dígito o traen palabra de blacklist como 'descuento').
     if (RegExp(r'^[-_*/\\@#!+=\d]').hasMatch(t)) return false;
 
     // Descarta si contiene guión en cualquier posición: es código interno del
@@ -478,11 +495,16 @@ class CatalogEntry {
   final String? nameKey;
   final String emoji;
   final String category;
+
+  /// Tokens normalizados de [name], precomputados al construir el catálogo.
+  final List<String> tokens;
+
   const CatalogEntry({
     required this.name,
     this.nameKey,
     required this.emoji,
     required this.category,
+    this.tokens = const [],
   });
 }
 
@@ -602,7 +624,7 @@ ScanMatchResult resolveScanItems({
     }
 
     // ── Paso 3: buscar el nombre canónico en la lista pendiente ───────────────
-    final catalogTokens = ReceiptMatcher.tokenize(catalog.name);
+    final catalogTokens = catalog.tokens;
     ShoppingItemModel? pendingMatch;
     double bestScore = 0;
 

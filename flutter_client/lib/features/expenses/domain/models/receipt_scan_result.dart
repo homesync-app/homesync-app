@@ -33,6 +33,11 @@ class ReceiptScanResult {
   /// Confianza 0.0–1.0 según legibilidad del ticket.
   final double confidence;
 
+  /// Id de la fila de ocr_scan_logs que el servidor insertó para este scan.
+  /// El cliente NO inserta su propia fila: actualiza esta con el resultado
+  /// del matcher y la acción final del usuario (confirmed/cancelled).
+  final String? logId;
+
   const ReceiptScanResult({
     this.merchant,
     this.amount,
@@ -42,12 +47,14 @@ class ReceiptScanResult {
     required this.rawItems,
     required this.localImagePath,
     required this.confidence,
+    this.logId,
   });
 
   factory ReceiptScanResult.fromJson(
     Map<String, dynamic> json,
-    String localImagePath,
-  ) {
+    String localImagePath, {
+    String? logId,
+  }) {
     final raw = (json['items'] as List<dynamic>?)
             ?.map((e) => e.toString().trim())
             .where((e) => e.isNotEmpty)
@@ -65,6 +72,7 @@ class ReceiptScanResult {
           raw.map(ReceiptMatcher.cleanName).where((e) => e.isNotEmpty).toList(),
       localImagePath: localImagePath,
       confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
+      logId: logId,
     );
   }
 

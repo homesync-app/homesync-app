@@ -73,7 +73,7 @@ class FamilyTaskCard extends StatelessWidget {
     final accent = isPendingReview
         ? const Color(0xFFE59A2F)
         : dashboardCategoryAccent(context, task.category);
-    final contextLabel = _contextLabel();
+    final contextLabel = _displayContextLabel();
     final urgency = _urgencyLabel();
 
     return AppCompletionFeedback(
@@ -104,7 +104,7 @@ class FamilyTaskCard extends StatelessWidget {
           child: Row(
             children: [
               _buildLeading(accent),
-              const SizedBox(width: 14),
+              const SizedBox(width: 18),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,23 +248,55 @@ class FamilyTaskCard extends StatelessWidget {
   }
 
   Widget _buildLeading(Color accent) {
-    final memberForAvatar =
+    final leadingMember =
         task.isPendingApproval ? completedMember : assignedMember;
-
-    if (memberForAvatar != null) {
-      return CustomUserAvatar(
-        name: memberForAvatar.displayName,
-        avatarUrl: memberForAvatar.avatarUrl,
-        radius: 22,
-        showBorder: true,
-        userId: memberForAvatar.userId,
-        forceCircular: true,
-      );
+    if (leadingMember?.isChild == true) {
+      return _buildChildAvatarLeading(leadingMember!, accent);
     }
 
+    return _buildCategoryLeading(accent);
+  }
+
+  Widget _buildChildAvatarLeading(MemberModel member, Color accent) {
+    final isPremiumCharacter =
+        UserAvatar.isPremiumAvatarValue(member.avatarUrl);
+
     return Container(
-      width: 54,
-      height: 54,
+      width: 58,
+      height: 58,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: 0.12),
+            accent.withValues(alpha: 0.04),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accent.withValues(alpha: 0.08)),
+      ),
+      child: Center(
+        child: Transform.translate(
+          offset: isPremiumCharacter ? const Offset(0, -2) : Offset.zero,
+          child: CustomUserAvatar(
+            name: member.displayName,
+            avatarUrl: member.avatarUrl,
+            radius: isPremiumCharacter ? 25 : 20,
+            showBorder: false,
+            userId: member.userId,
+            forceCircular: !isPremiumCharacter,
+            allowMotion: false,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryLeading(Color accent) {
+    return Container(
+      width: 58,
+      height: 58,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -284,6 +316,45 @@ class FamilyTaskCard extends StatelessWidget {
     );
   }
 
+  String? _displayContextLabel() {
+    if (task.isPendingApproval) {
+      if (canApprovePending) {
+        if (completedMember != null) {
+          return '${completedMember!.displayName} la marcó como hecha';
+        }
+        return 'Lista para revisar';
+      }
+      if (isChildView) return 'Esperando aprobación';
+      return 'Esperando que un adulto la revise';
+    }
+
+    if (task.assignedTo == null) {
+      if (task.isOverdue) return 'Pendiente de coordinar';
+      if (task.isDueToday) return 'A coordinar';
+      return null;
+    }
+
+    if (_isAssignedToCurrentUser) {
+      if (isChildView) {
+        return task.isOverdue ? 'Tu misión pendiente' : 'Tu misión';
+      }
+      return task.isOverdue ? 'Te quedó pendiente' : 'Te toca hoy';
+    }
+
+    if (assignedMember == null) {
+      return task.isOverdue ? 'Le quedó a otro' : 'Para otro integrante';
+    }
+
+    final name = _firstName(assignedMember!.displayName);
+    if (name.isEmpty) {
+      return task.isOverdue ? 'Le quedó a otro' : 'Para otro integrante';
+    }
+    return task.isOverdue ? 'Le quedó a $name' : 'Para $name';
+  }
+
+  String _firstName(String name) => name.trim().split(RegExp(r'\s+')).first;
+
+  // ignore: unused_element
   String? _contextLabel() {
     if (task.isPendingApproval) {
       if (canApprovePending) {

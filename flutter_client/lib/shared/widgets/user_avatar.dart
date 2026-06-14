@@ -208,11 +208,13 @@ class CustomUserAvatar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bool isPremium = UserAvatar.isPremiumCharacterAvatarValue(avatarUrl);
+    // Los avatares generados por IA (custom-avatars) comparten el formato
+    // sticker de los premium: mismo render grande, sin recorte circular.
+    final bool isSticker = UserAvatar.isPremiumAvatarValue(avatarUrl);
     final admin = ref.watch(adminProvider);
 
     Widget avatarContent;
-    if (isPremium && !forceCircular) {
+    if (isSticker && !forceCircular) {
       avatarContent = _PremiumCharacterAvatar(
         url: avatarUrl!,
         radius: radius,

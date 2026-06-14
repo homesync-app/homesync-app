@@ -13,6 +13,10 @@ class HomeHeaderAvatar extends StatelessWidget {
   final double regularRadius;
   final Offset premiumOffset;
   final Offset regularOffset;
+  final double premiumWidth;
+  final double premiumHeight;
+  final double premiumMaxWidth;
+  final double premiumMaxHeight;
 
   const HomeHeaderAvatar({
     super.key,
@@ -26,12 +30,16 @@ class HomeHeaderAvatar extends StatelessWidget {
     this.regularRadius = 29,
     this.premiumOffset = const Offset(6, -6),
     this.regularOffset = const Offset(0, -18),
+    this.premiumWidth = 110,
+    this.premiumHeight = 102,
+    this.premiumMaxWidth = 150,
+    this.premiumMaxHeight = 150,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isPremiumCharacter =
-        UserAvatar.isPremiumCharacterAvatarValue(avatarUrl);
+    // Sticker = premium:// o avatar IA generado: mismo render grande.
+    final isPremiumCharacter = UserAvatar.isPremiumAvatarValue(avatarUrl);
     final child = isPremiumCharacter
         ? _buildPremiumAvatar()
         : _buildRegularAvatar(context);
@@ -46,12 +54,12 @@ class HomeHeaderAvatar extends StatelessWidget {
     return Transform.translate(
       offset: premiumOffset,
       child: SizedBox(
-        width: 110,
-        height: 102,
+        width: premiumWidth,
+        height: premiumHeight,
         child: OverflowBox(
           alignment: Alignment.centerRight,
-          maxWidth: 150,
-          maxHeight: 150,
+          maxWidth: premiumMaxWidth,
+          maxHeight: premiumMaxHeight,
           child: CustomUserAvatar(
             name: name,
             avatarUrl: avatarUrl,
