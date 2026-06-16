@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart' as fa;
-import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/expenses/domain/models/receipt_scan_result.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -71,7 +72,7 @@ class ReceiptScanService {
       }
     }
 
-    debugPrint(
+    log.d(
       '[ReceiptScan] Imagen comprimida: ${(imageBytes.length / 1024).toStringAsFixed(1)} KB',
     );
 
@@ -104,7 +105,7 @@ class ReceiptScanService {
         '${now.month.toString().padLeft(2, '0')}-'
         '${now.day.toString().padLeft(2, '0')}';
 
-    debugPrint('[ReceiptScan] Invocando Edge Function scan-receipt...');
+    log.d('[ReceiptScan] Invocando Edge Function scan-receipt...');
     late final FunctionResponse response;
     try {
       // Bytes crudos (application/octet-stream): evita el 33% de overhead de
@@ -141,7 +142,7 @@ class ReceiptScanService {
       throw const ScanTimeoutException();
     }
 
-    debugPrint('[ReceiptScan] Respuesta status=${response.status}');
+    log.d('[ReceiptScan] Respuesta status=${response.status}');
 
     if (response.status != 200 || response.data == null) {
       throw Exception(
@@ -157,7 +158,7 @@ class ReceiptScanService {
       );
     }
 
-    debugPrint(
+    log.d(
       '[ReceiptScan] OCR ok merchant=${data['merchant']} amount=${data['amount']}',
     );
     return ReceiptScanResult.fromJson(
@@ -183,7 +184,7 @@ class ReceiptScanService {
       return signedUrl;
     } catch (e) {
       // El archivo puede haber vencido (>60 días) — devolver null es correcto.
-      debugPrint('[ReceiptScan] Ticket no disponible: $e');
+      log.w('[ReceiptScan] Ticket no disponible', error: e);
       return null;
     }
   }

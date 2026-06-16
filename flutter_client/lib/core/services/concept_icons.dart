@@ -167,7 +167,7 @@ class ConceptIconManifestNotifier extends Notifier<Map<String, String>> {
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('concept icon manifest refresh failed: $e');
+        log.w('concept icon manifest refresh failed', error: e);
       }
     }
   }

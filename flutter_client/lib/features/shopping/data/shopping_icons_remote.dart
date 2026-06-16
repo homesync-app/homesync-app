@@ -72,7 +72,7 @@ class ShoppingIconManifestNotifier extends Notifier<Map<String, String>> {
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('shopping icon manifest refresh failed: $e');
+        log.w('shopping icon manifest refresh failed', error: e);
       }
     }
   }

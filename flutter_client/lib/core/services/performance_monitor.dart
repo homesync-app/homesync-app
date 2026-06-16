@@ -82,7 +82,7 @@ class PerformanceMonitor {
       'appElapsedMs': _appStopwatch.elapsedMilliseconds,
       ...context,
     });
-    _emit('[Perf] $name$suffix');
+    log.i('[Perf] $name$suffix');
   }
 
   static void _log(
@@ -93,16 +93,11 @@ class PerformanceMonitor {
   ) {
     final suffix = _formatContext(context);
     final message = '[Perf] $name ${elapsedMs}ms$suffix';
-    _emit(message);
     if (elapsedMs >= warnAfterMs) {
       log.w(message);
     } else {
       log.i(message);
     }
-  }
-
-  static void _emit(String message) {
-    debugPrint(message);
   }
 
   static String _formatContext(Map<String, Object?> context) {

@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart' as fa;
-import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -35,7 +35,7 @@ class CustomAvatarGenerationService {
     final imageBytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(imageBytes);
 
-    debugPrint(
+    log.d(
       '[CustomAvatar] Imagen comprimida: '
       '${(imageBytes.length / 1024).toStringAsFixed(1)} KB',
     );
@@ -55,7 +55,7 @@ class CustomAvatarGenerationService {
       );
     }
 
-    debugPrint('[CustomAvatar] Invocando Edge Function...');
+    log.d('[CustomAvatar] Invocando Edge Function...');
     late final FunctionResponse response;
     try {
       response = await _supabase.functions.invoke(
@@ -75,9 +75,9 @@ class CustomAvatarGenerationService {
       );
     } on FunctionException catch (e) {
       final details = e.details;
-      debugPrint(
-        '[CustomAvatar] FunctionException status=${e.status} '
-        'details=$details error=$e',
+      log.w(
+        '[CustomAvatar] FunctionException status=${e.status} details=$details',
+        error: e,
       );
       if (e.status == 429) {
         throw const CustomAvatarGenerationException(
@@ -94,14 +94,14 @@ class CustomAvatarGenerationService {
             'No se pudo crear el avatar (${e.status}). Probá de nuevo.',
       );
     } catch (e) {
-      debugPrint('[CustomAvatar] Error inesperado: $e');
+      log.e('[CustomAvatar] Error inesperado', error: e);
       if (e is CustomAvatarGenerationException) rethrow;
       throw const CustomAvatarGenerationException(
         'No se pudo crear el avatar. Probá de nuevo.',
       );
     }
 
-    debugPrint(
+    log.d(
       '[CustomAvatar] Respuesta status=${response.status} data=${response.data}',
     );
     if (response.status != 200 || response.data == null) {
@@ -150,15 +150,16 @@ class CustomAvatarGenerationService {
         );
       }
     } on FunctionException catch (e) {
-      debugPrint(
+      log.w(
         '[CustomAvatar] Delete FunctionException status=${e.status} '
-        'details=${e.details} error=$e',
+        'details=${e.details}',
+        error: e,
       );
       throw const CustomAvatarGenerationException(
         'No se pudo eliminar el avatar. Probá de nuevo.',
       );
     } catch (e) {
-      debugPrint('[CustomAvatar] Error eliminando avatar: $e');
+      log.e('[CustomAvatar] Error eliminando avatar', error: e);
       if (e is CustomAvatarGenerationException) rethrow;
       throw const CustomAvatarGenerationException(
         'No se pudo eliminar el avatar. Probá de nuevo.',

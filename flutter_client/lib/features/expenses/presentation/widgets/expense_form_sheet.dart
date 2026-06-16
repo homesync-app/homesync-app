@@ -338,7 +338,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         }
       }
     } catch (e, st) {
-      debugPrint('[ReceiptScan] ERROR: $e\n$st');
+      log.e('[ReceiptScan] error procesando scan', error: e, stackTrace: st);
       if (!mounted) return;
       final message = switch (e) {
         ScanRateLimitException() => t.expensesFormOcrRateLimited,
@@ -609,9 +609,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       String? receiptPath = widget.expense?.receiptPath;
       if (_scanResult != null) {
         receiptPath = null;
-        debugPrint(
-          '[ExpenseForm] Ticket escaneado sin guardar imagen',
-        );
+        log.d('[ExpenseForm] Ticket escaneado sin guardar imagen');
       }
 
       final saveResult = await repo.saveExpense(
