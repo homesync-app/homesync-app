@@ -354,48 +354,6 @@ class FamilyTaskCard extends StatelessWidget {
 
   String _firstName(String name) => name.trim().split(RegExp(r'\s+')).first;
 
-  // ignore: unused_element
-  String? _contextLabel() {
-    if (task.isPendingApproval) {
-      if (canApprovePending) {
-        if (completedMember != null) {
-          return '${completedMember!.displayName} la marcó como hecha';
-        }
-        return 'Lista para revisar';
-      }
-      if (isChildView) return 'Esperando aprobación';
-      if (completedMember != null) {
-        return 'Esperando que un adulto la revise';
-      }
-      return 'Esperando revisión de un adulto';
-    }
-    if (task.isOverdue) {
-      if (task.assignedTo == null) {
-        return 'Pendiente de coordinar';
-      }
-      if (!_isAssignedToCurrentUser && assignedMember != null) {
-        final name = assignedMember!.displayName;
-        return name.isNotEmpty
-            ? 'Le quedó pendiente a $name'
-            : 'Le quedó pendiente a otro integrante';
-      }
-      return 'Te quedó pendiente';
-    }
-    if (task.isDueToday) {
-      if (task.assignedTo == null) {
-        return 'A coordinar';
-      }
-      if (!_isAssignedToCurrentUser && assignedMember != null) {
-        final name = assignedMember!.displayName;
-        return name.isNotEmpty
-            ? 'Le toca hoy a $name'
-            : 'Le toca hoy a otro integrante';
-      }
-      return 'Te toca hoy';
-    }
-    return null;
-  }
-
   String? _urgencyLabel() {
     if (task.isPendingApproval) {
       return canApprovePending ? 'Revisar' : 'En revisión';

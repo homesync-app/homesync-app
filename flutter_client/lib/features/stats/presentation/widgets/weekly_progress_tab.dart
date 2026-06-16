@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
@@ -40,105 +36,6 @@ class WeeklyProgressTab extends ConsumerWidget {
     this.showHeader = true,
     required this.onRefresh,
   });
-
-  // ignore: unused_element
-  void _showLoveNoteDialog(
-    BuildContext context,
-    WidgetRef ref,
-    AppThemeColors theme,
-  ) {
-    final t = AppLocalizations.of(context);
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.xxl),
-        ),
-        backgroundColor: theme.surface,
-        surfaceTintColor: Colors.transparent,
-        title: Row(
-          children: [
-            const Icon(Icons.favorite, color: Color(0xFFEF4444)),
-            const SizedBox(width: 12),
-            Text(
-              t.loveNoteDialogTitle,
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                color: theme.textPrimary,
-              ),
-            ),
-          ],
-        ),
-        content: TextField(
-          controller: controller,
-          maxLines: 3,
-          style: TextStyle(color: theme.textPrimary),
-          decoration: InputDecoration(
-            hintText: t.loveNoteHint,
-            filled: true,
-            fillColor: const Color(0xFFEF4444).withValues(alpha: 0.05),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadii.md),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              t.commonCancel,
-              style: TextStyle(color: theme.textMuted),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final content = controller.text.trim();
-              if (content.isEmpty) return;
-
-              final currentUserId = ref.read(currentUserIdProvider);
-              final householdId = await ref.read(householdIdProvider.future);
-              final members = ref.read(householdMembersProvider).value ?? [];
-              final partner =
-                  members.where((m) => m.userId != currentUserId).firstOrNull;
-
-              if (currentUserId == null ||
-                  householdId == null ||
-                  partner == null) {
-                return;
-              }
-
-              await ref.read(loveNotesProvider.notifier).sendNote(
-                    content: content,
-                    fromUserId: currentUserId,
-                    toUserId: partner.userId,
-                    householdId: householdId,
-                  );
-
-              if (ctx.mounted) Navigator.pop(ctx);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('💌 ${t.loveNoteSent}'),
-                    backgroundColor: const Color(0xFFEF4444),
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-              ),
-            ),
-            child: Text(t.commonSend),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

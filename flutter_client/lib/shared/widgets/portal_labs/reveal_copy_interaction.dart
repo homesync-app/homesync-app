@@ -4,8 +4,6 @@
 // Zero-dependency (Flutter/Dart core only). Excluded from analyzer in
 // analysis_options.yaml as third-party vendored code; do not lint-churn it.
 
-// ignore_for_file: type=lint
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';

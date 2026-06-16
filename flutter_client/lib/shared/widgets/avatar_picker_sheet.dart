@@ -511,40 +511,6 @@ class AvatarPickerSheet extends ConsumerWidget {
     }
   }
 
-  // ignore: unused_element
-  void _showCustomAvatarDialog(BuildContext context, WidgetRef ref) {
-    final controller = TextEditingController();
-    final t = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(t.avatarPickerCustomSheetTitle),
-        content: TextField(
-          controller: controller,
-          maxLength: 2,
-          decoration: const InputDecoration(
-            hintText: 'Ej: 🌞',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(t.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              final value = controller.text.trim();
-              if (value.isNotEmpty) {
-                Navigator.pop(context);
-                _updateAvatar(context, ref, value);
-              }
-            },
-            child: Text(t.commonSave),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _AiAvatarCreationCard extends ConsumerWidget {
