@@ -1106,6 +1106,29 @@ class AppLocalizationsEs extends AppLocalizations {
       'No pudimos identificar tu usuario.';
 
   @override
+  String get homeCoupleSettlementDialogTitle => 'Registrar equilibrio';
+
+  @override
+  String homeCoupleSettlementDialogDirectionPay(String partnerName) {
+    return 'Vos → $partnerName';
+  }
+
+  @override
+  String homeCoupleSettlementDialogDirectionReceive(String partnerName) {
+    return '$partnerName → vos';
+  }
+
+  @override
+  String get homeCoupleSettlementDialogBalanceZero =>
+      'Esto va a dejar el balance del hogar en cero.';
+
+  @override
+  String get homeCoupleSettlementDialogCancel => 'Ahora no';
+
+  @override
+  String get homeCoupleSettlementDialogConfirm => 'Registrar pago';
+
+  @override
   String homeCoupleSettlementDialogTitlePay(String partnerName) {
     return 'Equilibrar con $partnerName';
   }

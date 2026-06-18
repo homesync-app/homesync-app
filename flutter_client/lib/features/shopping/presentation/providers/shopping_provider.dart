@@ -23,7 +23,10 @@ part 'shopping_provider.g.dart';
 
 // ── Repositories & Use Cases ──────────────────────────────────────────────────
 
-@riverpod
+// keepAlive: repos are session-lived singletons that read their Ref after async
+// gaps; auto-dispose let this one be torn down mid-fetch, throwing "Cannot use
+// the Ref ... after it has been disposed" (see expense/stats repos).
+@Riverpod(keepAlive: true)
 ShoppingRepository shoppingRepository(Ref ref) {
   final client = ref.watch(supabaseClientProvider);
   return SupabaseShoppingRepository(client: client, ref: ref);

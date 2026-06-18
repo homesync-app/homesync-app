@@ -22,7 +22,7 @@ final class DashboardRepositoryProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'dashboardRepositoryProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -51,7 +51,7 @@ final class DashboardRepositoryProvider extends $FunctionalProvider<
 }
 
 String _$dashboardRepositoryHash() =>
-    r'66954bc9f173839741c4d056059dd1d720911921';
+    r'18513049de491ddfdee24e749d9e1800175166d0';
 
 @ProviderFor(getRecentActivityUseCase)
 final getRecentActivityUseCaseProvider = GetRecentActivityUseCaseProvider._();
@@ -179,7 +179,7 @@ final class RecentActivityProvider extends $FunctionalProvider<
   }
 }
 
-String _$recentActivityHash() => r'd9e212dc08413f65e7884e55b85e4709f0c7b1a7';
+String _$recentActivityHash() => r'aec7dc2f5f2939bf57e97bd43284f99cd9710d70';
 
 @ProviderFor(HiddenRecentExpenseIds)
 final hiddenRecentExpenseIdsProvider = HiddenRecentExpenseIdsProvider._();
@@ -261,7 +261,7 @@ final class OptimisticRecentActivityProvider extends $NotifierProvider<
 }
 
 String _$optimisticRecentActivityHash() =>
-    r'083c823ad6015af66aa250d1f17900fae3a4f5d4';
+    r'd799520f335673716f1212f4b6e840b004fc756d';
 
 abstract class _$OptimisticRecentActivity
     extends $Notifier<List<Map<String, dynamic>>> {

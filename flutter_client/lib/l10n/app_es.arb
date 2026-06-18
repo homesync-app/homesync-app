@@ -770,6 +770,40 @@
   "@homeCoupleSettlementErrorNoUser": {
     "description": "Snackbar shown when the user tries to settle but their user id can't be resolved."
   },
+  "homeCoupleSettlementDialogTitle": "Registrar equilibrio",
+  "@homeCoupleSettlementDialogTitle": {
+    "description": "Main title for the settle-up confirmation dialog."
+  },
+  "homeCoupleSettlementDialogDirectionPay": "Vos → {partnerName}",
+  "@homeCoupleSettlementDialogDirectionPay": {
+    "description": "Compact payer-to-receiver label when the current user pays the partner.",
+    "placeholders": {
+      "partnerName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCoupleSettlementDialogDirectionReceive": "{partnerName} → vos",
+  "@homeCoupleSettlementDialogDirectionReceive": {
+    "description": "Compact payer-to-receiver label when the partner pays the current user.",
+    "placeholders": {
+      "partnerName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCoupleSettlementDialogBalanceZero": "Esto va a dejar el balance del hogar en cero.",
+  "@homeCoupleSettlementDialogBalanceZero": {
+    "description": "Short helper copy in the settle-up dialog explaining the result of the payment."
+  },
+  "homeCoupleSettlementDialogCancel": "Ahora no",
+  "@homeCoupleSettlementDialogCancel": {
+    "description": "Secondary action in the settle-up dialog."
+  },
+  "homeCoupleSettlementDialogConfirm": "Registrar pago",
+  "@homeCoupleSettlementDialogConfirm": {
+    "description": "Primary action in the settle-up dialog."
+  },
   "homeCoupleSettlementDialogTitlePay": "Equilibrar con {partnerName}",
   "@homeCoupleSettlementDialogTitlePay": {
     "description": "Settle-up dialog title when the current user owes the partner.",

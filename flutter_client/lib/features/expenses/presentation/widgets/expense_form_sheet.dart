@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/errors/error_messages.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
@@ -36,6 +37,7 @@ import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_shake.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/inline_error_banner.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:image_picker/image_picker.dart';
@@ -116,6 +118,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   int _shakeTrigger = 0;
   bool _isLoading = false;
   bool _showSuccessState = false;
+  // Surfaced INLINE (not via a snackbar that would hide behind the sheet).
+  String? _errorMessage;
   bool _isIncome = false;
   Map<String, dynamic>? _selectedCategory;
 
@@ -521,7 +525,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   Future<void> _saveExpense() async {
     final t = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
-      setState(() => _shakeTrigger++);
+      setState(() {
+        _shakeTrigger++;
+        _errorMessage = null;
+      });
       return;
     }
 
@@ -529,13 +536,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         _amountController.text.replaceAll('.', '').replaceAll(',', '.');
     final amountParsed = double.tryParse(cleanAmtStr);
     if (amountParsed == null || amountParsed <= 0) {
-      final t = AppLocalizations.of(context);
-      setState(() => _shakeTrigger++);
-      AppSnackBar.show(
-        context,
-        message: t.expensesFormValidationAmountRequired,
-        type: AppSnackBarType.warning,
-      );
+      setState(() {
+        _shakeTrigger++;
+        _errorMessage = t.expensesFormValidationAmountRequired;
+      });
       return;
     }
 
@@ -547,7 +551,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     final members = await ref.read(householdMembersProvider.future);
     final financeMembers = _financeMembers(members);
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
     try {
       final repo = ref.read(expenseRepositoryProvider);
@@ -714,11 +721,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     } catch (e) {
       if (mounted) {
         final t = AppLocalizations.of(context);
-        AppSnackBar.show(
-          context,
-          message: t.commonErrorWithDetails(e.toString()),
-          type: AppSnackBarType.error,
-        );
+        // Inline, not a snackbar: the sheet is still open, so a snackbar would
+        // render behind the modal barrier and look like nothing happened.
+        setState(() {
+          _errorMessage = t.commonErrorWithDetails(friendlyErrorMessage(e));
+        });
       }
     } finally {
       if (mounted) {
@@ -739,7 +746,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     return membersAsync.when(
       loading: () => const Center(child: AppLoader()),
       error: (e, s) {
-        return Center(child: Text(t.commonErrorWithDetails(e.toString())));
+        return Center(
+          child: Text(t.commonErrorWithDetails(friendlyErrorMessage(e))),
+        );
       },
       data: (members) {
         if (members.isEmpty) {
@@ -899,6 +908,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                               ],
                               const SizedBox(height: 32),
                               const SizedBox(height: 48),
+                              if (_errorMessage != null) ...[
+                                InlineErrorBanner(message: _errorMessage!),
+                                const SizedBox(height: 16),
+                              ],
                               _buildSaveButton(),
                               const SizedBox(height: 40),
                             ],

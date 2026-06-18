@@ -1108,6 +1108,29 @@ class AppLocalizationsEn extends AppLocalizations {
       'We couldn\'t identify your user.';
 
   @override
+  String get homeCoupleSettlementDialogTitle => 'Record settlement';
+
+  @override
+  String homeCoupleSettlementDialogDirectionPay(String partnerName) {
+    return 'You → $partnerName';
+  }
+
+  @override
+  String homeCoupleSettlementDialogDirectionReceive(String partnerName) {
+    return '$partnerName → you';
+  }
+
+  @override
+  String get homeCoupleSettlementDialogBalanceZero =>
+      'This will bring the household balance to zero.';
+
+  @override
+  String get homeCoupleSettlementDialogCancel => 'Not now';
+
+  @override
+  String get homeCoupleSettlementDialogConfirm => 'Record payment';
+
+  @override
   String homeCoupleSettlementDialogTitlePay(String partnerName) {
     return 'Settle up with $partnerName';
   }

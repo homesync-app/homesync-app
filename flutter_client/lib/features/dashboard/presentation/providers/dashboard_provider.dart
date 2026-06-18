@@ -17,7 +17,10 @@ final recentActivityRealtimeDelayProvider = FutureProvider<bool>((ref) async {
   return true;
 });
 
-@riverpod
+// keepAlive: repos are session-lived singletons that read their Ref after async
+// gaps; auto-dispose risks "Cannot use the Ref ... after it has been disposed"
+// if torn down mid-await (see expense/stats repos).
+@Riverpod(keepAlive: true)
 DashboardRepository dashboardRepository(Ref ref) {
   final client = ref.watch(supabaseClientProvider);
   return SupabaseDashboardRepository(client, ref);

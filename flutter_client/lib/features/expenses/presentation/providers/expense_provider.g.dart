@@ -22,7 +22,7 @@ final class ExpenseRepositoryProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'expenseRepositoryProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -50,7 +50,7 @@ final class ExpenseRepositoryProvider extends $FunctionalProvider<
   }
 }
 
-String _$expenseRepositoryHash() => r'5da251b699e286e75db8e21ed09c45abf2b798b8';
+String _$expenseRepositoryHash() => r'67c211d51ec6e047092a7c804808324925e7d48a';
 
 @ProviderFor(getExpensesUseCase)
 final getExpensesUseCaseProvider = GetExpensesUseCaseProvider._();
@@ -342,7 +342,7 @@ final class ExpenseControllerProvider
   ExpenseController create() => ExpenseController();
 }
 
-String _$expenseControllerHash() => r'f2ffc6bc37cb9fb6de80d5b9c25f7519b04464bd';
+String _$expenseControllerHash() => r'e6e967d235e73895a212d88b056cb411b71bef8a';
 
 abstract class _$ExpenseController extends $AsyncNotifier<List<ExpenseModel>> {
   FutureOr<List<ExpenseModel>> build();
@@ -385,7 +385,7 @@ final class CombinedFeedControllerProvider extends $AsyncNotifierProvider<
 }
 
 String _$combinedFeedControllerHash() =>
-    r'aaac6ec5a50f8096b460af990f643eb16272c503';
+    r'c5db2e3027c66ac14e579d767632cd1a6eee6e77';
 
 abstract class _$CombinedFeedController
     extends $AsyncNotifier<List<FeedItemModel>> {
@@ -429,7 +429,7 @@ final class ExpenseTemplateControllerProvider extends $AsyncNotifierProvider<
 }
 
 String _$expenseTemplateControllerHash() =>
-    r'4116020e7c8072eb9f3c61c54bf70c0a7a9c024c';
+    r'9104faad45e11663517b44b7d1c853efc11edf62';
 
 abstract class _$ExpenseTemplateController
     extends $AsyncNotifier<List<ExpenseTemplateModel>> {
@@ -525,7 +525,7 @@ final class MonthlyProjectionProvider extends $FunctionalProvider<
   }
 }
 
-String _$monthlyProjectionHash() => r'faba3e34ae67d948e5a63c662d9af3af130d3585';
+String _$monthlyProjectionHash() => r'76fce5ed98e15f06922cac56d40c229b76d79587';
 
 @ProviderFor(ExpenseFiltersNotifier)
 final expenseFiltersProvider = ExpenseFiltersNotifierProvider._();

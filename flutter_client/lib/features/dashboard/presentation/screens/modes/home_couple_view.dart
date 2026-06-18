@@ -4,12 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
-import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
@@ -19,6 +17,7 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/balance_
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_header_avatar.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/love_note_envelope.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/settlement_confirm_dialog.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -727,178 +726,50 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     final payerId = isOwedByMe ? currentUserId : partnerId;
     final receiverId = isOwedByMe ? partnerId : currentUserId;
     final formattedAmount = ref.read(currencyProvider).format(amount);
+    // One idempotency key per dialog (i.e. per settlement intent): reused if the
+    // user retries after an error/timeout so the server resolves to the same
+    // settlement instead of duplicating it. A new dialog → new key.
+    final requestId = const Uuid().v4();
 
     showDialog<void>(
       context: context,
-      builder: (dialogContext) {
-        final theme = dialogContext.theme;
-        var isSubmitting = false;
-        var showSuccess = false;
-        // One idempotency key per dialog (i.e. per settlement intent): reused if
-        // the user retries after an error/timeout so the server resolves to the
-        // same settlement instead of duplicating it. A new dialog → new key.
-        final requestId = const Uuid().v4();
-
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: theme.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.xl),
-              ),
-              title: Text(
-                isOwedByMe
-                    ? t.homeCoupleSettlementDialogTitlePay(partnerName)
-                    : t.homeCoupleSettlementDialogTitleReceive,
-                style: TextStyle(
-                  color: theme.textPrimary,
-                  fontWeight: FontWeight.w900,
+      builder: (dialogContext) => SettlementConfirmDialog(
+        titleText: t.homeCoupleSettlementDialogTitle,
+        amountText: formattedAmount,
+        directionText: isOwedByMe
+            ? t.homeCoupleSettlementDialogDirectionPay(partnerName)
+            : t.homeCoupleSettlementDialogDirectionReceive(partnerName),
+        bodyText: t.homeCoupleSettlementDialogBalanceZero,
+        confirmLabel: t.homeCoupleSettlementDialogConfirm,
+        cancelLabel: t.homeCoupleSettlementDialogCancel,
+        doneBadgeText: t.homeCoupleSettlementDoneBadge,
+        errorTextBuilder: t.homeCoupleSettlementError,
+        onConfirm: () =>
+            ref.read(expenseControllerProvider.notifier).settleDebt(
+                  fromUserId: payerId,
+                  toUserId: receiverId,
+                  amount: amount,
+                  requestId: requestId,
                 ),
-              ),
-              content: Text(
-                isOwedByMe
-                    ? t.homeCoupleSettlementDialogBodyPay(
-                        formattedAmount,
-                        partnerName,
-                      )
-                    : t.homeCoupleSettlementDialogBodyReceive(
-                        partnerName,
-                        formattedAmount,
-                      ),
-                style: TextStyle(
-                  color: theme.textSecondary,
-                  height: 1.4,
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: isSubmitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: Text(
-                    t.commonCancel,
-                    style: TextStyle(
-                      color: theme.textSecondary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                FilledButton(
-                  onPressed: isSubmitting
-                      ? null
-                      : () async {
-                          setDialogState(() => isSubmitting = true);
-
-                          try {
-                            await ref
-                                .read(expenseControllerProvider.notifier)
-                                .settleDebt(
-                                  fromUserId: payerId,
-                                  toUserId: receiverId,
-                                  amount: amount,
-                                  requestId: requestId,
-                                );
-
-                            if (mounted) {
-                              setState(() {
-                                _optimisticExpenseBalance = 0;
-                                _settlementJustCompleted = true;
-                              });
-                            }
-                            AppHaptics.success();
-                            setDialogState(() {
-                              isSubmitting = false;
-                              showSuccess = true;
-                            });
-
-                            await Future<void>.delayed(
-                              const Duration(milliseconds: 420),
-                            );
-
-                            Future<void>.delayed(
-                              const Duration(milliseconds: 2200),
-                              () {
-                                if (!mounted) return;
-                                setState(() {
-                                  _settlementJustCompleted = false;
-                                });
-                              },
-                            );
-
-                            if (!mounted || !dialogContext.mounted) return;
-                            Navigator.of(dialogContext).pop();
-                            _showMessage(
-                              isOwedByMe
-                                  ? t.homeCoupleSettlementSuccessPay(
-                                      partnerName,
-                                    )
-                                  : t.homeCoupleSettlementSuccessReceive(
-                                      partnerName,
-                                    ),
-                            );
-                          } catch (e) {
-                            if (!dialogContext.mounted) return;
-                            setDialogState(() => isSubmitting = false);
-                            _showMessage(
-                              t.homeCoupleSettlementError(e.toString()),
-                            );
-                          }
-                        },
-                  style: FilledButton.styleFrom(
-                    backgroundColor:
-                        showSuccess ? AppColors.sage : theme.primary,
-                    disabledBackgroundColor:
-                        showSuccess ? AppColors.sage : theme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 12,
-                    ),
-                  ),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    switchInCurve: Curves.easeOutBack,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: ScaleTransition(
-                          scale: animation,
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: isSubmitting
-                        ? const SizedBox(
-                            key: ValueKey('loading'),
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : showSuccess
-                            ? Row(
-                                key: const ValueKey('success'),
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.check_rounded, size: 18),
-                                  const SizedBox(width: 8),
-                                  Text(t.homeCoupleSettlementDoneBadge),
-                                ],
-                              )
-                            : Text(
-                                t.commonConfirm,
-                                key: const ValueKey('idle'),
-                              ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+        onSettled: () {
+          if (mounted) {
+            setState(() {
+              _optimisticExpenseBalance = 0;
+              _settlementJustCompleted = true;
+            });
+          }
+          // Let the balance-card "just settled" flourish play, then clear it.
+          Future<void>.delayed(const Duration(milliseconds: 2200), () {
+            if (!mounted) return;
+            setState(() => _settlementJustCompleted = false);
+          });
+          _showMessage(
+            isOwedByMe
+                ? t.homeCoupleSettlementSuccessPay(partnerName)
+                : t.homeCoupleSettlementSuccessReceive(partnerName),
+          );
+        },
+      ),
     );
   }
 

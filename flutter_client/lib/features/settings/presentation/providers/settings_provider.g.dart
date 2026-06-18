@@ -22,7 +22,7 @@ final class SettingsRepositoryProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'settingsRepositoryProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -51,7 +51,7 @@ final class SettingsRepositoryProvider extends $FunctionalProvider<
 }
 
 String _$settingsRepositoryHash() =>
-    r'c6e9a6bfb312b0655ac88d857f9b3760f001aee5';
+    r'bc6023891d7bc0990e7cadf8222450b6caa559b4';
 
 @ProviderFor(resetAccountUseCase)
 final resetAccountUseCaseProvider = ResetAccountUseCaseProvider._();

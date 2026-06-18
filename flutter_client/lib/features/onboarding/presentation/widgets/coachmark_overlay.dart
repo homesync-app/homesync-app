@@ -724,10 +724,15 @@ class _TooltipCard extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                // Wrap (not Row) so a long primary label drops to its own line
+                // on narrow screens instead of overflowing the card width.
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  runSpacing: 8,
                   children: [
-                    if (onSecondary != null && step.secondaryCta != null) ...[
+                    if (onSecondary != null && step.secondaryCta != null)
                       TextButton(
                         onPressed: onSecondary,
                         style: TextButton.styleFrom(
@@ -745,8 +750,6 @@ class _TooltipCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
-                    ],
                     _PrimaryCta(
                       label: step.primaryCta,
                       onTap: onPrimary,
@@ -848,19 +851,11 @@ class _PrimaryCta extends StatelessWidget {
   Widget build(BuildContext context) {
     final padH = compact ? 22.0 : 28.0;
     final padV = compact ? 13.0 : 16.0;
-    // Compact CTAs live inside a ClipRRect-wrapped tooltip card. Any drop
-    // shadow on the button would be sliced where it meets the card's clip
-    // path. The gradient + frosted card already provide enough elevation,
-    // so we skip shadows in compact mode.
-    final shadows = compact
-        ? const <BoxShadow>[]
-        : <BoxShadow>[
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.42),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ];
+    // Every CTA here lives inside a ClipRRect-wrapped card (both the modal and
+    // the spotlight tooltip). Any drop shadow on the button would be sliced
+    // where it meets the card's clip path, leaving an ugly clipped smudge in
+    // the corners. The gradient + frosted card already provide enough
+    // elevation, so the button carries no shadow of its own.
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -874,7 +869,6 @@ class _PrimaryCta extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(AppRadii.pill),
-            boxShadow: shadows,
           ),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),

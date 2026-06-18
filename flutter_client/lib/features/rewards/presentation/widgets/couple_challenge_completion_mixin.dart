@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/errors/error_messages.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -148,7 +149,7 @@ mixin CoupleChallengeCompletionMixin<T extends ConsumerStatefulWidget>
       Navigator.pop(context); // cerrar loader
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t.rewardsChallengeError(e.toString())),
+          content: Text(t.rewardsChallengeError(friendlyErrorMessage(e))),
           backgroundColor: AppColors.error,
         ),
       );

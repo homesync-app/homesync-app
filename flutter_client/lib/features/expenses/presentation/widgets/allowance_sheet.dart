@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/errors/error_messages.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -14,6 +15,7 @@ import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/design/app_button.dart';
 import 'package:homesync_client/shared/widgets/design/app_sheet_shell.dart';
+import 'package:homesync_client/shared/widgets/inline_error_banner.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 /// Adult -> teen allowance transfer for Parent Mode.
@@ -40,6 +42,7 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
   final _noteController = TextEditingController();
   String? _recipientId;
   bool _loading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -65,16 +68,19 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
     );
 
     if (householdId == null || _recipientId == null) {
-      _snack(t.allowanceRecipientRequired, AppSnackBarType.error);
+      setState(() => _errorMessage = t.allowanceRecipientRequired);
       return;
     }
     if (amount == null || amount <= 0) {
-      _snack(t.allowanceAmountInvalid, AppSnackBarType.error);
+      setState(() => _errorMessage = t.allowanceAmountInvalid);
       return;
     }
 
     FocusManager.instance.primaryFocus?.unfocus();
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
     try {
       final result = await ref.read(supabaseClientProvider).rpc(
         'transfer_to_member',
@@ -94,19 +100,25 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
       if (!ok) {
         final msg = (result is Map ? result['message'] : null)?.toString() ??
             t.allowanceSendGenericError;
-        _snack(msg, AppSnackBarType.error);
-        setState(() => _loading = false);
+        setState(() {
+          _loading = false;
+          _errorMessage = msg;
+        });
         return;
       }
 
       ref.invalidate(userBalanceProvider);
       ref.invalidate(expenseControllerProvider);
       Navigator.of(context).pop(true);
+      // Success snackbar is fine: the sheet has popped, so it is no longer
+      // hidden behind a modal barrier.
       _snack(t.allowanceSentSnack, AppSnackBarType.success);
     } catch (e) {
       if (!mounted) return;
-      _snack(t.allowanceSendError(e.toString()), AppSnackBarType.error);
-      setState(() => _loading = false);
+      setState(() {
+        _loading = false;
+        _errorMessage = t.allowanceSendError(friendlyErrorMessage(e));
+      });
     }
   }
 
@@ -222,6 +234,10 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
                         ),
                       ),
                     ),
+                  ],
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    InlineErrorBanner(message: _errorMessage!),
                   ],
                 ],
               ),

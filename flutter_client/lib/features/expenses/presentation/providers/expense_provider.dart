@@ -25,7 +25,14 @@ part 'expense_provider.g.dart';
 
 // --- Providers ---
 
-@riverpod
+// keepAlive: the repository holds onto its [Ref] and reads it after async
+// gaps (online checks, admin-testing flags, analytics, currentUserId — see
+// SupabaseExpenseRepository). As an auto-dispose provider it was torn down
+// the instant a caller's `ref.read` returned and the home view invalidated
+// sibling providers, so an in-flight saveExpense/settleDebt RPC would resume
+// after its await and throw "Cannot use the Ref ... after it has been
+// disposed" — surfacing as a failed settle even though the row was written.
+@Riverpod(keepAlive: true)
 ExpenseRepository expenseRepository(Ref ref) {
   final client = ref.watch(supabaseClientProvider);
   return SupabaseExpenseRepository(client, ref);
@@ -162,7 +169,11 @@ class ExpenseController extends _$ExpenseController {
       throw failure;
     }
 
-    if (ref.read(isOnlineProvider)) {
+    // The write already succeeded above; the cache refresh below is best-effort.
+    // Guard `ref` because this auto-dispose controller can be torn down during
+    // the await (a caller's `ref.read` keeps no listener), and touching a
+    // disposed Ref throws "Cannot use the Ref ... after it has been disposed".
+    if (ref.mounted && ref.read(isOnlineProvider)) {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(combinedFeedControllerProvider);
@@ -203,7 +214,7 @@ class ExpenseController extends _$ExpenseController {
       (_) {},
     );
 
-    if (ref.read(isOnlineProvider)) {
+    if (ref.mounted && ref.read(isOnlineProvider)) {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(combinedFeedControllerProvider);
@@ -242,7 +253,11 @@ class ExpenseController extends _$ExpenseController {
       (_) {},
     );
 
-    if (ref.read(isOnlineProvider)) {
+    // The settlement row is already written; this cache refresh is best-effort.
+    // `ref.mounted` guards against the controller being auto-disposed during the
+    // RPC await — otherwise the tail throws "Cannot use the Ref ... after it has
+    // been disposed" and the settle surfaces as failed even though it succeeded.
+    if (ref.mounted && ref.read(isOnlineProvider)) {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(combinedFeedControllerProvider);

@@ -1838,6 +1838,42 @@ abstract class AppLocalizations {
   /// **'No pudimos identificar tu usuario.'**
   String get homeCoupleSettlementErrorNoUser;
 
+  /// Main title for the settle-up confirmation dialog.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrar equilibrio'**
+  String get homeCoupleSettlementDialogTitle;
+
+  /// Compact payer-to-receiver label when the current user pays the partner.
+  ///
+  /// In es, this message translates to:
+  /// **'Vos → {partnerName}'**
+  String homeCoupleSettlementDialogDirectionPay(String partnerName);
+
+  /// Compact payer-to-receiver label when the partner pays the current user.
+  ///
+  /// In es, this message translates to:
+  /// **'{partnerName} → vos'**
+  String homeCoupleSettlementDialogDirectionReceive(String partnerName);
+
+  /// Short helper copy in the settle-up dialog explaining the result of the payment.
+  ///
+  /// In es, this message translates to:
+  /// **'Esto va a dejar el balance del hogar en cero.'**
+  String get homeCoupleSettlementDialogBalanceZero;
+
+  /// Secondary action in the settle-up dialog.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora no'**
+  String get homeCoupleSettlementDialogCancel;
+
+  /// Primary action in the settle-up dialog.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrar pago'**
+  String get homeCoupleSettlementDialogConfirm;
+
   /// Settle-up dialog title when the current user owes the partner.
   ///
   /// In es, this message translates to:

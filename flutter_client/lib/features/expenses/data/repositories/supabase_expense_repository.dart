@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/errors/rpc_envelope.dart';
 import 'package:homesync_client/core/offline/offline_action.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -382,7 +383,14 @@ class SupabaseExpenseRepository
     };
     return executeWithHandling(
       () async {
-        await _client.rpc('settle_debt_v1', params: params);
+        final response = await _client.rpc('settle_debt_v1', params: params);
+        // settle_debt_v1 returns a jsonb envelope instead of raising on logical
+        // errors (e.g. "amount must be greater than 0"). Without this check a
+        // rejected settlement would be reported to the UI as success.
+        assertRpcEnvelopeSuccess(
+          response,
+          fallbackMessage: 'No se pudo registrar el equilibrio.',
+        );
       },
       context: 'SupabaseExpenseRepository.settleDebt',
       isOnline: _isOnline,

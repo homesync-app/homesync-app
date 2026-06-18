@@ -22,7 +22,7 @@ final class SavingsRepositoryProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'savingsRepositoryProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -50,7 +50,7 @@ final class SavingsRepositoryProvider extends $FunctionalProvider<
   }
 }
 
-String _$savingsRepositoryHash() => r'9baca2bd87191806dd622ec0ab2537c2414c8ca7';
+String _$savingsRepositoryHash() => r'5f567711126924b3ffa82bc8b7a57633c95208fa';
 
 @ProviderFor(getSavingsGoalsUseCase)
 final getSavingsGoalsUseCaseProvider = GetSavingsGoalsUseCaseProvider._();

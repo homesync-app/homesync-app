@@ -52,7 +52,11 @@ class _SavingsGoalsChunk {
   });
 }
 
-@riverpod
+// keepAlive: a repository is a stateless session-lived singleton that holds its
+// Ref and reads it after async gaps. As auto-dispose it could be torn down
+// mid-await, making a post-await `_ref` read throw "Cannot use the Ref ... after
+// it has been disposed" (see expense/stats repos for the same rationale).
+@Riverpod(keepAlive: true)
 SavingsRepository savingsRepository(Ref ref) {
   final client = ref.watch(supabaseClientProvider);
   return SupabaseSavingsRepository(client: client, ref: ref);
@@ -114,23 +118,33 @@ class SavingsGoals extends _$SavingsGoals {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return;
 
+    // Capture use cases before any await: this notifier is auto-dispose, so a
+    // mid-flight teardown would make a post-await `ref.read` throw "Cannot use
+    // the Ref ... after it has been disposed".
+    final createGoal = ref.read(createSavingsGoalUseCaseProvider);
+    final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
+
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await ref.read(createSavingsGoalUseCaseProvider).execute(
+    final next = await AsyncValue.guard(() async {
+      await createGoal.execute(
             householdId: householdId,
             title: title,
             targetAmount: targetAmount,
             color: color,
             icon: icon,
           );
-      final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
       final result = await getSavingsGoals.execute(householdId);
-      ref.invalidate(paginatedSavingsGoalsProvider);
       return result.fold(
         (failure) => throw failure,
         (goals) => goals,
       );
     });
+
+    // Guard the cache refresh and the state write: touching `ref`/`state` on a
+    // disposed notifier throws, and that throw is outside the guard above.
+    if (!ref.mounted) return;
+    ref.invalidate(paginatedSavingsGoalsProvider);
+    state = next;
   }
 
   Future<void> contribute(String goalId, double amount,
@@ -139,10 +153,14 @@ class SavingsGoals extends _$SavingsGoals {
     final householdId = await ref.read(householdIdProvider.future);
     if (userId == null || householdId == null) return;
 
+    final addContribution = ref.read(addContributionUseCaseProvider);
+    final expenseRepo = ref.read(expenseRepositoryProvider);
+    final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
+
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final next = await AsyncValue.guard(() async {
       // 1. Add the contribution to the savings goal
-      await ref.read(addContributionUseCaseProvider).execute(
+      await addContribution.execute(
             goalId: goalId,
             userId: userId,
             amount: amount,
@@ -151,7 +169,6 @@ class SavingsGoals extends _$SavingsGoals {
 
       // 2. Create a corresponding PERSONAL expense to reflect in global balance
       try {
-        final expenseRepo = ref.read(expenseRepositoryProvider);
         final saveResult = await expenseRepo.saveExpense(
           householdId: householdId,
           title: 'Ahorro: $goalTitle',
@@ -181,40 +198,46 @@ class SavingsGoals extends _$SavingsGoals {
         );
       }
 
-      ref.invalidate(goalContributionsProvider(goalId));
-      ref.invalidate(personalFinanceSummaryProvider);
-      ref.invalidate(expenseControllerProvider);
-      ref.invalidate(expenseBalancesProvider);
-      ref.invalidate(userBalanceProvider);
-      ref.invalidate(combinedFeedControllerProvider);
-      ref.invalidate(recentActivityRemoteProvider);
-      ref.invalidate(recentActivityProvider);
-      ref.invalidate(paginatedSavingsGoalsProvider);
-
-      final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
       final result = await getSavingsGoals.execute(householdId);
       return result.fold(
         (failure) => throw failure,
         (goals) => goals,
       );
     });
+
+    if (!ref.mounted) return;
+    ref.invalidate(goalContributionsProvider(goalId));
+    ref.invalidate(personalFinanceSummaryProvider);
+    ref.invalidate(expenseControllerProvider);
+    ref.invalidate(expenseBalancesProvider);
+    ref.invalidate(userBalanceProvider);
+    ref.invalidate(combinedFeedControllerProvider);
+    ref.invalidate(recentActivityRemoteProvider);
+    ref.invalidate(recentActivityProvider);
+    ref.invalidate(paginatedSavingsGoalsProvider);
+    state = next;
   }
 
   Future<void> removeGoal(String goalId) async {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return;
 
+    final deleteGoal = ref.read(deleteSavingsGoalUseCaseProvider);
+    final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
+
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await ref.read(deleteSavingsGoalUseCaseProvider).execute(goalId);
-      ref.invalidate(paginatedSavingsGoalsProvider);
-      final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
+    final next = await AsyncValue.guard(() async {
+      await deleteGoal.execute(goalId);
       final result = await getSavingsGoals.execute(householdId);
       return result.fold(
         (failure) => throw failure,
         (goals) => goals,
       );
     });
+
+    if (!ref.mounted) return;
+    ref.invalidate(paginatedSavingsGoalsProvider);
+    state = next;
   }
 }
 
@@ -254,7 +277,7 @@ class PaginatedSavingsGoals extends _$PaginatedSavingsGoals {
 
   Future<void> refresh() async {
     state = const AsyncLoading<SavingsGoalsPageState>();
-    state = await AsyncValue.guard(() async {
+    final next = await AsyncValue.guard(() async {
       final chunk = await _fetchChunk(offset: 0);
       return SavingsGoalsPageState(
         items: chunk.items,
@@ -262,6 +285,8 @@ class PaginatedSavingsGoals extends _$PaginatedSavingsGoals {
         isLoadingMore: false,
       );
     });
+    if (!ref.mounted) return;
+    state = next;
   }
 
   Future<void> loadMore() async {
@@ -274,6 +299,7 @@ class PaginatedSavingsGoals extends _$PaginatedSavingsGoals {
 
     try {
       final chunk = await _fetchChunk(offset: current.items.length);
+      if (!ref.mounted) return;
       state = AsyncData(
         current.copyWith(
           items: [...current.items, ...chunk.items],
@@ -282,7 +308,9 @@ class PaginatedSavingsGoals extends _$PaginatedSavingsGoals {
         ),
       );
     } catch (error, stackTrace) {
-      state = AsyncData(current.copyWith(isLoadingMore: false));
+      if (ref.mounted) {
+        state = AsyncData(current.copyWith(isLoadingMore: false));
+      }
       log.e(
         'Error loading more savings goals: $error',
         error: error,
