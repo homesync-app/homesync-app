@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/notification_service.dart';
@@ -32,6 +33,8 @@ import 'package:homesync_client/features/notifications/presentation/screens/noti
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
 import 'package:homesync_client/features/onboarding/presentation/widgets/coachmark_overlay.dart';
+import 'package:homesync_client/features/rewards/presentation/providers/couple_duel_stats_provider.dart';
+import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
@@ -72,6 +75,16 @@ class _MainScreenState extends ConsumerState<MainScreen>
   int? _lastTrackedTabIndex;
   MemberModel? _currentMember;
   bool _reportedFirstMainFrame = false;
+
+  // ── Prefetch ocioso de pestañas secundarias ───────────────────────────────
+  // Mientras el usuario está en el Home, calentamos en segundo plano los
+  // providers de las otras pestañas (hoy se construyen recién al visitarlas por
+  // el montaje perezoso del FadeIndexedStack). Mantenemos un listener vivo: como
+  // son autoDispose, un read fire-and-forget se computaría y se descartaría al
+  // instante; el listener los deja cacheados hasta que MainScreen se destruye,
+  // así Finanzas abre su widget de "gastos del mes" de forma instantánea.
+  bool _idlePrefetchScheduled = false;
+  final List<ProviderSubscription> _idlePrefetchSubs = [];
 
   // Anchor keys for the onboarding coachmark tour. Live for the lifetime of
   // MainScreen so the registry stays consistent across rebuilds.
@@ -127,6 +140,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
     _notifService.dispose();
     _linkSubscription?.cancel();
     _taskRealtimeNoticeSubscription?.close();
+    for (final sub in _idlePrefetchSubs) {
+      sub.close();
+    }
+    _idlePrefetchSubs.clear();
     // Diferido a microtask: modificar un provider durante dispose() tira
     // "Tried to modify a provider while the widget tree was building".
     // El unregister es idempotente (no-op si el key cambio) asi que es
@@ -302,6 +319,41 @@ class _MainScreenState extends ConsumerState<MainScreen>
     ref.invalidate(recentActivityProvider);
   }
 
+  /// Calienta en segundo plano los providers de la pestaña Finanzas que no
+  /// quedan cacheados por el arranque del Home. Se llama una sola vez, recién
+  /// cuando el scaffold principal ya está en pantalla, y difiere el trabajo
+  /// para no competir con la carga inicial ni con las animaciones de entrada
+  /// del Home.
+  void _scheduleSecondaryTabPrefetch() {
+    if (_idlePrefetchScheduled) return;
+    _idlePrefetchScheduled = true;
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (!mounted || _idlePrefetchSubs.isNotEmpty) return;
+      // Solo tiene sentido si hay red; offline se resolvería con caché/errores
+      // igual al entrar a la pestaña, sin ganancia por adelantarlo.
+      if (!ref.read(isOnlineProvider)) return;
+      // Finanzas (tab "Movimientos"). monthlyProjectionProvider ya lo calienta
+      // el Home en modo pareja, pero no en solo/familia; estos tres lo cubren en
+      // todos los modos. combinedFeed y expenseBalances ya vienen del arranque.
+      _idlePrefetchSubs
+        ..add(ref.listenManual(personalFinanceSummaryProvider, (_, __) {}))
+        ..add(ref.listenManual(expenseControllerProvider, (_, __) {}))
+        ..add(ref.listenManual(monthlyProjectionProvider, (_, __) {}));
+
+      // Pareja (solo en modo couple, que usa CoupleRewardsScreen). Los premios
+      // viven en un provider autoDispose (hay que sostener un listener); las
+      // stats del duelo en uno keepAlive (basta gatillar el build con un read).
+      final caps = ref.read(householdCapabilitiesProvider);
+      if (caps.usesCoupleRewardsExperience) {
+        _idlePrefetchSubs.add(ref.listenManual(rewardsProvider, (_, __) {}));
+        ref.read(coupleDuelStatsProvider.future).catchError(
+              (_) => CoupleDuelStats.empty,
+            );
+      }
+      log.d('MainScreen: prefetch ocioso de pestañas secundarias iniciado');
+    });
+  }
+
   void _showTaskRealtimeNotice(TaskRealtimeNotice notice) {
     final t = AppLocalizations.of(context);
     final taskTitle = localizedTaskTitle(t, notice.task);
@@ -457,6 +509,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
         final safeIndex = currentIndex >= navConfigs.length ? 0 : currentIndex;
         final currentConfig = navConfigs[safeIndex];
         _trackMainTabIfNeeded(index: safeIndex, source: 'state_sync');
+
+        // Ya pasamos todos los gates (setup/onboarding): estamos en la app real.
+        // Aprovechamos el tiempo ocioso en el Home para calentar Finanzas.
+        _scheduleSecondaryTabPrefetch();
 
         // Wrap with a Stack so the coachmark overlay can sit on top of the
         // Scaffold AND its bottomNavigationBar (otherwise an overlay mounted

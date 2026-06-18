@@ -119,8 +119,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           label = t.expensesFabNewSubscription;
           onPressed = () => _showTemplateForm(context);
         } else if (_tabController.index == 2) {
-          label = t.expensesFabNewGoal;
-          onPressed = () => SavingsTab.showGoalSheet(context, ref);
+          return const SizedBox.shrink();
         }
 
         return AppFloatingActionButton(

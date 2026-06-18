@@ -8,6 +8,11 @@ import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/activity_presentation.dart'
+    show
+        activityIsSettlement,
+        activitySettlementTitle,
+        formatTaskActivityTimeLabel;
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
     show dashboardCategoryAccent;
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
@@ -38,6 +43,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     final theme = context.theme;
     final type = activity['type'] as String?;
     final data = (activity['data'] as Map<String, dynamic>?) ?? {};
+    final isSettlement = activityIsSettlement(data);
     // Task approval is a premium Parent Mode feature. Its UI (the
     // "awaiting review" card + approve/reject actions) must be gated by the
     // SAME single source of truth that enables the feature —
@@ -53,6 +59,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     final createdAt =
         DateTime.tryParse(activity['created_at'] as String? ?? '')?.toLocal() ??
             DateTime.now();
+    final timeLabel = formatTaskActivityTimeLabel(activity);
 
     final userName = _firstName((data['user_name'] as String?)?.trim());
     final avatarUrl =
@@ -138,7 +145,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _headlineFor(type, userName),
+                      _headlineFor(type, userName, isSettlement: isSettlement),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -163,7 +170,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      _formatTime(createdAt),
+                      timeLabel,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -208,6 +215,9 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     Map<String, dynamic> data,
   ) async {
     if (type == 'task' || type == 'task_pending_approval') {
+      final completedAt = data['completed_at'] ??
+          data['last_completed_at'] ??
+          activity['created_at'];
       final taskData = <String, dynamic>{
         ...data,
         'title': data['task_title'] ?? data['title'],
@@ -215,7 +225,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
         'xp_reward': data['xp_reward'] ?? data['xp_per_user'] ?? data['xp'],
         'coin_reward':
             data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],
-        'completed_at': activity['created_at'],
+        'completed_at': completedAt,
         'activity_id': activity['id'],
         'completed_user': {
           'full_name': data['user_name'],
@@ -242,7 +252,9 @@ class FamilyActivityFeedItem extends ConsumerWidget {
         context,
         ExpenseModel(
           id: expenseId,
-          title: data['title']?.toString() ?? '',
+          title: activityIsSettlement(data)
+              ? activitySettlementTitle
+              : data['title']?.toString() ?? '',
           titleKey: data['title_key']?.toString(),
           amount: _parseAmount(data['amount']) ?? 0,
           category: data['category'] as String?,
@@ -258,7 +270,12 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     }
   }
 
-  String _headlineFor(String? type, String userName) {
+  String _headlineFor(
+    String? type,
+    String userName, {
+    bool isSettlement = false,
+  }) {
+    if (isSettlement) return '$userName equilibró la cuenta';
     switch (type) {
       case 'task_pending_approval':
         return '$userName dejó lista';
@@ -312,6 +329,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     BuildContext context,
     Map<String, dynamic> data,
   ) {
+    if (activityIsSettlement(data)) return activitySettlementTitle;
     final fallback = data['task_title'] ??
         data['title'] ??
         data['description'] ??

@@ -57,6 +57,28 @@ Stream<List<Map<String, dynamic>>> recentActivityRemote(Ref ref) {
   );
 }
 
+// Firma de contenido de las actividades de GASTO del feed remoto. Cambia solo
+// cuando aparece/desaparece un gasto, no en cada reemision del stream (el poll
+// de respaldo cada 15s reemite la misma lista con los mismos ids). Sirve para
+// refrescar el balance cross-device sin refetchear en cada emision: el widget
+// de balance (expenseBalances/personalFinanceSummary/...) no escucha realtime
+// y antes solo se invalidaba por acciones locales, asi que el balance del otro
+// miembro quedaba viejo hasta recargar aunque "movimientos del hogar" si se
+// actualizaba (ese feed si nace de este stream). El listener vive en HomeScreen.
+@riverpod
+String financeActivitySignature(Ref ref) {
+  final activities = ref.watch(recentActivityRemoteProvider).value ??
+      const <Map<String, dynamic>>[];
+  final ids = <String>[];
+  for (final activity in activities) {
+    if (activity['type'] == 'expense') {
+      ids.add('${activity['id']}');
+    }
+  }
+  ids.sort();
+  return ids.join(',');
+}
+
 // Provider publico: combina el stream remoto con el estado optimista y el
 // filtro de gastos ocultos. Al ser sync (Provider<AsyncValue<...>>), cuando
 // cambia el optimistic solo recomputa la merge -> sin AsyncLoading -> sin
@@ -179,6 +201,7 @@ class OptimisticRecentActivity extends _$OptimisticRecentActivity {
         'activity_id': activityId,
         'task_id': task.id,
         'category': task.category,
+        'completed_at': activityCreatedAt.toIso8601String(),
         'xp_reward': task.xpReward,
         'coins_reward': task.coinReward,
       },

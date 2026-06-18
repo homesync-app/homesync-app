@@ -54,6 +54,11 @@ class _ExpenseDetailSheetContentState
   bool get _needsFullExpense =>
       _expense.splits == null ||
       _expense.splits!.isEmpty ||
+      _expense.splits!.any(
+        (split) =>
+            (split.fullName == null || split.fullName!.trim().isEmpty) &&
+            (split.email == null || split.email!.trim().isEmpty),
+      ) ||
       (_expense.description?.isEmpty ?? true);
 
   Future<void> _refreshIfNeeded() async {
@@ -425,6 +430,7 @@ class _ExpenseDetailSheetContentState
                       child: Column(
                         children: expense.splits!.map((split) {
                           final isPayer = split.userId == expense.paidBy;
+                          final displayName = split.displayName;
                           return Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -434,7 +440,7 @@ class _ExpenseDetailSheetContentState
                               children: [
                                 CustomUserAvatar(
                                   avatarUrl: split.avatarUrl,
-                                  name: split.fullName ?? 'Usuario',
+                                  name: displayName,
                                   radius: 18,
                                   forceCircular: true,
                                 ),
@@ -445,9 +451,7 @@ class _ExpenseDetailSheetContentState
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        (split.fullName ?? 'Usuario')
-                                            .split(' ')
-                                            .first,
+                                        displayName,
                                         style: TextStyle(
                                           fontWeight: FontWeight.w800,
                                           fontSize: 14,

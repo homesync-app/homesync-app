@@ -73,8 +73,21 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
   String? get _completedById => _completedUser?['id'] as String?;
   String get _currentUserId => ref.read(currentUserIdProvider) ?? '';
   bool get _isAuthor => _completedById == _currentUserId;
-  bool get _hasCompletionRecord =>
-      _activityId != null || widget.taskData['completed_at'] != null;
+  DateTime? get _completedAt => _readDate(
+        widget.taskData['completed_at'],
+        widget.taskData['last_completed_at'],
+        _task.lastCompletionAt,
+      );
+  dynamic get _rawCompletedAt =>
+      widget.taskData['completed_at'] ??
+      widget.taskData['last_completed_at'] ??
+      _task.lastCompletionAt;
+  bool get _completedDateOnlyFlag {
+    final raw = widget.taskData['completed_date_only'];
+    return raw == true || raw?.toString().toLowerCase() == 'true';
+  }
+
+  bool get _hasCompletionRecord => _activityId != null || _completedAt != null;
 
   int _readInt(
     dynamic primary, [
@@ -88,6 +101,40 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
       if (parsed != null && parsed > 0) return parsed;
     }
     return 0;
+  }
+
+  DateTime? _readDate(dynamic primary, [dynamic fallback1, dynamic fallback2]) {
+    for (final candidate in [primary, fallback1, fallback2]) {
+      if (candidate is DateTime) return candidate.toLocal();
+      final parsed = DateTime.tryParse(candidate?.toString() ?? '');
+      if (parsed != null) return parsed.toLocal();
+    }
+    return null;
+  }
+
+  DateTime? _dateOnlyDisplayDate() {
+    final raw = _rawCompletedAt;
+    if (raw is DateTime) return DateTime(raw.year, raw.month, raw.day);
+    final parsed = DateTime.tryParse(raw?.toString() ?? '');
+    if (parsed == null) return null;
+    return DateTime(parsed.year, parsed.month, parsed.day);
+  }
+
+  bool _isDateOnlyCompletion(DateTime? completedAt) {
+    if (completedAt == null) return false;
+    if (_completedDateOnlyFlag) return true;
+
+    final raw = _rawCompletedAt?.toString();
+    if (raw != null) {
+      final normalized = raw.replaceFirst(' ', 'T');
+      return normalized.contains('T00:00:00') ||
+          normalized.contains('T12:00:00');
+    }
+
+    return completedAt.hour == 0 &&
+        completedAt.minute == 0 &&
+        completedAt.second == 0 &&
+        completedAt.millisecond == 0;
   }
 
   (String, Color, IconData) _statusInfo(AppLocalizations t) {
@@ -188,12 +235,18 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
     final (statusLabel, statusColor, statusIcon) = _statusInfo(t);
     final categoryColor = CategoryMapping.getCategoryColor(_category);
     final categoryIcon = CategoryMapping.getCategoryMaterialIcon(_category);
-    final completedAt = widget.taskData['completed_at'];
+    final completedAt = _completedAt;
     final localeTag = Localizations.localeOf(context).toString();
     final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
+    final isDateOnlyCompletion = _isDateOnlyCompletion(completedAt);
+    final displayDate = isDateOnlyCompletion
+        ? _dateOnlyDisplayDate() ?? completedAt
+        : completedAt;
     final dateStr = completedAt != null
-        ? DateFormat("d MMM '·' HH:mm", localeTag)
-            .format(DateTime.parse(completedAt as String).toLocal())
+        ? DateFormat(
+            isDateOnlyCompletion ? 'd MMM' : "d MMM '·' HH:mm",
+            localeTag,
+          ).format(displayDate!)
         : t.taskDetailNoRecord;
 
     return Container(
@@ -432,7 +485,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                   ),
                                 ),
                               ),
-                              if (completedAt != null)
+                              if (completedAt != null && !isDateOnlyCompletion)
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 10,
@@ -445,10 +498,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                         BorderRadius.circular(AppRadii.pill),
                                   ),
                                   child: Text(
-                                    DateFormat('HH:mm').format(
-                                      DateTime.parse(completedAt as String)
-                                          .toLocal(),
-                                    ),
+                                    DateFormat('HH:mm').format(completedAt),
                                     style: TextStyle(
                                       color: appTheme.textSecondary,
                                       fontSize: 12,

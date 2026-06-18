@@ -1835,6 +1835,14 @@
   "completeTaskTasksSubtitle": "Buscá y seleccioná lo terminado",
   "completeTaskSearchHint": "Buscar tarea...",
   "completeTaskNoTasksAvailable": "No hay tareas disponibles",
+  "completeTaskAddPromptTitle": "¿No encontrás la tarea?",
+  "@completeTaskAddPromptTitle": {
+    "description": "Helper text shown at the bottom of the complete tasks sheet when the user may need to create a missing task."
+  },
+  "completeTaskAddPromptButton": "Agregar nueva tarea",
+  "@completeTaskAddPromptButton": {
+    "description": "Secondary action button at the bottom of the complete tasks sheet to open the existing new task flow."
+  },
   "completeTaskRewardVerb": "{count, plural, =1{Ganaste} other{Ganaron}}",
   "@completeTaskRewardVerb": {
     "description": "Verb shown next to the rewards earned after completing tasks. Singular when only the current user did it; plural when multiple members participated.",
@@ -3761,17 +3769,27 @@
   "@savingsNewGoalTitle": {
     "description": "Title of the new savings goal sheet."
   },
-  "savingsNewGoalSubtitle": "Definí qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.",
+  "savingsNewGoalSubtitle": "{mode, select, solo{Definí qué querés lograr y cuánto necesitás juntar para hacerlo realidad.} family{Definí qué quiere lograr la familia y cuánto necesitan juntar para hacerlo realidad.} friends{Definan qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.} other{Definí qué quieren lograr en pareja y cuánto necesitan juntar para hacerlo realidad.}}",
   "@savingsNewGoalSubtitle": {
-    "description": "Subtitle of the new savings goal sheet explaining what a goal is."
+    "description": "Subtitle of the new savings goal sheet explaining what a goal is. Mode-aware by household type.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
   },
   "savingsSectionDetail": "DETALLE",
   "@savingsSectionDetail": {
     "description": "Section header (uppercase eyebrow) for the goal detail fields."
   },
-  "savingsSectionDetailTitle": "Qué quieren alcanzar",
+  "savingsSectionDetailTitle": "{mode, select, solo{Qué querés alcanzar} family{Qué quiere alcanzar la familia} friends{Qué quieren alcanzar} other{Qué quieren alcanzar}}",
   "@savingsSectionDetailTitle": {
-    "description": "Section title for the goal detail fields (name and amount)."
+    "description": "Section title for the goal detail fields (name and amount). Mode-aware by household type.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
   },
   "savingsSectionPersonalization": "PERSONALIZACIÓN",
   "@savingsSectionPersonalization": {
@@ -3808,6 +3826,190 @@
   "savingsConfirmContribution": "Confirmar Aporte",
   "@savingsConfirmContribution": {
     "description": "Primary button to confirm adding money to a savings goal."
+  },
+  "savingsTotalLabel": "Ahorro Total",
+  "@savingsTotalLabel": {
+    "description": "Label above the total saved amount in the savings header card."
+  },
+  "savingsStatGoals": "Metas",
+  "@savingsStatGoals": {
+    "description": "Stat label for the number of active savings goals."
+  },
+  "savingsStatCompleted": "Cumplidas",
+  "@savingsStatCompleted": {
+    "description": "Stat label for the number of completed savings goals."
+  },
+  "savingsHistoryTitle": "HISTORIAL DE APORTES",
+  "@savingsHistoryTitle": {
+    "description": "Section header for the contribution history on a goal card."
+  },
+  "savingsCompletedGoalsHistoryTitle": "Historial de metas",
+  "@savingsCompletedGoalsHistoryTitle": {
+    "description": "Section header for completed savings goals."
+  },
+  "savingsContributionLine": "{name} sumó {amount}",
+  "@savingsContributionLine": {
+    "description": "A single contribution row: who added how much.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsSharedContributionLine": "{names} sumaron {amount}",
+  "@savingsSharedContributionLine": {
+    "description": "A contribution row for a shared savings contribution with multiple participants.",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsContributionSomeone": "Alguien",
+  "@savingsContributionSomeone": {
+    "description": "Fallback name when a contributor's name is unknown."
+  },
+  "savingsCompletedBadge": "¡Cumplida!",
+  "@savingsCompletedBadge": {
+    "description": "Badge shown on a savings goal that reached its target."
+  },
+  "savingsDeadlineChip": "Para el {date}",
+  "@savingsDeadlineChip": {
+    "description": "Small chip showing a goal's target date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsEditAction": "Editar meta",
+  "@savingsEditAction": {
+    "description": "Overflow menu action to edit a savings goal."
+  },
+  "savingsDeleteAction": "Eliminar",
+  "@savingsDeleteAction": {
+    "description": "Overflow menu action / confirm button to delete a savings goal."
+  },
+  "savingsDeleteConfirmTitle": "¿Eliminar meta?",
+  "@savingsDeleteConfirmTitle": {
+    "description": "Title of the delete-goal confirmation dialog."
+  },
+  "savingsDeleteConfirmBody": "Se perderá el registro de \"{title}\".",
+  "@savingsDeleteConfirmBody": {
+    "description": "Body of the delete-goal confirmation dialog.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsArchiveAction": "Archivar",
+  "@savingsArchiveAction": {
+    "description": "Action to archive a completed savings goal."
+  },
+  "savingsArchiveConfirmTitle": "¿Archivar meta cumplida?",
+  "@savingsArchiveConfirmTitle": {
+    "description": "Title of the archive-goal confirmation dialog."
+  },
+  "savingsArchiveConfirmBody": "La meta se guardará como cumplida y dejará de aparecer en la lista.",
+  "@savingsArchiveConfirmBody": {
+    "description": "Body of the archive-goal confirmation dialog."
+  },
+  "savingsEditGoalTitle": "Editar Meta",
+  "@savingsEditGoalTitle": {
+    "description": "Title of the edit savings goal sheet."
+  },
+  "savingsSaveChangesAction": "Guardar cambios",
+  "@savingsSaveChangesAction": {
+    "description": "Primary button to save edits to a savings goal."
+  },
+  "savingsContributeSplitTitle": "¿CÓMO REGISTRAR EL APORTE?",
+  "@savingsContributeSplitTitle": {
+    "description": "Eyebrow above the contribution split selector."
+  },
+  "savingsContributeSoloLabel": "Solo yo",
+  "@savingsContributeSoloLabel": {
+    "description": "Split option: the contribution comes only from the current user (a gift)."
+  },
+  "savingsContributeSoloDesc": "Sale de tu bolsillo, como un regalo.",
+  "@savingsContributeSoloDesc": {
+    "description": "Description of the 'solo yo' contribution split option."
+  },
+  "savingsContributeSharedLabel": "{mode, select, family{En familia} friends{Entre todos} solo{Entre todos} other{En pareja}}",
+  "@savingsContributeSharedLabel": {
+    "description": "Split option: the contribution is shared. Mode-aware by household type.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsContributeSharedDesc": "{mode, select, family{Se reparte entre los adultos del hogar.} friends{Se reparte entre quienes conviven.} solo{Se reparte según la economía del hogar.} other{Se reparte entre vos y tu pareja.}}",
+  "@savingsContributeSharedDesc": {
+    "description": "Description of the shared contribution split option. Mode-aware by household type.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsNoteLabel": "Nota (opcional)",
+  "@savingsNoteLabel": {
+    "description": "Label for the optional note field in the contribution sheet."
+  },
+  "savingsNoteHint": "¿Para qué es este aporte?",
+  "@savingsNoteHint": {
+    "description": "Hint for the optional note field in the contribution sheet."
+  },
+  "savingsTargetDateLabel": "Fecha objetivo (opcional)",
+  "@savingsTargetDateLabel": {
+    "description": "Label for the optional target date field on a savings goal."
+  },
+  "savingsTargetDateClear": "Sin fecha límite",
+  "@savingsTargetDateClear": {
+    "description": "Placeholder shown when a savings goal has no target date."
+  },
+  "savingsSuggesterMessage": "Según tu plan, podrías ahorrar {amount} extra este mes. ¡Adelantarías un {percent}% tu meta \"{goal}\"!",
+  "@savingsSuggesterMessage": {
+    "description": "Surplus-based savings suggestion message.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsSuggesterCta": "Aportar ahora",
+  "@savingsSuggesterCta": {
+    "description": "Call to action on the savings suggestion card."
+  },
+  "savingsCompletedCelebrationTitle": "¡Meta cumplida! 🎉",
+  "@savingsCompletedCelebrationTitle": {
+    "description": "Title of the celebration dialog shown when a goal is reached."
+  },
+  "savingsCompletedCelebrationBody": "Juntaron todo para \"{title}\". ¡Felicitaciones!",
+  "@savingsCompletedCelebrationBody": {
+    "description": "Body of the celebration dialog shown when a goal is reached.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsCelebrationDismiss": "¡Genial!",
+  "@savingsCelebrationDismiss": {
+    "description": "Dismiss button on the goal-completed celebration dialog."
   },
   "achievementsBadgesSection": "Tus Medallas",
   "@achievementsBadgesSection": {

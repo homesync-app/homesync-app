@@ -80,7 +80,7 @@ final class AuthControllerProvider
   AuthController create() => AuthController();
 }
 
-String _$authControllerHash() => r'939c3808c8e20d3dd99ae6e3ea3e640965f9ef7e';
+String _$authControllerHash() => r'e2ca25245bad3b32706110cf9d0191883fc52a17';
 
 /// Controller that manages the authentication state and actions.
 /// It wraps the AuthRepository and provides a unified interface for the UI.

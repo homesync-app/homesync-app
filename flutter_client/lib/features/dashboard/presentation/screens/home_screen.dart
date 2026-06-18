@@ -74,6 +74,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final householdAsync = ref.watch(householdIdProvider);
     final theme = context.theme;
 
+    // Mantener el balance fresco cross-device: el feed de actividad (que nace
+    // del stream realtime + poll de respaldo) avisa cuando otro miembro carga
+    // un gasto. Los providers de balance no escuchan realtime, asi que los
+    // invalidamos cuando la firma de actividades de gasto cambia. Sin esto, el
+    // balance del otro dispositivo quedaba viejo hasta recargar (a diferencia
+    // de "movimientos del hogar", que si se actualizaba solo).
+    ref.listen(financeActivitySignatureProvider, (previous, next) {
+      if (previous == null || previous == next) return;
+      ref.invalidate(expenseBalancesProvider);
+      ref.invalidate(personalFinanceSummaryProvider);
+      ref.invalidate(monthlyPendingPlannedExpensesProvider);
+    });
+
     return householdAsync.when(
       loading: () => Scaffold(
         backgroundColor: theme.background,

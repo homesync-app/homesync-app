@@ -4425,6 +4425,18 @@ abstract class AppLocalizations {
   /// **'No hay tareas disponibles'**
   String get completeTaskNoTasksAvailable;
 
+  /// Helper text shown at the bottom of the complete tasks sheet when the user may need to create a missing task.
+  ///
+  /// In es, this message translates to:
+  /// **'¿No encontrás la tarea?'**
+  String get completeTaskAddPromptTitle;
+
+  /// Secondary action button at the bottom of the complete tasks sheet to open the existing new task flow.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar nueva tarea'**
+  String get completeTaskAddPromptButton;
+
   /// Verb shown next to the rewards earned after completing tasks. Singular when only the current user did it; plural when multiple members participated.
   ///
   /// In es, this message translates to:
@@ -9777,11 +9789,11 @@ abstract class AppLocalizations {
   /// **'Nueva Meta'**
   String get savingsNewGoalTitle;
 
-  /// Subtitle of the new savings goal sheet explaining what a goal is.
+  /// Subtitle of the new savings goal sheet explaining what a goal is. Mode-aware by household type.
   ///
   /// In es, this message translates to:
-  /// **'Definí qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.'**
-  String get savingsNewGoalSubtitle;
+  /// **'{mode, select, solo{Definí qué querés lograr y cuánto necesitás juntar para hacerlo realidad.} family{Definí qué quiere lograr la familia y cuánto necesitan juntar para hacerlo realidad.} friends{Definan qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.} other{Definí qué quieren lograr en pareja y cuánto necesitan juntar para hacerlo realidad.}}'**
+  String savingsNewGoalSubtitle(String mode);
 
   /// Section header (uppercase eyebrow) for the goal detail fields.
   ///
@@ -9789,11 +9801,11 @@ abstract class AppLocalizations {
   /// **'DETALLE'**
   String get savingsSectionDetail;
 
-  /// Section title for the goal detail fields (name and amount).
+  /// Section title for the goal detail fields (name and amount). Mode-aware by household type.
   ///
   /// In es, this message translates to:
-  /// **'Qué quieren alcanzar'**
-  String get savingsSectionDetailTitle;
+  /// **'{mode, select, solo{Qué querés alcanzar} family{Qué quiere alcanzar la familia} friends{Qué quieren alcanzar} other{Qué quieren alcanzar}}'**
+  String savingsSectionDetailTitle(String mode);
 
   /// Section header (uppercase eyebrow) for the goal personalization fields.
   ///
@@ -9848,6 +9860,204 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Confirmar Aporte'**
   String get savingsConfirmContribution;
+
+  /// Label above the total saved amount in the savings header card.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahorro Total'**
+  String get savingsTotalLabel;
+
+  /// Stat label for the number of active savings goals.
+  ///
+  /// In es, this message translates to:
+  /// **'Metas'**
+  String get savingsStatGoals;
+
+  /// Stat label for the number of completed savings goals.
+  ///
+  /// In es, this message translates to:
+  /// **'Cumplidas'**
+  String get savingsStatCompleted;
+
+  /// Section header for the contribution history on a goal card.
+  ///
+  /// In es, this message translates to:
+  /// **'HISTORIAL DE APORTES'**
+  String get savingsHistoryTitle;
+
+  /// Section header for completed savings goals.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial de metas'**
+  String get savingsCompletedGoalsHistoryTitle;
+
+  /// A single contribution row: who added how much.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} sumó {amount}'**
+  String savingsContributionLine(String name, String amount);
+
+  /// A contribution row for a shared savings contribution with multiple participants.
+  ///
+  /// In es, this message translates to:
+  /// **'{names} sumaron {amount}'**
+  String savingsSharedContributionLine(String names, String amount);
+
+  /// Fallback name when a contributor's name is unknown.
+  ///
+  /// In es, this message translates to:
+  /// **'Alguien'**
+  String get savingsContributionSomeone;
+
+  /// Badge shown on a savings goal that reached its target.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Cumplida!'**
+  String get savingsCompletedBadge;
+
+  /// Small chip showing a goal's target date.
+  ///
+  /// In es, this message translates to:
+  /// **'Para el {date}'**
+  String savingsDeadlineChip(String date);
+
+  /// Overflow menu action to edit a savings goal.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar meta'**
+  String get savingsEditAction;
+
+  /// Overflow menu action / confirm button to delete a savings goal.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar'**
+  String get savingsDeleteAction;
+
+  /// Title of the delete-goal confirmation dialog.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar meta?'**
+  String get savingsDeleteConfirmTitle;
+
+  /// Body of the delete-goal confirmation dialog.
+  ///
+  /// In es, this message translates to:
+  /// **'Se perderá el registro de \"{title}\".'**
+  String savingsDeleteConfirmBody(String title);
+
+  /// Action to archive a completed savings goal.
+  ///
+  /// In es, this message translates to:
+  /// **'Archivar'**
+  String get savingsArchiveAction;
+
+  /// Title of the archive-goal confirmation dialog.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Archivar meta cumplida?'**
+  String get savingsArchiveConfirmTitle;
+
+  /// Body of the archive-goal confirmation dialog.
+  ///
+  /// In es, this message translates to:
+  /// **'La meta se guardará como cumplida y dejará de aparecer en la lista.'**
+  String get savingsArchiveConfirmBody;
+
+  /// Title of the edit savings goal sheet.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar Meta'**
+  String get savingsEditGoalTitle;
+
+  /// Primary button to save edits to a savings goal.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar cambios'**
+  String get savingsSaveChangesAction;
+
+  /// Eyebrow above the contribution split selector.
+  ///
+  /// In es, this message translates to:
+  /// **'¿CÓMO REGISTRAR EL APORTE?'**
+  String get savingsContributeSplitTitle;
+
+  /// Split option: the contribution comes only from the current user (a gift).
+  ///
+  /// In es, this message translates to:
+  /// **'Solo yo'**
+  String get savingsContributeSoloLabel;
+
+  /// Description of the 'solo yo' contribution split option.
+  ///
+  /// In es, this message translates to:
+  /// **'Sale de tu bolsillo, como un regalo.'**
+  String get savingsContributeSoloDesc;
+
+  /// Split option: the contribution is shared. Mode-aware by household type.
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, family{En familia} friends{Entre todos} solo{Entre todos} other{En pareja}}'**
+  String savingsContributeSharedLabel(String mode);
+
+  /// Description of the shared contribution split option. Mode-aware by household type.
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, family{Se reparte entre los adultos del hogar.} friends{Se reparte entre quienes conviven.} solo{Se reparte según la economía del hogar.} other{Se reparte entre vos y tu pareja.}}'**
+  String savingsContributeSharedDesc(String mode);
+
+  /// Label for the optional note field in the contribution sheet.
+  ///
+  /// In es, this message translates to:
+  /// **'Nota (opcional)'**
+  String get savingsNoteLabel;
+
+  /// Hint for the optional note field in the contribution sheet.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Para qué es este aporte?'**
+  String get savingsNoteHint;
+
+  /// Label for the optional target date field on a savings goal.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha objetivo (opcional)'**
+  String get savingsTargetDateLabel;
+
+  /// Placeholder shown when a savings goal has no target date.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin fecha límite'**
+  String get savingsTargetDateClear;
+
+  /// Surplus-based savings suggestion message.
+  ///
+  /// In es, this message translates to:
+  /// **'Según tu plan, podrías ahorrar {amount} extra este mes. ¡Adelantarías un {percent}% tu meta \"{goal}\"!'**
+  String savingsSuggesterMessage(String amount, String percent, String goal);
+
+  /// Call to action on the savings suggestion card.
+  ///
+  /// In es, this message translates to:
+  /// **'Aportar ahora'**
+  String get savingsSuggesterCta;
+
+  /// Title of the celebration dialog shown when a goal is reached.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Meta cumplida! 🎉'**
+  String get savingsCompletedCelebrationTitle;
+
+  /// Body of the celebration dialog shown when a goal is reached.
+  ///
+  /// In es, this message translates to:
+  /// **'Juntaron todo para \"{title}\". ¡Felicitaciones!'**
+  String savingsCompletedCelebrationBody(String title);
+
+  /// Dismiss button on the goal-completed celebration dialog.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Genial!'**
+  String get savingsCelebrationDismiss;
 
   /// Section header for the user's earned badges in the achievements tab.
   ///

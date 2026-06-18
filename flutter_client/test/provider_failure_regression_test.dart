@@ -207,7 +207,23 @@ class _FailingSavingsRepository implements SavingsRepository {
     required double targetAmount,
     required String color,
     required String icon,
+    DateTime? targetDate,
   }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, void>> updateGoal({
+    required String goalId,
+    String? title,
+    double? targetAmount,
+    String? color,
+    String? icon,
+    DateTime? targetDate,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, void>> archiveGoal({required String goalId}) async =>
       throw UnimplementedError();
 
   @override

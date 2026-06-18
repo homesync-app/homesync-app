@@ -2785,6 +2785,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get completeTaskNoTasksAvailable => 'No hay tareas disponibles';
 
   @override
+  String get completeTaskAddPromptTitle => '¿No encontrás la tarea?';
+
+  @override
+  String get completeTaskAddPromptButton => 'Agregar nueva tarea';
+
+  @override
   String completeTaskRewardVerb(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -5987,14 +5993,39 @@ class AppLocalizationsEs extends AppLocalizations {
   String get savingsNewGoalTitle => 'Nueva Meta';
 
   @override
-  String get savingsNewGoalSubtitle =>
-      'Definí qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.';
+  String savingsNewGoalSubtitle(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'solo':
+            'Definí qué querés lograr y cuánto necesitás juntar para hacerlo realidad.',
+        'family':
+            'Definí qué quiere lograr la familia y cuánto necesitan juntar para hacerlo realidad.',
+        'friends':
+            'Definan qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.',
+        'other':
+            'Definí qué quieren lograr en pareja y cuánto necesitan juntar para hacerlo realidad.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get savingsSectionDetail => 'DETALLE';
 
   @override
-  String get savingsSectionDetailTitle => 'Qué quieren alcanzar';
+  String savingsSectionDetailTitle(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'solo': 'Qué querés alcanzar',
+        'family': 'Qué quiere alcanzar la familia',
+        'friends': 'Qué quieren alcanzar',
+        'other': 'Qué quieren alcanzar',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get savingsSectionPersonalization => 'PERSONALIZACIÓN';
@@ -6022,6 +6053,141 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get savingsConfirmContribution => 'Confirmar Aporte';
+
+  @override
+  String get savingsTotalLabel => 'Ahorro Total';
+
+  @override
+  String get savingsStatGoals => 'Metas';
+
+  @override
+  String get savingsStatCompleted => 'Cumplidas';
+
+  @override
+  String get savingsHistoryTitle => 'HISTORIAL DE APORTES';
+
+  @override
+  String get savingsCompletedGoalsHistoryTitle => 'Historial de metas';
+
+  @override
+  String savingsContributionLine(String name, String amount) {
+    return '$name sumó $amount';
+  }
+
+  @override
+  String savingsSharedContributionLine(String names, String amount) {
+    return '$names sumaron $amount';
+  }
+
+  @override
+  String get savingsContributionSomeone => 'Alguien';
+
+  @override
+  String get savingsCompletedBadge => '¡Cumplida!';
+
+  @override
+  String savingsDeadlineChip(String date) {
+    return 'Para el $date';
+  }
+
+  @override
+  String get savingsEditAction => 'Editar meta';
+
+  @override
+  String get savingsDeleteAction => 'Eliminar';
+
+  @override
+  String get savingsDeleteConfirmTitle => '¿Eliminar meta?';
+
+  @override
+  String savingsDeleteConfirmBody(String title) {
+    return 'Se perderá el registro de \"$title\".';
+  }
+
+  @override
+  String get savingsArchiveAction => 'Archivar';
+
+  @override
+  String get savingsArchiveConfirmTitle => '¿Archivar meta cumplida?';
+
+  @override
+  String get savingsArchiveConfirmBody =>
+      'La meta se guardará como cumplida y dejará de aparecer en la lista.';
+
+  @override
+  String get savingsEditGoalTitle => 'Editar Meta';
+
+  @override
+  String get savingsSaveChangesAction => 'Guardar cambios';
+
+  @override
+  String get savingsContributeSplitTitle => '¿CÓMO REGISTRAR EL APORTE?';
+
+  @override
+  String get savingsContributeSoloLabel => 'Solo yo';
+
+  @override
+  String get savingsContributeSoloDesc =>
+      'Sale de tu bolsillo, como un regalo.';
+
+  @override
+  String savingsContributeSharedLabel(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family': 'En familia',
+        'friends': 'Entre todos',
+        'solo': 'Entre todos',
+        'other': 'En pareja',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String savingsContributeSharedDesc(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family': 'Se reparte entre los adultos del hogar.',
+        'friends': 'Se reparte entre quienes conviven.',
+        'solo': 'Se reparte según la economía del hogar.',
+        'other': 'Se reparte entre vos y tu pareja.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savingsNoteLabel => 'Nota (opcional)';
+
+  @override
+  String get savingsNoteHint => '¿Para qué es este aporte?';
+
+  @override
+  String get savingsTargetDateLabel => 'Fecha objetivo (opcional)';
+
+  @override
+  String get savingsTargetDateClear => 'Sin fecha límite';
+
+  @override
+  String savingsSuggesterMessage(String amount, String percent, String goal) {
+    return 'Según tu plan, podrías ahorrar $amount extra este mes. ¡Adelantarías un $percent% tu meta \"$goal\"!';
+  }
+
+  @override
+  String get savingsSuggesterCta => 'Aportar ahora';
+
+  @override
+  String get savingsCompletedCelebrationTitle => '¡Meta cumplida! 🎉';
+
+  @override
+  String savingsCompletedCelebrationBody(String title) {
+    return 'Juntaron todo para \"$title\". ¡Felicitaciones!';
+  }
+
+  @override
+  String get savingsCelebrationDismiss => '¡Genial!';
 
   @override
   String get achievementsBadgesSection => 'Tus Medallas';

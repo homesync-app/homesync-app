@@ -19,18 +19,31 @@ import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 import 'create_task_dialog.dart';
+import 'task_creation_result.dart';
 
 class AddTaskOptionsSheet extends ConsumerStatefulWidget {
   final List<MemberModel> members;
+  final ValueChanged<TaskCreationResult>? onTaskAdded;
 
-  const AddTaskOptionsSheet({super.key, required this.members});
+  const AddTaskOptionsSheet({
+    super.key,
+    required this.members,
+    this.onTaskAdded,
+  });
 
-  static Future<bool?> show(BuildContext context, List<MemberModel> members) {
+  static Future<bool?> show(
+    BuildContext context,
+    List<MemberModel> members, {
+    ValueChanged<TaskCreationResult>? onTaskAdded,
+  }) {
     return AppSheet.show<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => AddTaskOptionsSheet(members: members),
+      builder: (context) => AddTaskOptionsSheet(
+        members: members,
+        onTaskAdded: onTaskAdded,
+      ),
     );
   }
 
@@ -130,6 +143,12 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
       });
 
       if (!mounted) return;
+      widget.onTaskAdded?.call(
+        TaskCreationResult(
+          title: template.title,
+          category: template.categoryId,
+        ),
+      );
       final t = AppLocalizations.of(context);
       final title = localizedTaskTemplateTitle(t, template);
       AppSnackBar.show(
@@ -316,7 +335,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      final result = await showDialog<bool>(
+                      final result = await showDialog<TaskCreationResult>(
                         context: context,
                         builder: (context) => CreateTaskDialog(
                           members: widget.members
@@ -324,7 +343,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                               .toList(),
                         ),
                       );
-                      if (result == true && context.mounted) {
+                      if (result != null && context.mounted) {
+                        widget.onTaskAdded?.call(result);
                         Navigator.pop(context, true);
                       }
                     },

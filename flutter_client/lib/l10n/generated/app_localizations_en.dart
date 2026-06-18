@@ -2780,6 +2780,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get completeTaskNoTasksAvailable => 'No tasks available';
 
   @override
+  String get completeTaskAddPromptTitle => 'Can\'t find the task?';
+
+  @override
+  String get completeTaskAddPromptButton => 'Add new task';
+
+  @override
   String completeTaskRewardVerb(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -5965,14 +5971,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savingsNewGoalTitle => 'New Goal';
 
   @override
-  String get savingsNewGoalSubtitle =>
-      'Define what you want to achieve and how much you need to save to make it happen.';
+  String savingsNewGoalSubtitle(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'solo':
+            'Define what you want to achieve and how much you need to save to make it happen.',
+        'family':
+            'Define what your family wants to achieve and how much you need to save together.',
+        'friends':
+            'Define what you want to achieve and how much you need to save together.',
+        'other':
+            'Define what you want to achieve together and how much you need to save to make it happen.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get savingsSectionDetail => 'DETAILS';
 
   @override
-  String get savingsSectionDetailTitle => 'What you want to reach';
+  String savingsSectionDetailTitle(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'solo': 'What you want to reach',
+        'family': 'What your family wants to reach',
+        'friends': 'What you want to reach',
+        'other': 'What you want to reach',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get savingsSectionPersonalization => 'PERSONALIZATION';
@@ -6000,6 +6031,141 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savingsConfirmContribution => 'Confirm Contribution';
+
+  @override
+  String get savingsTotalLabel => 'Total Saved';
+
+  @override
+  String get savingsStatGoals => 'Goals';
+
+  @override
+  String get savingsStatCompleted => 'Completed';
+
+  @override
+  String get savingsHistoryTitle => 'CONTRIBUTION HISTORY';
+
+  @override
+  String get savingsCompletedGoalsHistoryTitle => 'Completed goals';
+
+  @override
+  String savingsContributionLine(String name, String amount) {
+    return '$name added $amount';
+  }
+
+  @override
+  String savingsSharedContributionLine(String names, String amount) {
+    return '$names added $amount';
+  }
+
+  @override
+  String get savingsContributionSomeone => 'Someone';
+
+  @override
+  String get savingsCompletedBadge => 'Reached!';
+
+  @override
+  String savingsDeadlineChip(String date) {
+    return 'By $date';
+  }
+
+  @override
+  String get savingsEditAction => 'Edit goal';
+
+  @override
+  String get savingsDeleteAction => 'Delete';
+
+  @override
+  String get savingsDeleteConfirmTitle => 'Delete goal?';
+
+  @override
+  String savingsDeleteConfirmBody(String title) {
+    return 'The record for \"$title\" will be lost.';
+  }
+
+  @override
+  String get savingsArchiveAction => 'Archive';
+
+  @override
+  String get savingsArchiveConfirmTitle => 'Archive completed goal?';
+
+  @override
+  String get savingsArchiveConfirmBody =>
+      'The goal will be saved as completed and stop showing in the list.';
+
+  @override
+  String get savingsEditGoalTitle => 'Edit Goal';
+
+  @override
+  String get savingsSaveChangesAction => 'Save changes';
+
+  @override
+  String get savingsContributeSplitTitle => 'HOW TO LOG THIS CONTRIBUTION?';
+
+  @override
+  String get savingsContributeSoloLabel => 'Just me';
+
+  @override
+  String get savingsContributeSoloDesc =>
+      'Comes out of your pocket, like a gift.';
+
+  @override
+  String savingsContributeSharedLabel(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family': 'As a family',
+        'friends': 'Everyone',
+        'solo': 'Everyone',
+        'other': 'As a couple',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String savingsContributeSharedDesc(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family': 'Split among the household adults.',
+        'friends': 'Split among housemates.',
+        'solo': 'Split per the household economy.',
+        'other': 'Split between you and your partner.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savingsNoteLabel => 'Note (optional)';
+
+  @override
+  String get savingsNoteHint => 'What is this contribution for?';
+
+  @override
+  String get savingsTargetDateLabel => 'Target date (optional)';
+
+  @override
+  String get savingsTargetDateClear => 'No deadline';
+
+  @override
+  String savingsSuggesterMessage(String amount, String percent, String goal) {
+    return 'Based on your plan, you could save $amount extra this month. That would advance your \"$goal\" goal by $percent%!';
+  }
+
+  @override
+  String get savingsSuggesterCta => 'Contribute now';
+
+  @override
+  String get savingsCompletedCelebrationTitle => 'Goal reached! 🎉';
+
+  @override
+  String savingsCompletedCelebrationBody(String title) {
+    return 'You saved it all for \"$title\". Congrats!';
+  }
+
+  @override
+  String get savingsCelebrationDismiss => 'Awesome!';
 
   @override
   String get achievementsBadgesSection => 'Your Badges';

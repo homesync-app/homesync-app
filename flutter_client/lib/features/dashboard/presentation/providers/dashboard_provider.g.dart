@@ -136,6 +136,47 @@ final class RecentActivityRemoteProvider extends $FunctionalProvider<
 String _$recentActivityRemoteHash() =>
     r'd800edd89e43e7808020eff674e48ebed094dbc1';
 
+@ProviderFor(financeActivitySignature)
+final financeActivitySignatureProvider = FinanceActivitySignatureProvider._();
+
+final class FinanceActivitySignatureProvider
+    extends $FunctionalProvider<String, String, String> with $Provider<String> {
+  FinanceActivitySignatureProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'financeActivitySignatureProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$financeActivitySignatureHash();
+
+  @$internal
+  @override
+  $ProviderElement<String> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  String create(Ref ref) {
+    return financeActivitySignature(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String>(value),
+    );
+  }
+}
+
+String _$financeActivitySignatureHash() =>
+    r'7ebd4122a9310c9756f5faa69b3a35bf18104e13';
+
 @ProviderFor(recentActivity)
 final recentActivityProvider = RecentActivityProvider._();
 
@@ -261,7 +302,7 @@ final class OptimisticRecentActivityProvider extends $NotifierProvider<
 }
 
 String _$optimisticRecentActivityHash() =>
-    r'd799520f335673716f1212f4b6e840b004fc756d';
+    r'ed00d85243d694aced3d9de7de891ab5a7ee79a4';
 
 abstract class _$OptimisticRecentActivity
     extends $Notifier<List<Map<String, dynamic>>> {

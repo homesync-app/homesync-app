@@ -191,6 +191,11 @@ class SupabaseDashboardRepository implements DashboardRepository {
           data['category'] = metadata['category'] ??
               metadata['task_category'] ??
               metadata['category_name'];
+          data['completed_at'] = metadata['completed_at'] ??
+              metadata['last_completed_at'] ??
+              task?['completed_at'] ??
+              task?['last_completed_at'] ??
+              item['created_at'];
           data['xp_reward'] = metadata['xp_reward'] ??
               metadata['xpReward'] ??
               metadata['p_xp_reward'] ??

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
@@ -21,6 +20,7 @@ import '../../../stats/presentation/widgets/weekly_progress_tab.dart';
 import '../../domain/models/couple_challenge.dart';
 import '../../domain/models/reward_model.dart';
 import '../providers/couple_challenge_provider.dart';
+import '../providers/couple_duel_stats_provider.dart';
 import '../providers/reward_provider.dart';
 import '../utils/reward_localization.dart';
 import '../widgets/couple_challenge_card.dart';
@@ -120,7 +120,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     super.dispose();
   }
 
-  Future<void> _loadDuelStats() async {
+  Future<void> _loadDuelStats({bool forceRefresh = false}) async {
     if (mounted) {
       final hasCachedDuelData = _weeklyRanking.isNotEmpty ||
           _memberStats.isNotEmpty ||
@@ -132,51 +132,21 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     }
 
     try {
-      final admin = ref.read(adminProvider);
-      late final List<dynamic> mainResults;
-      late final Future<dynamic> duelHistoryFuture;
-
-      if (admin.isAdminUser) {
-        final client = ref.read(supabaseClientProvider);
-        mainResults = await Future.wait<dynamic>([
-          client.rpc(
-            'qa_admin_get_task_stats_by_category',
-            params: {'p_household_id': widget.householdId},
-          ),
-          client.rpc(
-            'qa_admin_get_member_activity_stats',
-            params: {'p_household_id': widget.householdId},
-          ),
-          client.rpc(
-            'qa_admin_get_weekly_ranking',
-            params: {'p_household_id': widget.householdId},
-          ),
-        ]);
-        duelHistoryFuture = client.rpc(
-          'qa_admin_get_weekly_duel_history',
-          params: {'p_household_id': widget.householdId},
-        );
-      } else {
-        final rpc = ref.read(rpcServiceProvider);
-        mainResults = await Future.wait<dynamic>([
-          rpc.getTaskStatsByCategory(),
-          rpc.getMemberActivityStats(),
-          rpc.getWeeklyRanking(),
-        ]);
-        duelHistoryFuture = rpc.getWeeklyDuelHistory();
+      // Las stats viven en coupleDuelStatsProvider (keepAlive): el primer load
+      // aprovecha la caché calentada en segundo plano desde el Home, así el tab
+      // abre al instante. El pull-to-refresh fuerza datos frescos.
+      if (forceRefresh) {
+        ref.invalidate(coupleDuelStatsProvider);
       }
-
+      final stats = await ref.read(coupleDuelStatsProvider.future);
       if (!mounted) return;
       setState(() {
-        _taskStats = _mapList(mainResults[0]);
-        _memberStats = _mapList(mainResults[1]);
-        _weeklyRanking = _mapList(mainResults[2]);
+        _taskStats = stats.taskStats;
+        _memberStats = stats.memberStats;
+        _weeklyRanking = stats.weeklyRanking;
+        _duelHistory = stats.duelHistory;
         _isStatsLoading = false;
       });
-
-      final duelHistory = await duelHistoryFuture;
-      if (!mounted) return;
-      setState(() => _duelHistory = _mapList(duelHistory));
     } catch (error, stackTrace) {
       log.w(
         'CoupleRewardsScreen failed to load duel stats',
@@ -186,13 +156,6 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       if (!mounted) return;
       setState(() => _isStatsLoading = false);
     }
-  }
-
-  List<Map<String, dynamic>> _mapList(dynamic value) {
-    if (value is List) {
-      return List<Map<String, dynamic>>.from(value);
-    }
-    return const [];
   }
 
   int get _totalTasksCompleted {
@@ -360,7 +323,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       totalXp: _totalXpEarned,
       totalCoins: _totalCoinsEarned,
       showHeader: false,
-      onRefresh: _loadDuelStats,
+      onRefresh: () => _loadDuelStats(forceRefresh: true),
     );
   }
 

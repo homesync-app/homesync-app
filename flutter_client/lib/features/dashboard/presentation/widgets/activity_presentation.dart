@@ -31,10 +31,22 @@ double? activityParseAmount(dynamic raw) {
   return double.tryParse(raw.toString());
 }
 
+/// Un equilibrio de saldo (settle_debt_v1) llega como expense con
+/// type='settlement' en metadata. Se presenta distinto en todas las
+/// superficies del feed (titulo, icono, detalle) para que no aparezca como un
+/// gasto "Otros".
+bool activityIsSettlement(Map<String, dynamic> data) =>
+    data['type'] == 'settlement';
+
+/// Titulo unificado de un equilibrio de saldo. Single source of truth para
+/// chat bubble, solo tile, family feed y la hoja de detalle.
+const String activitySettlementTitle = 'Balance equilibrado';
+
 String localizedActivityTitle(
   AppLocalizations t,
   Map<String, dynamic> data,
 ) {
+  if (activityIsSettlement(data)) return activitySettlementTitle;
   final fallback =
       data['task_title'] ?? data['title'] ?? data['description'] ?? 'Actividad';
   return localizedTaskCatalogText(
@@ -90,7 +102,12 @@ Color activityAccent(
   return dashboardCategoryAccent(context, category);
 }
 
-IconData activityIcon(String? type, String? category) {
+IconData activityIcon(
+  String? type,
+  String? category, {
+  bool isSettlement = false,
+}) {
+  if (isSettlement) return Icons.handshake_rounded;
   switch (type) {
     case 'expense':
       return Icons.receipt_long_rounded;
@@ -111,6 +128,41 @@ String formatActivityTimeAgo(DateTime time) {
   return DateFormat('d MMM', 'es_AR').format(time);
 }
 
+String formatTaskActivityTimeLabel(Map<String, dynamic> activity) {
+  final createdAt =
+      DateTime.tryParse(activity['created_at'] as String? ?? '')?.toLocal() ??
+          DateTime.now();
+  final data = (activity['data'] as Map<String, dynamic>?) ?? {};
+  final completedAtRaw = data['completed_at'];
+  final completedAt = DateTime.tryParse(completedAtRaw?.toString() ?? '');
+
+  if (activity['type'] == 'task' && completedAt != null) {
+    final createdDay = DateTime(createdAt.year, createdAt.month, createdAt.day);
+    final completedDateOnly = data['completed_date_only'] == true ||
+        data['completed_date_only']?.toString().toLowerCase() == 'true' ||
+        _looksLikeDateOnlyTimestamp(completedAtRaw);
+    final effectiveCompletedAt =
+        completedDateOnly ? completedAt : completedAt.toLocal();
+    final completedDay = DateTime(
+      effectiveCompletedAt.year,
+      effectiveCompletedAt.month,
+      effectiveCompletedAt.day,
+    );
+    final dayDiff = createdDay.difference(completedDay).inDays;
+    if (dayDiff > 0) {
+      return dayDiff == 1 ? 'Hecha ayer' : 'Hecha hace $dayDiff días';
+    }
+  }
+
+  return formatActivityTimeAgo(createdAt);
+}
+
+bool _looksLikeDateOnlyTimestamp(dynamic raw) {
+  final normalized = raw?.toString().replaceFirst(' ', 'T');
+  if (normalized == null) return false;
+  return normalized.contains('T00:00:00') || normalized.contains('T12:00:00');
+}
+
 /// Opens the right detail sheet for a feed activity (task or expense).
 /// Reward activities have no detail sheet and are a no-op.
 Future<void> openActivityDetail(
@@ -122,6 +174,9 @@ Future<void> openActivityDetail(
   final data = (activity['data'] as Map<String, dynamic>?) ?? {};
 
   if (type == 'task') {
+    final completedAt = data['completed_at'] ??
+        data['last_completed_at'] ??
+        activity['created_at'];
     final taskData = <String, dynamic>{
       ...data,
       'title': data['task_title'] ?? data['title'],
@@ -129,7 +184,7 @@ Future<void> openActivityDetail(
       'xp_reward': data['xp_reward'] ?? data['xp_per_user'] ?? data['xp'],
       'coin_reward':
           data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],
-      'completed_at': activity['created_at'],
+      'completed_at': completedAt,
       'activity_id': activity['id'],
       'completed_user': {
         'full_name': data['user_name'],
@@ -156,7 +211,9 @@ Future<void> openActivityDetail(
       context,
       ExpenseModel(
         id: expenseId,
-        title: data['title']?.toString() ?? '',
+        title: activityIsSettlement(data)
+            ? activitySettlementTitle
+            : data['title']?.toString() ?? '',
         titleKey: data['title_key']?.toString(),
         amount: activityParseAmount(data['amount']) ?? 0,
         category: data['category'] as String?,

@@ -9,6 +9,7 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
@@ -23,6 +24,8 @@ import 'package:intl/intl.dart';
 
 import '../../../household/data/repositories/supabase_household_repository.dart';
 import '../../data/repositories/supabase_task_repository.dart';
+import 'add_task_options_sheet.dart';
+import 'task_creation_result.dart';
 
 class CompleteTaskSheet extends ConsumerStatefulWidget {
   final VoidCallback onTasksCompleted;
@@ -56,6 +59,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   final Set<String> _selectedCategories = {};
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _taskItemKeys = {};
 
   bool _isLoading = true;
   List<TaskModel> _allTasks = [];
@@ -77,6 +82,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -147,7 +153,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       return;
     }
 
-    if (!_isRightNow && _customDate.isAfter(DateTime.now())) {
+    if (!_isRightNow && _customDateDay().isAfter(_today())) {
       AppSnackBar.show(
         context,
         message: t.completeTaskSnackFutureDate,
@@ -294,35 +300,98 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     );
 
     if (picked != null) {
-      if (!mounted) return;
-      final timePicked = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_customDate),
-        builder: (context, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: Theme.of(context).colorScheme.copyWith(
-                    primary: AppColors.primary,
-                  ),
-            ),
-            child: child!,
-          );
-        },
-      );
+      setState(() {
+        _customDate = DateTime.utc(picked.year, picked.month, picked.day, 12);
+        _isRightNow = false;
+      });
+    }
+  }
 
-      if (timePicked != null) {
-        setState(() {
-          _customDate = DateTime(
-            picked.year,
-            picked.month,
-            picked.day,
-            timePicked.hour,
-            timePicked.minute,
-          );
-          _isRightNow = false;
-        });
+  DateTime _customDateDay() {
+    final local = _customDate.toLocal();
+    return DateTime(local.year, local.month, local.day);
+  }
+
+  DateTime _today() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  Future<void> _showAddTaskOptions() async {
+    AppHaptics.tap();
+    final existingTaskIds = _allTasks.map((task) => task.id).toSet();
+    final addedTasks = <TaskCreationResult>[];
+    final members = _members.map(MemberModel.fromMap).toList();
+    final result = await AddTaskOptionsSheet.show(
+      context,
+      members,
+      onTaskAdded: addedTasks.add,
+    );
+    if (result == true && mounted) {
+      _selectedTaskIds.clear();
+      await _loadData();
+      if (!mounted) return;
+      final addedTaskIds = _findAddedTaskIds(existingTaskIds, addedTasks);
+      if (addedTaskIds.isNotEmpty) {
+        setState(() => _selectedTaskIds.addAll(addedTaskIds));
+        _scrollToTask(addedTaskIds.first);
       }
     }
+  }
+
+  void _scrollToTask(String taskId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final keyContext = _taskItemKeys[taskId]?.currentContext;
+      if (keyContext != null) {
+        Scrollable.ensureVisible(
+          keyContext,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
+          alignment: 0.32,
+        );
+        return;
+      }
+
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
+
+  Set<String> _findAddedTaskIds(
+    Set<String> previousTaskIds,
+    List<TaskCreationResult> addedTasks,
+  ) {
+    if (addedTasks.isEmpty) return {};
+
+    final matchedIds = <String>{};
+    for (final addedTask in addedTasks) {
+      final title = addedTask.title.toLowerCase().trim();
+      final category = CategoryMapping.normaliseCategory(addedTask.category);
+
+      final matches = _allTasks.where((task) {
+        if (previousTaskIds.contains(task.id) || matchedIds.contains(task.id)) {
+          return false;
+        }
+        final sameTitle = task.title.toLowerCase().trim() == title;
+        final sameCategory =
+            CategoryMapping.normaliseCategory(task.category) == category;
+        return task.isActive && sameTitle && sameCategory;
+      }).toList();
+
+      if (matches.isNotEmpty) {
+        matches.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        matchedIds.add(matches.first.id);
+      }
+    }
+
+    return matchedIds;
   }
 
   @override
@@ -444,11 +513,12 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 const SizedBox(height: 24),
                 Expanded(
                   child: ListView(
+                    controller: _scrollController,
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: EdgeInsets.only(
                       bottom: _selectedTaskIds.isEmpty || _isLoading
-                          ? AppSpacing.lg
+                          ? AppSpacing.xxl
                           : AppSpacing.sm,
                     ),
                     children: [
@@ -480,7 +550,11 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                           horizontal: AppSpacing.lg,
                         ),
                         child: Column(
-                          children: _buildGroupedTasksInFull(tasks, categories),
+                          children: [
+                            ..._buildGroupedTasksInFull(tasks, categories),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildAddTaskPrompt(),
+                          ],
                         ),
                       ),
                     ],
@@ -700,7 +774,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           Expanded(
             child: _buildDateOptionCard(
               title: !_isRightNow
-                  ? DateFormat('d/M HH:mm').format(_customDate)
+                  ? DateFormat('d/M').format(_customDate)
                   : AppLocalizations.of(context).completeTaskTimeBefore,
               icon: Icons.calendar_today_rounded,
               isSelected: !_isRightNow,
@@ -989,6 +1063,52 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     return widgets;
   }
 
+  Widget _buildAddTaskPrompt() {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Column(
+        children: [
+          Text(
+            t.completeTaskAddPromptTitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: theme.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _showAddTaskOptions,
+              icon: const Icon(Icons.playlist_add_rounded, size: 20),
+              label: Text(t.completeTaskAddPromptButton),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                side: BorderSide(
+                  color: AppColors.primary.withValues(alpha: 0.22),
+                  width: 1.4,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCategoryDivider({
     required IconData icon,
     required String title,
@@ -1021,55 +1141,60 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   Widget _buildTaskSelectionItem(TaskModel task, Color catColor) {
     final theme = context.theme;
     final isSelected = _selectedTaskIds.contains(task.id);
-    return GestureDetector(
-      onTap: () {
-        AppHaptics.tap();
-        _toggleTask(task);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.05)
-              : theme.surface,
-          borderRadius: BorderRadius.circular(AppRadii.lg),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : theme.border,
-            width: 1.5,
+    final itemKey = _taskItemKeys.putIfAbsent(task.id, GlobalKey.new);
+
+    return KeyedSubtree(
+      key: itemKey,
+      child: GestureDetector(
+        onTap: () {
+          AppHaptics.tap();
+          _toggleTask(task);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.05)
+                : theme.surface,
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : theme.border,
+              width: 1.5,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              isSelected
-                  ? Icons.check_circle_rounded
-                  : Icons.radio_button_unchecked_rounded,
-              color: isSelected ? AppColors.primary : theme.textMuted,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                localizedTaskTitle(AppLocalizations.of(context), task),
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? AppColors.primary : theme.textPrimary,
+          child: Row(
+            children: [
+              Icon(
+                isSelected
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                color: isSelected ? AppColors.primary : theme.textMuted,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  localizedTaskTitle(AppLocalizations.of(context), task),
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    color: isSelected ? AppColors.primary : theme.textPrimary,
+                  ),
                 ),
               ),
-            ),
-            if (task.xpReward > 0)
-              Text(
-                '${task.xpReward} XP',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: theme.textMuted,
+              if (task.xpReward > 0)
+                Text(
+                  '${task.xpReward} XP',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: theme.textMuted,
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

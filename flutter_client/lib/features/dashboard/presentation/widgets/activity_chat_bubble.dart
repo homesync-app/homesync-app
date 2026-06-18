@@ -29,10 +29,13 @@ class ActivityChatBubble extends ConsumerWidget {
     final creatorId = activity['creator_id'] as String?;
     final isMe = creatorId == currentUserId;
     final isReward = type == 'reward';
+    // Un equilibrio de saldo (settle_debt_v1) llega como expense con
+    // type='settlement' en metadata. Reusamos los slots de header + titulo
+    // existentes para no agrandar la tarjeta (titulo/icono centralizados en
+    // activity_presentation.dart).
+    final isSettlement = activityIsSettlement(data);
 
-    final createdAt =
-        DateTime.tryParse(activity['created_at'] as String? ?? '')?.toLocal() ??
-            DateTime.now();
+    final timeLabel = formatTaskActivityTimeLabel(activity);
 
     final category = data['category'] as String?;
     final title = activityDisplayTitle(
@@ -155,7 +158,7 @@ class ActivityChatBubble extends ConsumerWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 6),
                         child: Text(
-                          'Gasto del hogar',
+                          isSettlement ? 'Equilibrio' : 'Gasto del hogar',
                           style: TextStyle(
                             color: accent.withValues(alpha: 0.85),
                             fontWeight: FontWeight.w700,
@@ -187,6 +190,7 @@ class ActivityChatBubble extends ConsumerWidget {
                             type,
                             category,
                             isReward ? rewardAccent : accent,
+                            isSettlement: isSettlement,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -222,7 +226,7 @@ class ActivityChatBubble extends ConsumerWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              formatActivityTimeAgo(createdAt),
+                              timeLabel,
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
@@ -256,8 +260,8 @@ class ActivityChatBubble extends ConsumerWidget {
                         if (isReward &&
                             activityReadInt(data['reward_cost']) != null)
                           _activityMetaPill(
-                            label: AppLocalizations.of(context)
-                                .activityCoinsMinus(
+                            label:
+                                AppLocalizations.of(context).activityCoinsMinus(
                               activityReadInt(data['reward_cost'])!,
                             ),
                             color: rewardAccent,
@@ -326,8 +330,9 @@ class ActivityChatBubble extends ConsumerWidget {
   Widget _activityLeading(
     String? type,
     String? category,
-    Color accent,
-  ) {
+    Color accent, {
+    bool isSettlement = false,
+  }) {
     if (type == 'reward') {
       return Container(
         width: 26,
@@ -343,7 +348,7 @@ class ActivityChatBubble extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 1),
       child: Icon(
-        activityIcon(type, category),
+        activityIcon(type, category, isSettlement: isSettlement),
         size: 18,
         color: accent,
       ),

@@ -44,6 +44,7 @@ class SupabaseSavingsRepository
             .from('savings_goals')
             .select()
             .eq('household_id', householdId)
+            .isFilter('archived_at', null)
             .order('created_at', ascending: false);
         if (offset != null && limit != null) {
           query = query.range(offset, offset + limit - 1);
@@ -89,16 +90,20 @@ class SupabaseSavingsRepository
     required double targetAmount,
     required String color,
     required String icon,
+    DateTime? targetDate,
   }) async {
+    final values = <String, dynamic>{
+      'household_id': householdId,
+      'title': title,
+      'target_amount': targetAmount,
+      'color': color,
+      'icon': icon,
+      'created_by': _client.auth.currentUser?.id,
+      if (targetDate != null) 'target_date': targetDate.toIso8601String(),
+    };
     return executeWithHandling(
       () async {
-        await _client.from('savings_goals').insert({
-          'household_id': householdId,
-          'title': title,
-          'target_amount': targetAmount,
-          'color': color,
-          'icon': icon,
-        });
+        await _client.from('savings_goals').insert(values);
       },
       context: 'SupabaseSavingsRepository.createGoal',
       isOnline: _isOnline,
@@ -107,13 +112,66 @@ class SupabaseSavingsRepository
           OfflineAction(
             type: OfflineActionType.tableInsert,
             target: 'savings_goals',
-            values: {
-              'household_id': householdId,
-              'title': title,
-              'target_amount': targetAmount,
-              'color': color,
-              'icon': icon,
-            },
+            values: values,
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Future<Either<Failure, void>> updateGoal({
+    required String goalId,
+    String? title,
+    double? targetAmount,
+    String? color,
+    String? icon,
+    DateTime? targetDate,
+  }) async {
+    final values = <String, dynamic>{
+      if (title != null) 'title': title,
+      if (targetAmount != null) 'target_amount': targetAmount,
+      if (color != null) 'color': color,
+      if (icon != null) 'icon': icon,
+      if (targetDate != null) 'target_date': targetDate.toIso8601String(),
+    };
+    return executeWithHandling(
+      () async {
+        await _client.from('savings_goals').update(values).eq('id', goalId);
+      },
+      context: 'SupabaseSavingsRepository.updateGoal',
+      isOnline: _isOnline,
+      onOffline: () async {
+        await _queueAction(
+          OfflineAction(
+            type: OfflineActionType.tableUpdate,
+            target: 'savings_goals',
+            values: values,
+            filters: [OfflineFilter(column: 'id', value: goalId)],
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Future<Either<Failure, void>> archiveGoal({required String goalId}) async {
+    final now = DateTime.now().toIso8601String();
+    return executeWithHandling(
+      () async {
+        await _client
+            .from('savings_goals')
+            .update({'archived_at': now}).eq('id', goalId);
+      },
+      context: 'SupabaseSavingsRepository.archiveGoal',
+      isOnline: _isOnline,
+      onOffline: () async {
+        await _queueAction(
+          OfflineAction(
+            type: OfflineActionType.tableUpdate,
+            target: 'savings_goals',
+            values: {'archived_at': now},
+            filters: [OfflineFilter(column: 'id', value: goalId)],
           ),
         );
       },
@@ -126,15 +184,20 @@ class SupabaseSavingsRepository
     required String userId,
     required double amount,
     String? note,
+    String splitType = 'personal',
+    List<Map<String, dynamic>> participants = const [],
   }) async {
+    final values = {
+      'goal_id': goalId,
+      'user_id': userId,
+      'amount': amount,
+      'note': note,
+      'split_type': splitType,
+      'participants': participants,
+    };
     return executeWithHandling(
       () async {
-        await _client.from('savings_contributions').insert({
-          'goal_id': goalId,
-          'user_id': userId,
-          'amount': amount,
-          'note': note,
-        });
+        await _client.from('savings_contributions').insert(values);
       },
       context: 'SupabaseSavingsRepository.addContribution',
       isOnline: _isOnline,
@@ -143,12 +206,7 @@ class SupabaseSavingsRepository
           OfflineAction(
             type: OfflineActionType.tableInsert,
             target: 'savings_contributions',
-            values: {
-              'goal_id': goalId,
-              'user_id': userId,
-              'amount': amount,
-              'note': note,
-            },
+            values: values,
           ),
         );
       },

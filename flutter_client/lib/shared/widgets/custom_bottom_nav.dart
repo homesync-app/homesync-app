@@ -22,11 +22,22 @@ class NavClearance extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    if (mq.padding.bottom <= mq.viewPadding.bottom) return child;
+    // Always return the SAME tree shape (a MediaQuery wrapping `child`),
+    // varying only its data. A conditional `return child` vs
+    // `return MediaQuery(child: child)` would change the element type at this
+    // position whenever the branch flips — and it flips every time the soft
+    // keyboard opens, because the IME collapses padding.bottom below
+    // viewPadding.bottom. That remounted the entire tab subtree, dropping
+    // focus on any open TextField and snapping the keyboard shut (e.g. the
+    // shopping search field would open then immediately close the IME).
+    final raiseClearance = mq.padding.bottom > mq.viewPadding.bottom;
     return MediaQuery(
-      data: mq.copyWith(
-        viewPadding: mq.viewPadding.copyWith(bottom: mq.padding.bottom),
-      ),
+      data: raiseClearance
+          ? mq.copyWith(
+              viewPadding:
+                  mq.viewPadding.copyWith(bottom: mq.padding.bottom),
+            )
+          : mq,
       child: child,
     );
   }

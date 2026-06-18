@@ -16,6 +16,8 @@ import 'package:homesync_client/features/tasks/presentation/utils/task_localizat
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 
+import 'task_creation_result.dart';
+
 class CreateTaskDialog extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>>? members;
 
@@ -256,7 +258,11 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       AppHaptics.success();
       setState(() => _showSuccessState = true);
       await Future<void>.delayed(const Duration(milliseconds: 220));
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        Navigator.of(context).pop(
+          TaskCreationResult(title: title, category: _selectedCategory!),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

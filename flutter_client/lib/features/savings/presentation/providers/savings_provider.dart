@@ -1,17 +1,22 @@
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/savings/data/repositories/supabase_savings_repository.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/features/savings/domain/repositories/savings_repository.dart';
 import 'package:homesync_client/features/savings/domain/usecases/add_contribution_usecase.dart';
+import 'package:homesync_client/features/savings/domain/usecases/archive_savings_goal_usecase.dart';
 import 'package:homesync_client/features/savings/domain/usecases/create_savings_goal_usecase.dart';
 import 'package:homesync_client/features/savings/domain/usecases/delete_savings_goal_usecase.dart';
 import 'package:homesync_client/features/savings/domain/usecases/get_goal_contributions_usecase.dart';
 import 'package:homesync_client/features/savings/domain/usecases/get_savings_goals_usecase.dart';
+import 'package:homesync_client/features/savings/domain/usecases/update_savings_goal_usecase.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'savings_provider.g.dart';
@@ -88,8 +93,20 @@ DeleteSavingsGoalUseCase deleteSavingsGoalUseCase(Ref ref) {
 }
 
 @riverpod
+UpdateSavingsGoalUseCase updateSavingsGoalUseCase(Ref ref) {
+  return UpdateSavingsGoalUseCase(ref.watch(savingsRepositoryProvider));
+}
+
+@riverpod
+ArchiveSavingsGoalUseCase archiveSavingsGoalUseCase(Ref ref) {
+  return ArchiveSavingsGoalUseCase(ref.watch(savingsRepositoryProvider));
+}
+
+@riverpod
 Future<List<SavingsContributionModel>> goalContributions(
-    Ref ref, String goalId,) async {
+  Ref ref,
+  String goalId,
+) async {
   final getGoalContributions = ref.watch(getGoalContributionsUseCaseProvider);
   final result = await getGoalContributions.execute(goalId);
   return result.fold(
@@ -114,7 +131,12 @@ class SavingsGoals extends _$SavingsGoals {
   }
 
   Future<void> addGoal(
-      String title, double targetAmount, String color, String icon,) async {
+    String title,
+    double targetAmount,
+    String color,
+    String icon, {
+    DateTime? targetDate,
+  }) async {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return;
 
@@ -127,12 +149,13 @@ class SavingsGoals extends _$SavingsGoals {
     state = const AsyncValue.loading();
     final next = await AsyncValue.guard(() async {
       await createGoal.execute(
-            householdId: householdId,
-            title: title,
-            targetAmount: targetAmount,
-            color: color,
-            icon: icon,
-          );
+        householdId: householdId,
+        title: title,
+        targetAmount: targetAmount,
+        color: color,
+        icon: icon,
+        targetDate: targetDate,
+      );
       final result = await getSavingsGoals.execute(householdId);
       return result.fold(
         (failure) => throw failure,
@@ -147,8 +170,82 @@ class SavingsGoals extends _$SavingsGoals {
     state = next;
   }
 
-  Future<void> contribute(String goalId, double amount,
-      {String? note, required String goalTitle,}) async {
+  Future<void> editGoal(
+    String goalId, {
+    String? title,
+    double? targetAmount,
+    String? color,
+    String? icon,
+    DateTime? targetDate,
+  }) async {
+    final householdId = await ref.read(householdIdProvider.future);
+    if (householdId == null) return;
+
+    final updateGoal = ref.read(updateSavingsGoalUseCaseProvider);
+    final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
+
+    state = const AsyncValue.loading();
+    final next = await AsyncValue.guard(() async {
+      await updateGoal.execute(
+        goalId: goalId,
+        title: title,
+        targetAmount: targetAmount,
+        color: color,
+        icon: icon,
+        targetDate: targetDate,
+      );
+      final result = await getSavingsGoals.execute(householdId);
+      return result.fold(
+        (failure) => throw failure,
+        (goals) => goals,
+      );
+    });
+
+    if (!ref.mounted) return;
+    ref.invalidate(paginatedSavingsGoalsProvider);
+    state = next;
+  }
+
+  Future<void> archiveGoal(String goalId) async {
+    final householdId = await ref.read(householdIdProvider.future);
+    if (householdId == null) return;
+
+    final archiveGoal = ref.read(archiveSavingsGoalUseCaseProvider);
+    final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
+
+    state = const AsyncValue.loading();
+    final next = await AsyncValue.guard(() async {
+      await archiveGoal.execute(goalId);
+      final result = await getSavingsGoals.execute(householdId);
+      return result.fold(
+        (failure) => throw failure,
+        (goals) => goals,
+      );
+    });
+
+    if (!ref.mounted) return;
+    ref.invalidate(paginatedSavingsGoalsProvider);
+    state = next;
+  }
+
+  /// Registers a contribution to a savings goal.
+  ///
+  /// The full [amount] always lands on the goal (the savings progress is a
+  /// household figure). What [splitType]/[splits] control is how the matching
+  /// LEDGER expense is attributed:
+  ///  - [SplitType.personal] → "solo yo / regalo": only the contributor's
+  ///    balance is debited.
+  ///  - [SplitType.equal]/[SplitType.fixed] → "entre todos": the expense is
+  ///    shared/divided across members per the household's economy config.
+  Future<void> contribute(
+    String goalId,
+    double amount, {
+    String? note,
+    required String goalTitle,
+    SplitType splitType = SplitType.personal,
+    SplitType? savingsSplitType,
+    List<Map<String, dynamic>>? splits,
+  }) async {
     final userId = ref.read(currentUserIdProvider);
     final householdId = await ref.read(householdIdProvider.future);
     if (userId == null || householdId == null) return;
@@ -159,15 +256,44 @@ class SavingsGoals extends _$SavingsGoals {
 
     state = const AsyncValue.loading();
     final next = await AsyncValue.guard(() async {
+      final members = await ref.read(householdMembersProvider.future);
+      final membersByUserId = {
+        for (final member in members) member.userId: member,
+      };
+      final contributionSplitType = savingsSplitType ?? splitType;
+      final participantIds = contributionSplitType == SplitType.personal
+          ? <String>[userId]
+          : (splits ?? const <Map<String, dynamic>>[])
+              .map((split) => split['user_id']?.toString())
+              .whereType<String>()
+              .where((id) => id.isNotEmpty)
+              .toSet()
+              .toList();
+      final participants = participantIds
+          .map((id) => membersByUserId[id])
+          .whereType<MemberModel>()
+          .map(
+            (member) => {
+              'user_id': member.userId,
+              'name': member.fullDisplayName,
+              'email': member.email,
+              'avatar_url': member.avatarUrl,
+            },
+          )
+          .toList();
+
       // 1. Add the contribution to the savings goal
       await addContribution.execute(
-            goalId: goalId,
-            userId: userId,
-            amount: amount,
-            note: note,
-          );
+        goalId: goalId,
+        userId: userId,
+        amount: amount,
+        note: note,
+        splitType: contributionSplitType.name,
+        participants: participants,
+      );
 
-      // 2. Create a corresponding PERSONAL expense to reflect in global balance
+      // 2. Create a matching expense so the contribution leaves the ledger.
+      //    The split attribution mirrors the contribution sheet's choice.
       try {
         final saveResult = await expenseRepo.saveExpense(
           householdId: householdId,
@@ -177,7 +303,8 @@ class SavingsGoals extends _$SavingsGoals {
           paidBy: userId,
           paidAt: DateTime.now(),
           description: note ?? 'Aportación a meta de ahorro',
-          splitType: SplitType.personal,
+          splitType: splitType,
+          splits: splits,
           type: 'expense',
         );
         // saveExpense returns Either<Failure, void>; a Left means the ledger
@@ -322,11 +449,15 @@ class PaginatedSavingsGoals extends _$PaginatedSavingsGoals {
 }
 
 class SavingsSuggestion {
-  final String message;
-  final SavingsGoalModel? goal;
+  final SavingsGoalModel goal;
   final double surplus;
+  final double percentageBoost;
 
-  SavingsSuggestion({required this.message, this.goal, required this.surplus});
+  SavingsSuggestion({
+    required this.goal,
+    required this.surplus,
+    required this.percentageBoost,
+  });
 }
 
 @riverpod
@@ -345,25 +476,74 @@ Future<SavingsSuggestion?> savingsSuggester(Ref ref) async {
 
   final surplus = income - totalExpectedSpend;
 
-  if (surplus > 1000) {
-    // Only suggest if surplus is relevant (e.g. > $1000 ARS)
-    // Find the goal with the highest progress but not yet completed
-    final eligibleGoals =
-        goals.where((g) => g.currentAmount < g.targetAmount).toList();
-    if (eligibleGoals.isEmpty) return null;
+  // Only suggest if surplus is relevant (e.g. > $1000 ARS)
+  if (surplus <= 1000) return null;
 
-    eligibleGoals.sort((a, b) => b.progress.compareTo(a.progress));
-    final targetGoal = eligibleGoals.first;
+  // Find the goal with the highest progress but not yet reached.
+  final eligibleGoals = goals.where((g) => !g.isReached).toList();
+  if (eligibleGoals.isEmpty) return null;
 
-    final percentageBoost = (surplus / targetGoal.targetAmount) * 100;
+  eligibleGoals.sort((a, b) => b.progress.compareTo(a.progress));
+  final targetGoal = eligibleGoals.first;
 
-    return SavingsSuggestion(
-      message:
-          'Basado en tu plan, podrías ahorrar \$${surplus.toStringAsFixed(0)} extra este mes. ¡Eso adelantaría un ${percentageBoost.toStringAsFixed(1)}% tu meta de "${targetGoal.title}"!',
-      goal: targetGoal,
-      surplus: surplus,
-    );
+  return SavingsSuggestion(
+    goal: targetGoal,
+    surplus: surplus,
+    percentageBoost: targetGoal.targetAmount > 0
+        ? (surplus / targetGoal.targetAmount) * 100
+        : 0,
+  );
+}
+
+/// What the current user is allowed to do with savings goals.
+///
+/// Only **family** households gate by role (per product decision):
+///  - parent/guardian → full control;
+///  - teen → may view and contribute, but not create/edit/delete;
+///  - child → view only.
+/// Every other household type (couple/solo/friends) keeps full access.
+class SavingsPermissions {
+  final bool canCreate;
+  final bool canContribute;
+  final bool canManage; // edit / delete / archive
+
+  const SavingsPermissions({
+    required this.canCreate,
+    required this.canContribute,
+    required this.canManage,
+  });
+
+  static const full = SavingsPermissions(
+    canCreate: true,
+    canContribute: true,
+    canManage: true,
+  );
+}
+
+@riverpod
+SavingsPermissions savingsPermissions(Ref ref) {
+  final caps = ref.watch(householdCapabilitiesProvider);
+  if (!caps.usesFamilyRoles) return SavingsPermissions.full;
+
+  final member = ref.watch(currentMemberProvider);
+  // While members load, assume the most permissive non-destructive baseline
+  // for adults; gating tightens once the real type resolves.
+  switch (member?.type) {
+    case MemberType.teen:
+      return const SavingsPermissions(
+        canCreate: false,
+        canContribute: true,
+        canManage: false,
+      );
+    case MemberType.child:
+      return const SavingsPermissions(
+        canCreate: false,
+        canContribute: false,
+        canManage: false,
+      );
+    case MemberType.parent:
+    case MemberType.guardian:
+    case null:
+      return SavingsPermissions.full;
   }
-
-  return null;
 }

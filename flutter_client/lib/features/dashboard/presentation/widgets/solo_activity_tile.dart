@@ -31,10 +31,9 @@ class SoloActivityTile extends ConsumerWidget {
     final type = activity['type'] as String?;
     final data = (activity['data'] as Map<String, dynamic>?) ?? {};
     final isReward = type == 'reward';
+    final isSettlement = activityIsSettlement(data);
 
-    final createdAt =
-        DateTime.tryParse(activity['created_at'] as String? ?? '')?.toLocal() ??
-            DateTime.now();
+    final timeLabel = formatTaskActivityTimeLabel(activity);
     final category = data['category'] as String?;
     final title = activityDisplayTitle(
       localizedActivityTitle(t, data),
@@ -112,7 +111,7 @@ class SoloActivityTile extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Icon(
-                  activityIcon(type, category),
+                  activityIcon(type, category, isSettlement: isSettlement),
                   size: 20,
                   color: accent,
                 ),
@@ -136,7 +135,7 @@ class SoloActivityTile extends ConsumerWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      formatActivityTimeAgo(createdAt),
+                      timeLabel,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,

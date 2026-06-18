@@ -273,6 +273,94 @@ final class DeleteSavingsGoalUseCaseProvider extends $FunctionalProvider<
 String _$deleteSavingsGoalUseCaseHash() =>
     r'cbbf18505c6a6683128316cfbe634640b7a59fdf';
 
+@ProviderFor(updateSavingsGoalUseCase)
+final updateSavingsGoalUseCaseProvider = UpdateSavingsGoalUseCaseProvider._();
+
+final class UpdateSavingsGoalUseCaseProvider extends $FunctionalProvider<
+    UpdateSavingsGoalUseCase,
+    UpdateSavingsGoalUseCase,
+    UpdateSavingsGoalUseCase> with $Provider<UpdateSavingsGoalUseCase> {
+  UpdateSavingsGoalUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'updateSavingsGoalUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$updateSavingsGoalUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<UpdateSavingsGoalUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  UpdateSavingsGoalUseCase create(Ref ref) {
+    return updateSavingsGoalUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UpdateSavingsGoalUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UpdateSavingsGoalUseCase>(value),
+    );
+  }
+}
+
+String _$updateSavingsGoalUseCaseHash() =>
+    r'a186c7323c098a7a8502a5569e0b3cca0a4b6ae3';
+
+@ProviderFor(archiveSavingsGoalUseCase)
+final archiveSavingsGoalUseCaseProvider = ArchiveSavingsGoalUseCaseProvider._();
+
+final class ArchiveSavingsGoalUseCaseProvider extends $FunctionalProvider<
+    ArchiveSavingsGoalUseCase,
+    ArchiveSavingsGoalUseCase,
+    ArchiveSavingsGoalUseCase> with $Provider<ArchiveSavingsGoalUseCase> {
+  ArchiveSavingsGoalUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'archiveSavingsGoalUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$archiveSavingsGoalUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<ArchiveSavingsGoalUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  ArchiveSavingsGoalUseCase create(Ref ref) {
+    return archiveSavingsGoalUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ArchiveSavingsGoalUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ArchiveSavingsGoalUseCase>(value),
+    );
+  }
+}
+
+String _$archiveSavingsGoalUseCaseHash() =>
+    r'b2b931219702470bad11230ea6d91894683ee4ed';
+
 @ProviderFor(goalContributions)
 final goalContributionsProvider = GoalContributionsFamily._();
 
@@ -378,7 +466,7 @@ final class SavingsGoalsProvider
   SavingsGoals create() => SavingsGoals();
 }
 
-String _$savingsGoalsHash() => r'035b0549d7dd2216f51b90de85a61264b0748c68';
+String _$savingsGoalsHash() => r'a8f189b020cf23dd5084b5a6911ba14a21a3de09';
 
 abstract class _$SavingsGoals extends $AsyncNotifier<List<SavingsGoalModel>> {
   FutureOr<List<SavingsGoalModel>> build();
@@ -421,7 +509,7 @@ final class PaginatedSavingsGoalsProvider extends $AsyncNotifierProvider<
 }
 
 String _$paginatedSavingsGoalsHash() =>
-    r'828752c3b7392401467e51d87cb2fd1690d6c893';
+    r'fa8918fb24a0ab8cfb6ee06d29cdcb6bffe91e62';
 
 abstract class _$PaginatedSavingsGoals
     extends $AsyncNotifier<SavingsGoalsPageState> {
@@ -476,4 +564,48 @@ final class SavingsSuggesterProvider extends $FunctionalProvider<
   }
 }
 
-String _$savingsSuggesterHash() => r'2642de1c427d355906c53e5a22762f5d9d915526';
+String _$savingsSuggesterHash() => r'b12a74e1984720ceb47470b8e4112aeb558580b9';
+
+@ProviderFor(savingsPermissions)
+final savingsPermissionsProvider = SavingsPermissionsProvider._();
+
+final class SavingsPermissionsProvider extends $FunctionalProvider<
+    SavingsPermissions,
+    SavingsPermissions,
+    SavingsPermissions> with $Provider<SavingsPermissions> {
+  SavingsPermissionsProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'savingsPermissionsProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$savingsPermissionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<SavingsPermissions> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SavingsPermissions create(Ref ref) {
+    return savingsPermissions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SavingsPermissions value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SavingsPermissions>(value),
+    );
+  }
+}
+
+String _$savingsPermissionsHash() =>
+    r'0466afd4c2449ede3b807591edbe5e173b73c0f3';

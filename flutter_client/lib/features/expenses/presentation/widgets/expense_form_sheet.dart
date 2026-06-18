@@ -416,13 +416,20 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       householdId: householdId,
     );
 
+    // El auto-vínculo OCR → lista de compras es una función premium: para
+    // usuarios no-premium solo poblamos _ocrMatchedShoppingItems (muestra
+    // gris read-only "esto haría premium"), nunca _selectedShoppingItems, que
+    // es lo que realmente se persiste (descripción del gasto + sync de lista).
+    final isPremium = ref.read(premiumProvider).value ?? false;
     setState(() {
       _ocrMatchedShoppingItems
         ..clear()
         ..addAll(result.allLinked);
-      _selectedShoppingItems
-        ..removeAll(_ocrMatchedShoppingItems)
-        ..addAll(result.allLinked);
+      if (isPremium) {
+        _selectedShoppingItems
+          ..removeAll(_ocrMatchedShoppingItems)
+          ..addAll(result.allLinked);
+      }
       _unmatchedOcrItems = result.unrecognized;
     });
 

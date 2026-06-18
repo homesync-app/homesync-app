@@ -131,7 +131,23 @@ class FakeSavingsRepository implements SavingsRepository {
     required double targetAmount,
     required String color,
     required String icon,
+    DateTime? targetDate,
   }) async =>
+      const Right(null);
+
+  @override
+  Future<Either<Failure, void>> updateGoal({
+    required String goalId,
+    String? title,
+    double? targetAmount,
+    String? color,
+    String? icon,
+    DateTime? targetDate,
+  }) async =>
+      const Right(null);
+
+  @override
+  Future<Either<Failure, void>> archiveGoal({required String goalId}) async =>
       const Right(null);
 
   @override
