@@ -9,6 +9,7 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/widgets/concept_icon.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_split_builder.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
@@ -215,13 +216,22 @@ class SavingsTab extends ConsumerWidget {
     final goalColor = AppColors.fromHex(goal.color);
     final progress = goal.progress.clamp(0.0, 1.0);
     final reached = goal.isReached;
+    final currency = ref.read(currencyProvider);
+    final currentAmount = currency.format(goal.currentAmount);
+    final targetAmount = currency.format(goal.targetAmount);
+    final progressPercent = (progress * 100).toInt();
 
     return AnimatedPress(
       onTap: perms.canContribute && !reached
           ? () => _showContributionDialog(context, goal, ref)
           : null,
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.md,
+          AppSpacing.md,
+          AppSpacing.sm,
+        ),
         decoration: BoxDecoration(
           color: theme.surface,
           borderRadius: BorderRadius.circular(AppRadii.xxl),
@@ -236,18 +246,16 @@ class SavingsTab extends ConsumerWidget {
         child: Column(
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 62,
-                  height: 62,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: goalColor.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+                SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: Center(
+                    child: ConceptIcon(emoji: goal.icon, size: 54),
                   ),
-                  child: Text(goal.icon, style: const TextStyle(fontSize: 30)),
                 ),
-                const SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,118 +264,139 @@ class SavingsTab extends ConsumerWidget {
                         goal.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
+                          color: theme.textPrimary,
                           fontWeight: FontWeight.w900,
-                          fontSize: 21,
-                          height: 1.05,
+                          fontSize: 22,
+                          height: 1.02,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xxs),
                       Text(
-                        t.savingsGoalTarget(
-                          ref.read(currencyProvider).format(goal.targetAmount),
-                        ),
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                        t.savingsGoalTarget(targetAmount),
+                        style: TextStyle(
+                          color: theme.textSecondary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                       if (goal.targetDate != null)
                         Padding(
-                          padding: const EdgeInsets.only(top: 2),
+                          padding: const EdgeInsets.only(top: AppSpacing.xxs),
                           child: Text(
                             t.savingsDeadlineChip(
                               DateFormat('dd MMM yyyy')
                                   .format(goal.targetDate!),
                             ),
-                            style: const TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                            style: TextStyle(
+                              color: theme.textMuted,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Wrap(
-                        spacing: AppSpacing.xs,
-                        runSpacing: AppSpacing.xs,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          if (reached)
-                            _CompletedBadge(
-                              color: goalColor,
-                              label: t.savingsCompletedBadge,
-                            ),
-                          _ProgressBadge(
-                            color: goalColor,
-                            progress: progress,
-                            reached: reached,
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                 ),
                 if (perms.canManage) _GoalMenu(goal: goal, reached: reached),
               ],
             ),
-            const SizedBox(height: 16),
-            LinearProgressIndicator(
-              value: progress,
-              backgroundColor: AppColors.divider,
-              valueColor: AlwaysStoppedAnimation(goalColor),
-              borderRadius: BorderRadius.circular(10),
-              minHeight: 10,
-            ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.sm),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
-                  child: Text(
-                    t.savingsGoalSaved(
-                      ref.read(currencyProvider).format(goal.currentAmount),
-                    ),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: theme.textSecondary,
-                      fontSize: 16,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        currentAmount,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          color: theme.textPrimary,
+                          fontSize: 24,
+                          height: 0.98,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        t.savingsGoalSavedOf(targetAmount),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: theme.textSecondary,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                if (perms.canContribute && !reached)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppRadii.pill),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.add_circle_outline_rounded,
-                          color: AppColors.primary,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          t.savingsGoalContributeAction,
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
+                const SizedBox(width: AppSpacing.sm),
+                if (reached)
+                  _CompletedBadge(
+                    color: goalColor,
+                    label: t.savingsCompletedBadge,
+                  )
+                else
+                  Text(
+                    '$progressPercent%',
+                    style: TextStyle(
+                      color: goalColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      height: 1,
                     ),
                   ),
               ],
             ),
+            const SizedBox(height: AppSpacing.xs),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadii.pill),
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: goalColor.withValues(alpha: 0.14),
+                valueColor: AlwaysStoppedAnimation(goalColor),
+                minHeight: 8,
+              ),
+            ),
+            if (perms.canContribute && !reached) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.11),
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.add_circle_outline_rounded,
+                        color: AppColors.primary,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        t.savingsGoalContributeAction,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
             _ContributionHistory(goalId: goal.id),
           ],
         ),
@@ -401,15 +430,12 @@ class SavingsTab extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: goalColor.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+            SizedBox(
+              width: 54,
+              height: 54,
+              child: Center(
+                child: ConceptIcon(emoji: goal.icon, size: 44),
               ),
-              child: Text(goal.icon, style: const TextStyle(fontSize: 20)),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
@@ -502,7 +528,9 @@ class SavingsTab extends ConsumerWidget {
   }
 
   static void _showGoalDetailSheet(
-      BuildContext context, SavingsGoalModel goal) {
+    BuildContext context,
+    SavingsGoalModel goal,
+  ) {
     AppSheet.show(
       context: context,
       isScrollControlled: true,
@@ -615,41 +643,6 @@ class _CompletedBadge extends StatelessWidget {
           color: color,
           fontSize: 11,
           fontWeight: FontWeight.w900,
-        ),
-      ),
-    );
-  }
-}
-
-class _ProgressBadge extends StatelessWidget {
-  final Color color;
-  final double progress;
-  final bool reached;
-
-  const _ProgressBadge({
-    required this.color,
-    required this.progress,
-    required this.reached,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppRadii.pill),
-      ),
-      child: Text(
-        '${(progress * 100).toInt()}%',
-        style: TextStyle(
-          fontWeight: FontWeight.w900,
-          fontSize: 14,
-          color: reached ? color : theme.textPrimary,
         ),
       ),
     );
@@ -1297,10 +1290,7 @@ class _ContributionSheetState extends ConsumerState<_ContributionSheet> {
                                       .withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
-                                child: Text(
-                                  goal.icon,
-                                  style: const TextStyle(fontSize: 24),
-                                ),
+                                child: ConceptIcon(emoji: goal.icon, size: 30),
                               ),
                               const SizedBox(width: AppSpacing.md),
                               Expanded(
@@ -1989,13 +1979,7 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                   if (customValue != null)
                     customValue
                   else
-                    Text(
-                      value,
-                      style: TextStyle(
-                        color: theme.textPrimary,
-                        fontSize: 18,
-                      ),
-                    ),
+                    ConceptIcon(emoji: value, size: 24),
                   const Spacer(),
                   Icon(
                     Icons.keyboard_arrow_down_rounded,
@@ -2058,10 +2042,7 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                       border: Border.all(color: theme.border),
                     ),
                     alignment: Alignment.center,
-                    child: Text(
-                      options[index],
-                      style: const TextStyle(fontSize: 24),
-                    ),
+                    child: ConceptIcon(emoji: options[index], size: 40),
                   ),
                 ),
               ),

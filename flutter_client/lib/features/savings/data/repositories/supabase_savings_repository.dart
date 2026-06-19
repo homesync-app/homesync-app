@@ -6,6 +6,7 @@ import 'package:homesync_client/core/offline/offline_queue_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/providers/connectivity_provider.dart';
+import '../../../../core/providers/identity_providers.dart';
 import '../../../../core/services/repository_error_handler.dart';
 import '../../domain/models/savings_model.dart';
 import '../../domain/repositories/savings_repository.dart';
@@ -92,13 +93,14 @@ class SupabaseSavingsRepository
     required String icon,
     DateTime? targetDate,
   }) async {
+    final currentUserId = _ref.read(currentUserIdProvider);
     final values = <String, dynamic>{
       'household_id': householdId,
       'title': title,
       'target_amount': targetAmount,
       'color': color,
       'icon': icon,
-      'created_by': _client.auth.currentUser?.id,
+      if (currentUserId != null) 'created_by': currentUserId,
       if (targetDate != null) 'target_date': targetDate.toIso8601String(),
     };
     return executeWithHandling(

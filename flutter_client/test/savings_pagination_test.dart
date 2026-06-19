@@ -18,6 +18,8 @@ class FakePaginatedSavingsRepository implements SavingsRepository {
     required String userId,
     required double amount,
     String? note,
+    String splitType = 'personal',
+    List<Map<String, dynamic>> participants = const [],
   }) async =>
       const Right(null);
 

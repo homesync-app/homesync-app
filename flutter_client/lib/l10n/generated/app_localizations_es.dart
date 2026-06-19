@@ -5987,6 +5987,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String savingsGoalSavedOf(String amount) {
+    return 'ahorrados de $amount';
+  }
+
+  @override
   String get savingsGoalContributeAction => 'Aportar';
 
   @override

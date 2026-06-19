@@ -19,6 +19,7 @@ import 'package:homesync_client/core/providers/riverpod_retry.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/breadcrumb_service.dart';
+import 'package:homesync_client/core/services/concept_icons.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/services/premium_service.dart';
@@ -524,6 +525,9 @@ class _MyAppState extends ConsumerState<MyApp> {
     // viejos. Fire-and-forget — no bloquea el arranque.
     unawaited(
       ref.read(shoppingIconManifestProvider.notifier).precacheAllIcons(),
+    );
+    unawaited(
+      ref.read(conceptIconManifestProvider.notifier).precacheAllIcons(),
     );
     log.i('🚀 StartupGate: waiting for authBootstrap...');
     await PerformanceMonitor.measureFuture(

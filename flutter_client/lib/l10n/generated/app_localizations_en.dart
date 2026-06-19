@@ -5965,6 +5965,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String savingsGoalSavedOf(String amount) {
+    return 'saved of $amount';
+  }
+
+  @override
   String get savingsGoalContributeAction => 'Add funds';
 
   @override

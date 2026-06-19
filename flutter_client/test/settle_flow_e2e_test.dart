@@ -12,7 +12,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
@@ -57,8 +56,9 @@ class _SettleFakeRepository implements ExpenseRepository {
       const Right([]);
 
   @override
-  noSuchMethod(Invocation invocation) =>
-      throw UnimplementedError('Unexpected repo call: ${invocation.memberName}');
+  noSuchMethod(Invocation invocation) => throw UnimplementedError(
+        'Unexpected repo call: ${invocation.memberName}',
+      );
 
   // Benign stubs so the controller's build() can never trip on a noSuchMethod.
   @override
@@ -66,29 +66,36 @@ class _SettleFakeRepository implements ExpenseRepository {
       const Right('h1');
   @override
   Future<Map<String, dynamic>> getPersonalFinanceSummary(
-          String userId, String householdId) async =>
+    String userId,
+    String householdId,
+  ) async =>
       {'balance': 0.0, 'income': 0.0, 'expense': 0.0, 'variation': 0.0};
   @override
   Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(
-          String householdId) async =>
+    String householdId,
+  ) async =>
       const Right([]);
   @override
   Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(
-          String householdId) async =>
+    String householdId,
+  ) async =>
       const Right([]);
   @override
   Future<Either<Failure, Unit>> processRecurringExpenses(
-          String householdId) async =>
+    String householdId,
+  ) async =>
       const Right(unit);
   @override
   Future<Either<Failure, List<FeedItemModel>>> getMonthlyPendingPlannedExpenses(
-          String householdId,
-          {required DateTime month}) async =>
+    String householdId, {
+    required DateTime month,
+  }) async =>
       const Right([]);
 }
 
 void main() {
-  test('settling a negative balance refreshes it to 0 and is idempotent on '
+  test(
+      'settling a negative balance refreshes it to 0 and is idempotent on '
       'retry', () async {
     final repo = _SettleFakeRepository(balance: -10000);
     final container = ProviderContainer(

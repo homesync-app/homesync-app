@@ -3606,6 +3606,7 @@
   "savingsGoalTarget": "Goal: {amount}",
   "savingsGoalProgressCaption": "of goal",
   "savingsGoalSaved": "Saved: {amount}",
+  "savingsGoalSavedOf": "saved of {amount}",
   "savingsGoalContributeAction": "Add funds",
   "savingsNewGoalTitle": "New Goal",
   "savingsNewGoalSubtitle": "{mode, select, solo{Define what you want to achieve and how much you need to save to make it happen.} family{Define what your family wants to achieve and how much you need to save together.} friends{Define what you want to achieve and how much you need to save together.} other{Define what you want to achieve together and how much you need to save to make it happen.}}",

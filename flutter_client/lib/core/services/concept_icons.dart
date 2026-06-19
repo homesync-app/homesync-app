@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -120,6 +124,10 @@ class ConceptIcons {
     '🐶': 'dog_pet',
     '💻': 'laptop',
     '🐷': 'piggy_bank',
+    '🎄': 'christmas_tree',
+    '🚲': 'bicycle',
+    '📱': 'smartphone',
+    '⚽': 'soccer_ball',
   };
 
   /// Devuelve la clave del PNG para un emoji, o null si no está mapeado.
@@ -169,6 +177,84 @@ class ConceptIconManifestNotifier extends Notifier<Map<String, String>> {
       if (kDebugMode) {
         log.w('concept icon manifest refresh failed', error: e);
       }
+    }
+  }
+
+  bool _precaching = false;
+
+  /// Precarga en disco y memoria los iconos ilustrados para evitar el primer
+  /// frame con placeholder cuando el usuario entra a premios, logros o metas.
+  Future<void> precacheAllIcons() async {
+    if (_precaching) return;
+    _precaching = true;
+    try {
+      if (state.isEmpty) {
+        await refresh();
+      }
+
+      final manager = DefaultCacheManager();
+      final entries = state.entries.toList(growable: false);
+      const concurrency = 6;
+      final config = ImageConfiguration(devicePixelRatio: _safeDpr());
+
+      for (var i = 0; i < entries.length; i += concurrency) {
+        final batch = entries.skip(i).take(concurrency);
+        await Future.wait(
+          batch.map(
+            (entry) => _precacheOne(
+              url: ConceptIcons.urlFor(entry.key, entry.value),
+              manager: manager,
+              config: config,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      log.d('concept_icons: precache failed: $e');
+    } finally {
+      _precaching = false;
+    }
+  }
+
+  Future<void> _precacheOne({
+    required String url,
+    required CacheManager manager,
+    required ImageConfiguration config,
+  }) async {
+    try {
+      await manager.downloadFile(url);
+    } catch (_) {}
+
+    try {
+      final provider = CachedNetworkImageProvider(url);
+      final completer = Completer<ImageInfo>();
+      final listener = ImageStreamListener(
+        (info, _) {
+          if (!completer.isCompleted) completer.complete(info);
+        },
+        onError: (Object e, StackTrace? st) {
+          if (!completer.isCompleted) completer.completeError(e, st);
+        },
+      );
+      final stream = provider.resolve(config);
+      stream.addListener(listener);
+      try {
+        await completer.future.timeout(const Duration(seconds: 6));
+      } finally {
+        stream.removeListener(listener);
+      }
+    } catch (_) {
+      // Best-effort: si falla, el widget lo carga on-demand y mantiene el
+      // espacio transparente hasta que llegue la imagen.
+    }
+  }
+
+  double _safeDpr() {
+    try {
+      return WidgetsBinding
+          .instance.platformDispatcher.views.first.devicePixelRatio;
+    } catch (_) {
+      return 1.0;
     }
   }
 }

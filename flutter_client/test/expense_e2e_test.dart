@@ -188,25 +188,30 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(
-      String householdId,) async {
+    String householdId,
+  ) async {
     return const Right([]);
   }
 
   @override
   Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(
-      String householdId,) async {
+    String householdId,
+  ) async {
     return const Right([]);
   }
 
   @override
   Future<Either<Failure, Unit>> saveTemplate(
-      ExpenseTemplateModel template,) async {
+    ExpenseTemplateModel template,
+  ) async {
     return const Right(unit);
   }
 
   @override
   Future<Either<Failure, Unit>> toggleTemplateActivity(
-      String templateId, bool isActive,) async {
+    String templateId,
+    bool isActive,
+  ) async {
     return const Right(unit);
   }
 
@@ -222,7 +227,8 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Either<Failure, Unit>> processRecurringExpenses(
-      String householdId,) async {
+    String householdId,
+  ) async {
     return const Right(unit);
   }
 
@@ -273,8 +279,10 @@ void main() {
       await simulator.settleDebt('user-2', 'user-1', 50.0);
 
       final finalBalances = await simulator.calculateBalances();
-      expect(finalBalances.firstWhere((b) => b.userId == 'user-1').balance,
-          100.0);
+      expect(
+        finalBalances.firstWhere((b) => b.userId == 'user-1').balance,
+        100.0,
+      );
     });
 
     test('Multiple expenses accumulate correctly', () async {

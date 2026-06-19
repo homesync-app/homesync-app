@@ -29,17 +29,31 @@ class ConceptIcon extends ConsumerWidget {
 
     final manifest = ref.watch(conceptIconManifestProvider);
     final version = manifest[key];
-    if (version == null) return fallback;
+    if (version == null) return _IconPlaceholder(size: size);
 
-    return CachedNetworkImage(
-      imageUrl: ConceptIcons.urlFor(key, version),
+    return Image(
+      image: CachedNetworkImageProvider(ConceptIcons.urlFor(key, version)),
       width: size,
       height: size,
       fit: BoxFit.contain,
-      fadeInDuration: const Duration(milliseconds: 150),
-      placeholder: (_, __) => fallback,
-      errorWidget: (_, __, ___) => fallback,
+      gaplessPlayback: true,
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded || frame != null) return child;
+        return _IconPlaceholder(size: size);
+      },
+      errorBuilder: (_, __, ___) => fallback,
     );
+  }
+}
+
+class _IconPlaceholder extends StatelessWidget {
+  const _IconPlaceholder({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(dimension: size);
   }
 }
 

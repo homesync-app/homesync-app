@@ -3761,6 +3761,15 @@
       }
     }
   },
+  "savingsGoalSavedOf": "ahorrados de {amount}",
+  "@savingsGoalSavedOf": {
+    "description": "Caption under the saved amount on an active savings goal card.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "savingsGoalContributeAction": "Aportar",
   "@savingsGoalContributeAction": {
     "description": "Button on a savings goal card to add money to the goal."

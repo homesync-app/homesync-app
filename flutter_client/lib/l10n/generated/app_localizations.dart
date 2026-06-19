@@ -9777,6 +9777,12 @@ abstract class AppLocalizations {
   /// **'Ahorrado: {amount}'**
   String savingsGoalSaved(String amount);
 
+  /// Caption under the saved amount on an active savings goal card.
+  ///
+  /// In es, this message translates to:
+  /// **'ahorrados de {amount}'**
+  String savingsGoalSavedOf(String amount);
+
   /// Button on a savings goal card to add money to the goal.
   ///
   /// In es, this message translates to:

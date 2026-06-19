@@ -4,9 +4,13 @@ import 'package:homesync_client/core/errors/failures.dart';
 
 void main() {
   group('friendlyErrorMessage', () {
-    test('returns the domain message for a Failure (no runtimeType prefix)', () {
+    test('returns the domain message for a Failure (no runtimeType prefix)',
+        () {
       const failure = ServerFailure('Error en la base de datos: detalle');
-      expect(friendlyErrorMessage(failure), 'Error en la base de datos: detalle');
+      expect(
+        friendlyErrorMessage(failure),
+        'Error en la base de datos: detalle',
+      );
       // Must NOT leak the "ServerFailure: " prefix that toString() would add.
       expect(friendlyErrorMessage(failure), isNot(contains('ServerFailure')));
     });
@@ -41,14 +45,18 @@ void main() {
     });
 
     test('falls back to the generic message for unknown errors and null', () {
-      expect(friendlyErrorMessage(Exception('weird internal thing')),
-          kGenericErrorMessage);
+      expect(
+        friendlyErrorMessage(Exception('weird internal thing')),
+        kGenericErrorMessage,
+      );
       expect(friendlyErrorMessage(null), kGenericErrorMessage);
     });
 
     test('uses a blank Failure message fallback', () {
-      expect(friendlyErrorMessage(const ServerFailure('   ')),
-          kGenericErrorMessage);
+      expect(
+        friendlyErrorMessage(const ServerFailure('   ')),
+        kGenericErrorMessage,
+      );
     });
   });
 }
