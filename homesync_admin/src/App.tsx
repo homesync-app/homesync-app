@@ -99,7 +99,12 @@ function App() {
   return (
     <Router>
       <Routes>
-        {!SKIP_AUTH && <Route path="/login" element={<Login />} />}
+        {!SKIP_AUTH && (
+          <Route
+            path="/login"
+            element={session ? <Navigate to="/" replace /> : <Login />}
+          />
+        )}
         <Route
           path="/*"
           element={
