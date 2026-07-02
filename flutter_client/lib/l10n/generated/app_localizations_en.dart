@@ -548,6 +548,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeViewWeekButton => 'View week';
 
   @override
+  String homeTodayProgressLabel(int done, int total) {
+    return '$done of $total';
+  }
+
+  @override
   String get homeAllDoneToday => 'All done for today';
 
   @override
@@ -1077,6 +1082,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeFamilyApprovalsAllClear => 'All clear';
+
+  @override
+  String expensesYouAreOwed(String amount) {
+    return 'You\'re owed $amount';
+  }
+
+  @override
+  String expensesYouOwe(String amount) {
+    return 'You owe $amount';
+  }
+
+  @override
+  String expensesDailyAvg(String amount) {
+    return '≈ $amount/day';
+  }
 
   @override
   String get homeCoupleHeadlineSecondary => 'of your home';
@@ -2473,6 +2493,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksPillNoDate => 'No date';
 
   @override
+  String get tasksSectionOverdue => 'Overdue';
+
+  @override
+  String get tasksSectionToday => 'Today';
+
+  @override
+  String get tasksSectionThisWeek => 'This week';
+
+  @override
+  String get tasksSectionUpcoming => 'Later';
+
+  @override
+  String get tasksSectionNoDate => 'No date';
+
+  @override
   String get tasksPillOverdue => 'Overdue';
 
   @override
@@ -3775,6 +3810,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get premiumRestorePurchases => 'Restore purchases';
+
+  @override
+  String get premiumCancelAnytime => 'Cancel anytime';
 
   @override
   String get premiumFreeTrialAvailable => 'Free Trial Available';
@@ -5630,6 +5668,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taskTemplatePlanHouseholdTasks => 'Plan household tasks';
+
+  @override
+  String get taskTemplateCleanMicrowave => 'Clean the microwave';
+
+  @override
+  String get taskTemplateWashCar => 'Wash the car';
+
+  @override
+  String get taskTemplateCleanTrashBins => 'Clean the trash bins';
+
+  @override
+  String get taskTemplatePackSchoolBag => 'Pack the school bag';
+
+  @override
+  String get taskTemplateGivePetWater => 'Refresh the pet\'s water';
 
   @override
   String addTaskOptionsAddedSnack(String title) {

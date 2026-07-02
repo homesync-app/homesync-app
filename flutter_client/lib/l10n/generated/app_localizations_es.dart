@@ -549,6 +549,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeViewWeekButton => 'Ver semana';
 
   @override
+  String homeTodayProgressLabel(int done, int total) {
+    return '$done de $total';
+  }
+
+  @override
   String get homeAllDoneToday => 'Todo listo por hoy';
 
   @override
@@ -1075,6 +1080,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get homeFamilyApprovalsAllClear => 'Al día';
+
+  @override
+  String expensesYouAreOwed(String amount) {
+    return 'Te deben $amount';
+  }
+
+  @override
+  String expensesYouOwe(String amount) {
+    return 'Debés $amount';
+  }
+
+  @override
+  String expensesDailyAvg(String amount) {
+    return '≈ $amount/día';
+  }
 
   @override
   String get homeCoupleHeadlineSecondary => 'del hogar';
@@ -2478,6 +2498,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tasksPillNoDate => 'Sin fecha';
 
   @override
+  String get tasksSectionOverdue => 'Vencidas';
+
+  @override
+  String get tasksSectionToday => 'Hoy';
+
+  @override
+  String get tasksSectionThisWeek => 'Esta semana';
+
+  @override
+  String get tasksSectionUpcoming => 'Más adelante';
+
+  @override
+  String get tasksSectionNoDate => 'Sin fecha';
+
+  @override
   String get tasksPillOverdue => 'Vencida';
 
   @override
@@ -3787,6 +3822,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get premiumRestorePurchases => 'Restaurar compras';
+
+  @override
+  String get premiumCancelAnytime => 'Cancelá cuando quieras';
 
   @override
   String get premiumFreeTrialAvailable => 'Prueba Gratis Disponible';
@@ -5651,6 +5689,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get taskTemplatePlanHouseholdTasks => 'Planificar tareas del hogar';
+
+  @override
+  String get taskTemplateCleanMicrowave => 'Limpiar microondas';
+
+  @override
+  String get taskTemplateWashCar => 'Lavar el auto';
+
+  @override
+  String get taskTemplateCleanTrashBins => 'Lavar tachos de basura';
+
+  @override
+  String get taskTemplatePackSchoolBag => 'Preparar mochila del colegio';
+
+  @override
+  String get taskTemplateGivePetWater => 'Cambiar agua de la mascota';
 
   @override
   String addTaskOptionsAddedSnack(String title) {

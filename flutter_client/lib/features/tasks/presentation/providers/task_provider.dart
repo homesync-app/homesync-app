@@ -1105,6 +1105,50 @@ AsyncValue<List<TaskModel>> todayTasks(Ref ref) {
   });
 }
 
+/// Daily progress for the home "today" section: how many of today's tasks the
+/// viewer already closed vs. how many remain. `total` = done + pending, so the
+/// ratio is stable while completions land optimistically.
+@riverpod
+AsyncValue<({int done, int total})> todayTaskProgress(Ref ref) {
+  final tasksAsync = ref.watch(tasksProvider);
+  final remaining = ref.watch(todayTasksProvider).value?.length ?? 0;
+  final currentUserId = ref.watch(currentUserIdProvider);
+  final caps = ref.watch(householdCapabilitiesProvider);
+  final members = ref.watch(householdMembersProvider).value ?? const [];
+  final currentMember =
+      members.where((member) => member.userId == currentUserId).firstOrNull;
+  final isFamilyMode = caps.type == HouseholdType.family;
+  final isFamilyChild = isFamilyMode && (currentMember?.isChild ?? false);
+  final now = DateTime.now();
+  final completedActivityTaskIds = <String>{
+    ..._completedActivityTaskIdsForLocalDate(
+      ref.watch(recentActivityProvider).value ?? const <Map<String, dynamic>>[],
+      now,
+    ),
+    ..._completedActivityTaskIdsForLocalDate(
+      ref.watch(recentActivityRemoteProvider).value ??
+          const <Map<String, dynamic>>[],
+      now,
+    ),
+  };
+
+  bool isAssignedToSomeoneElse(TaskModel task) {
+    final shouldFilterByAssignment = isFamilyMode ? isFamilyChild : true;
+    return shouldFilterByAssignment &&
+        task.assignedTo != null &&
+        task.assignedTo != currentUserId;
+  }
+
+  return tasksAsync.whenData((tasks) {
+    final done = tasks.where((task) {
+      if (isAssignedToSomeoneElse(task)) return false;
+      return isTaskCompletedOnLocalDate(task, now) ||
+          completedActivityTaskIds.contains(task.id);
+    }).length;
+    return (done: done, total: done + remaining);
+  });
+}
+
 Set<String> _completedActivityTaskIdsForLocalDate(
   List<Map<String, dynamic>> activities,
   DateTime now,

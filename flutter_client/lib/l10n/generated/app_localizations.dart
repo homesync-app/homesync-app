@@ -944,6 +944,12 @@ abstract class AppLocalizations {
   /// **'Ver semana'**
   String get homeViewWeekButton;
 
+  /// Daily task progress chip next to the home tasks title, e.g. '2 de 5'.
+  ///
+  /// In es, this message translates to:
+  /// **'{done} de {total}'**
+  String homeTodayProgressLabel(int done, int total);
+
   /// Empty-state message shown on the dashboard when there are no tasks left for today.
   ///
   /// In es, this message translates to:
@@ -1783,6 +1789,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Al día'**
   String get homeFamilyApprovalsAllClear;
+
+  /// Chip on the Finances summary card when household members owe the user money for shared expenses (divided economy). Amount arrives currency-formatted.
+  ///
+  /// In es, this message translates to:
+  /// **'Te deben {amount}'**
+  String expensesYouAreOwed(String amount);
+
+  /// Chip on the Finances summary card when the user owes money for shared expenses (divided economy). Voseo 'Debés'.
+  ///
+  /// In es, this message translates to:
+  /// **'Debés {amount}'**
+  String expensesYouOwe(String amount);
+
+  /// Running daily average under the Finances hero amount (simple expenses mode). Amount arrives already currency-formatted; the month renders separately in the header pill.
+  ///
+  /// In es, this message translates to:
+  /// **'≈ {amount}/día'**
+  String expensesDailyAvg(String amount);
 
   /// Second line of the couple-mode dashboard headline ('Todo lo importante / del hogar').
   ///
@@ -3854,6 +3878,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Sin fecha'**
   String get tasksPillNoDate;
+
+  /// Tasks list section header: overdue tasks.
+  ///
+  /// In es, this message translates to:
+  /// **'Vencidas'**
+  String get tasksSectionOverdue;
+
+  /// Tasks list section header: tasks due today.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy'**
+  String get tasksSectionToday;
+
+  /// Tasks list section header: tasks due within the next 7 days.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta semana'**
+  String get tasksSectionThisWeek;
+
+  /// Tasks list section header: tasks due beyond this week.
+  ///
+  /// In es, this message translates to:
+  /// **'Más adelante'**
+  String get tasksSectionUpcoming;
+
+  /// Tasks list section header: unscheduled tasks.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin fecha'**
+  String get tasksSectionNoDate;
 
   /// No description provided for @tasksPillOverdue.
   ///
@@ -6158,6 +6212,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Restaurar compras'**
   String get premiumRestorePurchases;
+
+  /// Microcopy de confianza bajo el CTA del paywall
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelá cuando quieras'**
+  String get premiumCancelAnytime;
 
   /// No description provided for @premiumFreeTrialAvailable.
   ///
@@ -9194,6 +9254,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Planificar tareas del hogar'**
   String get taskTemplatePlanHouseholdTasks;
+
+  /// Localized task template title from the system catalog.
+  ///
+  /// In es, this message translates to:
+  /// **'Limpiar microondas'**
+  String get taskTemplateCleanMicrowave;
+
+  /// Localized task template title from the system catalog.
+  ///
+  /// In es, this message translates to:
+  /// **'Lavar el auto'**
+  String get taskTemplateWashCar;
+
+  /// Localized task template title from the system catalog.
+  ///
+  /// In es, this message translates to:
+  /// **'Lavar tachos de basura'**
+  String get taskTemplateCleanTrashBins;
+
+  /// Localized task template title from the system catalog.
+  ///
+  /// In es, this message translates to:
+  /// **'Preparar mochila del colegio'**
+  String get taskTemplatePackSchoolBag;
+
+  /// Localized task template title from the system catalog.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar agua de la mascota'**
+  String get taskTemplateGivePetWater;
 
   /// Snackbar shown after adding a suggested task template.
   ///

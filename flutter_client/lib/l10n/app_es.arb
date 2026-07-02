@@ -390,6 +390,18 @@
   "@homeViewWeekButton": {
     "description": "Small button next to the day-tasks list that takes the user to the full weekly view."
   },
+  "homeTodayProgressLabel": "{done} de {total}",
+  "@homeTodayProgressLabel": {
+    "description": "Daily task progress chip next to the home tasks title, e.g. '2 de 5'.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "homeAllDoneToday": "Todo listo por hoy",
   "@homeAllDoneToday": {
     "description": "Empty-state message shown on the dashboard when there are no tasks left for today."
@@ -736,6 +748,33 @@
   "homeFamilyApprovalsAllClear": "Al día",
   "@homeFamilyApprovalsAllClear": {
     "description": "Caption on the family dashboard approvals tile when there is nothing awaiting review."
+  },
+  "expensesYouAreOwed": "Te deben {amount}",
+  "@expensesYouAreOwed": {
+    "description": "Chip on the Finances summary card when household members owe the user money for shared expenses (divided economy). Amount arrives currency-formatted.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesYouOwe": "Debés {amount}",
+  "@expensesYouOwe": {
+    "description": "Chip on the Finances summary card when the user owes money for shared expenses (divided economy). Voseo 'Debés'.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesDailyAvg": "≈ {amount}/día",
+  "@expensesDailyAvg": {
+    "description": "Running daily average under the Finances hero amount (simple expenses mode). Amount arrives already currency-formatted; the month renders separately in the header pill.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "homeCoupleHeadlineSecondary": "del hogar",
   "@homeCoupleHeadlineSecondary": {
@@ -1717,6 +1756,26 @@
   "tasksEmptySharedSubtitle": "Agregá tu primera tarea o activá una categoría para empezar a organizar la casa.",
   "tasksEmptyFilteredSubtitle": "Probá cambiar la categoría o crear una nueva tarea.",
   "tasksPillNoDate": "Sin fecha",
+  "tasksSectionOverdue": "Vencidas",
+  "@tasksSectionOverdue": {
+    "description": "Tasks list section header: overdue tasks."
+  },
+  "tasksSectionToday": "Hoy",
+  "@tasksSectionToday": {
+    "description": "Tasks list section header: tasks due today."
+  },
+  "tasksSectionThisWeek": "Esta semana",
+  "@tasksSectionThisWeek": {
+    "description": "Tasks list section header: tasks due within the next 7 days."
+  },
+  "tasksSectionUpcoming": "Más adelante",
+  "@tasksSectionUpcoming": {
+    "description": "Tasks list section header: tasks due beyond this week."
+  },
+  "tasksSectionNoDate": "Sin fecha",
+  "@tasksSectionNoDate": {
+    "description": "Tasks list section header: unscheduled tasks."
+  },
   "tasksPillOverdue": "Vencida",
   "tasksPillInReview": "En revisión",
   "tasksActionSchedule": "Programar",
@@ -2398,6 +2457,10 @@
   "premiumBenefitFullCustomization": "Personalización completa",
   "premiumBenefitFullCustomizationDesc": "Elegí colores, temas y avatares personalizados para que el hogar se sienta propio.",
   "premiumRestorePurchases": "Restaurar compras",
+  "premiumCancelAnytime": "Cancelá cuando quieras",
+  "@premiumCancelAnytime": {
+    "description": "Microcopy de confianza bajo el CTA del paywall"
+  },
   "premiumFreeTrialAvailable": "Prueba Gratis Disponible",
   "premiumActivateButton": "Activar Premium",
   "premiumTestingModeLabel": "Modo testing · sin cargo",
@@ -3582,6 +3645,26 @@
   },
   "taskTemplatePlanHouseholdTasks": "Planificar tareas del hogar",
   "@taskTemplatePlanHouseholdTasks": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanMicrowave": "Limpiar microondas",
+  "@taskTemplateCleanMicrowave": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateWashCar": "Lavar el auto",
+  "@taskTemplateWashCar": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanTrashBins": "Lavar tachos de basura",
+  "@taskTemplateCleanTrashBins": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplatePackSchoolBag": "Preparar mochila del colegio",
+  "@taskTemplatePackSchoolBag": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateGivePetWater": "Cambiar agua de la mascota",
+  "@taskTemplateGivePetWater": {
     "description": "Localized task template title from the system catalog."
   },
   "addTaskOptionsAddedSnack": "\"{title}\" añadida",

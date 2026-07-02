@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -32,6 +33,7 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_feed_entry_motion.dart';
 import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 class HomeCoupleView extends ConsumerStatefulWidget {
@@ -424,20 +426,51 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
         ref.watch(householdMembersProvider).value ?? const <MemberModel>[];
     final caps = ref.watch(householdCapabilitiesProvider);
     final t = AppLocalizations.of(context);
+    final progress = ref.watch(todayTaskProgressProvider).value;
+    final locale = Localizations.localeOf(context).toString();
+    final dateEyebrow =
+        DateFormat('EEEE, d MMM', locale).format(DateTime.now()).toUpperCase();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          dateEyebrow,
+          style: TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.1,
+            color: theme.textMuted,
+          ),
+        ),
+        const SizedBox(height: 2),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              t.homeCoupleTasksTitle,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: theme.textPrimary,
-                letterSpacing: -0.7,
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      t.homeCoupleTasksTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: theme.textPrimary,
+                        letterSpacing: -0.7,
+                      ),
+                    ),
+                  ),
+                  if (progress != null && progress.total > 0) ...[
+                    const SizedBox(width: 10),
+                    _TodayProgressChip(
+                      done: progress.done,
+                      total: progress.total,
+                    ),
+                  ],
+                ],
               ),
             ),
             TextButton(
@@ -780,6 +813,69 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       messenger.context,
       message: message,
       type: AppSnackBarType.neutral,
+    );
+  }
+}
+
+/// Chip de progreso diario junto al título "Hoy en casa": anillo + "2 de 5".
+/// Vira a verde (sage) cuando el día queda completo.
+class _TodayProgressChip extends StatelessWidget {
+  final int done;
+  final int total;
+
+  const _TodayProgressChip({
+    required this.done,
+    required this.total,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    final complete = total > 0 && done >= total;
+    final color = complete ? AppColors.sage : theme.primary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
+        border: Border.all(color: color.withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 12,
+            height: 12,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween<double>(
+                begin: 0,
+                end: total == 0 ? 0 : done / total,
+              ),
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => CircularProgressIndicator(
+                value: value,
+                strokeWidth: 2.4,
+                strokeCap: StrokeCap.round,
+                color: color,
+                backgroundColor: color.withValues(alpha: 0.16),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            t.homeTodayProgressLabel(done, total),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: color,
+              letterSpacing: -0.1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

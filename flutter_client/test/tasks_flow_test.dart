@@ -190,7 +190,9 @@ void main() {
 
     // ── Verify the task renders ──
     expect(find.text('Lavar platos'), findsOneWidget);
-    expect(find.text('LIMPIEZA'), findsOneWidget);
+    // Tasks are grouped by urgency; a task without dueAt lands in "Sin fecha"
+    // (the section header renders uppercased).
+    expect(find.text('SIN FECHA'), findsOneWidget);
 
     // ── Tap the task card to expand inline actions ──
     await tester.tap(find.text('Lavar platos'));

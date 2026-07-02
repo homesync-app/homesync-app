@@ -277,6 +277,10 @@ class TaskModel {
     return _effectiveDueDate.isSameDay(DateTime.now());
   }
 
+  /// Calendar day of the (recurrence-adjusted) due date, or null when the
+  /// task has no schedule. Used to bucket the tasks list by urgency.
+  DateTime? get dueDateOnly => dueAt == null ? null : _effectiveDueDate;
+
   /// Whether the task should surface in the home "today" section based purely
   /// on its own schedule: due today, overdue, or any daily recurring task.
   /// Completion state is handled separately by the caller — this only answers

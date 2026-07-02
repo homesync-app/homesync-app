@@ -175,11 +175,11 @@ abstract class _$TaskCategoryFilter extends $Notifier<Set<String>> {
   Set<String> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<Set<String>, Set<String>>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<Set<String>, Set<String>>, Set<String>, Object?, Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -221,11 +221,11 @@ abstract class _$TaskSearchQuery extends $Notifier<String> {
   String build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<String, String>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<String, String>, String, Object?, Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -266,11 +266,11 @@ abstract class _$TaskViewMode extends $Notifier<bool> {
   bool build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<bool, bool>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<bool, bool>, bool, Object?, Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -304,14 +304,14 @@ abstract class _$Tasks extends $AsyncNotifier<List<TaskModel>> {
   FutureOr<List<TaskModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<List<TaskModel>>, List<TaskModel>>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<AsyncValue<List<TaskModel>>, List<TaskModel>>,
         AsyncValue<List<TaskModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -443,6 +443,98 @@ final class TodayTasksProvider extends $FunctionalProvider<
 }
 
 String _$todayTasksHash() => r'a38c37170ab5437a1f8c06607b5bb89bbe9ce7e8';
+
+/// Daily progress for the home "today" section: how many of today's tasks the
+/// viewer already closed vs. how many remain. `total` = done + pending, so the
+/// ratio is stable while completions land optimistically.
+
+@ProviderFor(todayTaskProgress)
+final todayTaskProgressProvider = TodayTaskProgressProvider._();
+
+/// Daily progress for the home "today" section: how many of today's tasks the
+/// viewer already closed vs. how many remain. `total` = done + pending, so the
+/// ratio is stable while completions land optimistically.
+
+final class TodayTaskProgressProvider extends $FunctionalProvider<
+        AsyncValue<
+            ({
+              int done,
+              int total,
+            })>,
+        AsyncValue<
+            ({
+              int done,
+              int total,
+            })>,
+        AsyncValue<
+            ({
+              int done,
+              int total,
+            })>>
+    with
+        $Provider<
+            AsyncValue<
+                ({
+                  int done,
+                  int total,
+                })>> {
+  /// Daily progress for the home "today" section: how many of today's tasks the
+  /// viewer already closed vs. how many remain. `total` = done + pending, so the
+  /// ratio is stable while completions land optimistically.
+  TodayTaskProgressProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'todayTaskProgressProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$todayTaskProgressHash();
+
+  @$internal
+  @override
+  $ProviderElement<
+      AsyncValue<
+          ({
+            int done,
+            int total,
+          })>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  AsyncValue<
+      ({
+        int done,
+        int total,
+      })> create(Ref ref) {
+    return todayTaskProgress(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(
+      AsyncValue<
+              ({
+                int done,
+                int total,
+              })>
+          value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<
+          AsyncValue<
+              ({
+                int done,
+                int total,
+              })>>(value),
+    );
+  }
+}
+
+String _$todayTaskProgressHash() => r'6505f1ab959af6cc797bbfee77aa4e2a3a92b86c';
 
 @ProviderFor(taskStatusCount)
 final taskStatusCountProvider = TaskStatusCountProvider._();
