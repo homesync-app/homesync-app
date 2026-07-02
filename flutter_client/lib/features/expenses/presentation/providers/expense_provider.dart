@@ -64,25 +64,13 @@ GetPersonalFinanceSummaryUseCase getPersonalFinanceSummaryUseCase(
   return GetPersonalFinanceSummaryUseCase(repo);
 }
 
-final _uuidPattern = RegExp(
-  r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-);
-
 @riverpod
 class PersonalFinanceSummary extends _$PersonalFinanceSummary {
   @override
   Future<Map<String, dynamic>> build() async {
     final userId = ref.read(currentUserIdProvider);
     final householdId = await ref.watch(householdIdProvider.future);
-    if (userId == null ||
-        householdId == null ||
-        !_uuidPattern.hasMatch(userId)) {
-      if (userId != null && !_uuidPattern.hasMatch(userId)) {
-        // p_user_id is uuid server-side; a non-uuid value (e.g. a raw
-        // Firebase UID leaking through identity resolution) would crash the
-        // RPC with "invalid input syntax for type uuid". Fail soft instead.
-        log.w('PersonalFinanceSummary: non-uuid userId=$userId, skipping RPC');
-      }
+    if (userId == null || householdId == null) {
       return {
         'balance': 0.0,
         'income': 0.0,
@@ -544,7 +532,15 @@ Future<MonthlyProjectionData> monthlyProjection(
   double spent = 0.0;
   double pending = 0.0;
   final now = DateTime.now();
-  final memberCount = members.isNotEmpty ? members.length : 2;
+  // Rent/bills split between adults only — kids and teens don't share
+  // household expenses (mirrors pay_planned_expense's split-member filter).
+  // Friends/roommates households have no "kids", everyone splits.
+  final isFriendsOrRoommates = const {'friends', 'roommates'}
+      .contains(household?.householdType.toLowerCase());
+  final splitMembers = isFriendsOrRoommates
+      ? members
+      : members.where((m) => m.isAdult).toList();
+  final memberCount = splitMembers.isNotEmpty ? splitMembers.length : 2;
   // Integrated/shared economy (couple or family): pending planned expenses count
   // in full toward the household rather than being split per member.
   final isSharedEconomy = household?.financeMode == 'shared';

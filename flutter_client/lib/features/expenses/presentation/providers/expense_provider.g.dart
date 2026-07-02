@@ -262,7 +262,7 @@ abstract class _$PersonalFinanceSummary
   FutureOr<Map<String, dynamic>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref
         as $Ref<AsyncValue<Map<String, dynamic>>, Map<String, dynamic>>;
     final element = ref.element as $ClassProviderElement<
@@ -270,7 +270,7 @@ abstract class _$PersonalFinanceSummary
         AsyncValue<Map<String, dynamic>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -305,7 +305,7 @@ abstract class _$ExpenseBalances
   FutureOr<List<HouseholdBalanceModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<List<HouseholdBalanceModel>>,
         List<HouseholdBalanceModel>>;
     final element = ref.element as $ClassProviderElement<
@@ -314,7 +314,7 @@ abstract class _$ExpenseBalances
         AsyncValue<List<HouseholdBalanceModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -348,7 +348,7 @@ abstract class _$ExpenseController extends $AsyncNotifier<List<ExpenseModel>> {
   FutureOr<List<ExpenseModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<List<ExpenseModel>>, List<ExpenseModel>>;
     final element = ref.element as $ClassProviderElement<
@@ -356,7 +356,7 @@ abstract class _$ExpenseController extends $AsyncNotifier<List<ExpenseModel>> {
         AsyncValue<List<ExpenseModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -392,7 +392,7 @@ abstract class _$CombinedFeedController
   FutureOr<List<FeedItemModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<List<FeedItemModel>>, List<FeedItemModel>>;
     final element = ref.element as $ClassProviderElement<
@@ -400,7 +400,7 @@ abstract class _$CombinedFeedController
         AsyncValue<List<FeedItemModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -436,7 +436,7 @@ abstract class _$ExpenseTemplateController
   FutureOr<List<ExpenseTemplateModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<List<ExpenseTemplateModel>>,
         List<ExpenseTemplateModel>>;
     final element = ref.element as $ClassProviderElement<
@@ -445,7 +445,7 @@ abstract class _$ExpenseTemplateController
         AsyncValue<List<ExpenseTemplateModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -525,7 +525,7 @@ final class MonthlyProjectionProvider extends $FunctionalProvider<
   }
 }
 
-String _$monthlyProjectionHash() => r'76fce5ed98e15f06922cac56d40c229b76d79587';
+String _$monthlyProjectionHash() => r'9a3b7fd686d96a181b714cf8e220fd9b568a5814';
 
 @ProviderFor(ExpenseFiltersNotifier)
 final expenseFiltersProvider = ExpenseFiltersNotifierProvider._();
@@ -567,14 +567,14 @@ abstract class _$ExpenseFiltersNotifier
   Map<String, dynamic> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<Map<String, dynamic>, Map<String, dynamic>>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<Map<String, dynamic>, Map<String, dynamic>>,
         Map<String, dynamic>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -610,7 +610,7 @@ abstract class _$MercadopagoMovements
   FutureOr<List<Map<String, dynamic>>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<List<Map<String, dynamic>>>,
         List<Map<String, dynamic>>>;
     final element = ref.element as $ClassProviderElement<
@@ -619,6 +619,6 @@ abstract class _$MercadopagoMovements
         AsyncValue<List<Map<String, dynamic>>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
