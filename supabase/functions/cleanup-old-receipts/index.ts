@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Edge Function invocada via cron (Supabase Cron) una vez por día.
@@ -16,7 +15,7 @@ const RETENTION_DAYS = 60;
 const BUCKET = "receipts";
 const PAGE_SIZE = 100;
 
-serve(async (req) => {
+Deno.serve(async (req: Request) => {
   const authHeader = req.headers.get("Authorization");
   const cronSecret = Deno.env.get("CRON_SECRET");
 

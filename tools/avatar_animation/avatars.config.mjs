@@ -32,13 +32,13 @@ export const AVATARS = [
     // se erosiona el alfa N pasadas para dejarlo al ras como el resto.
     erodeBorder: 6,
     motion:
-      'The golden puppy slowly wags its tail, its floppy ears perk up for a moment, it blinks, and tilts its head curiously toward the grocery bag it holds, then settles. Mouth stays closed in a calm happy expression.',
+      'The golden puppy leans over and takes the handle of its shopping bag in its mouth, gives it a small proud lift as if bringing the groceries home, then gently sets the bag back down in the exact same spot and settles back into its original calm sitting pose, tail giving one happy wag. Starts and ends in exactly the input pose.',
   },
   {
     id: 'premium_orange_cat',
     keyColor: 'magenta',
     motion:
-      'The orange kitten breathes gently, blinks slowly like a content cat, and its tail sways softly side to side.',
+      'The orange kitten leans down and gently takes the handle of its grocery bag in its mouth, lifts it just a little as if proudly bringing the groceries home, then carefully sets the bag back down in the exact same spot and settles back into its original calm sitting pose. Starts and ends in exactly the input pose.',
   },
   {
     id: 'premium_paper_plane_kid',
@@ -56,7 +56,7 @@ export const AVATARS = [
     id: 'premium_key_bird',
     keyColor: 'magenta',
     motion:
-      'The little yellow chick ruffles its feathers, gives a tiny hop, blinks, and the house key on the ribbon it holds swings softly side to side. Beak stays closed in a calm happy expression.',
+      'The little yellow chick raises the house key up with a small proud gesture as if presenting the keys to a new home, gives it one gentle jingle, then lowers it back down and settles back into its original calm standing pose, ruffling its feathers once. Starts and ends in exactly the input pose.',
   },
   {
     id: 'premium_tool_adult_man',
@@ -132,6 +132,12 @@ export const EVENT_MOTIONS = {
     },
   },
   premium_orange_cat: {
+    // Gesto "ta-da" de presentacion para el paywall premium.
+    tada: {
+      loop: 'oneshot',
+      prompt:
+        'The orange kitten sits up a little taller and does a charming ta-da presenting gesture: it spreads its front paws open wide and welcoming, as if proudly unveiling something wonderful, with bright sparkling excited eyes and a big warm smile, holds the pose for a brief joyful moment, then settles back down into exactly its original calm sitting pose.',
+    },
     victory: {
       loop: 'oneshot',
       prompt:
@@ -167,7 +173,11 @@ export function buildPrompt(avatar, { motionText, oneshot = false } = {}) {
     'Preserve the exact art style, colors, proportions and lighting of the input image.',
     `The background is a completely flat, uniform, solid ${key.name} color (${key.hex}) with no gradients, no shadows, no vignette and no texture.`,
     'Camera is completely static and locked. No camera movement, no zoom, no pan.',
-    'The scene is completely silent: the character does not speak, talk, sing or make any vocal sound, mouth stays closed.',
+    // Silencio: evita el filtro de audio de Veo y el look de "hablar". No se
+    // fuerza la boca cerrada aqui: los animales pueden abrirla para una accion
+    // (ej. agarrar la bolsa). Para HUMANOS, agregar "mouth/lips stay closed"
+    // en su prompt especifico.
+    'The scene is completely silent: the character does not speak, talk, sing or make any vocal sound.',
     oneshot
       ? 'Gentle, friendly motion. Soft and warm mood.'
       : 'Slow, calm, loopable motion. Soft and friendly mood.',
@@ -179,4 +189,4 @@ export function buildPrompt(avatar, { motionText, oneshot = false } = {}) {
 export const NEGATIVE_PROMPT =
   'camera movement, zoom, pan, background change, gradients, shadows on background, ' +
   'extra limbs, deformation, style change, text, watermark, fast motion, jump cut, ' +
-  'speaking, talking, singing, humming, voice, vocal sounds, open mouth';
+  'speaking, talking, singing, humming, voice, vocal sounds';

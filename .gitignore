@@ -103,3 +103,6 @@ artifacts/
 
 # ─── Creative-production artifacts (ad moodboards, review boards — regenerable) ─
 outputs/
+
+# ─── OpenMontage (video production) ───────────────────────────────────────────
+OpenMontage/

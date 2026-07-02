@@ -38,7 +38,9 @@ const SIMILARITY = getArg('similarity', '0.20');
 const BLEND = getArg('blend', '0.06');
 
 function processTake(file) {
-  const match = file.match(/^(.+?)(?:_(victory|versus|celebrate))?_take(\d+)\.mp4$/);
+  const match = file.match(
+    /^(.+?)(?:_(victory|versus|celebrate|tada))?_take(\d+)\.mp4$/,
+  );
   if (!match) return null;
   const [, avatarId, motion = 'idle', take] = match;
   if (ONLY_AVATAR && avatarId !== ONLY_AVATAR) return null;
@@ -50,8 +52,15 @@ function processTake(file) {
   }
   const eventCfg =
     motion === 'idle' ? null : EVENT_MOTIONS[avatarId]?.[motion];
-  const oneshot = eventCfg?.loop === 'oneshot';
-  const trimSeconds = eventCfg?.trimSeconds;
+  // Modo de loop:
+  //  - idle ("llegada") = reverse: Veo genera reposo->agarra-objeto; al
+  //    invertirlo, el personaje LLEGA con el objeto y lo DEJA, terminando en
+  //    la pose del sticker (primer frame original = la imagen estatica).
+  //  - evento oneshot = forward tal cual; pingpong = ida y vuelta.
+  const mode = motion === 'idle'
+    ? 'reverse'
+    : (eventCfg?.loop === 'oneshot' ? 'oneshot' : 'pingpong');
+  const trimSeconds = motion === 'idle' ? undefined : eventCfg?.trimSeconds;
   const key = KEY_COLORS[avatar.keyColor];
   const input = join(RAW_DIR, file);
   const suffix = motion === 'idle' ? '' : `_${motion}`;
@@ -72,11 +81,15 @@ function processTake(file) {
     `scale=${SIZE}:${SIZE}:flags=lanczos`,
   ].join(',');
 
-  // Ping-pong: forward + reverse = loop sin costura. Los oneshot (eventos)
-  // van solo de ida: el prompt pide terminar en la pose inicial.
-  const tail = oneshot
+  // tail segun modo:
+  //  - oneshot: nada (forward tal cual)
+  //  - reverse: invierte el clip completo (llegada)
+  //  - pingpong: ida + vuelta sin costura
+  const tail = mode === 'oneshot'
     ? null
-    : 'split[fwd][tmp];[tmp]reverse[rev];[fwd][rev]concat=n=2:v=1:a=0';
+    : mode === 'reverse'
+        ? 'reverse'
+        : 'split[fwd][tmp];[tmp]reverse[rev];[fwd][rev]concat=n=2:v=1:a=0';
 
   // Erosion opcional del alfa para comer un borde sticker blanco (ver config).
   const erode = avatar.erodeBorder || 0;

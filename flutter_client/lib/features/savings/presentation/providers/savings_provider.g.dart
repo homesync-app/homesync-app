@@ -466,13 +466,13 @@ final class SavingsGoalsProvider
   SavingsGoals create() => SavingsGoals();
 }
 
-String _$savingsGoalsHash() => r'a8f189b020cf23dd5084b5a6911ba14a21a3de09';
+String _$savingsGoalsHash() => r'f38b0edc4bb3e2a7d1dc966b88d239bee208159a';
 
 abstract class _$SavingsGoals extends $AsyncNotifier<List<SavingsGoalModel>> {
   FutureOr<List<SavingsGoalModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref
         as $Ref<AsyncValue<List<SavingsGoalModel>>, List<SavingsGoalModel>>;
     final element = ref.element as $ClassProviderElement<
@@ -480,7 +480,7 @@ abstract class _$SavingsGoals extends $AsyncNotifier<List<SavingsGoalModel>> {
         AsyncValue<List<SavingsGoalModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -516,7 +516,7 @@ abstract class _$PaginatedSavingsGoals
   FutureOr<SavingsGoalsPageState> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref
         as $Ref<AsyncValue<SavingsGoalsPageState>, SavingsGoalsPageState>;
     final element = ref.element as $ClassProviderElement<
@@ -524,7 +524,7 @@ abstract class _$PaginatedSavingsGoals
         AsyncValue<SavingsGoalsPageState>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

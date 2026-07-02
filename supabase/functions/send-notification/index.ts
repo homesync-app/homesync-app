@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { createRemoteJWKSet, jwtVerify } from "https://esm.sh/jose@5"
 
@@ -43,7 +42,7 @@ async function verifyFirebaseUser(token: string): Promise<string | null> {
   }
 }
 
-serve(async (req) => {
+Deno.serve(async (req: Request) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })

@@ -41,7 +41,7 @@ abstract class _$HouseholdMembersNotifier
   FutureOr<List<MemberModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<List<MemberModel>>, List<MemberModel>>;
     final element = ref.element as $ClassProviderElement<
@@ -49,7 +49,7 @@ abstract class _$HouseholdMembersNotifier
         AsyncValue<List<MemberModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

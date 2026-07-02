@@ -261,11 +261,11 @@ abstract class _$HiddenRecentExpenseIds extends $Notifier<Set<String>> {
   Set<String> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<Set<String>, Set<String>>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<Set<String>, Set<String>>, Set<String>, Object?, Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -309,7 +309,7 @@ abstract class _$OptimisticRecentActivity
   List<Map<String, dynamic>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref
         as $Ref<List<Map<String, dynamic>>, List<Map<String, dynamic>>>;
     final element = ref.element as $ClassProviderElement<
@@ -317,6 +317,6 @@ abstract class _$OptimisticRecentActivity
         List<Map<String, dynamic>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

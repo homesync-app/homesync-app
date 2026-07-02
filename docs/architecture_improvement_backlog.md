@@ -5,7 +5,7 @@ La idea no es hacer todo junto, sino elegir cortes chicos, testeables y con impa
 
 ## Estado actual del backlog
 
-Ultima actualizacion: 2026-06-01.
+Ultima actualizacion: 2026-06-30 (ver seccion 12 para la sesion de mantenimiento mas reciente).
 
 - Hecho: `delete_expense_v1`, `complete_task_v1`, `approve_task_v1`, `reject_task_v1`, `undo_task_completion_v1`.
 - Hecho: `settle_debt_v1` (idempotente por `p_request_id`, titulo UTF-8 corregido, smoke-gateado, contrato en `docs/rpc_contracts.md`).
@@ -260,3 +260,75 @@ Cada mejora cierra con:
 - **Entrada en `docs/rpc_contracts.md`** si toca RPCs.
 - Resumen de providers invalidados/actualizados en el commit/PR.
 - Nota de rollback si afecta datos productivos.
+
+## 12. Sesion de mantenimiento 2026-06-30 (hecho + pendiente)
+
+Sesion de upgrade de stack + limpieza, verificada con el MCP de Dart (`dart mcp-server`,
+analisis en segundos). Todo lo "hecho" quedo en verde por MCP (`No errors`).
+
+### Hecho (verificado)
+
+- **Dependencias**: 57 paquetes actualizados dentro de sus rangos (supabase_flutter 2.12->2.15,
+  riverpod 3.2->3.3.2, firebase, purchases_flutter, video_player, etc.) + `.g.dart` regenerados.
+  Floors de `pubspec.yaml` alineados.
+- **MCP de Dart configurado** en `.kiro/settings/mcp.json` (server `dart`). Da loop de
+  analisis rapido (`analyze_files`) sin el cold-start lento del CLI + plugin riverpod_lint.
+- **Edge Functions -> `Deno.serve`**: migradas las 9 que usaban el `serve` deprecado de
+  `std@0.168.0/http/server.ts` (scan-receipt + send-notification, send-feedback-reply,
+  send-feedback-ack, revenuecat-webhook, mercadopago-api, generate-custom-avatar,
+  delete-custom-avatar, cleanup-old-receipts). Deployadas a prod + smoke-tested (OPTIONS 200,
+  webhooks sin auth 401, ningun 500 de arranque). Solo cambia el bootstrap HTTP, cero cambio
+  de comportamiento.
+- **debugPrint de debug** gateados con `if (kDebugMode)` en `premium_animated_avatar.dart`
+  (no se eliminan en release por default). Requirio `import 'package:flutter/foundation.dart'`
+  (no viene por material.dart; lo atrapo el analyzer).
+- **`savings_model.dart`**: casts no-null fragiles endurecidos (`as num?` con default) para no
+  crashear si Supabase devuelve null.
+- **keepAlive (fix de raiz)**: `supabaseClientProvider` -> `@Riverpod(keepAlive: true)` (es el
+  singleton global de Supabase, no tiene estado descartable). Limpio ~10 warnings
+  `only_use_keep_alive_inside_keep_alive` de los repos que lo observaban. Ademas los 7 use-cases
+  de `stats_provider` -> keepAlive (cadena Controller->use-case->repo->client toda keepAlive).
+- **Mojibake (double-encoded UTF-8)**: arreglado con `ftfy` solo en archivos con mojibake
+  ACCIDENTAL (28 lineas en 4 archivos). Incluia bugs visibles al usuario: emoji `label` (etiqueta)
+  corrupto en `expense_shopping_components.dart` (4 sitios) y un emoji en
+  `settings_admin_components.dart`, mas un separador en string de UI en `expense_form_sheet.dart`.
+  El resto eran comentarios. NO se tocaron los mapas con mojibake INTENCIONAL (data-repair):
+  `user_avatar.dart` (aliases legados de avatares), `shopping_localization.dart` (normalizacion
+  de acentos), `activity_presentation.dart` (reparacion deliberada).
+- **God files extraidos** (a part files `*_widgets.dart` / `*_builders.dart`, misma libreria,
+  comparten imports). NOTA: esto va en tension con la seccion 8.2 de este backlog (postergar
+  refactor de widgets grandes); se hizo por pedido explicito del owner, y son moves puros
+  (sin cambio de logica), verificados en verde:
+  - `expense_form_sheet.dart`: 1760 -> 1324 (13 builders, varios con tecnica setState->handler).
+  - `savings_tab.dart`: 2109 -> 531 (9 clases widget a `savings_tab_widgets.dart`).
+  - `tasks_screen.dart`: 1844 -> 957 (`_TaskCard`/State + `_SectionHeader`/`_TodayDoneCelebration`
+    a `tasks_screen_widgets.dart`).
+
+### Pendiente (documentado, NO hacer a ciegas)
+
+- **`avoid_public_notifier_properties` en `task_provider.dart:105`** (`Tasks.hasMore` getter
+  publico, lo usa la UI en `tasks_screen.dart` para "cargar mas"). Fix correcto per Riverpod 3:
+  exponer `hasMore` DENTRO del `state` (mirror de `RewardsPageState`/`SavingsGoalsPageState`/
+  `NotificationsState` que ya existen). PERO cambia la forma del `state` de `Tasks`
+  (`Future<List<TaskModel>>` -> un `TasksPageState`) y toca todos los consumidores de
+  `tasksProvider` -> refactor dedicado con testing de paginacion/completar. Coherente con 8.1:
+  no abstraer en generico; si se hace, replicar el patron por-feature existente.
+- **~27 warnings `only_use_keep_alive_inside_keep_alive` restantes** (task_provider, shopping_provider):
+  controllers keepAlive observando use-cases autoDispose. Decision arquitectonica (ver seccion 7):
+  marcar keepAlive las cadenas (como se hizo en stats) o repensar que controllers son keepAlive.
+  Es codigo deliberado/documentado en varios casos (ej. `expenseRepository` keepAlive evita
+  "Cannot use Ref after disposed" en settleDebt).
+- **`anonKey` deprecado** (`main.dart:183`) -> `publishableKey`. Requiere generar key
+  `sb_publishable_...` en el dashboard de Supabase + actualizar `AppEnvironment`. Las anon keys
+  legadas funcionan hasta fin de 2026.
+- **`strict-casts: false`** en `analysis_options.yaml`. Activarlo endurece type-safety (los modelos
+  hacen `id: json['id']` dynamic->String), pero el analysis server no recarga la opcion `language`
+  sin restart, asi que no se pudo medir la cascada de errores en esta sesion. Tarea dedicada.
+- **Mojibake en COMENTARIOS no-criticos**: el comentario huerfano sobre `_closeSheet` en
+  `expense_form_sheet.dart` ya se limpio via ftfy. Si aparece mas mojibake accidental, el patron
+  es: `python -c "import ftfy; ..."` solo sobre archivos SIN mojibake intencional.
+- **`setup_screen.dart` (2333 lineas)**: NO candidato a move mecanico (la navegacion del wizard
+  con `setState(() => _currentStep = X)` esta entretejida en casi todos los step builders). El fix
+  correcto es un `SetupWizardController` (Notifier que sea dueno de `_currentStep` + navegacion),
+  refactor deliberado con tests. Otros god files monoliticos: `expenses_screen.dart` (~1959),
+  `couple_rewards_screen.dart` (~1828), `admin_workspace_screen.dart` (~1704).

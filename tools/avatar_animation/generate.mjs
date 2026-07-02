@@ -76,13 +76,16 @@ function prepareInput(avatar) {
 }
 
 async function startGeneration(avatar, inputPng) {
-  const event = MOTION === 'idle' ? null : EVENT_MOTIONS[avatar.id]?.[MOTION];
+  const isIdle = MOTION === 'idle';
+  const event = isIdle ? null : EVENT_MOTIONS[avatar.id]?.[MOTION];
+  // El idle ahora es una "llegada" one-shot (arranca y termina en la pose de
+  // reposo), igual que los eventos. Nada loopea.
   const body = {
     instances: [
       {
         prompt: buildPrompt(avatar, {
           motionText: event?.prompt,
-          oneshot: event?.loop === 'oneshot',
+          oneshot: isIdle ? true : event?.loop === 'oneshot',
         }),
         image: {
           mimeType: 'image/png',

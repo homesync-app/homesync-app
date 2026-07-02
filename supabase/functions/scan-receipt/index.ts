@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { encodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { jwtVerify, createRemoteJWKSet } from "https://esm.sh/jose@5";
@@ -209,7 +208,7 @@ function resolveTodayIso(todayLocal: string | null, now: Date): string {
   return driftMs <= 2 * 24 * 60 * 60 * 1000 ? todayLocal : serverIso;
 }
 
-serve(async (req) => {
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }

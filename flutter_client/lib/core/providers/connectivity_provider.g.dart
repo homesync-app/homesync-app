@@ -92,14 +92,14 @@ abstract class _$ConnectivityNotifier extends $Notifier<ConnectivityState> {
   ConnectivityState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<ConnectivityState, ConnectivityState>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<ConnectivityState, ConnectivityState>,
         ConnectivityState,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

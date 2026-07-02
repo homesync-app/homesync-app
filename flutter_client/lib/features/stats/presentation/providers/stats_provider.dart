@@ -21,43 +21,43 @@ StatsRepository statsRepository(Ref ref) {
   return SupabaseStatsRepository(statsRpc);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 GetTaskStatsByCategoryUseCase taskStatsByCategoryUseCase(
   Ref ref,
 ) {
   return GetTaskStatsByCategoryUseCase(ref.watch(statsRepositoryProvider));
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 GetXpHistoryUseCase xpHistoryUseCase(Ref ref) {
   return GetXpHistoryUseCase(ref.watch(statsRepositoryProvider));
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 GetCoinHistoryUseCase coinHistoryUseCase(Ref ref) {
   return GetCoinHistoryUseCase(ref.watch(statsRepositoryProvider));
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 GetExpenseStatsByCategoryUseCase expenseStatsByCategoryUseCase(
   Ref ref,
 ) {
   return GetExpenseStatsByCategoryUseCase(ref.watch(statsRepositoryProvider));
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 GetMemberActivityStatsUseCase memberActivityStatsUseCase(
   Ref ref,
 ) {
   return GetMemberActivityStatsUseCase(ref.watch(statsRepositoryProvider));
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 GetWeeklyRankingUseCase weeklyRankingUseCase(Ref ref) {
   return GetWeeklyRankingUseCase(ref.watch(statsRepositoryProvider));
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 GetWeeklyDuelHistoryUseCase weeklyDuelHistoryUseCase(
   Ref ref,
 ) {

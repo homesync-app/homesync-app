@@ -296,7 +296,7 @@ Future<Map<String, String?>?> showSettingsAdminAddDummyMemberDialog(
                 controller: avatarCtrl,
                 decoration: const InputDecoration(
                   labelText: 'Avatar emoji opcional',
-                  hintText: 'Ej: ðŸ˜„',
+                  hintText: 'Ej: 😄',
                 ),
               ),
               const SizedBox(height: 16),
