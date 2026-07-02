@@ -64,13 +64,25 @@ GetPersonalFinanceSummaryUseCase getPersonalFinanceSummaryUseCase(
   return GetPersonalFinanceSummaryUseCase(repo);
 }
 
+final _uuidPattern = RegExp(
+  r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+);
+
 @riverpod
 class PersonalFinanceSummary extends _$PersonalFinanceSummary {
   @override
   Future<Map<String, dynamic>> build() async {
     final userId = ref.read(currentUserIdProvider);
     final householdId = await ref.watch(householdIdProvider.future);
-    if (userId == null || householdId == null) {
+    if (userId == null ||
+        householdId == null ||
+        !_uuidPattern.hasMatch(userId)) {
+      if (userId != null && !_uuidPattern.hasMatch(userId)) {
+        // p_user_id is uuid server-side; a non-uuid value (e.g. a raw
+        // Firebase UID leaking through identity resolution) would crash the
+        // RPC with "invalid input syntax for type uuid". Fail soft instead.
+        log.w('PersonalFinanceSummary: non-uuid userId=$userId, skipping RPC');
+      }
       return {
         'balance': 0.0,
         'income': 0.0,

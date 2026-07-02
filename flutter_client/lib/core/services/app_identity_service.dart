@@ -2,10 +2,21 @@ import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'logger_service.dart';
+
 class AppIdentityService extends ChangeNotifier {
   AppIdentityService._();
 
   static final AppIdentityService instance = AppIdentityService._();
+
+  // Postgres RPCs take p_user_id as uuid; a raw Firebase UID (or any other
+  // malformed value) leaking in here crashes every finance/task/reward call
+  // with "invalid input syntax for type uuid". Guard the write side so a
+  // bad value is dropped instead of poisoning the cached identity.
+  static final RegExp _uuidPattern = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+  );
+  static bool _looksLikeUuid(String value) => _uuidPattern.hasMatch(value);
 
   SupabaseClient? _client;
   String? _currentUserId;
@@ -33,7 +44,14 @@ class AppIdentityService extends ChangeNotifier {
   /// Directly sets the resolved user ID (e.g., from a security-definer RPC
   /// whose return value is already trusted, avoiding an extra anon DB query).
   void setDirectUserId(String userId) {
-    if (userId.isNotEmpty && userId != _currentUserId) {
+    if (!_looksLikeUuid(userId)) {
+      log.w(
+        'AppIdentityService.setDirectUserId rejected non-uuid value: $userId',
+        stackTrace: StackTrace.current,
+      );
+      return;
+    }
+    if (userId != _currentUserId) {
       _currentUserId = userId;
       notifyListeners();
     }
@@ -78,9 +96,16 @@ class AppIdentityService extends ChangeNotifier {
           },
         );
         final userId = result?.toString();
-        if (userId != null && userId.isNotEmpty) {
-          _currentUserId = userId;
-          notifyListeners();
+        if (userId != null) {
+          if (_looksLikeUuid(userId)) {
+            _currentUserId = userId;
+            notifyListeners();
+          } else {
+            log.w(
+              'AppIdentityService.refresh: ensure_user_profile returned '
+              'non-uuid value: $userId',
+            );
+          }
         }
       }
     } catch (e) {

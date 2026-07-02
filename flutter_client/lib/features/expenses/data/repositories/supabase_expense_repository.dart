@@ -412,11 +412,18 @@ class SupabaseExpenseRepository
     String householdId,
   ) async {
     final sw = Stopwatch()..start();
+    // Month bounds travel from the client so "this month" matches the user's
+    // local calendar (the server would otherwise cut at UTC midnight).
+    final now = DateTime.now();
+    final monthStart = DateTime(now.year, now.month);
+    final monthEnd = DateTime(now.year, now.month + 1);
     final response = await _client.rpc(
       'get_personal_finance_summary',
       params: {
         'p_user_id': userId,
         'p_household_id': householdId,
+        'p_month_start': monthStart.toUtc().toIso8601String(),
+        'p_month_end': monthEnd.toUtc().toIso8601String(),
       },
     );
     final summary = Map<String, dynamic>.from(response);
