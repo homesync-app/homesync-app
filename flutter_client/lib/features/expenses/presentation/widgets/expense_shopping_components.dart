@@ -491,8 +491,8 @@ class _ExpenseShoppingIntegrationCardState
                     children: displayNames.take(8).indexed.map((entry) {
                       final index = entry.$1;
                       final raw = entry.$2;
-                      // Resuelve emoji y nombre limpio desde el catÃ¡logo.
-                      // raw puede ser nombre canÃ³nico ("Antitranspirante") o
+                      // Resuelve emoji y nombre limpio desde el catálogo.
+                      // raw puede ser nombre canónico ("Antitranspirante") o
                       // string crudo del OCR ("ANTITRANS DOVE M POMEL").
                       final catalogEntry = ReceiptMatcher.findPredefined(raw);
                       final cleanRaw = ReceiptMatcher.cleanName(raw);
@@ -919,7 +919,7 @@ class _ShoppingItemsSelectorSheetState
                         await ref.read(shoppingItemsProvider.notifier).addItem(
                               name: val.trim(),
                               category: 'general',
-                              emoji: 'ðŸ·ï¸',
+                              emoji: '🏷️',
                             );
 
                         final temp = ShoppingItemModel(
@@ -927,7 +927,7 @@ class _ShoppingItemsSelectorSheetState
                           name: val.trim(),
                           householdId: '',
                           createdAt: DateTime.now(),
-                          emoji: 'ðŸ·ï¸',
+                          emoji: '🏷️',
                           category: 'general',
                         );
                         setState(() => _currentSelection.add(temp));
@@ -967,7 +967,7 @@ class _ShoppingItemsSelectorSheetState
                                 .addItem(
                                   name: queryToSave,
                                   category: 'general',
-                                  emoji: 'ðŸ·ï¸',
+                                  emoji: '🏷️',
                                 );
 
                             final temp = ShoppingItemModel(
@@ -975,7 +975,7 @@ class _ShoppingItemsSelectorSheetState
                               name: queryToSave,
                               householdId: '',
                               createdAt: DateTime.now(),
-                              emoji: 'ðŸ·ï¸',
+                              emoji: '🏷️',
                               category: 'general',
                             );
                             setState(() => _currentSelection.add(temp));

@@ -111,7 +111,7 @@ class _RecurringExpenseFormSheetState
 
   void _onTitleChanged() {
     if (widget.template != null) return;
-    if (_type == 'income') return; // no inferir categorÃ­a para ingresos
+    if (_type == 'income') return; // no inferir categoría para ingresos
     final inferredCategory =
         inferExpenseCategoryIdFromText(_titleController.text);
     if (inferredCategory == null) return;
@@ -523,7 +523,7 @@ class _RecurringExpenseFormSheetState
       child: GestureDetector(
         onTap: () => setState(() {
           _type = type;
-          // Resetear categorÃ­a al cambiar tipo si la actual no existe en la nueva lista
+          // Resetear categoría al cambiar tipo si la actual no existe en la nueva lista
           final available =
               type == 'income' ? _incomeCategories : _expenseCategories;
           if (!available.any((c) => c['id'] == _category)) {

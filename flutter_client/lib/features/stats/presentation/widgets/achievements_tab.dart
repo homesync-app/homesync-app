@@ -5,6 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme_extension.dart';
 import '../../../../core/widgets/concept_icon.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/widgets/app_refresh_indicator.dart';
+import '../../../../shared/widgets/design/app_progress_fill_card.dart';
 import 'stats_shared_widgets.dart';
 
 class AchievementsTab extends StatelessWidget {
@@ -55,9 +57,8 @@ class AchievementsTab extends StatelessWidget {
       );
     }
 
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: onRefresh,
-      color: AppColors.primary,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
         children: [
@@ -169,9 +170,8 @@ class AchievementsTab extends StatelessWidget {
   }) {
     final t = AppLocalizations.of(context);
 
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: onRefresh,
-      color: AppColors.primary,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
         children: [
@@ -249,20 +249,16 @@ class AchievementsTab extends StatelessWidget {
     required String progressText,
   }) {
     final theme = context.theme;
-    return Container(
+    final accentColor = isUnlocked ? AppColors.accentGold : AppColors.primary;
+
+    return AppProgressFillCard(
+      progress: progress,
+      accentColor: accentColor,
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(AppRadii.xxl),
-        boxShadow: theme.cardShadow,
-        border: Border.all(
-          color: isUnlocked
-              ? AppColors.accentGold.withValues(alpha: 0.2)
-              : theme.border.withValues(alpha: 0.45),
-          width: 1.5,
-        ),
-      ),
+      borderColor: isUnlocked
+          ? AppColors.accentGold.withValues(alpha: 0.2)
+          : theme.border.withValues(alpha: 0.45),
       child: Row(
         children: [
           SizedBox(
@@ -297,19 +293,11 @@ class AchievementsTab extends StatelessWidget {
                     color: theme.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    backgroundColor: theme.surfaceContainer,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      isUnlocked
-                          ? AppColors.accentGold
-                          : AppColors.primary.withValues(alpha: 0.3),
-                    ),
-                    minHeight: 6,
-                  ),
+                const SizedBox(height: 10),
+                _achievementProgressHint(
+                  progress: progress,
+                  color: accentColor,
+                  isUnlocked: isUnlocked,
                 ),
               ],
             ),
@@ -325,6 +313,45 @@ class AchievementsTab extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _achievementProgressHint({
+    required double progress,
+    required Color color,
+    required bool isUnlocked,
+  }) {
+    final clamped = progress.clamp(0.0, 1.0).toDouble();
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 4,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppRadii.pill),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: clamped,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: isUnlocked ? 0.92 : 0.45),
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (isUnlocked) ...[
+          const SizedBox(width: AppSpacing.xs),
+          Icon(
+            Icons.check_circle_rounded,
+            size: 16,
+            color: color.withValues(alpha: 0.9),
+          ),
+        ],
+      ],
     );
   }
 
