@@ -99,8 +99,11 @@ class AvatarPickerSheet extends ConsumerWidget {
       final isPremiumAvatar = UserAvatar.isPremiumAvatarValue(normalizedAvatar);
       final isPremium = ref.read(premiumProvider).value ?? false;
       if (isPremiumAvatar && !isPremium) {
-        PremiumPaywall.show(context);
-        return;
+        await PremiumPaywall.show(context);
+        // Si compro premium desde el paywall, retomar la seleccion pendiente
+        // en vez de descartarla (antes el avatar elegido se perdia).
+        final nowPremium = ref.read(premiumProvider).value ?? false;
+        if (!nowPremium || !context.mounted) return;
       }
 
       final result = await ref

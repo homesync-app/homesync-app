@@ -24,6 +24,7 @@ const Map<String, Map<AvatarMotion, String>> kAnimatedPremiumAvatarFiles = {
     AvatarMotion.victory: 'premium_orange_cat_victory.webp',
     AvatarMotion.versus: 'premium_orange_cat_versus.webp',
     AvatarMotion.celebrate: 'premium_orange_cat_celebrate.webp',
+    AvatarMotion.tada: 'premium_orange_cat_tada.webp',
   },
   'premium_market_dog': {
     AvatarMotion.idle: 'premium_market_dog.webp',
@@ -31,11 +32,11 @@ const Map<String, Map<AvatarMotion, String>> kAnimatedPremiumAvatarFiles = {
     AvatarMotion.versus: 'premium_market_dog_versus.webp',
     AvatarMotion.celebrate: 'premium_market_dog_celebrate.webp',
   },
-  // Pajarito: versus + celebrate pendientes (cuota Veo agotada el 2026-06-10).
-  // El player cae al idle para los movimientos que falten.
   'premium_key_bird': {
     AvatarMotion.idle: 'premium_key_bird.webp',
     AvatarMotion.victory: 'premium_key_bird_victory.webp',
+    AvatarMotion.versus: 'premium_key_bird_versus.webp',
+    AvatarMotion.celebrate: 'premium_key_bird_celebrate.webp',
   },
 };
 

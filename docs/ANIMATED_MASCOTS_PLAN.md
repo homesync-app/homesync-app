@@ -24,6 +24,29 @@ reglas:
   bloqueada** (ver §2). No se elimina al 100% → se valida con UN humano antes de
   generar el resto (ver §8, Fase 1a).
 
+## 2bis. Modelo de reproducción: "Llegada" one-shot (2026-06-14)
+
+Reemplaza al idle loopeable. Feedback del usuario: el ping-pong se veía
+antinatural (la cola "se des-movía" al rebobinar) y el loop infinito no era
+el objetivo.
+
+- **Idle = "Llegada":** UNA pasada al entrar a la app (y al volver de
+  background), termina en la pose de reposo del arte, y se queda quieto.
+  **Sin loop, sin ping-pong, sin "respiro" repetido.**
+- Concepto coherente: el avatar "llega y presenta lo que trae", luego se
+  acomoda. Gato/perro: levantan su bolsa con la boca y la dejan; pajarito:
+  presenta su llave. Todos arrancan y terminan en la pose del input.
+- **Eventos** (victory/versus/celebrate): igual, one-shot al dispararse,
+  terminan en reposo.
+- Implementado en `PremiumAnimatedAvatar` (play once en mount + en resume, sin
+  timer de repetición; se quitó `restBetweenPlays`). Pipeline: idle ahora es
+  one-shot (sin ping-pong) en generate.mjs y postprocess.mjs.
+- Mouth/boca: se soltó la regla global de "boca cerrada" (los animales abren
+  la boca para agarrar la bolsa). Para HUMANOS reincorporar "mouth/lips stay
+  closed" en su prompt. Cláusula de silencio se mantiene (filtro de audio).
+- PENDIENTE: regenerar los 3 idles con el prompt de llegada cuando vuelva la
+  cuota de Veo (hoy agotada). Los eventos ya generados se conservan.
+
 ## 2. Principios de animación (para TODA mascota nueva)
 
 1. **Cara calma:** sonrisa sutil permitida, pero **nunca abrir la boca/pico** ni

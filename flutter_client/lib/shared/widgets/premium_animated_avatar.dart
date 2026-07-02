@@ -2,12 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// Movimientos disponibles para un avatar premium animado.
 /// idle es el saludo/respiracion ambiental; el resto son eventos.
-enum AvatarMotion { idle, victory, versus, celebrate }
+enum AvatarMotion { idle, victory, versus, celebrate, tada }
 
 /// Permite disparar un movimiento de evento desde afuera
 /// (ej. al ganar el duelo semanal o saldar una deuda).
@@ -17,11 +18,16 @@ class PremiumAvatarMotionController {
   void play(AvatarMotion motion) => _attached?._playEvent(motion);
 }
 
-/// Reproduce los WebP animados de un avatar premium con "respiro":
-/// hace una pasada completa del movimiento ambiental al aparecer, queda
-/// quieto en la pose final (que coincide con la neutral) y la repite cada
-/// [restBetweenPlays]. Un [PremiumAvatarMotionController] puede interrumpir
-/// con un movimiento de evento; al terminar vuelve al ciclo ambiental.
+/// Reproduce los WebP animados de un avatar premium como "llegada":
+/// hace UNA pasada del movimiento ambiental al entrar a la app (mount) y al
+/// volver del background (resume), y queda quieto en la pose de reposo del
+/// arte. NO se re-dispara al cambiar de pestana. No loopea. Un
+/// [PremiumAvatarMotionController] puede interrumpir con un evento; al
+/// terminar queda en reposo.
+///
+/// El idle/llegada es un clip en reverse (el personaje llega con el objeto y
+/// lo deja, terminando en la pose del sticker = primer frame original). Los
+/// eventos son one-shot que vuelven a la pose. Asi todo asienta en reposo.
 ///
 /// Los assets pueden ser rutas de bundle (`assets/...`) o archivos locales
 /// descargados (ruta absoluta del cache de la app).
@@ -44,8 +50,12 @@ class PremiumAnimatedAvatar extends StatefulWidget {
   /// PNG estatico que se muestra mientras carga o si falla el WebP.
   final String fallbackAsset;
   final double size;
-  final Duration restBetweenPlays;
   final PremiumAvatarMotionController? controller;
+
+  /// Espera antes de reproducir la llegada. Util cuando el widget se monta
+  /// durante una transicion de ruta: sin retardo, la animacion arranca tapada
+  /// por la transicion y el usuario solo alcanza a ver el final del gesto.
+  final Duration arrivalDelay;
 
   const PremiumAnimatedAvatar({
     super.key,
@@ -53,8 +63,8 @@ class PremiumAnimatedAvatar extends StatefulWidget {
     required this.fallbackAsset,
     required this.size,
     this.ambientMotion = AvatarMotion.idle,
-    this.restBetweenPlays = const Duration(seconds: 10),
     this.controller,
+    this.arrivalDelay = Duration.zero,
   });
 
   @override
@@ -68,10 +78,15 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
   Timer? _timer;
   bool _failed = false;
 
-  /// true cuando la app esta en background, la ruta esta tapada
-  /// (TickerMode) o el usuario tiene reduce-motion activado.
-  bool _suspended = false;
+  /// La ruta esta tapada / pestana inactiva (via TickerMode).
+  bool _offstage = false;
   bool _reduceMotion = false;
+
+  /// Hay una "llegada" pendiente de reproducir. Se prende al entrar a la app
+  /// (mount) y al volver del background (resume); se consume al reproducirla.
+  /// NO se prende al cambiar de pestana, asi la llegada es una sola vez por
+  /// entrada a la app y no cada vez que se vuelve al Inicio.
+  bool _pendingArrival = true;
 
   /// Invalida pasadas en vuelo cuando arranca una nueva.
   int _playToken = 0;
@@ -81,42 +96,59 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     widget.controller?._attached = this;
+    if (kDebugMode) {
+      debugPrint('[PAA] mount #${identityHashCode(this)} '
+          'ambient=${widget.ambientMotion}');
+    }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final tickerEnabled = TickerMode.valuesOf(context).enabled;
+    _offstage = !TickerMode.valuesOf(context).enabled;
     _reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final shouldSuspend = !tickerEnabled ||
-        _reduceMotion ||
-        WidgetsBinding.instance.lifecycleState == AppLifecycleState.paused;
-    _setSuspended(shouldSuspend);
-    if (!_suspended && _timer == null && _frame == null) {
-      _startAmbient();
+    if (kDebugMode) {
+      debugPrint('[PAA] deps #${identityHashCode(this)} '
+          'offstage=$_offstage reduce=$_reduceMotion pending=$_pendingArrival');
     }
+    _maybePlayArrival();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _setSuspended(_reduceMotion ? true : false);
+      // Volver del background cuenta como "entrar a la app".
+      _pendingArrival = true;
+      _maybePlayArrival();
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
-      _setSuspended(true);
-    }
-  }
-
-  void _setSuspended(bool value) {
-    if (_suspended == value) return;
-    _suspended = value;
-    if (value) {
       _timer?.cancel();
       _timer = null;
       _playToken++;
-    } else if (mounted) {
-      _startAmbient();
     }
+  }
+
+  /// Reproduce la llegada UNA vez si esta visible, sin reduce-motion y hay una
+  /// llegada pendiente. Al cambiar de pestana esto se llama pero _pendingArrival
+  /// ya esta consumido, asi que no re-dispara.
+  void _maybePlayArrival() {
+    if (_offstage || _reduceMotion) {
+      _timer?.cancel();
+      _timer = null;
+      return;
+    }
+    if (!_pendingArrival) return;
+    _pendingArrival = false;
+    if (widget.arrivalDelay == Duration.zero) {
+      _startAmbient();
+      return;
+    }
+    Future.delayed(widget.arrivalDelay, () {
+      // Re-chequear al disparar: pudo pasar a background o quedar tapado
+      // mientras corria el retardo.
+      if (!mounted || _offstage || _reduceMotion) return;
+      _startAmbient();
+    });
   }
 
   @override
@@ -153,6 +185,9 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
     for (final codec in _codecs.values) {
       codec.dispose();
     }
+    if (kDebugMode) {
+      debugPrint('[PAA] dispose #${identityHashCode(this)}');
+    }
     super.dispose();
   }
 
@@ -178,13 +213,9 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
     }
   }
 
-  void _scheduleAmbient() {
-    if (!mounted || _suspended) return;
-    _timer = Timer(widget.restBetweenPlays, _startAmbient);
-  }
-
+  /// Reproduce la "llegada" UNA vez y queda en la pose final (sin repetir).
   void _startAmbient() {
-    if (_suspended) return;
+    if (_offstage || _reduceMotion) return;
     // Si falta el movimiento ambiental pedido (avatar con set parcial),
     // caer al idle animado antes que al PNG estatico.
     final asset = widget.motionAssets[widget.ambientMotion] ??
@@ -193,20 +224,26 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
       setState(() => _failed = true);
       return;
     }
-    _playPass(asset, onDone: _scheduleAmbient);
+    _playPass(asset, onDone: () {});
   }
 
   void _playEvent(AvatarMotion motion) {
-    if (_suspended || !mounted) return;
+    if (_offstage || _reduceMotion || !mounted) return;
     final asset = widget.motionAssets[motion];
     if (asset == null) return;
-    _playPass(asset, onDone: _scheduleAmbient);
+    // El evento termina en la pose de reposo y se queda ahi (no vuelve a
+    // disparar la llegada).
+    _playPass(asset, onDone: () {});
   }
 
   Future<void> _playPass(String asset, {required VoidCallback onDone}) async {
     _timer?.cancel();
     final token = ++_playToken;
     final codec = await _codecFor(asset);
+    if (kDebugMode) {
+      debugPrint('[PAA] pass #${identityHashCode(this)} token=$token '
+          'frames=${codec?.frameCount} asset=${asset.split('/').last}');
+    }
     if (!mounted || token != _playToken) return;
     if (codec == null) {
       // Sin codec no hay pasada, pero el ciclo ambiental debe seguir vivo
@@ -241,6 +278,10 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
       if (framesShown < codec.frameCount) {
         _timer = Timer(info.duration, advance);
       } else {
+        if (kDebugMode) {
+          debugPrint('[PAA] done #${identityHashCode(this)} token=$token '
+              'shown=$framesShown (held last frame)');
+        }
         onDone();
       }
     }

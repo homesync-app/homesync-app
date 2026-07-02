@@ -10,8 +10,17 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/animated_amount.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
+import 'package:homesync_client/shared/widgets/premium_animated_avatar.dart';
 import 'package:purchases_flutter/purchases_flutter.dart' as rc;
+
+const String _kMascotDir = 'assets/images/premium_3d_avatars';
+const Map<AvatarMotion, String> _kMascotMotions = {
+  AvatarMotion.idle: '$_kMascotDir/animated/premium_orange_cat.webp',
+  AvatarMotion.tada: '$_kMascotDir/animated/premium_orange_cat_tada.webp',
+};
+const String _kMascotFallback = '$_kMascotDir/premium_orange_cat.png';
 
 class PremiumPaywallScreen extends ConsumerStatefulWidget {
   const PremiumPaywallScreen({super.key});
@@ -53,22 +62,24 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
       ),
       body: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: theme.isDarkMode
-                    ? [
-                        theme.background,
-                        AppColors.primary.withValues(alpha: 0.12),
-                        theme.surface,
-                      ]
-                    : const [
-                        AppColors.background,
-                        AppColors.primaryLight,
-                        AppColors.surface,
-                      ],
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: theme.isDarkMode
+                      ? [
+                          theme.background,
+                          AppColors.primary.withValues(alpha: 0.12),
+                          theme.surface,
+                        ]
+                      : const [
+                          AppColors.background,
+                          AppColors.primaryLight,
+                          AppColors.surface,
+                        ],
+                ),
               ),
             ),
           ),
@@ -79,12 +90,12 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
             right: 0,
             child: IgnorePointer(
               child: Container(
-                height: 320,
+                height: 340,
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
                     colors: [
                       AppColors.accentGold.withValues(
-                        alpha: theme.isDarkMode ? 0.14 : 0.12,
+                        alpha: theme.isDarkMode ? 0.16 : 0.14,
                       ),
                       Colors.transparent,
                     ],
@@ -95,83 +106,51 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
           ),
           SafeArea(
             top: false,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              child: Column(
-                children: [
-                  if (isPremium)
-                    const _PremiumActiveContent()
-                        .animate()
-                        .fadeIn(duration: 350.ms)
-                        .slideY(begin: 0.04)
-                  else ...[
-                    const _HeroHeader()
-                        .animate()
-                        .fadeIn(duration: 350.ms)
-                        .slideY(begin: 0.06),
-                    const SizedBox(height: 18),
-                    productsAsync.when(
-                      data: (products) => _ProductList(products: products),
-                      loading: () => const CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
-                      error: (err, _) => _StoreError(error: err.toString()),
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+                    child: Column(
+                      children: [
+                        if (isPremium)
+                          const _PremiumActiveContent()
+                              .animate()
+                              .fadeIn(duration: 350.ms)
+                              .slideY(begin: 0.04)
+                        else ...[
+                          const _HeroHeader()
+                              .animate()
+                              .fadeIn(duration: 350.ms)
+                              .slideY(begin: 0.06),
+                          const SizedBox(height: 22),
+                          const _BenefitsCard()
+                              .animate()
+                              .fadeIn(delay: 140.ms, duration: 350.ms)
+                              .slideY(begin: 0.06),
+                        ],
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        minimumSize: Size.zero,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      onPressed: () async {
-                        final isPremium = await ref
-                            .read(premiumProvider.notifier)
-                            .restorePurchases();
-                        if (isPremium && context.mounted) {
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: Text(
-                        t.premiumRestorePurchases,
-                        style: TextStyle(
-                          color: theme.textSecondary,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (!isPremium)
+                  productsAsync.when(
+                    data: (products) => _PurchasePanel(products: products),
+                    loading: () => const _PanelShell(
+                      child: SizedBox(
+                        height: 160,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    _BenefitCard(
-                      icon: Icons.event_repeat_rounded,
-                      color: AppColors.primary,
-                      title: t.premiumBenefitRecurringPayments,
-                      desc: t.premiumBenefitRecurringPaymentsDesc,
-                    ).animate().fadeIn(delay: 120.ms).slideY(begin: 0.08),
-                    _BenefitCard(
-                      icon: Icons.shopping_cart_checkout_rounded,
-                      color: AppColors.sage,
-                      title: t.premiumBenefitShoppingFinanceSync,
-                      desc: t.premiumBenefitShoppingFinanceSyncDesc,
-                    ).animate().fadeIn(delay: 180.ms).slideY(begin: 0.08),
-                    _BenefitCard(
-                      icon: Icons.insights_rounded,
-                      color: AppColors.accentBlue,
-                      title: t.premiumBenefitAdvancedStats,
-                      desc: t.premiumBenefitAdvancedStatsDesc,
-                    ).animate().fadeIn(delay: 240.ms).slideY(begin: 0.08),
-                    _BenefitCard(
-                      icon: Icons.palette_rounded,
-                      color: AppColors.accentPurple,
-                      title: t.premiumBenefitFullCustomization,
-                      desc: t.premiumBenefitFullCustomizationDesc,
-                    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.08),
-                  ],
-                ],
-              ),
+                    error: (err, _) => _PanelShell(
+                      child: _StoreError(error: err.toString()),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
@@ -190,44 +169,29 @@ class _HeroHeader extends StatelessWidget {
 
     return Column(
       children: [
-        // Gold medallion: the single hero element of the screen.
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFF2C266), Color(0xFFDF9A2E)],
-            ),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.55),
-              width: 1.4,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.accentGold.withValues(alpha: 0.38),
-                blurRadius: 26,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.workspace_premium_rounded,
-            color: Colors.white,
-            size: 36,
-          ),
-        )
-            .animate()
-            .scale(
-              begin: const Offset(0.8, 0.8),
-              end: const Offset(1, 1),
-              duration: 500.ms,
-              curve: Curves.easeOutBack,
-            )
-            .fadeIn(duration: 250.ms),
-        const SizedBox(height: 14),
+        // Brand mascot instead of a generic medallion: the hero moment.
+        SizedBox(
+          width: 148,
+          height: 148,
+          child: const PremiumAnimatedAvatar(
+            motionAssets: _kMascotMotions,
+            fallbackAsset: _kMascotFallback,
+            ambientMotion: AvatarMotion.tada,
+            // Deja terminar la transicion de ruta + fade del hero antes del
+            // ta-da, para que el gesto se vea completo y no "cortado".
+            arrivalDelay: Duration(milliseconds: 550),
+            size: 148,
+          )
+              .animate()
+              .scale(
+                begin: const Offset(0.86, 0.86),
+                end: const Offset(1, 1),
+                duration: 500.ms,
+                curve: Curves.easeOutBack,
+              )
+              .fadeIn(duration: 250.ms),
+        ),
+        const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
@@ -237,13 +201,25 @@ class _HeroHeader extends StatelessWidget {
               color: AppColors.accentGold.withValues(alpha: 0.32),
             ),
           ),
-          child: Text(
-            t.premiumPaywallEyebrow,
-            style: TextStyle(
-              color: theme.textPrimary,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w800,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.workspace_premium_rounded,
+                color: AppColors.accentGold,
+                size: 14,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                t.premiumPaywallEyebrow,
+                style: TextStyle(
+                  color: theme.textPrimary,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
@@ -251,22 +227,25 @@ class _HeroHeader extends StatelessWidget {
           t.premiumPaywallTitle,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 26,
+            fontSize: 24,
             fontWeight: FontWeight.w900,
             color: theme.textPrimary,
-            letterSpacing: -0.8,
-            height: 1.08,
+            letterSpacing: -0.7,
+            height: 1.1,
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          t.premiumPaywallSubtitle,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w600,
-            color: theme.textSecondary,
-            height: 1.32,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            t.premiumPaywallSubtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              color: theme.textSecondary,
+              height: 1.32,
+            ),
           ),
         ),
       ],
@@ -274,13 +253,81 @@ class _HeroHeader extends StatelessWidget {
   }
 }
 
-class _BenefitCard extends StatelessWidget {
+/// All the benefits grouped in a single soft card, like modern paywalls do,
+/// instead of a stack of setting-like rows.
+class _BenefitsCard extends StatelessWidget {
+  const _BenefitsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+
+    final benefits = [
+      (
+        Icons.event_repeat_rounded,
+        AppColors.primary,
+        t.premiumBenefitRecurringPayments,
+        t.premiumBenefitRecurringPaymentsDesc,
+      ),
+      (
+        Icons.shopping_cart_checkout_rounded,
+        AppColors.sage,
+        t.premiumBenefitShoppingFinanceSync,
+        t.premiumBenefitShoppingFinanceSyncDesc,
+      ),
+      (
+        Icons.insights_rounded,
+        AppColors.accentBlue,
+        t.premiumBenefitAdvancedStats,
+        t.premiumBenefitAdvancedStatsDesc,
+      ),
+      (
+        Icons.palette_rounded,
+        AppColors.accentPurple,
+        t.premiumBenefitFullCustomization,
+        t.premiumBenefitFullCustomizationDesc,
+      ),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.isDarkMode
+            ? theme.surface.withValues(alpha: 0.74)
+            : Colors.white.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+        border: Border.all(color: theme.border.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < benefits.length; i++) ...[
+            _BenefitRow(
+              icon: benefits[i].$1,
+              color: benefits[i].$2,
+              title: benefits[i].$3,
+              desc: benefits[i].$4,
+            ),
+            if (i < benefits.length - 1)
+              Divider(
+                height: 1,
+                thickness: 1,
+                indent: 62,
+                color: theme.border.withValues(alpha: 0.3),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _BenefitRow extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String title;
   final String desc;
 
-  const _BenefitCard({
+  const _BenefitRow({
     required this.icon,
     required this.color,
     required this.title,
@@ -291,72 +338,95 @@ class _BenefitCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-        decoration: BoxDecoration(
-          color: theme.isDarkMode
-              ? theme.surface.withValues(alpha: 0.74)
-              : Colors.white.withValues(alpha: 0.58),
-          borderRadius: BorderRadius.circular(AppRadii.lg),
-          border: Border.all(color: theme.border.withValues(alpha: 0.28)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.13),
-                borderRadius: BorderRadius.circular(AppRadii.lg),
-              ),
-              child: Icon(icon, color: color, size: 19),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.13),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: theme.textPrimary,
-                      height: 1.18,
-                    ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w800,
+                    color: theme.textPrimary,
+                    height: 1.2,
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    desc,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: theme.textSecondary,
-                      height: 1.28,
-                    ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  desc,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: theme.textSecondary,
+                    height: 1.3,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _ProductList extends ConsumerStatefulWidget {
-  final List<rc.Package> products;
+/// Surface pinned to the bottom that holds the whole purchase flow so the
+/// plans and the CTA never scroll away.
+class _PanelShell extends StatelessWidget {
+  final Widget child;
 
-  const _ProductList({required this.products});
+  const _PanelShell({required this.child});
 
   @override
-  ConsumerState<_ProductList> createState() => _ProductListState();
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+      decoration: BoxDecoration(
+        color: theme.isDarkMode ? theme.surface : Colors.white,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadii.xxl),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(
+              alpha: theme.isDarkMode ? 0.42 : 0.08,
+            ),
+            blurRadius: 30,
+            offset: const Offset(0, -10),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
 }
 
-class _ProductListState extends ConsumerState<_ProductList> {
+class _PurchasePanel extends ConsumerStatefulWidget {
+  final List<rc.Package> products;
+
+  const _PurchasePanel({required this.products});
+
+  @override
+  ConsumerState<_PurchasePanel> createState() => _PurchasePanelState();
+}
+
+class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
   rc.Package? _selectedPackage;
 
   bool _isAnnual(rc.Package package) {
@@ -372,7 +442,7 @@ class _ProductListState extends ConsumerState<_ProductList> {
   }
 
   @override
-  void didUpdateWidget(covariant _ProductList oldWidget) {
+  void didUpdateWidget(covariant _PurchasePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.products.isEmpty) return;
     final selectedId = _selectedPackage?.identifier;
@@ -382,18 +452,37 @@ class _ProductListState extends ConsumerState<_ProductList> {
     if (!stillExists) _selectedPackage = _defaultPackage();
   }
 
+  Future<void> _buy(rc.Package package) async {
+    final t = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final isPremium =
+          await ref.read(premiumProvider.notifier).buyProduct(package);
+      if (isPremium && mounted) {
+        AppHaptics.celebrate();
+        Navigator.pop(context);
+      }
+    } catch (_) {
+      // Purchase errors (billing unavailable, DEVELOPER_ERROR on
+      // non-Play builds, region issues, etc.) must never crash the
+      // app — buyProduct already logs them. Show a friendly notice.
+      messenger.showSnackBar(SnackBar(content: Text(t.commonError)));
+    }
+  }
+
+  Future<void> _restore() async {
+    final isPremium =
+        await ref.read(premiumProvider.notifier).restorePurchases();
+    if (isPremium && mounted) Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
+
     if (widget.products.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: theme.surface.withValues(alpha: theme.isDarkMode ? 1 : 0.86),
-          borderRadius: BorderRadius.circular(AppRadii.xl),
-          border: Border.all(color: theme.border),
-        ),
+      return _PanelShell(
         child: Column(
           children: [
             Text(
@@ -447,112 +536,120 @@ class _ProductListState extends ConsumerState<_ProductList> {
         return aAnnual ? -1 : 1;
       });
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          t.premiumChoosePlanTitle,
-          style: TextStyle(
-            color: theme.textPrimary,
-            fontSize: 17,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Container(
-          decoration: BoxDecoration(
-            color: theme.surface.withValues(alpha: theme.isDarkMode ? 1 : 0.9),
-            borderRadius: BorderRadius.circular(AppRadii.xl),
-            border: Border.all(color: theme.border, width: 1.2),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: [
-              for (var index = 0; index < sortedProducts.length; index++) ...[
-                _ProductOptionRow(
-                  package: sortedProducts[index],
-                  isSelected: sortedProducts[index].identifier ==
-                      selectedPackage.identifier,
-                  isAnnual: _isAnnual(sortedProducts[index]),
-                  onTap: () {
-                    AppHaptics.selection();
-                    setState(() => _selectedPackage = sortedProducts[index]);
-                  },
-                ),
-                if (index < sortedProducts.length - 1)
-                  Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: theme.border,
+    return _PanelShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Extra headroom so the floating badge of the annual card breathes.
+          const SizedBox(height: 8),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < sortedProducts.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 10),
+                  Expanded(
+                    child: _PlanCard(
+                      package: sortedProducts[i],
+                      isAnnual: _isAnnual(sortedProducts[i]),
+                      isSelected: sortedProducts[i].identifier ==
+                          selectedPackage.identifier,
+                      onTap: () {
+                        AppHaptics.selection();
+                        setState(
+                          () => _selectedPackage = sortedProducts[i],
+                        );
+                      },
+                    ),
                   ),
+                ],
               ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          AnimatedPress(
+            scale: 0.98,
+            haptic: AppPressHaptic.light,
+            onTap: () => _buy(selectedPackage),
+            child: Container(
+              height: 56,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.primary, AppColors.primaryDark],
+                ),
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.34),
+                    blurRadius: 22,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Text(
+                t.premiumContinueWithPlan,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.1,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                t.premiumCancelAnytime,
+                style: TextStyle(
+                  color: theme.textMuted,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                '  ·  ',
+                style: TextStyle(color: theme.textMuted, fontSize: 11.5),
+              ),
+              TextButton(
+                style: TextButton.styleFrom(
+                  minimumSize: Size.zero,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 6,
+                  ),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: _restore,
+                child: Text(
+                  t.premiumRestorePurchases,
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
             ],
           ),
-        ),
-        const SizedBox(height: 12),
-        AnimatedPress(
-          scale: 0.98,
-          haptic: AppPressHaptic.light,
-          onTap: () async {
-            final messenger = ScaffoldMessenger.of(context);
-            try {
-              final isPremium = await ref
-                  .read(premiumProvider.notifier)
-                  .buyProduct(selectedPackage);
-              if (isPremium && context.mounted) {
-                AppHaptics.celebrate();
-                Navigator.pop(context);
-              }
-            } catch (_) {
-              // Purchase errors (billing unavailable, DEVELOPER_ERROR on
-              // non-Play builds, region issues, etc.) must never crash the
-              // app — buyProduct already logs them. Show a friendly notice.
-              messenger.showSnackBar(
-                SnackBar(content: Text(t.commonError)),
-              );
-            }
-          },
-          child: Container(
-            height: 56,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [AppColors.primary, AppColors.primaryDark],
-              ),
-              borderRadius: BorderRadius.circular(AppRadii.pill),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.34),
-                  blurRadius: 22,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Text(
-              t.premiumContinueWithPlan,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.1,
-              ),
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-class _ProductOptionRow extends StatelessWidget {
+class _PlanCard extends StatelessWidget {
   final rc.Package package;
   final bool isSelected;
   final bool isAnnual;
   final VoidCallback onTap;
 
-  const _ProductOptionRow({
+  const _PlanCard({
     required this.package,
     required this.isSelected,
     required this.isAnnual,
@@ -564,115 +661,111 @@ class _ProductOptionRow extends StatelessWidget {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     final product = package.storeProduct;
-    final periodLabel = isAnnual ? t.premiumAnnualPlan : t.premiumMonthlyPlan;
-    final supportingLabel =
-        isAnnual ? t.premiumBilledAnnually : t.premiumBilledMonthly;
     final monthlyEquivalent = isAnnual
         ? product.pricePerMonthString ?? _formattedMonthlyEquivalent(product)
         : null;
+    final subtitle = monthlyEquivalent != null
+        ? t.premiumMonthlyEquivalent(monthlyEquivalent)
+        : (isAnnual ? t.premiumBilledAnnually : t.premiumBilledMonthly);
 
-    return Material(
-      color: isSelected
-          ? AppColors.primary.withValues(alpha: theme.isDarkMode ? 0.16 : 0.10)
-          : Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
-          child: Row(
-            children: [
-              _PlanRadio(isSelected: isSelected),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.primary.withValues(
+                      alpha: theme.isDarkMode ? 0.16 : 0.07,
+                    )
+                  : (theme.isDarkMode
+                      ? theme.background.withValues(alpha: 0.5)
+                      : theme.background),
+              borderRadius: BorderRadius.circular(AppRadii.xl),
+              border: Border.all(
+                color: isSelected ? AppColors.primary : theme.border,
+                width: isSelected ? 2 : 1.2,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            periodLabel,
-                            style: TextStyle(
-                              color: theme.textPrimary,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                        if (isAnnual) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(
-                                AppRadii.pill,
-                              ),
-                            ),
-                            child: Text(
-                              t.premiumBestValueBadge,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      monthlyEquivalent != null
-                          ? t.premiumMonthlyEquivalent(monthlyEquivalent)
-                          : supportingLabel,
-                      style: TextStyle(
-                        color: theme.textSecondary,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    if (monthlyEquivalent != null)
-                      Text(
-                        supportingLabel,
+                    Expanded(
+                      child: Text(
+                        isAnnual ? t.premiumAnnualPlan : t.premiumMonthlyPlan,
                         style: TextStyle(
-                          color: theme.textMuted,
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
+                          color: theme.textPrimary,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
+                    ),
+                    AnimatedScale(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOutBack,
+                      scale: isSelected ? 1 : 0,
+                      child: const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppColors.primary,
+                        size: 19,
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    product.priceString,
-                    style: TextStyle(
-                      color: theme.textPrimary,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 18,
-                    ),
+                const SizedBox(height: 8),
+                Text(
+                  product.priceString,
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w900,
+                    fontFeatures: kTabularFigures,
                   ),
-                  if (isAnnual)
-                    Text(
-                      t.premiumSavePercent,
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+          if (isAnnual)
+            Positioned(
+              top: -9,
+              left: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                ),
+                child: Text(
+                  t.premiumSavePercent,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -681,37 +774,6 @@ class _ProductOptionRow extends StatelessWidget {
     if (!isAnnual || product.price <= 0) return null;
     final monthlyPrice = product.price / 12;
     return '${product.currencyCode} ${monthlyPrice.toStringAsFixed(2)}';
-  }
-}
-
-class _PlanRadio extends StatelessWidget {
-  final bool isSelected;
-
-  const _PlanRadio({required this.isSelected});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      width: 22,
-      height: 22,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isSelected ? AppColors.primary : Colors.transparent,
-        border: Border.all(
-          color: isSelected ? AppColors.primary : theme.border,
-          width: 2,
-        ),
-      ),
-      child: isSelected
-          ? const Icon(
-              Icons.check_rounded,
-              size: 15,
-              color: Colors.white,
-            )
-          : null,
-    );
   }
 }
 
@@ -736,31 +798,10 @@ class _PremiumActiveContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        _BenefitCard(
-          icon: Icons.event_repeat_rounded,
-          color: AppColors.primary,
-          title: t.premiumBenefitRecurringPayments,
-          desc: t.premiumBenefitRecurringPaymentsDesc,
-        ).animate().fadeIn(delay: 90.ms).slideY(begin: 0.06),
-        _BenefitCard(
-          icon: Icons.shopping_cart_checkout_rounded,
-          color: AppColors.sage,
-          title: t.premiumBenefitShoppingFinanceSync,
-          desc: t.premiumBenefitShoppingFinanceSyncDesc,
-        ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.06),
-        _BenefitCard(
-          icon: Icons.insights_rounded,
-          color: AppColors.accentBlue,
-          title: t.premiumBenefitAdvancedStats,
-          desc: t.premiumBenefitAdvancedStatsDesc,
-        ).animate().fadeIn(delay: 210.ms).slideY(begin: 0.06),
-        _BenefitCard(
-          icon: Icons.palette_rounded,
-          color: AppColors.accentPurple,
-          title: t.premiumBenefitFullCustomization,
-          desc: t.premiumBenefitFullCustomizationDesc,
-        ).animate().fadeIn(delay: 270.ms).slideY(begin: 0.06),
-        const SizedBox(height: 12),
+        const _BenefitsCard().animate().fadeIn(delay: 90.ms).slideY(
+              begin: 0.06,
+            ),
+        const SizedBox(height: 14),
         AnimatedPress(
           scale: 0.98,
           haptic: AppPressHaptic.light,
