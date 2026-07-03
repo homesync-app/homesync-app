@@ -540,7 +540,10 @@ Future<MonthlyProjectionData> monthlyProjection(
   final splitMembers = isFriendsOrRoommates
       ? members
       : members.where((m) => m.isAdult).toList();
-  final memberCount = splitMembers.isNotEmpty ? splitMembers.length : 2;
+  // Fallback 1 (no 2): si los miembros aún no cargaron, mostrar el monto
+  // completo es menos engañoso que inventar una división por la mitad
+  // (y en solo-mode el único adulto ES el total).
+  final memberCount = splitMembers.isNotEmpty ? splitMembers.length : 1;
   // Integrated/shared economy (couple or family): pending planned expenses count
   // in full toward the household rather than being split per member.
   final isSharedEconomy = household?.financeMode == 'shared';
