@@ -618,6 +618,51 @@ Solo lectura. No escribe datos ni necesita `request_id`.
 
 ---
 
+## `generate_planned_payment_reminders_v1()`
+
+Genera recordatorios de pagos planificados para hogares PREMIUM. NO es un RPC de clientes: lo ejecuta el cron diario via la edge function `planned-payment-reminders` (auth `CRON_SECRET`/service role, mismo patron que `cleanup-old-receipts`).
+
+- `planned_payment_upcoming`: el planificado `pending` vence en exactamente 3 dias.
+- `planned_payment_due`: vence hoy.
+
+**Inputs**
+
+Sin parametros (opera sobre `current_date` del servidor).
+
+**Output**
+
+`jsonb`: `{ success, upcoming, due_today, run_date }` — contadores de notificaciones insertadas en esta corrida.
+
+**Tablas / RPCs**
+
+| objeto | R/W | nota |
+|---|---|---|
+| `public.planned_expenses` | R | `status = 'pending'` con `due_date` en hoy o hoy+3 |
+| `public.households` | R | gate premium: `is_premium` y `premium_until` vigente |
+| `public.household_members` | R | destinatarios: `payer_default` o todos los adultos (`parent`/`guardian`/`adult`) |
+| `public.notifications` | W | inserta el recordatorio; el webhook existente lo convierte en push (send-notification) |
+
+**Seguridad**
+
+- `security definer`, `set search_path = public`.
+- `EXECUTE` revocado a `public`/`anon`/`authenticated`; solo `service_role`.
+
+**Idempotencia**
+
+Si: `NOT EXISTS` por `(type, related_entity_id, user_id)`. Correr el cron N veces el mismo dia no duplica; cada periodo de un recurrente es una fila nueva de `planned_expenses`, asi que recuerda una vez por vencimiento.
+
+**Providers a invalidar en cliente**
+
+Ninguno de forma directa (el cliente recibe la notificacion por push/realtime y el listado sale del controller de notificaciones al refrescar).
+
+**Cliente / Ops**
+
+- Edge function: `supabase/functions/planned-payment-reminders/index.ts`.
+- Cron sugerido: diario 12:00 UTC (manana en AR). Configurar en Supabase Cron con header `Authorization: Bearer <CRON_SECRET>`.
+- Copy sin tildes a proposito (convencion de notificaciones de RPC); `type` + `related_entity_*` quedan estructurados para localizarlas client-side mas adelante.
+
+---
+
 ## Apendice: como agregar una entrada nueva
 
 1. Crear la migration con el RPC (`security definer`, `set search_path = public`, validar `current_app_user_id()`).
