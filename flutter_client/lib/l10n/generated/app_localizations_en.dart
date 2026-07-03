@@ -553,6 +553,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String homeTodayProgressSemantic(int done, int total) {
+    return 'Today\'s progress: $done of $total tasks completed';
+  }
+
+  @override
   String get homeAllDoneToday => 'All done for today';
 
   @override

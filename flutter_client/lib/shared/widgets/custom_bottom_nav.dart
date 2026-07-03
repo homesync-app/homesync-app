@@ -34,8 +34,7 @@ class NavClearance extends StatelessWidget {
     return MediaQuery(
       data: raiseClearance
           ? mq.copyWith(
-              viewPadding:
-                  mq.viewPadding.copyWith(bottom: mq.padding.bottom),
+              viewPadding: mq.viewPadding.copyWith(bottom: mq.padding.bottom),
             )
           : mq,
       child: child,
@@ -144,51 +143,57 @@ class _CustomBottomNavTile extends StatelessWidget {
     final theme = context.theme;
     final foreground = isSelected ? theme.primary : theme.textMuted;
 
-    return AnimatedPress(
-      key: item.anchorKey,
-      scale: 0.94,
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: AppMotion.normal,
-        curve: AppMotion.standard,
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? theme.primary.withValues(alpha: theme.isDarkMode ? 0.18 : 0.10)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadii.lg),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedSwitcher(
-              duration: AppMotion.fast,
-              switchInCurve: Curves.easeOutBack,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: ScaleTransition(scale: animation, child: child),
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: item.label,
+      child: AnimatedPress(
+        key: item.anchorKey,
+        scale: 0.94,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: AppMotion.normal,
+          curve: AppMotion.standard,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? theme.primary
+                    .withValues(alpha: theme.isDarkMode ? 0.18 : 0.10)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedSwitcher(
+                duration: AppMotion.fast,
+                switchInCurve: Curves.easeOutBack,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(scale: animation, child: child),
+                ),
+                child: Icon(
+                  isSelected ? item.selectedIcon : item.icon,
+                  key: ValueKey('${item.label}-$isSelected'),
+                  color: foreground,
+                  size: 20,
+                ),
               ),
-              child: Icon(
-                isSelected ? item.selectedIcon : item.icon,
-                key: ValueKey('${item.label}-$isSelected'),
-                color: foreground,
-                size: 20,
+              const SizedBox(height: 4),
+              Text(
+                item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: foreground,
+                  fontSize: 9.5,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              item.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: foreground,
-                fontSize: 9.5,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

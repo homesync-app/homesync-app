@@ -767,9 +767,15 @@ class _MyAppState extends ConsumerState<MyApp> {
       supportedLocales: AppLocalizations.supportedLocales,
       // Status/nav bar icons follow the active theme on every screen,
       // including the ones without an AppBar (home tab, splash, login).
+      // Text scaling respects the system setting but clamps at 1.3x: the
+      // editorial layout (bento tiles, chips, headers con fontSize fijo) no
+      // sobrevive escalas mayores sin overflow.
       builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
         value: AppSystemUi.styleFor(Theme.of(context).brightness),
-        child: child ?? const SizedBox.shrink(),
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.3,
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
       routes: {
         '/__login__': (_) => LoginScreen(prefs: widget.prefs),

@@ -835,46 +835,51 @@ class _TodayProgressChip extends StatelessWidget {
     final complete = total > 0 && done >= total;
     final color = complete ? AppColors.sage : theme.primary;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(AppRadii.pill),
-        border: Border.all(color: color.withValues(alpha: 0.14)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 12,
-            height: 12,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween<double>(
-                begin: 0,
-                end: total == 0 ? 0 : done / total,
+    return Semantics(
+      label: t.homeTodayProgressSemantic(done, total),
+      // El anillo y el "2 de 5" son la misma información: un solo nodo.
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
+          border: Border.all(color: color.withValues(alpha: 0.14)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 12,
+              height: 12,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(
+                  begin: 0,
+                  end: total == 0 ? 0 : done / total,
+                ),
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) => CircularProgressIndicator(
+                  value: value,
+                  strokeWidth: 2.4,
+                  strokeCap: StrokeCap.round,
+                  color: color,
+                  backgroundColor: color.withValues(alpha: 0.16),
+                ),
               ),
-              duration: const Duration(milliseconds: 600),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, _) => CircularProgressIndicator(
-                value: value,
-                strokeWidth: 2.4,
-                strokeCap: StrokeCap.round,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              t.homeTodayProgressLabel(done, total),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
                 color: color,
-                backgroundColor: color.withValues(alpha: 0.16),
+                letterSpacing: -0.1,
               ),
             ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            t.homeTodayProgressLabel(done, total),
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: color,
-              letterSpacing: -0.1,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

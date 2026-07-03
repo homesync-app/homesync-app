@@ -950,6 +950,12 @@ abstract class AppLocalizations {
   /// **'{done} de {total}'**
   String homeTodayProgressLabel(int done, int total);
 
+  /// Screen-reader label for the daily progress chip.
+  ///
+  /// In es, this message translates to:
+  /// **'Progreso de hoy: {done} de {total} tareas completadas'**
+  String homeTodayProgressSemantic(int done, int total);
+
   /// Empty-state message shown on the dashboard when there are no tasks left for today.
   ///
   /// In es, this message translates to:

@@ -402,6 +402,18 @@
       }
     }
   },
+  "homeTodayProgressSemantic": "Progreso de hoy: {done} de {total} tareas completadas",
+  "@homeTodayProgressSemantic": {
+    "description": "Screen-reader label for the daily progress chip.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "homeAllDoneToday": "Todo listo por hoy",
   "@homeAllDoneToday": {
     "description": "Empty-state message shown on the dashboard when there are no tasks left for today."

@@ -263,188 +263,193 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
       shadowBaseAlpha: 0.04,
       shadowPulseAlpha: 0.06,
       shadowPulseBlur: 10,
-      builder: (context, progress, pulse, completionColor) => InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: _isSubmitting
-            ? null
-            : () {
-                AppHaptics.tap();
-                setState(() => _isExpanded = !_isExpanded);
-              },
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          localizedTitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: theme.textPrimary,
-                            letterSpacing: -0.35,
-                            height: 1.12,
-                          ),
-                        ),
-                      ),
-                      if (!_isExpanded && _isSubmitting) ...[
-                        const SizedBox(width: 10),
-                        _completionBadge(categoryColor),
-                      ] else if (!_isExpanded &&
-                          (task.xpReward > 0 || displayCoins > 0)) ...[
-                        const SizedBox(width: 10),
-                        _rewardBadge(task.xpReward, displayCoins),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: [
-                            if (categoryLabel != null)
-                              _pill(
-                                icon: CategoryMapping.getCategoryMaterialIcon(
-                                  task.category ?? '',
-                                ),
-                                label: categoryLabel,
-                                color: categoryColor,
-                                background:
-                                    categoryColor.withValues(alpha: 0.10),
-                                borderAlpha: 0.16,
-                                textWeight: FontWeight.w700,
-                              ),
-                            if (task.isRecurring)
-                              _pill(
-                                icon: Icons.event_repeat_rounded,
-                                label: _recurrenceLabel(
-                                  AppLocalizations.of(context),
-                                  task.recurrenceType,
-                                ),
-                                color: AppColors.accentGold,
-                                background: AppColors.accentGold.withValues(
-                                  alpha: 0.16,
-                                ),
-                              ),
-                            if (task.isOverdue)
-                              _pill(
-                                icon: Icons.priority_high_rounded,
-                                label: AppLocalizations.of(context)
-                                    .tasksPillOverdue,
-                                color: AppColors.accentRed,
-                                background:
-                                    AppColors.accentRed.withValues(alpha: 0.16),
-                                borderAlpha: 0.26,
-                              ),
-                            if (isFamilyMode && task.isPendingApproval)
-                              _pill(
-                                icon: Icons.hourglass_top_rounded,
-                                label: AppLocalizations.of(context)
-                                    .tasksPillInReview,
-                                color: AppColors.primary,
-                                background:
-                                    AppColors.primary.withValues(alpha: 0.12),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              ClipRect(
-                child: AnimatedAlign(
-                  duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeOutCubic,
-                  alignment: Alignment.topCenter,
-                  heightFactor: _isExpanded ? 1.0 : 0.0,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: AppSpacing.md),
-                    child: Column(
+      builder: (context, progress, pulse, completionColor) => Semantics(
+        button: true,
+        expanded: _isExpanded,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: _isSubmitting
+              ? null
+              : () {
+                  AppHaptics.tap();
+                  setState(() => _isExpanded = !_isExpanded);
+                },
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          height: 1,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.transparent,
-                                theme.divider.withValues(alpha: 0.34),
-                                Colors.transparent,
-                              ],
+                        Expanded(
+                          child: Text(
+                            localizedTitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: theme.textPrimary,
+                              letterSpacing: -0.35,
+                              height: 1.12,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            // Minors (teens + children) cannot edit, schedule,
-                            // or reshape tasks. Only adults manage them.
-                            if (!requiresApprovalSubmission) ...[
-                              Expanded(
-                                child: _buildActionTilePremium(
-                                  icon: Icons.edit_rounded,
-                                  label:
-                                      AppLocalizations.of(context).commonEdit,
+                        if (!_isExpanded && _isSubmitting) ...[
+                          const SizedBox(width: 10),
+                          _completionBadge(categoryColor),
+                        ] else if (!_isExpanded &&
+                            (task.xpReward > 0 || displayCoins > 0)) ...[
+                          const SizedBox(width: 10),
+                          _rewardBadge(task.xpReward, displayCoins),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: [
+                              if (categoryLabel != null)
+                                _pill(
+                                  icon: CategoryMapping.getCategoryMaterialIcon(
+                                    task.category ?? '',
+                                  ),
+                                  label: categoryLabel,
+                                  color: categoryColor,
+                                  background:
+                                      categoryColor.withValues(alpha: 0.10),
+                                  borderAlpha: 0.16,
+                                  textWeight: FontWeight.w700,
+                                ),
+                              if (task.isRecurring)
+                                _pill(
+                                  icon: Icons.event_repeat_rounded,
+                                  label: _recurrenceLabel(
+                                    AppLocalizations.of(context),
+                                    task.recurrenceType,
+                                  ),
                                   color: AppColors.accentGold,
-                                  onTap: widget.onEdit,
+                                  background: AppColors.accentGold.withValues(
+                                    alpha: 0.16,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _buildActionTilePremium(
-                                  icon: Icons.schedule_rounded,
+                              if (task.isOverdue)
+                                _pill(
+                                  icon: Icons.priority_high_rounded,
                                   label: AppLocalizations.of(context)
-                                      .tasksActionSchedule,
-                                  color: AppColors.primary,
-                                  onTap: widget.onSchedule,
+                                      .tasksPillOverdue,
+                                  color: AppColors.accentRed,
+                                  background: AppColors.accentRed
+                                      .withValues(alpha: 0.16),
+                                  borderAlpha: 0.26,
                                 ),
-                              ),
-                              const SizedBox(width: 8),
+                              if (isFamilyMode && task.isPendingApproval)
+                                _pill(
+                                  icon: Icons.hourglass_top_rounded,
+                                  label: AppLocalizations.of(context)
+                                      .tasksPillInReview,
+                                  color: AppColors.primary,
+                                  background:
+                                      AppColors.primary.withValues(alpha: 0.12),
+                                ),
                             ],
-                            Expanded(
-                              child: isFamilyMode
-                                  ? _buildFamilyTaskAction(
-                                      isAdultView: isAdultView,
-                                      requiresApprovalSubmission:
-                                          requiresApprovalSubmission,
-                                      isOpenTask: isOpenTask,
-                                      isAssignedToCurrentUser:
-                                          isAssignedToCurrentUser,
-                                      assignedMember: assignedMember,
-                                    )
-                                  : _buildActionTilePremium(
-                                      icon: Icons.check_rounded,
-                                      label: _isSubmitting
-                                          ? AppLocalizations.of(context)
-                                              .tasksActionCompleting
-                                          : AppLocalizations.of(context)
-                                              .tasksActionComplete,
-                                      color: AppColors.accentGreen,
-                                      onTap:
-                                          _isSubmitting ? null : _completeTask,
-                                    ),
-                            ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
+                  ],
+                ),
+                ClipRect(
+                  child: AnimatedAlign(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeOutCubic,
+                    alignment: Alignment.topCenter,
+                    heightFactor: _isExpanded ? 1.0 : 0.0,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.md),
+                      child: Column(
+                        children: [
+                          Container(
+                            height: 1,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.transparent,
+                                  theme.divider.withValues(alpha: 0.34),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              // Minors (teens + children) cannot edit, schedule,
+                              // or reshape tasks. Only adults manage them.
+                              if (!requiresApprovalSubmission) ...[
+                                Expanded(
+                                  child: _buildActionTilePremium(
+                                    icon: Icons.edit_rounded,
+                                    label:
+                                        AppLocalizations.of(context).commonEdit,
+                                    color: AppColors.accentGold,
+                                    onTap: widget.onEdit,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: _buildActionTilePremium(
+                                    icon: Icons.schedule_rounded,
+                                    label: AppLocalizations.of(context)
+                                        .tasksActionSchedule,
+                                    color: AppColors.primary,
+                                    onTap: widget.onSchedule,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              Expanded(
+                                child: isFamilyMode
+                                    ? _buildFamilyTaskAction(
+                                        isAdultView: isAdultView,
+                                        requiresApprovalSubmission:
+                                            requiresApprovalSubmission,
+                                        isOpenTask: isOpenTask,
+                                        isAssignedToCurrentUser:
+                                            isAssignedToCurrentUser,
+                                        assignedMember: assignedMember,
+                                      )
+                                    : _buildActionTilePremium(
+                                        icon: Icons.check_rounded,
+                                        label: _isSubmitting
+                                            ? AppLocalizations.of(context)
+                                                .tasksActionCompleting
+                                            : AppLocalizations.of(context)
+                                                .tasksActionComplete,
+                                        color: AppColors.accentGreen,
+                                        onTap: _isSubmitting
+                                            ? null
+                                            : _completeTask,
+                                      ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

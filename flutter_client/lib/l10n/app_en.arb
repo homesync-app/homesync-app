@@ -402,7 +402,19 @@
       }
     }
   },
-  "homeAllDoneToday": "All done for today",
+  "homeTodayProgressSemantic": "Today's progress: {done} of {total} tasks completed",
+  "@homeTodayProgressSemantic": {
+    "description": "Screen-reader label for the daily progress chip.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAllDoneToday":"All done for today",
   "@homeAllDoneToday": {
     "description": "Empty-state message shown on the dashboard when there are no tasks left for today."
   },
