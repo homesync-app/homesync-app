@@ -95,7 +95,12 @@ class _SettlementConfirmDialogState extends State<SettlementConfirmDialog> {
       setState(() {
         _isSubmitting = false;
         _errorMessage = widget.errorTextBuilder(
-          friendlyErrorMessage(e, t: AppLocalizations.of(context)),
+          // Nullable lookup: los tests montan el diálogo sin delegates de
+          // l10n; sin t cae a los literales legacy en español.
+          friendlyErrorMessage(
+            e,
+            t: Localizations.of<AppLocalizations>(context, AppLocalizations),
+          ),
         );
       });
     }
