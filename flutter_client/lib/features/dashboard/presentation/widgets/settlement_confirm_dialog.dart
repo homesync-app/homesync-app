@@ -5,6 +5,7 @@ import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/inline_error_banner.dart';
 
 /// Confirmation dialog for settling the shared balance ("Equilibrar").
@@ -93,7 +94,9 @@ class _SettlementConfirmDialogState extends State<SettlementConfirmDialog> {
       // traces / Failure type prefixes — the full detail stays in the logs.
       setState(() {
         _isSubmitting = false;
-        _errorMessage = widget.errorTextBuilder(friendlyErrorMessage(e));
+        _errorMessage = widget.errorTextBuilder(
+          friendlyErrorMessage(e, t: AppLocalizations.of(context)),
+        );
       });
     }
   }

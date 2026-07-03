@@ -149,7 +149,7 @@ mixin CoupleChallengeCompletionMixin<T extends ConsumerStatefulWidget>
       Navigator.pop(context); // cerrar loader
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t.rewardsChallengeError(friendlyErrorMessage(e))),
+          content: Text(t.rewardsChallengeError(friendlyErrorMessage(e, t: t))),
           backgroundColor: AppColors.error,
         ),
       );

@@ -733,7 +733,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         // Inline, not a snackbar: the sheet is still open, so a snackbar would
         // render behind the modal barrier and look like nothing happened.
         setState(() {
-          _errorMessage = t.commonErrorWithDetails(friendlyErrorMessage(e));
+          _errorMessage = t.commonErrorWithDetails(friendlyErrorMessage(e, t: t));
         });
       }
     } finally {
@@ -756,7 +756,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       loading: () => const Center(child: AppLoader()),
       error: (e, s) {
         return Center(
-          child: Text(t.commonErrorWithDetails(friendlyErrorMessage(e))),
+          child: Text(t.commonErrorWithDetails(friendlyErrorMessage(e, t: t))),
         );
       },
       data: (members) {

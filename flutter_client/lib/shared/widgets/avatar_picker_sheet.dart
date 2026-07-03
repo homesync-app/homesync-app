@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/errors/error_messages.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
@@ -138,9 +139,12 @@ class AvatarPickerSheet extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
+        final t = AppLocalizations.of(context);
         AppSnackBar.show(
           context,
-          message: AppLocalizations.of(context).avatarPickerUpdateError('$e'),
+          message: t.avatarPickerUpdateError(
+            e is CustomAvatarGenerationException ? e.localized(t) : '$e',
+          ),
           type: AppSnackBarType.error,
         );
       }
@@ -448,9 +452,14 @@ class AvatarPickerSheet extends ConsumerWidget {
       ref.invalidate(customAvatarQuotaResetProvider);
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
+        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(
+              e is CustomAvatarGenerationException
+                  ? e.localized(t)
+                  : friendlyErrorMessage(e, t: t),
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -507,7 +516,9 @@ class AvatarPickerSheet extends ConsumerWidget {
       if (context.mounted) {
         AppSnackBar.show(
           context,
-          message: t.avatarPickerCustomDeleteError('$e'),
+          message: t.avatarPickerCustomDeleteError(
+            e is CustomAvatarGenerationException ? e.localized(t) : '$e',
+          ),
           type: AppSnackBarType.error,
         );
       }

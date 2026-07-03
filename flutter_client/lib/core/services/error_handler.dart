@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../errors/error_messages.dart';
 import '../errors/failures.dart';
 import 'logger_service.dart';
 
@@ -35,20 +37,25 @@ class ErrorHandler {
     StackTrace? stackTrace,
     String? where,
   }) {
+    final t = context.mounted ? AppLocalizations.of(context) : null;
     if (error is Failure) {
       log.w(
         'Handled Failure in $where: ${error.message}',
         error: error,
         stackTrace: stackTrace,
       );
-      _showSnackBar(context, error.message, isError: true);
+      _showSnackBar(context, friendlyErrorMessage(error, t: t), isError: true);
     } else if (error is NetworkException) {
       log.w(
         'Network Exception in $where: ${error.message}',
         error: error,
         stackTrace: stackTrace,
       );
-      _showSnackBar(context, 'Error de red: revisá tu conexión', isError: true);
+      _showSnackBar(
+        context,
+        t?.errorNetworkCheckConnection ?? 'Error de red: revisá tu conexión',
+        isError: true,
+      );
     } else if (error is OfflineException) {
       log.i(
         'Offline action in $where: ${error.message}',
@@ -57,7 +64,7 @@ class ErrorHandler {
       );
       _showSnackBar(
         context,
-        'Estás offline. Acción guardada para luego.',
+        t?.errorOfflineQueued ?? 'Estás offline. Acción guardada para luego.',
         isError: false,
       );
     } else {
@@ -66,7 +73,11 @@ class ErrorHandler {
         error: error,
         stackTrace: stackTrace,
       );
-      _showSnackBar(context, 'Ha ocurrido un error inesperado', isError: true);
+      _showSnackBar(
+        context,
+        t?.errorUnexpected ?? 'Ha ocurrido un error inesperado',
+        isError: true,
+      );
     }
   }
 

@@ -7652,4 +7652,92 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get rewardTemplateSpecialDessertDescription =>
       'Elegir un postre favorito para después de cenar.';
+
+  @override
+  String get errorGeneric => 'Algo salió mal. Probá de nuevo en un momento.';
+
+  @override
+  String get errorOffline =>
+      'Sin conexión. Verificá tu red e intentá de nuevo.';
+
+  @override
+  String get errorTooManyRequests =>
+      'Demasiadas solicitudes. Reintentá en un momento.';
+
+  @override
+  String get errorServerUnreachable =>
+      'No pudimos conectar con el servidor. Verificá tu red.';
+
+  @override
+  String get errorTimeout => 'La operación tardó demasiado. Probá de nuevo.';
+
+  @override
+  String get errorNetworkCheckConnection => 'Error de red: revisá tu conexión';
+
+  @override
+  String get errorUnexpected => 'Ha ocurrido un error inesperado';
+
+  @override
+  String get errorOfflineQueued => 'Estás offline. Acción guardada para luego.';
+
+  @override
+  String get errorNotAuthenticated => 'Usuario no autenticado';
+
+  @override
+  String get errorHouseholdNotFound => 'Hogar no encontrado';
+
+  @override
+  String get avatarErrorImageTooLarge =>
+      'La imagen es demasiado grande. Probá con otra foto.';
+
+  @override
+  String get avatarErrorSessionExpired =>
+      'Sesión expirada. Iniciá sesión nuevamente.';
+
+  @override
+  String get avatarErrorTimeout =>
+      'La generación tardó demasiado. Probá de nuevo en un momento.';
+
+  @override
+  String get avatarErrorMonthlyLimit =>
+      'Ya usaste tu creación de avatar de este mes. Vas a poder crear otro el mes que viene.';
+
+  @override
+  String get avatarErrorPremiumRequired =>
+      'Esta función es para usuarios Premium.';
+
+  @override
+  String get avatarErrorCreateFailed =>
+      'No se pudo crear el avatar. Probá de nuevo.';
+
+  @override
+  String get avatarErrorInvalidResult =>
+      'El generador no devolvió un avatar válido.';
+
+  @override
+  String get avatarErrorDeleteFailed =>
+      'No se pudo eliminar el avatar. Probá de nuevo.';
+
+  @override
+  String get avatarErrorSaveFailed => 'No se pudo guardar el avatar generado.';
+
+  @override
+  String editTaskDeleteBody(String title) {
+    return 'Se va a eliminar \"$title\" y no se puede deshacer.';
+  }
+
+  @override
+  String get financeOnlyConfirmTitle => 'Confirmar cambio';
+
+  @override
+  String financeOnlyConfirmBody(String action) {
+    String _temp0 = intl.Intl.selectLogic(
+      action,
+      {
+        'enable': 'activar',
+        'other': 'desactivar',
+      },
+    );
+    return 'Al $_temp0 el modo \"Solo finanzas\", TODOS los miembros del hogar verán solo funcionalidades financieras (sin tareas, compras, etc.). Esta configuración se aplica a todo el hogar.';
+  }
 }

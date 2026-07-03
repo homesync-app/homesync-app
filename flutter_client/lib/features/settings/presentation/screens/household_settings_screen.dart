@@ -373,24 +373,22 @@ class _HouseholdSettingsScreenState
   }
 
   Future<void> _confirmAndUpdateTasksEnabled(bool enabled) async {
-    final action = enabled ? 'activar' : 'desactivar';
+    final t = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Confirmar cambio'),
+        title: Text(t.financeOnlyConfirmTitle),
         content: Text(
-          'Al $action el modo "Solo finanzas", TODOS los miembros del hogar '
-          'verán solo funcionalidades financieras (sin tareas, compras, etc.). '
-          'Esta configuración se aplica a todo el hogar.',
+          t.financeOnlyConfirmBody(enabled ? 'enable' : 'disable'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
+            child: Text(t.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Confirmar'),
+            child: Text(t.commonConfirm),
           ),
         ],
       ),

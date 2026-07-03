@@ -159,7 +159,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
               ),
               const SizedBox(height: 18),
               Text(
-                'Se va a eliminar "${widget.task.title}" y no se puede deshacer.',
+                AppLocalizations.of(context).editTaskDeleteBody(
+                  widget.task.title,
+                ),
                 style: TextStyle(
                   fontSize: 15,
                   height: 1.4,

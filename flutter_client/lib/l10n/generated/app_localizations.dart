@@ -12626,6 +12626,138 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Elegir un postre favorito para después de cenar.'**
   String get rewardTemplateSpecialDessertDescription;
+
+  /// No description provided for @errorGeneric.
+  ///
+  /// In es, this message translates to:
+  /// **'Algo salió mal. Probá de nuevo en un momento.'**
+  String get errorGeneric;
+
+  /// No description provided for @errorOffline.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin conexión. Verificá tu red e intentá de nuevo.'**
+  String get errorOffline;
+
+  /// No description provided for @errorTooManyRequests.
+  ///
+  /// In es, this message translates to:
+  /// **'Demasiadas solicitudes. Reintentá en un momento.'**
+  String get errorTooManyRequests;
+
+  /// No description provided for @errorServerUnreachable.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos conectar con el servidor. Verificá tu red.'**
+  String get errorServerUnreachable;
+
+  /// No description provided for @errorTimeout.
+  ///
+  /// In es, this message translates to:
+  /// **'La operación tardó demasiado. Probá de nuevo.'**
+  String get errorTimeout;
+
+  /// No description provided for @errorNetworkCheckConnection.
+  ///
+  /// In es, this message translates to:
+  /// **'Error de red: revisá tu conexión'**
+  String get errorNetworkCheckConnection;
+
+  /// No description provided for @errorUnexpected.
+  ///
+  /// In es, this message translates to:
+  /// **'Ha ocurrido un error inesperado'**
+  String get errorUnexpected;
+
+  /// No description provided for @errorOfflineQueued.
+  ///
+  /// In es, this message translates to:
+  /// **'Estás offline. Acción guardada para luego.'**
+  String get errorOfflineQueued;
+
+  /// No description provided for @errorNotAuthenticated.
+  ///
+  /// In es, this message translates to:
+  /// **'Usuario no autenticado'**
+  String get errorNotAuthenticated;
+
+  /// No description provided for @errorHouseholdNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'Hogar no encontrado'**
+  String get errorHouseholdNotFound;
+
+  /// No description provided for @avatarErrorImageTooLarge.
+  ///
+  /// In es, this message translates to:
+  /// **'La imagen es demasiado grande. Probá con otra foto.'**
+  String get avatarErrorImageTooLarge;
+
+  /// No description provided for @avatarErrorSessionExpired.
+  ///
+  /// In es, this message translates to:
+  /// **'Sesión expirada. Iniciá sesión nuevamente.'**
+  String get avatarErrorSessionExpired;
+
+  /// No description provided for @avatarErrorTimeout.
+  ///
+  /// In es, this message translates to:
+  /// **'La generación tardó demasiado. Probá de nuevo en un momento.'**
+  String get avatarErrorTimeout;
+
+  /// No description provided for @avatarErrorMonthlyLimit.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya usaste tu creación de avatar de este mes. Vas a poder crear otro el mes que viene.'**
+  String get avatarErrorMonthlyLimit;
+
+  /// No description provided for @avatarErrorPremiumRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta función es para usuarios Premium.'**
+  String get avatarErrorPremiumRequired;
+
+  /// No description provided for @avatarErrorCreateFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo crear el avatar. Probá de nuevo.'**
+  String get avatarErrorCreateFailed;
+
+  /// No description provided for @avatarErrorInvalidResult.
+  ///
+  /// In es, this message translates to:
+  /// **'El generador no devolvió un avatar válido.'**
+  String get avatarErrorInvalidResult;
+
+  /// No description provided for @avatarErrorDeleteFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo eliminar el avatar. Probá de nuevo.'**
+  String get avatarErrorDeleteFailed;
+
+  /// No description provided for @avatarErrorSaveFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar el avatar generado.'**
+  String get avatarErrorSaveFailed;
+
+  /// No description provided for @editTaskDeleteBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Se va a eliminar \"{title}\" y no se puede deshacer.'**
+  String editTaskDeleteBody(String title);
+
+  /// No description provided for @financeOnlyConfirmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar cambio'**
+  String get financeOnlyConfirmTitle;
+
+  /// No description provided for @financeOnlyConfirmBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Al {action, select, enable{activar} other{desactivar}} el modo \"Solo finanzas\", TODOS los miembros del hogar verán solo funcionalidades financieras (sin tareas, compras, etc.). Esta configuración se aplica a todo el hogar.'**
+  String financeOnlyConfirmBody(String action);
 }
 
 class _AppLocalizationsDelegate

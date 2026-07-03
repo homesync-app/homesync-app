@@ -4862,5 +4862,41 @@
   "rewardTemplateWeekendFamilyPlan": "Plan del fin de semana",
   "rewardTemplateWeekendFamilyPlanDescription": "Elegir una salida o actividad para hacer juntos.",
   "rewardTemplateSpecialDessert": "Postre especial",
-  "rewardTemplateSpecialDessertDescription": "Elegir un postre favorito para después de cenar."
+  "rewardTemplateSpecialDessertDescription": "Elegir un postre favorito para después de cenar.",
+  "errorGeneric": "Algo salió mal. Probá de nuevo en un momento.",
+  "errorOffline": "Sin conexión. Verificá tu red e intentá de nuevo.",
+  "errorTooManyRequests": "Demasiadas solicitudes. Reintentá en un momento.",
+  "errorServerUnreachable": "No pudimos conectar con el servidor. Verificá tu red.",
+  "errorTimeout": "La operación tardó demasiado. Probá de nuevo.",
+  "errorNetworkCheckConnection": "Error de red: revisá tu conexión",
+  "errorUnexpected": "Ha ocurrido un error inesperado",
+  "errorOfflineQueued": "Estás offline. Acción guardada para luego.",
+  "errorNotAuthenticated": "Usuario no autenticado",
+  "errorHouseholdNotFound": "Hogar no encontrado",
+  "avatarErrorImageTooLarge": "La imagen es demasiado grande. Probá con otra foto.",
+  "avatarErrorSessionExpired": "Sesión expirada. Iniciá sesión nuevamente.",
+  "avatarErrorTimeout": "La generación tardó demasiado. Probá de nuevo en un momento.",
+  "avatarErrorMonthlyLimit": "Ya usaste tu creación de avatar de este mes. Vas a poder crear otro el mes que viene.",
+  "avatarErrorPremiumRequired": "Esta función es para usuarios Premium.",
+  "avatarErrorCreateFailed": "No se pudo crear el avatar. Probá de nuevo.",
+  "avatarErrorInvalidResult": "El generador no devolvió un avatar válido.",
+  "avatarErrorDeleteFailed": "No se pudo eliminar el avatar. Probá de nuevo.",
+  "avatarErrorSaveFailed": "No se pudo guardar el avatar generado.",
+  "editTaskDeleteBody": "Se va a eliminar \"{title}\" y no se puede deshacer.",
+  "@editTaskDeleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "financeOnlyConfirmTitle": "Confirmar cambio",
+  "financeOnlyConfirmBody": "Al {action, select, enable{activar} other{desactivar}} el modo \"Solo finanzas\", TODOS los miembros del hogar verán solo funcionalidades financieras (sin tareas, compras, etc.). Esta configuración se aplica a todo el hogar.",
+  "@financeOnlyConfirmBody": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  }
 }

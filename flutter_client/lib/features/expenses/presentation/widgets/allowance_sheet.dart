@@ -117,7 +117,7 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _errorMessage = t.allowanceSendError(friendlyErrorMessage(e));
+        _errorMessage = t.allowanceSendError(friendlyErrorMessage(e, t: t));
       });
     }
   }

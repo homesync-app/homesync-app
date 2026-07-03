@@ -4145,5 +4145,41 @@
   "rewardTemplateWeekendFamilyPlan": "Weekend family plan",
   "rewardTemplateWeekendFamilyPlanDescription": "Choose an outing or activity to do together.",
   "rewardTemplateSpecialDessert": "Special dessert",
-  "rewardTemplateSpecialDessertDescription": "Pick a favorite dessert for after dinner."
+  "rewardTemplateSpecialDessertDescription": "Pick a favorite dessert for after dinner.",
+  "errorGeneric": "Something went wrong. Try again in a moment.",
+  "errorOffline": "No connection. Check your network and try again.",
+  "errorTooManyRequests": "Too many requests. Try again in a moment.",
+  "errorServerUnreachable": "We couldn't reach the server. Check your network.",
+  "errorTimeout": "The operation took too long. Try again.",
+  "errorNetworkCheckConnection": "Network error: check your connection",
+  "errorUnexpected": "An unexpected error occurred",
+  "errorOfflineQueued": "You're offline. Action saved for later.",
+  "errorNotAuthenticated": "Not signed in",
+  "errorHouseholdNotFound": "Household not found",
+  "avatarErrorImageTooLarge": "That image is too large. Try another photo.",
+  "avatarErrorSessionExpired": "Session expired. Please sign in again.",
+  "avatarErrorTimeout": "Generation took too long. Try again in a moment.",
+  "avatarErrorMonthlyLimit": "You already used this month's avatar creation. You can create another one next month.",
+  "avatarErrorPremiumRequired": "This feature is for Premium users.",
+  "avatarErrorCreateFailed": "Couldn't create the avatar. Try again.",
+  "avatarErrorInvalidResult": "The generator didn't return a valid avatar.",
+  "avatarErrorDeleteFailed": "Couldn't delete the avatar. Try again.",
+  "avatarErrorSaveFailed": "Couldn't save the generated avatar.",
+  "editTaskDeleteBody": "\"{title}\" will be deleted and this can't be undone.",
+  "@editTaskDeleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "financeOnlyConfirmTitle": "Confirm change",
+  "financeOnlyConfirmBody": "When you {action, select, enable{enable} other{disable}} \"Finance only\" mode, ALL household members will see only finance features (no tasks, shopping, etc.). This setting applies to the whole household.",
+  "@financeOnlyConfirmBody": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  }
 }
