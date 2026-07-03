@@ -2,10 +2,20 @@ import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'logger_service.dart';
+
 class AppIdentityService extends ChangeNotifier {
   AppIdentityService._();
 
   static final AppIdentityService instance = AppIdentityService._();
+
+  // Defensa en profundidad: la raíz (auth.uid() casteado a uuid en el RPC) ya
+  // está arreglada server-side, pero un Firebase UID crudo cacheado acá
+  // envenenaría todos los RPCs de finanzas/tareas. Rechazar la escritura es
+  // gratis y deja rastro en logs.
+  static final RegExp _uuidPattern = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+  );
 
   SupabaseClient? _client;
   String? _currentUserId;
@@ -33,7 +43,14 @@ class AppIdentityService extends ChangeNotifier {
   /// Directly sets the resolved user ID (e.g., from a security-definer RPC
   /// whose return value is already trusted, avoiding an extra anon DB query).
   void setDirectUserId(String userId) {
-    if (userId.isNotEmpty && userId != _currentUserId) {
+    if (!_uuidPattern.hasMatch(userId)) {
+      log.w(
+        'AppIdentityService.setDirectUserId rejected non-uuid value: $userId',
+        stackTrace: StackTrace.current,
+      );
+      return;
+    }
+    if (userId != _currentUserId) {
       _currentUserId = userId;
       notifyListeners();
     }
