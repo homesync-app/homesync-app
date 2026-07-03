@@ -12753,6 +12753,127 @@ abstract class AppLocalizations {
   /// **'Se va a eliminar \"{title}\" y no se puede deshacer.'**
   String editTaskDeleteBody(String title);
 
+  /// No description provided for @notifTaskAssignedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva tarea asignada'**
+  String get notifTaskAssignedTitle;
+
+  /// No description provided for @notifTaskAssignedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'{actor} te asignó la tarea: {task}'**
+  String notifTaskAssignedBody(String actor, String task);
+
+  /// No description provided for @notifTaskCompletedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tarea completada'**
+  String get notifTaskCompletedTitle;
+
+  /// No description provided for @notifTaskCompletedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'{actor} completó: {task}'**
+  String notifTaskCompletedBody(String actor, String task);
+
+  /// No description provided for @notifTaskPendingApprovalTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tarea pendiente de aprobación'**
+  String get notifTaskPendingApprovalTitle;
+
+  /// No description provided for @notifTaskPendingApprovalBody.
+  ///
+  /// In es, this message translates to:
+  /// **'{actor} completó \"{task}\"'**
+  String notifTaskPendingApprovalBody(String actor, String task);
+
+  /// No description provided for @notifTaskApprovedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tarea aprobada'**
+  String get notifTaskApprovedTitle;
+
+  /// No description provided for @notifTaskApprovedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'\"{task}\" fue aprobada. Ganaste {coins} coins.'**
+  String notifTaskApprovedBody(String task, int coins);
+
+  /// No description provided for @notifTaskRejectedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tarea no aprobada'**
+  String get notifTaskRejectedTitle;
+
+  /// No description provided for @notifTaskRejectedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu tarea \"{task}\" necesita ajustes.'**
+  String notifTaskRejectedBody(String task);
+
+  /// No description provided for @notifExpenseAddedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevo movimiento'**
+  String get notifExpenseAddedTitle;
+
+  /// No description provided for @notifExpenseAddedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'{actor} {kind, select, groceries{compró en} other{gastó en}} {title} ({amount})'**
+  String notifExpenseAddedBody(
+      String actor, String kind, String title, String amount);
+
+  /// No description provided for @notifSettlementTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Deuda saldada!'**
+  String get notifSettlementTitle;
+
+  /// No description provided for @notifSettlementBody.
+  ///
+  /// In es, this message translates to:
+  /// **'{actor} saldó su deuda de {amount}'**
+  String notifSettlementBody(String actor, String amount);
+
+  /// No description provided for @notifWeeklySummaryTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu resumen semanal está listo'**
+  String get notifWeeklySummaryTitle;
+
+  /// No description provided for @notifWeeklySummaryBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Mirá cómo cerró la semana del hogar: cumplimiento, MVP y gastos.'**
+  String get notifWeeklySummaryBody;
+
+  /// No description provided for @notifPlannedUpcomingTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Pago próximo: {title}'**
+  String notifPlannedUpcomingTitle(String title);
+
+  /// No description provided for @notifPlannedUpcomingBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Vence el {date} - {amount}'**
+  String notifPlannedUpcomingBody(String date, String amount);
+
+  /// No description provided for @notifPlannedDueTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Vence hoy: {title}'**
+  String notifPlannedDueTitle(String title);
+
+  /// No description provided for @notifPlannedDueBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Registralo desde Finanzas cuando lo pagues - {amount}'**
+  String notifPlannedDueBody(String amount);
+
   /// No description provided for @financeOnlyConfirmTitle.
   ///
   /// In es, this message translates to:

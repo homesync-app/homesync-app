@@ -7732,6 +7732,97 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get notifTaskAssignedTitle => 'Nueva tarea asignada';
+
+  @override
+  String notifTaskAssignedBody(String actor, String task) {
+    return '$actor te asignó la tarea: $task';
+  }
+
+  @override
+  String get notifTaskCompletedTitle => 'Tarea completada';
+
+  @override
+  String notifTaskCompletedBody(String actor, String task) {
+    return '$actor completó: $task';
+  }
+
+  @override
+  String get notifTaskPendingApprovalTitle => 'Tarea pendiente de aprobación';
+
+  @override
+  String notifTaskPendingApprovalBody(String actor, String task) {
+    return '$actor completó \"$task\"';
+  }
+
+  @override
+  String get notifTaskApprovedTitle => 'Tarea aprobada';
+
+  @override
+  String notifTaskApprovedBody(String task, int coins) {
+    return '\"$task\" fue aprobada. Ganaste $coins coins.';
+  }
+
+  @override
+  String get notifTaskRejectedTitle => 'Tarea no aprobada';
+
+  @override
+  String notifTaskRejectedBody(String task) {
+    return 'Tu tarea \"$task\" necesita ajustes.';
+  }
+
+  @override
+  String get notifExpenseAddedTitle => 'Nuevo movimiento';
+
+  @override
+  String notifExpenseAddedBody(
+      String actor, String kind, String title, String amount) {
+    String _temp0 = intl.Intl.selectLogic(
+      kind,
+      {
+        'groceries': 'compró en',
+        'other': 'gastó en',
+      },
+    );
+    return '$actor $_temp0 $title ($amount)';
+  }
+
+  @override
+  String get notifSettlementTitle => '¡Deuda saldada!';
+
+  @override
+  String notifSettlementBody(String actor, String amount) {
+    return '$actor saldó su deuda de $amount';
+  }
+
+  @override
+  String get notifWeeklySummaryTitle => 'Tu resumen semanal está listo';
+
+  @override
+  String get notifWeeklySummaryBody =>
+      'Mirá cómo cerró la semana del hogar: cumplimiento, MVP y gastos.';
+
+  @override
+  String notifPlannedUpcomingTitle(String title) {
+    return 'Pago próximo: $title';
+  }
+
+  @override
+  String notifPlannedUpcomingBody(String date, String amount) {
+    return 'Vence el $date - $amount';
+  }
+
+  @override
+  String notifPlannedDueTitle(String title) {
+    return 'Vence hoy: $title';
+  }
+
+  @override
+  String notifPlannedDueBody(String amount) {
+    return 'Registralo desde Finanzas cuando lo pagues - $amount';
+  }
+
+  @override
   String get financeOnlyConfirmTitle => 'Confirmar cambio';
 
   @override

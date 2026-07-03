@@ -8,6 +8,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/notifications/domain/entities/app_notification.dart';
 import 'package:homesync_client/features/notifications/presentation/providers/notifications_provider.dart';
+import 'package:homesync_client/features/notifications/presentation/utils/notification_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -137,6 +138,10 @@ class _NotificationCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final content = localizedNotificationContent(
+      AppLocalizations.of(context),
+      notification,
+    );
     return InkWell(
       onTap: () async {
         if (notification.isRead) {
@@ -190,7 +195,7 @@ class _NotificationCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    notification.title,
+                    content.title,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: notification.isRead
@@ -201,7 +206,7 @@ class _NotificationCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    notification.body,
+                    content.body,
                     style: TextStyle(
                       fontSize: 14,
                       color: notification.isRead
@@ -211,7 +216,10 @@ class _NotificationCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    timeago.format(notification.createdAt, locale: 'es'),
+                    timeago.format(
+                      notification.createdAt,
+                      locale: Localizations.localeOf(context).languageCode,
+                    ),
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.textMuted,

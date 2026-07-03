@@ -4902,6 +4902,130 @@
       }
     }
   },
+  "notifTaskAssignedTitle": "Nueva tarea asignada",
+  "notifTaskAssignedBody": "{actor} te asignó la tarea: {task}",
+  "@notifTaskAssignedBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "notifTaskCompletedTitle": "Tarea completada",
+  "notifTaskCompletedBody": "{actor} completó: {task}",
+  "@notifTaskCompletedBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "notifTaskPendingApprovalTitle": "Tarea pendiente de aprobación",
+  "notifTaskPendingApprovalBody": "{actor} completó \"{task}\"",
+  "@notifTaskPendingApprovalBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "notifTaskApprovedTitle": "Tarea aprobada",
+  "notifTaskApprovedBody": "\"{task}\" fue aprobada. Ganaste {coins} coins.",
+  "@notifTaskApprovedBody": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      },
+      "coins": {
+        "type": "int"
+      }
+    }
+  },
+  "notifTaskRejectedTitle": "Tarea no aprobada",
+  "notifTaskRejectedBody": "Tu tarea \"{task}\" necesita ajustes.",
+  "@notifTaskRejectedBody": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "notifExpenseAddedTitle": "Nuevo movimiento",
+  "notifExpenseAddedBody": "{actor} {kind, select, groceries{compró en} other{gastó en}} {title} ({amount})",
+  "@notifExpenseAddedBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "kind": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSettlementTitle": "¡Deuda saldada!",
+  "notifSettlementBody": "{actor} saldó su deuda de {amount}",
+  "@notifSettlementBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifWeeklySummaryTitle": "Tu resumen semanal está listo",
+  "notifWeeklySummaryBody": "Mirá cómo cerró la semana del hogar: cumplimiento, MVP y gastos.",
+  "notifPlannedUpcomingTitle": "Pago próximo: {title}",
+  "@notifPlannedUpcomingTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPlannedUpcomingBody": "Vence el {date} - {amount}",
+  "@notifPlannedUpcomingBody": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPlannedDueTitle": "Vence hoy: {title}",
+  "@notifPlannedDueTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPlannedDueBody": "Registralo desde Finanzas cuando lo pagues - {amount}",
+  "@notifPlannedDueBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "financeOnlyConfirmTitle": "Confirmar cambio",
   "financeOnlyConfirmBody": "Al {action, select, enable{activar} other{desactivar}} el modo \"Solo finanzas\", TODOS los miembros del hogar verán solo funcionalidades financieras (sin tareas, compras, etc.). Esta configuración se aplica a todo el hogar.",
   "@financeOnlyConfirmBody": {

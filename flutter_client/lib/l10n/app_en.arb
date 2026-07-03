@@ -4185,6 +4185,130 @@
       }
     }
   },
+  "notifTaskAssignedTitle": "New task assigned",
+  "notifTaskAssignedBody": "{actor} assigned you the task: {task}",
+  "@notifTaskAssignedBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "notifTaskCompletedTitle": "Task completed",
+  "notifTaskCompletedBody": "{actor} completed: {task}",
+  "@notifTaskCompletedBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "notifTaskPendingApprovalTitle": "Task awaiting approval",
+  "notifTaskPendingApprovalBody": "{actor} completed \"{task}\"",
+  "@notifTaskPendingApprovalBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "notifTaskApprovedTitle": "Task approved",
+  "notifTaskApprovedBody": "\"{task}\" was approved. You earned {coins} coins.",
+  "@notifTaskApprovedBody": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      },
+      "coins": {
+        "type": "int"
+      }
+    }
+  },
+  "notifTaskRejectedTitle": "Task not approved",
+  "notifTaskRejectedBody": "Your task \"{task}\" needs some changes.",
+  "@notifTaskRejectedBody": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "notifExpenseAddedTitle": "New transaction",
+  "notifExpenseAddedBody": "{actor} {kind, select, groceries{shopped at} other{spent on}} {title} ({amount})",
+  "@notifExpenseAddedBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "kind": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSettlementTitle": "Debt settled!",
+  "notifSettlementBody": "{actor} settled their debt of {amount}",
+  "@notifSettlementBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifWeeklySummaryTitle": "Your weekly summary is ready",
+  "notifWeeklySummaryBody": "See how the household's week went: completion, MVP and spending.",
+  "notifPlannedUpcomingTitle": "Upcoming payment: {title}",
+  "@notifPlannedUpcomingTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPlannedUpcomingBody": "Due {date} - {amount}",
+  "@notifPlannedUpcomingBody": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPlannedDueTitle": "Due today: {title}",
+  "@notifPlannedDueTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPlannedDueBody": "Log it from Finances once you pay it - {amount}",
+  "@notifPlannedDueBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "financeOnlyConfirmTitle": "Confirm change",
   "financeOnlyConfirmBody": "When you {action, select, enable{enable} other{disable}} \"Finance only\" mode, ALL household members will see only finance features (no tasks, shopping, etc.). This setting applies to the whole household.",
   "@financeOnlyConfirmBody": {
