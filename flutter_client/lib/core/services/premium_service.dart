@@ -79,6 +79,17 @@ class PremiumService {
       if (await _ensureConfigured()) {
         final customerInfo = await rc.Purchases.getCustomerInfo();
         if (_hasPremium(customerInfo)) return true;
+        // Diagnostico: hay compra pero no el entitlement esperado => casi
+        // seguro el producto no esta vinculado al entitlement 'premium' en
+        // el dashboard de RevenueCat (o el fallback de plan_tier no corrio).
+        if (customerInfo.activeSubscriptions.isNotEmpty ||
+            customerInfo.entitlements.active.isNotEmpty) {
+          log.e(
+            'RevenueCat: subs activas sin entitlement "$premiumEntitlementId" '
+            '(entitlements=${customerInfo.entitlements.active.keys.toList()} '
+            'subs=${customerInfo.activeSubscriptions})',
+          );
+        }
       }
     } catch (e, stack) {
       log.w(
