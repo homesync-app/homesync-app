@@ -2075,6 +2075,8 @@
   "expensesStatTilePending": "Pending",
   "expensesProjectionPendingShare": "Your pending share",
   "expensesProjectionEstimated": "Estimated close",
+  "expensesProjectionOwedToYou": "Owed to you",
+  "expensesProjectionYouOwe": "You owe",
   "expensesProjectionTitle": "Projection breakdown",
   "expensesProjectionSubtitle": "Here's how we arrive at your end-of-month estimate.",
   "expensesProjectionRowBalance": "Your current balance",

@@ -5271,6 +5271,18 @@ abstract class AppLocalizations {
   /// **'Cierre estimado'**
   String get expensesProjectionEstimated;
 
+  /// No description provided for @expensesProjectionOwedToYou.
+  ///
+  /// In es, this message translates to:
+  /// **'Te deben'**
+  String get expensesProjectionOwedToYou;
+
+  /// No description provided for @expensesProjectionYouOwe.
+  ///
+  /// In es, this message translates to:
+  /// **'Debés'**
+  String get expensesProjectionYouOwe;
+
   /// No description provided for @expensesProjectionTitle.
   ///
   /// In es, this message translates to:

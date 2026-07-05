@@ -3291,6 +3291,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expensesProjectionEstimated => 'Estimated close';
 
   @override
+  String get expensesProjectionOwedToYou => 'Owed to you';
+
+  @override
+  String get expensesProjectionYouOwe => 'You owe';
+
+  @override
   String get expensesProjectionTitle => 'Projection breakdown';
 
   @override

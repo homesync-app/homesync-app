@@ -2110,6 +2110,8 @@
   "expensesStatTilePending": "Pendiente",
   "expensesProjectionPendingShare": "Tu parte pendiente",
   "expensesProjectionEstimated": "Cierre estimado",
+  "expensesProjectionOwedToYou": "Te deben",
+  "expensesProjectionYouOwe": "Debés",
   "expensesProjectionTitle": "Cálculo de proyección",
   "expensesProjectionSubtitle": "Así llegamos a tu cierre estimado para fin de mes.",
   "expensesProjectionRowBalance": "Tu balance actual",

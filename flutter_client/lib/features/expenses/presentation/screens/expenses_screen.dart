@@ -482,6 +482,25 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     return item.amount / _householdMemberCount();
   }
 
+  /// Intercala el divisor vertical del pie entre celdas y las expande.
+  List<Widget> _withFooterDividers(AppThemeColors theme, List<Widget> cells) {
+    final children = <Widget>[];
+    for (var i = 0; i < cells.length; i++) {
+      if (i > 0) {
+        children.add(
+          Container(
+            height: 28,
+            width: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 18),
+            color: theme.border.withValues(alpha: 0.62),
+          ),
+        );
+      }
+      children.add(Expanded(child: cells[i]));
+    }
+    return children;
+  }
+
   Widget _buildProjectionStat(
     String label,
     num amount,
@@ -506,15 +525,19 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             ),
           ),
           const SizedBox(height: 4),
-          AnimatedAmount(
-            value: amount.toDouble(),
-            locale: ref.watch(currencyProvider).locale,
-            prefix: ref.watch(currencyProvider).inputPrefix(),
-            style: TextStyle(
-              color: isBold ? theme.textPrimary : color,
-              fontSize: isBold ? 20 : 17,
-              fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
-              letterSpacing: isBold ? -0.7 : -0.3,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: AnimatedAmount(
+              value: amount.toDouble(),
+              locale: ref.watch(currencyProvider).locale,
+              prefix: ref.watch(currencyProvider).inputPrefix(),
+              style: TextStyle(
+                color: isBold ? theme.textPrimary : color,
+                fontSize: isBold ? 20 : 17,
+                fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
+                letterSpacing: isBold ? -0.7 : -0.3,
+              ),
             ),
           ),
         ],
@@ -794,10 +817,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         ),
                       ),
                     ],
-                    if (showDebtChip) ...[
-                      const SizedBox(height: 10),
-                      _buildDebtChip(myDebtBalance),
-                    ],
                     if (hasIncome || hasPending) ...[
                       const SizedBox(height: 18),
                       Row(
@@ -849,7 +868,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   ],
                 ),
               ),
-              if (hasIncome)
+              if (hasIncome || showDebtChip)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.lg,
@@ -864,24 +883,27 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     ),
                   ),
                   child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildProjectionStat(
+                    children: _withFooterDividers(theme, [
+                      // Deuda viva entre miembros: dato del mes, no accion —
+                      // saldar solo lo inicia quien debe (flujo del Home).
+                      if (showDebtChip)
+                        _buildProjectionStat(
+                          myDebtBalance > 0
+                              ? t.expensesProjectionOwedToYou
+                              : t.expensesProjectionYouOwe,
+                          myDebtBalance.abs(),
+                          myDebtBalance > 0 ? AppColors.sage : theme.primary,
+                        ),
+                      if (hasIncome)
+                        _buildProjectionStat(
                           t.expensesProjectionPendingShare,
                           projectedPending,
                           theme.textSecondary,
                           onTap: () =>
                               _showPendingBreakdownSheet(projectedPending),
                         ),
-                      ),
-                      Container(
-                        height: 28,
-                        width: 1,
-                        margin: const EdgeInsets.symmetric(horizontal: 18),
-                        color: theme.border.withValues(alpha: 0.62),
-                      ),
-                      Expanded(
-                        child: _buildProjectionStat(
+                      if (hasIncome)
+                        _buildProjectionStat(
                           t.expensesProjectionEstimated,
                           projectedBalance,
                           theme.textPrimary,
@@ -892,8 +914,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             projectedBalance,
                           ),
                         ),
-                      ),
-                    ],
+                    ]),
                   ),
                 ),
             ],
@@ -1123,42 +1144,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ),
         ),
       ],
-    );
-  }
-
-  /// Deuda viva entre miembros por compartidos ya pagados: verde sage cuando
-  /// te deben, primary cuando debés. Solo en economía dividida.
-  Widget _buildDebtChip(double debtBalance) {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-    final owedToMe = debtBalance > 0;
-    final color = owedToMe ? AppColors.sage : theme.primary;
-    final label = owedToMe
-        ? t.expensesYouAreOwed(_formatCurrency(debtBalance.abs()))
-        : t.expensesYouOwe(_formatCurrency(debtBalance.abs()));
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(AppRadii.pill),
-        border: Border.all(color: color.withValues(alpha: 0.16)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.handshake_rounded, size: 13, color: color),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
