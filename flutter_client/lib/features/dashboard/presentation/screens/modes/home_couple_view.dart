@@ -426,7 +426,6 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
         ref.watch(householdMembersProvider).value ?? const <MemberModel>[];
     final caps = ref.watch(householdCapabilitiesProvider);
     final t = AppLocalizations.of(context);
-    final progress = ref.watch(todayTaskProgressProvider).value;
     final locale = Localizations.localeOf(context).toString();
     final dateEyebrow =
         DateFormat('EEEE, d MMM', locale).format(DateTime.now()).toUpperCase();
@@ -463,13 +462,6 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
                       ),
                     ),
                   ),
-                  if (progress != null && progress.total > 0) ...[
-                    const SizedBox(width: 10),
-                    _TodayProgressChip(
-                      done: progress.done,
-                      total: progress.total,
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -817,70 +809,3 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
   }
 }
 
-/// Chip de progreso diario junto al título "Hoy en casa": anillo + "2 de 5".
-/// Vira a verde (sage) cuando el día queda completo.
-class _TodayProgressChip extends StatelessWidget {
-  final int done;
-  final int total;
-
-  const _TodayProgressChip({
-    required this.done,
-    required this.total,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-    final complete = total > 0 && done >= total;
-    final color = complete ? AppColors.sage : theme.primary;
-
-    return Semantics(
-      label: t.homeTodayProgressSemantic(done, total),
-      // El anillo y el "2 de 5" son la misma información: un solo nodo.
-      excludeSemantics: true,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(AppRadii.pill),
-          border: Border.all(color: color.withValues(alpha: 0.14)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 12,
-              height: 12,
-              child: TweenAnimationBuilder<double>(
-                tween: Tween<double>(
-                  begin: 0,
-                  end: total == 0 ? 0 : done / total,
-                ),
-                duration: const Duration(milliseconds: 600),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, _) => CircularProgressIndicator(
-                  value: value,
-                  strokeWidth: 2.4,
-                  strokeCap: StrokeCap.round,
-                  color: color,
-                  backgroundColor: color.withValues(alpha: 0.16),
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              t.homeTodayProgressLabel(done, total),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: color,
-                letterSpacing: -0.1,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
