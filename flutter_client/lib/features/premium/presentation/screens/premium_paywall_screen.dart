@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +22,7 @@ const Map<AvatarMotion, String> _kMascotMotions = {
   AvatarMotion.idle: '$_kMascotDir/animated/premium_orange_cat.webp',
   AvatarMotion.tada: '$_kMascotDir/animated/premium_orange_cat_tada.webp',
 };
-const String _kMascotFallback = '$_kMascotDir/premium_orange_cat.png';
+const String _kMascotFallback = '$_kMascotDir/premium_orange_cat.webp';
 
 class PremiumPaywallScreen extends ConsumerStatefulWidget {
   const PremiumPaywallScreen({super.key});
@@ -104,56 +106,97 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
               ),
             ),
           ),
+          // El contenido scrollea a pantalla completa y se desliza POR DEBAJO
+          // del panel de compra flotante: sin costura dura entre ambos.
           SafeArea(
             top: false,
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-                    child: Column(
-                      children: [
-                        if (isPremium)
-                          const _PremiumActiveContent()
-                              .animate()
-                              .fadeIn(duration: 350.ms)
-                              .slideY(begin: 0.04)
-                        else ...[
-                          const _HeroHeader()
-                              .animate()
-                              .fadeIn(duration: 350.ms)
-                              .slideY(begin: 0.06),
-                          const SizedBox(height: 22),
-                          const _BenefitsCard()
-                              .animate()
-                              .fadeIn(delay: 140.ms, duration: 350.ms)
-                              .slideY(begin: 0.06),
-                        ],
-                      ],
+            bottom: isPremium,
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(20, 4, 20, isPremium ? 24 : 320),
+              child: Column(
+                children: [
+                  if (isPremium)
+                    const _PremiumActiveContent()
+                        .animate()
+                        .fadeIn(duration: 350.ms)
+                        .slideY(begin: 0.04)
+                  else ...[
+                    const _HeroHeader()
+                        .animate()
+                        .fadeIn(duration: 350.ms)
+                        .slideY(begin: 0.06),
+                    const SizedBox(height: 22),
+                    const _BenefitsCard()
+                        .animate()
+                        .fadeIn(delay: 140.ms, duration: 350.ms)
+                        .slideY(begin: 0.06),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          if (!isPremium)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: productsAsync.when(
+                data: (products) => _PurchasePanel(products: products),
+                loading: () => const _PanelShell(
+                  child: SizedBox(
+                    height: 160,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 ),
-                if (!isPremium)
-                  productsAsync.when(
-                    data: (products) => _PurchasePanel(products: products),
-                    loading: () => const _PanelShell(
-                      child: SizedBox(
-                        height: 160,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-                    error: (err, _) => _PanelShell(
-                      child: _StoreError(error: err.toString()),
-                    ),
-                  ),
-              ],
+                error: (err, _) => _PanelShell(
+                  child: _StoreError(error: err.toString()),
+                ),
+              ),
             ),
-          ),
         ],
+      ),
+    );
+  }
+}
+
+/// Mascota del paywall: entra con el ta-da, "respira" en reposo y repite el
+/// gesto al tocarla.
+class _HeroMascot extends StatefulWidget {
+  const _HeroMascot();
+
+  @override
+  State<_HeroMascot> createState() => _HeroMascotState();
+}
+
+class _HeroMascotState extends State<_HeroMascot> {
+  final PremiumAvatarMotionController _motion = PremiumAvatarMotionController();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        AppHaptics.tap();
+        _motion.play(AvatarMotion.tada);
+      },
+      child: SizedBox(
+        width: 148,
+        height: 148,
+        child: PremiumAnimatedAvatar(
+          motionAssets: _kMascotMotions,
+          fallbackAsset: _kMascotFallback,
+          ambientMotion: AvatarMotion.tada,
+          // Deja terminar la transicion de ruta + fade del hero antes del
+          // ta-da, para que el gesto se vea completo y no "cortado".
+          arrivalDelay: const Duration(milliseconds: 550),
+          breathing: true,
+          controller: _motion,
+          size: 148,
+        ),
       ),
     );
   }
@@ -170,27 +213,15 @@ class _HeroHeader extends StatelessWidget {
     return Column(
       children: [
         // Brand mascot instead of a generic medallion: the hero moment.
-        SizedBox(
-          width: 148,
-          height: 148,
-          child: const PremiumAnimatedAvatar(
-            motionAssets: _kMascotMotions,
-            fallbackAsset: _kMascotFallback,
-            ambientMotion: AvatarMotion.tada,
-            // Deja terminar la transicion de ruta + fade del hero antes del
-            // ta-da, para que el gesto se vea completo y no "cortado".
-            arrivalDelay: Duration(milliseconds: 550),
-            size: 148,
-          )
-              .animate()
-              .scale(
-                begin: const Offset(0.86, 0.86),
-                end: const Offset(1, 1),
-                duration: 500.ms,
-                curve: Curves.easeOutBack,
-              )
-              .fadeIn(duration: 250.ms),
-        ),
+        const _HeroMascot()
+            .animate()
+            .scale(
+              begin: const Offset(0.86, 0.86),
+              end: const Offset(1, 1),
+              duration: 500.ms,
+              curve: Curves.easeOutBack,
+            )
+            .fadeIn(duration: 250.ms),
         const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -394,25 +425,38 @@ class _PanelShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    const radius = BorderRadius.vertical(top: Radius.circular(AppRadii.xxl));
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
       decoration: BoxDecoration(
-        color: theme.isDarkMode ? theme.surface : Colors.white,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppRadii.xxl),
-        ),
+        borderRadius: radius,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(
-              alpha: theme.isDarkMode ? 0.42 : 0.08,
+              alpha: theme.isDarkMode ? 0.5 : 0.16,
             ),
-            blurRadius: 30,
-            offset: const Offset(0, -10),
+            blurRadius: 36,
+            offset: const Offset(0, -12),
           ),
         ],
       ),
-      child: child,
+      // Frosted glass: se ve el contenido difuminado pasar por debajo, como
+      // en los sheets de iOS — separa el panel del fondo sin costura dura.
+      child: ClipRRect(
+        borderRadius: radius,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+            color: theme.isDarkMode
+                ? theme.surface.withValues(alpha: 0.88)
+                : Colors.white.withValues(alpha: 0.86),
+            // El panel flota fuera del SafeArea: absorbe el inset inferior
+            // para que su fondo llegue hasta el borde de la pantalla.
+            child: SafeArea(top: false, child: child),
+          ),
+        ),
+      ),
     );
   }
 }
