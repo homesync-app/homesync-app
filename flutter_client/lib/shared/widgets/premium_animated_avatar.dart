@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 /// Movimientos disponibles para un avatar premium animado.
 /// idle es el saludo/respiracion ambiental; el resto son eventos.
@@ -57,6 +58,11 @@ class PremiumAnimatedAvatar extends StatefulWidget {
   /// por la transicion y el usuario solo alcanza a ver el final del gesto.
   final Duration arrivalDelay;
 
+  /// "Respiracion": escala sutil en loop mientras NO corre una pasada, para
+  /// que el personaje nunca se vea muerto. Opt-in por superficie (hero del
+  /// paywall, etc.); los avatares chicos del home no la necesitan.
+  final bool breathing;
+
   const PremiumAnimatedAvatar({
     super.key,
     required this.motionAssets,
@@ -65,6 +71,7 @@ class PremiumAnimatedAvatar extends StatefulWidget {
     this.ambientMotion = AvatarMotion.idle,
     this.controller,
     this.arrivalDelay = Duration.zero,
+    this.breathing = false,
   });
 
   @override
@@ -72,11 +79,30 @@ class PremiumAnimatedAvatar extends StatefulWidget {
 }
 
 class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   final Map<String, ui.Codec> _codecs = {};
   ui.Image? _frame;
   Timer? _timer;
   bool _failed = false;
+
+  /// Fundido del ultimo frame hacia el PNG estatico al terminar una pasada.
+  Timer? _settleTimer;
+  bool _settling = false;
+
+  /// Respiracion en reposo (solo si widget.breathing).
+  late final AnimationController _breathController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2600),
+  );
+  late final Animation<double> _breathScale = Tween<double>(
+    begin: 1,
+    end: 1.018,
+  ).animate(
+    CurvedAnimation(parent: _breathController, curve: Curves.easeInOut),
+  );
+
+  /// Hay una pasada de WebP corriendo (la respiracion se pausa mientras).
+  bool _passActive = false;
 
   /// La ruta esta tapada / pestana inactiva (via TickerMode).
   bool _offstage = false;
@@ -107,6 +133,7 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
     super.didChangeDependencies();
     _offstage = !TickerMode.valuesOf(context).enabled;
     _reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    _updateBreathing();
     if (kDebugMode) {
       debugPrint('[PAA] deps #${identityHashCode(this)} '
           'offstage=$_offstage reduce=$_reduceMotion pending=$_pendingArrival');
@@ -125,6 +152,10 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
       _timer?.cancel();
       _timer = null;
       _playToken++;
+      if (_breathController.isAnimating) {
+        _breathController.stop();
+        _breathController.value = 0;
+      }
     }
   }
 
@@ -179,6 +210,8 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
       widget.controller?._attached = null;
     }
     _timer?.cancel();
+    _settleTimer?.cancel();
+    _breathController.dispose();
     _playToken++;
     _frame?.dispose();
     _frame = null;
@@ -208,7 +241,15 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
         return null;
       }
       return _codecs[asset] = codec;
-    } catch (_) {
+    } catch (e, stack) {
+      // El platform decoder de algunos Samsung rechaza el WebP animado
+      // ("unimplemented"): dejamos rastro remoto para saber que asset falla
+      // y en que dispositivos. El fallback al PNG estatico deberia cubrirlo.
+      log.w(
+        'PremiumAnimatedAvatar codec decode failed asset=${asset.split('/').last}',
+        error: e,
+        stackTrace: stack,
+      );
       return null;
     }
   }
@@ -236,8 +277,29 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
     _playPass(asset, onDone: () {});
   }
 
+  /// Arranca/pausa la respiracion segun el estado actual.
+  void _updateBreathing() {
+    if (!widget.breathing || !mounted) return;
+    final allowed = !_passActive && !_offstage && !_reduceMotion;
+    if (allowed && !_breathController.isAnimating) {
+      _breathController.repeat(reverse: true);
+    } else if (!allowed && _breathController.isAnimating) {
+      _breathController.stop();
+      _breathController.value = 0;
+    }
+  }
+
+  void _endPass() {
+    _passActive = false;
+    _updateBreathing();
+  }
+
   Future<void> _playPass(String asset, {required VoidCallback onDone}) async {
     _timer?.cancel();
+    _settleTimer?.cancel();
+    _settling = false;
+    _passActive = true;
+    _updateBreathing();
     final token = ++_playToken;
     final codec = await _codecFor(asset);
     if (kDebugMode) {
@@ -249,6 +311,7 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
       // Sin codec no hay pasada, pero el ciclo ambiental debe seguir vivo
       // (un evento fallido no puede dejar congelada a la mascota).
       if (_frame == null) setState(() => _failed = true);
+      _endPass();
       onDone();
       return;
     }
@@ -259,8 +322,16 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
       final ui.FrameInfo info;
       try {
         info = await codec.getNextFrame();
-      } catch (_) {
+      } catch (e) {
+        // Un frame que no decodifica deja la pasada congelada en el ultimo
+        // frame bueno: dejar rastro para poder diagnosticarlo en debug.
+        if (kDebugMode) {
+          debugPrint(
+            '[PAA] getNextFrame error token=$token frame=$framesShown: $e',
+          );
+        }
         if (mounted && _frame == null) setState(() => _failed = true);
+        _endPass();
         onDone();
         return;
       }
@@ -280,8 +351,10 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
       } else {
         if (kDebugMode) {
           debugPrint('[PAA] done #${identityHashCode(this)} token=$token '
-              'shown=$framesShown (held last frame)');
+              'shown=$framesShown (settling to sticker)');
         }
+        _scheduleSettle(token);
+        _endPass();
         onDone();
       }
     }
@@ -289,28 +362,88 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
     await advance();
   }
 
+  /// Tras completar una pasada, funde el ultimo frame al PNG estatico: los
+  /// takes de Veo no siempre terminan exactamente en la pose del sticker y
+  /// sostener un frame intermedio se ve "trabado". El PNG ES la pose estable.
+  void _scheduleSettle(int token) {
+    _settleTimer?.cancel();
+    _settleTimer = Timer(const Duration(milliseconds: 450), () {
+      if (!mounted || token != _playToken) return;
+      setState(() => _settling = true);
+    });
+  }
+
+  void _onSettleFinished() {
+    if (!mounted) return;
+    setState(() {
+      _frame?.dispose();
+      _frame = null;
+      _settling = false;
+    });
+  }
+
+  /// Envuelve [child] con la respiracion (escala anclada a los pies) cuando
+  /// esta habilitada; los estados sin respiracion pasan tal cual.
+  Widget _withBreathing(Widget child) {
+    if (!widget.breathing) return child;
+    return ScaleTransition(
+      scale: _breathScale,
+      alignment: Alignment.bottomCenter,
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_frame == null || _failed || _reduceMotion) {
-      return Image.asset(
-        widget.fallbackAsset,
-        width: widget.size,
-        height: widget.size,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.low,
-        errorBuilder: (_, __, ___) =>
-            SizedBox(width: widget.size, height: widget.size),
+      return _withBreathing(
+        Image.asset(
+          widget.fallbackAsset,
+          width: widget.size,
+          height: widget.size,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.low,
+          errorBuilder: (_, __, ___) =>
+              SizedBox(width: widget.size, height: widget.size),
+        ),
       );
     }
     // RepaintBoundary: cada frame del WebP marca dirty solo esta capa en
     // vez de repintar hasta el boundary ancestro (la card/pantalla entera).
-    return RepaintBoundary(
-      child: RawImage(
-        image: _frame,
-        width: widget.size,
-        height: widget.size,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.medium,
+    final frameImage = RawImage(
+      image: _frame,
+      width: widget.size,
+      height: widget.size,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.medium,
+    );
+    if (!_settling) {
+      return _withBreathing(RepaintBoundary(child: frameImage));
+    }
+    // Asentado: PNG estable debajo, ultimo frame fundiendose encima.
+    return _withBreathing(
+      RepaintBoundary(
+        child: Stack(
+          children: [
+            Image.asset(
+              widget.fallbackAsset,
+              width: widget.size,
+              height: widget.size,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.low,
+              errorBuilder: (_, __, ___) =>
+                  SizedBox(width: widget.size, height: widget.size),
+            ),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 1, end: 0),
+              duration: const Duration(milliseconds: 400),
+              onEnd: _onSettleFinished,
+              child: frameImage,
+              builder: (_, opacity, child) =>
+                  Opacity(opacity: opacity, child: child),
+            ),
+          ],
+        ),
       ),
     );
   }

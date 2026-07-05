@@ -6,6 +6,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/custom_avatar_generation_service.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/premium_avatar_motion_cache.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
@@ -99,6 +100,13 @@ class AvatarPickerSheet extends ConsumerWidget {
           UserAvatar.normalizeAvatarValue(avatarValue) ?? avatarValue;
       final isPremiumAvatar = UserAvatar.isPremiumAvatarValue(normalizedAvatar);
       final isPremium = ref.read(premiumProvider).value ?? false;
+      // Diagnostico gate-vs-render: si aparece "gated" pero el usuario se cree
+      // premium => problema de status/entitlement. Si aparece "saved" pero el
+      // home no lo muestra => problema de render (decode del webp/png).
+      log.i(
+        'AvatarPicker._updateAvatar: value=$normalizedAvatar '
+        'isPremiumAvatar=$isPremiumAvatar isPremium=$isPremium',
+      );
       if (isPremiumAvatar && !isPremium) {
         await PremiumPaywall.show(context);
         // Si compro premium desde el paywall, retomar la seleccion pendiente
@@ -114,6 +122,7 @@ class AvatarPickerSheet extends ConsumerWidget {
         (failure) => throw Exception(failure.message),
         (_) {},
       );
+      log.i('AvatarPicker._updateAvatar: saved avatar=$normalizedAvatar');
 
       // Si el avatar tiene variante animada, arrancar la descarga ya para
       // que el home lo muestre en movimiento apenas se cierre el picker.
