@@ -27,7 +27,7 @@ class SetupWelcomeStep extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SetupOnboardingIllustration(
-                  imagePath: 'assets/images/onboarding_welcome_cat.png',
+                  imagePath: 'assets/images/onboarding_welcome_cat.webp',
                 ),
                 const SizedBox(height: 18),
                 Text(
