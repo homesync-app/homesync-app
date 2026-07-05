@@ -15,6 +15,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
+import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/setup_wizard_controller.dart';
@@ -273,6 +274,45 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     });
 
     try {
+      // Guard: el wizard puede aparecer por un falso negativo de
+      // householdIdProvider (p. ej. snapshot de bootstrap sin hogar). Si el
+      // usuario YA pertenece a un hogar, ensure_household_for_user devolvería
+      // ese hogar y generate_household_invitation puede cortar con
+      // "limited to 2 members". En ese caso no hay nada que crear: entramos.
+      // Solo aplica con el wizard recién abierto (no mid-flow), para no
+      // expulsar a quien volvió atrás después de crear su hogar acá mismo.
+      if (!ref.read(setupInProgressProvider)) {
+        final userId = ref.read(currentUserIdProvider);
+        if (userId != null) {
+          final existing = await ref
+              .read(householdRepositoryProvider)
+              .getHouseholdId(userId);
+          final existingId = existing.fold<String?>((_) => null, (id) => id);
+          if (existingId != null && existingId.isNotEmpty) {
+            // log.e para que llegue al pipeline remoto: este evento es la
+            // evidencia del falso negativo del router que hay que cazar.
+            log.e(
+              'SetupScreen._handleCreateTeam: wizard shown for user with '
+              'existing household $existingId — entering it instead of '
+              'creating a new one',
+            );
+            _invalidateHouseholdSession();
+            ref.invalidate(userProfileProvider);
+            ref.invalidate(householdMembersProvider);
+            ref.invalidate(memberOnboardingProvider);
+            if (!widget.isAdminPreview) {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setBool('setup_completed', true);
+            }
+            if (mounted) {
+              setState(() => _isGeneratingCode = false);
+              _notifySetupComplete();
+            }
+            return;
+          }
+        }
+      }
+
       final firebaseAuthService = ref.read(firebaseAuthServiceProvider);
       final mode = _wizardState.selectedMode ?? 'couple';
       // Mark setup as in-progress BEFORE creating the household. Creating it
