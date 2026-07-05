@@ -49,9 +49,7 @@ class PremiumNotifier extends AsyncNotifier<bool> {
         return;
       }
 
-      final isPremium = customerInfo.entitlements.active.containsKey(
-        PremiumService.premiumEntitlementId,
-      );
+      final isPremium = PremiumService.customerInfoHasPremium(customerInfo);
       unawaited(_syncCustomerInfoStatus(isPremium));
     };
 

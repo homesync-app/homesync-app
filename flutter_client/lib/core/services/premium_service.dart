@@ -70,9 +70,32 @@ class PremiumService {
     return true;
   }
 
-  bool _hasPremium(rc.CustomerInfo customerInfo) {
-    return customerInfo.entitlements.active.containsKey(premiumEntitlementId);
+  /// IDs de los productos de suscripción premium (todos los planes de la app
+  /// son premium). Sirven de red de seguridad: si el entitlement `premium` no
+  /// está mapeado en el dashboard de RevenueCat, una suscripción activa a
+  /// cualquiera de estos igual cuenta como premium.
+  static const Set<String> premiumProductIds = {
+    'premium_solo',
+    'premium_household',
+    'premium_family',
+  };
+
+  /// True si el usuario es premium según RevenueCat. Acepta el entitlement
+  /// `premium` (camino normal) O una suscripción activa a un producto premium
+  /// conocido (robusto ante un entitlement mal configurado en el dashboard).
+  static bool customerInfoHasPremium(rc.CustomerInfo customerInfo) {
+    if (customerInfo.entitlements.active.containsKey(premiumEntitlementId)) {
+      return true;
+    }
+    // `activeSubscriptions` trae ids con o sin sufijo de base plan; comparar
+    // por prefijo cubre 'premium_household:annual' y similares.
+    return customerInfo.activeSubscriptions.any(
+      (sub) => premiumProductIds.any((id) => sub.startsWith(id)),
+    );
   }
+
+  bool _hasPremium(rc.CustomerInfo customerInfo) =>
+      customerInfoHasPremium(customerInfo);
 
   Future<bool> getPremiumStatus() async =>
       (await getPremiumStatusSnapshot()).isPremium;
