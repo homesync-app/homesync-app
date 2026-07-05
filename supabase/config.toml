@@ -366,6 +366,12 @@ verify_jwt = false
 [functions.scan-receipt]
 verify_jwt = false
 
+# RevenueCat authentica con su propio secret (REVENUECAT_WEBHOOK_SECRET) dentro
+# de la función; con verify_jwt=true el gateway rebota sus POST con 401 y las
+# compras nunca actualizan plan_tier (roto entre 2026-06-30 y 2026-07-05).
+[functions.revenuecat-webhook]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.
