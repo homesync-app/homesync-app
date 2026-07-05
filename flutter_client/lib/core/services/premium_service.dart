@@ -74,11 +74,27 @@ class PremiumService {
     return customerInfo.entitlements.active.containsKey(premiumEntitlementId);
   }
 
-  Future<bool> getPremiumStatus() async {
+  Future<bool> getPremiumStatus() async =>
+      (await getPremiumStatusSnapshot()).isPremium;
+
+  /// Status premium con nivel de confianza: [PremiumStatusSnapshot.isConfirmed]
+  /// solo es true cuando las fuentes consultadas RESPONDIERON (sin
+  /// excepciones). Un `false` no confirmado (RevenueCat caido, RPC caido)
+  /// no debe disparar acciones destructivas como revertir el avatar premium.
+  Future<PremiumStatusSnapshot> getPremiumStatusSnapshot() async {
+    var sourcesAnswered = true;
+
     try {
+      // _ensureConfigured() == false (sin API key / sin usuario) no es un
+      // error: en esa plataforma la DB es la unica fuente de verdad.
       if (await _ensureConfigured()) {
         final customerInfo = await rc.Purchases.getCustomerInfo();
-        if (_hasPremium(customerInfo)) return true;
+        if (_hasPremium(customerInfo)) {
+          return const PremiumStatusSnapshot(
+            isPremium: true,
+            isConfirmed: true,
+          );
+        }
         // Diagnostico: hay compra pero no el entitlement esperado => casi
         // seguro el producto no esta vinculado al entitlement 'premium' en
         // el dashboard de RevenueCat (o el fallback de plan_tier no corrio).
@@ -92,6 +108,7 @@ class PremiumService {
         }
       }
     } catch (e, stack) {
+      sourcesAnswered = false;
       log.w(
         'RevenueCat premium status failed, falling back to Supabase',
         error: e,
@@ -101,12 +118,17 @@ class PremiumService {
 
     final userId = AppIdentityService.instance.currentUserId;
     if (userId == null) {
-      return false;
+      return const PremiumStatusSnapshot(isPremium: false, isConfirmed: false);
     }
 
     try {
       final effective = await _supabase.rpc('get_effective_premium_status');
-      if (effective is bool) return effective;
+      if (effective is bool) {
+        return PremiumStatusSnapshot(
+          isPremium: effective,
+          isConfirmed: sourcesAnswered,
+        );
+      }
     } catch (e, stack) {
       log.w(
         'get_effective_premium_status failed, falling back to users.is_premium',
@@ -122,10 +144,13 @@ class PremiumService {
           .eq('id', userId)
           .maybeSingle();
 
-      return data != null && data['is_premium'] == true;
+      return PremiumStatusSnapshot(
+        isPremium: data != null && data['is_premium'] == true,
+        isConfirmed: sourcesAnswered,
+      );
     } catch (e, stack) {
       log.e('Error fetching premium status: $e', error: e, stackTrace: stack);
-      return false;
+      return const PremiumStatusSnapshot(isPremium: false, isConfirmed: false);
     }
   }
 
@@ -211,6 +236,20 @@ class PremiumService {
       rethrow;
     }
   }
+}
+
+/// Resultado de la consulta de status premium.
+class PremiumStatusSnapshot {
+  final bool isPremium;
+
+  /// true solo si todas las fuentes consultadas respondieron sin errores.
+  /// Un `false` con isConfirmed=false es "no sabemos", no "no es premium".
+  final bool isConfirmed;
+
+  const PremiumStatusSnapshot({
+    required this.isPremium,
+    required this.isConfirmed,
+  });
 }
 
 final premiumServiceProvider = Provider<PremiumService>((ref) {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/premium/data/repositories/premium_service_repository.dart';
 import 'package:homesync_client/features/premium/domain/repositories/premium_repository.dart';
@@ -65,9 +66,13 @@ class PremiumNotifier extends AsyncNotifier<bool> {
   }
 
   Future<bool> _fetchPremiumStatus() async {
-    final isPremium = await ref.read(getPremiumStatusUseCaseProvider).call();
-    await _enforceFreeAvatarIfNeeded(isPremium);
-    return isPremium;
+    final snapshot =
+        await ref.read(premiumServiceProvider).getPremiumStatusSnapshot();
+    await _enforceFreeAvatarIfNeeded(
+      snapshot.isPremium,
+      confirmed: snapshot.isConfirmed,
+    );
+    return snapshot.isPremium;
   }
 
   Future<void> _syncCustomerInfoStatus(bool revenueCatPremium) async {
@@ -81,7 +86,9 @@ class PremiumNotifier extends AsyncNotifier<bool> {
   }
 
   Future<void> _setPremiumState(bool isPremium) async {
-    await _enforceFreeAvatarIfNeeded(isPremium);
+    // Llega desde compras/restores con respuesta real de RevenueCat: es un
+    // resultado confirmado, no un fallo de red.
+    await _enforceFreeAvatarIfNeeded(isPremium, confirmed: true);
     state = AsyncData(isPremium);
   }
 
@@ -93,8 +100,20 @@ class PremiumNotifier extends AsyncNotifier<bool> {
         trimmed.contains('/storage/v1/object/public/custom-avatars/');
   }
 
-  Future<void> _enforceFreeAvatarIfNeeded(bool isPremium) async {
+  Future<void> _enforceFreeAvatarIfNeeded(
+    bool isPremium, {
+    required bool confirmed,
+  }) async {
     if (isPremium) return;
+    // Revertir el avatar es destructivo: solo con un false CONFIRMADO.
+    // Un false por RevenueCat/RPC caidos no debe degradar a un premium real.
+    if (!confirmed) {
+      log.i(
+        'PremiumNotifier: status no-premium sin confirmar (fuentes caidas); '
+        'se omite el downgrade de avatar',
+      );
+      return;
+    }
 
     final userId = ref.read(currentUserIdProvider);
     if (userId == null) return;
