@@ -959,6 +959,24 @@
     }
   },
   "setupFinishButton": "Finish setup",
+  "setupCompletionTitle": "{mode, select, couple{Your home is ready!} family{Your family home is ready!} friends{Your shared home is ready!} solo{Your space is ready!} other{Your space is ready!}}",
+  "@setupCompletionTitle": {
+    "description": "Title of the celebration dialog shown when the setup wizard finishes, per household mode.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupCompletionMessage": "{mode, select, couple{You can now organize tasks, expenses and goals together.} family{You can now share tasks and coordinate the house.} friends{Clear accounts from day one.} solo{Everything set to start your routines.} other{Everything set to start your routines.}}",
+  "@setupCompletionMessage": {
+    "description": "Supporting message of the setup completion celebration, per household mode.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
   "settingsHouseholdEmptyTitle": "Start your team!",
   "settingsHouseholdEmptyBody": "Join an existing team with an invite code to start sharing tasks and expenses.",
   "settingsHouseholdJoinWithCodeButton": "Join with a code",

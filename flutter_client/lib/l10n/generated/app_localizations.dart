@@ -2175,6 +2175,18 @@ abstract class AppLocalizations {
   /// **'Terminar configuración'**
   String get setupFinishButton;
 
+  /// Title of the celebration dialog shown when the setup wizard finishes, per household mode.
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, couple{¡Su hogar está listo!} family{¡El hogar familiar está listo!} friends{¡La convivencia está lista!} solo{¡Tu espacio está listo!} other{¡Tu espacio está listo!}}'**
+  String setupCompletionTitle(String mode);
+
+  /// Supporting message of the setup completion celebration, per household mode.
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, couple{Ya pueden organizar tareas, gastos y metas juntos.} family{Ya pueden repartir tareas y coordinar la casa.} friends{Cuentas claras desde el día uno.} solo{Todo ordenado para arrancar tus rutinas.} other{Todo ordenado para arrancar tus rutinas.}}'**
+  String setupCompletionMessage(String mode);
+
   /// No description provided for @settingsHouseholdEmptyTitle.
   ///
   /// In es, this message translates to:

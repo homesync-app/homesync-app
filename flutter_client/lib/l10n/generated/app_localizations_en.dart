@@ -1338,6 +1338,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setupFinishButton => 'Finish setup';
 
   @override
+  String setupCompletionTitle(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'couple': 'Your home is ready!',
+        'family': 'Your family home is ready!',
+        'friends': 'Your shared home is ready!',
+        'solo': 'Your space is ready!',
+        'other': 'Your space is ready!',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String setupCompletionMessage(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'couple': 'You can now organize tasks, expenses and goals together.',
+        'family': 'You can now share tasks and coordinate the house.',
+        'friends': 'Clear accounts from day one.',
+        'solo': 'Everything set to start your routines.',
+        'other': 'Everything set to start your routines.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsHouseholdEmptyTitle => 'Start your team!';
 
   @override

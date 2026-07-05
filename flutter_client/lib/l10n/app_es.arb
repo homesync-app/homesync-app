@@ -959,6 +959,24 @@
     }
   },
   "setupFinishButton": "Terminar configuración",
+  "setupCompletionTitle": "{mode, select, couple{¡Su hogar está listo!} family{¡El hogar familiar está listo!} friends{¡La convivencia está lista!} solo{¡Tu espacio está listo!} other{¡Tu espacio está listo!}}",
+  "@setupCompletionTitle": {
+    "description": "Title of the celebration dialog shown when the setup wizard finishes, per household mode.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupCompletionMessage": "{mode, select, couple{Ya pueden organizar tareas, gastos y metas juntos.} family{Ya pueden repartir tareas y coordinar la casa.} friends{Cuentas claras desde el día uno.} solo{Todo ordenado para arrancar tus rutinas.} other{Todo ordenado para arrancar tus rutinas.}}",
+  "@setupCompletionMessage": {
+    "description": "Supporting message of the setup completion celebration, per household mode.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
   "settingsHouseholdEmptyTitle": "¡Comienza tu equipo!",
   "settingsHouseholdEmptyBody": "Unite a un equipo existente con un código de invitación para empezar a compartir tareas y gastos.",
   "settingsHouseholdJoinWithCodeButton": "Unirse con código",
