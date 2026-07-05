@@ -139,12 +139,15 @@ class AvatarPickerSheet extends ConsumerWidget {
       ref.invalidate(customAvatarOptionsProvider);
 
       if (context.mounted) {
-        Navigator.pop(context);
+        // El toast va al root overlay: mostrarlo ANTES de popear el sheet
+        // evita usar un context ya desactivado ("Looking up a deactivated
+        // widget's ancestor is unsafe") y aparece igual sobre el home.
         AppSnackBar.show(
           context,
           message: AppLocalizations.of(context).avatarPickerUpdated,
           type: AppSnackBarType.success,
         );
+        Navigator.pop(context);
       }
     } catch (e) {
       if (context.mounted) {
