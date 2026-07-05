@@ -12,6 +12,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { getEnvInfo } from '../lib/auth';
 import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
 
 type Tone = 'indigo' | 'emerald' | 'rose' | 'amber' | 'violet';
@@ -89,12 +90,14 @@ export const Dashboard = () => {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const envHost = getEnvInfo().host;
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     setError(null);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     const [households, tasksToday, alerts, ledgerRes, activityStream, pendingFeedback] = await Promise.all([
       supabase.from('households').select('*', { count: 'exact', head: true }),
@@ -103,7 +106,11 @@ export const Dashboard = () => {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'verified')
         .gte('updated_at', today.toISOString()),
-      supabase.from('application_logs').select('*', { count: 'exact', head: true }).eq('level', 'error'),
+      supabase
+        .from('application_logs')
+        .select('*', { count: 'exact', head: true })
+        .in('level', ['error', 'critical'])
+        .gte('created_at', sevenDaysAgo.toISOString()),
       supabase.from('ledger_entries').select('amount').eq('type', 'coins_earned'),
       supabase.from('household_activities').select('*').order('created_at', { ascending: false }).limit(5),
       supabase.from('user_feedback').select('*', { count: 'exact', head: true }).eq('resolved', false),
@@ -154,7 +161,7 @@ export const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <StatCard title="Hogares Activos" value={stats.households} icon={Users} tone="indigo" loading={loading} />
         <StatCard title="Tareas Completadas Hoy" value={stats.tasksToday} icon={CheckCircle2} tone="emerald" loading={loading} />
-        <StatCard title="Alertas Críticas" value={stats.alerts} icon={AlertTriangle} tone="rose" loading={loading} />
+        <StatCard title="Alertas Críticas (7d)" value={stats.alerts} icon={AlertTriangle} tone="rose" loading={loading} />
         <StatCard title="Monedas en Circulación" value={stats.totalCoins.toLocaleString()} icon={Zap} tone="amber" loading={loading} />
         <StatCard title="Feedback Pendiente" value={stats.pendingFeedback} icon={MessageSquare} tone="violet" loading={loading} />
       </div>
@@ -201,17 +208,36 @@ export const Dashboard = () => {
         <div className="glass-dark p-8 rounded-3xl border border-white/5">
           <h3 className="text-xl font-bold mb-6">Estado del Sistema</h3>
           <div className="space-y-4">
-            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-1">Base de Datos</p>
-              <p className="text-sm font-medium">Supabase Cloud (Activo)</p>
+            <div
+              className={`p-4 rounded-2xl border ${
+                error
+                  ? 'bg-rose-500/10 border-rose-500/20'
+                  : 'bg-emerald-500/10 border-emerald-500/20'
+              }`}
+            >
+              <p
+                className={`text-xs font-bold uppercase tracking-widest mb-1 ${
+                  error ? 'text-rose-400' : 'text-emerald-500'
+                }`}
+              >
+                Conexión Backend
+              </p>
+              <p className="text-sm font-medium flex items-center gap-2">
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    loading ? 'bg-amber-400 animate-pulse' : error ? 'bg-rose-500' : 'bg-emerald-500'
+                  }`}
+                />
+                {loading ? 'Verificando...' : error ? 'Sin conexión' : 'Conectado'}
+              </p>
+            </div>
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Base de Datos</p>
+              <p className="text-sm font-medium font-mono truncate">{envHost}</p>
             </div>
             <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20">
               <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Autenticación</p>
-              <p className="text-sm font-medium">JWT RSA-256 (Habilitado)</p>
-            </div>
-            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
-              <p className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-1">Almacenamiento</p>
-              <p className="text-sm font-medium">Object Storage (CDN)</p>
+              <p className="text-sm font-medium">Supabase Auth · Firebase JWT</p>
             </div>
           </div>
 

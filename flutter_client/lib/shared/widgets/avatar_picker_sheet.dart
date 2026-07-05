@@ -1,17 +1,24 @@
 import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/errors/error_messages.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/custom_avatar_generation_service.dart';
+import 'package:homesync_client/core/services/premium_avatar_motion_cache.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'user_avatar.dart';
@@ -38,6 +45,26 @@ final customAvatarOptionsProvider =
   }).toList();
 });
 
+/// Fecha en la que se libera el cupo mensual de creación IA (1° del mes
+/// siguiente, en UTC como lo cuenta el server), o null si aún no se usó.
+final customAvatarQuotaResetProvider = FutureProvider<DateTime?>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return null;
+
+  final nowUtc = DateTime.now().toUtc();
+  final monthStart = DateTime.utc(nowUtc.year, nowUtc.month);
+  final row = await ref
+      .read(supabaseClientProvider)
+      .from('custom_avatar_monthly_usage')
+      .select('generation_month')
+      .eq('user_id', userId)
+      .eq('generation_month', monthStart.toIso8601String().substring(0, 10))
+      .maybeSingle();
+
+  if (row == null) return null;
+  return DateTime.utc(nowUtc.year, nowUtc.month + 1);
+});
+
 class CustomAvatarOption {
   final String id;
   final String avatarUrl;
@@ -54,7 +81,7 @@ class AvatarPickerSheet extends ConsumerWidget {
   const AvatarPickerSheet({super.key});
 
   static void show(BuildContext context) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -73,8 +100,11 @@ class AvatarPickerSheet extends ConsumerWidget {
       final isPremiumAvatar = UserAvatar.isPremiumAvatarValue(normalizedAvatar);
       final isPremium = ref.read(premiumProvider).value ?? false;
       if (isPremiumAvatar && !isPremium) {
-        PremiumPaywall.show(context);
-        return;
+        await PremiumPaywall.show(context);
+        // Si compro premium desde el paywall, retomar la seleccion pendiente
+        // en vez de descartarla (antes el avatar elegido se perdia).
+        final nowPremium = ref.read(premiumProvider).value ?? false;
+        if (!nowPremium || !context.mounted) return;
       }
 
       final result = await ref
@@ -85,6 +115,15 @@ class AvatarPickerSheet extends ConsumerWidget {
         (_) {},
       );
 
+      // Si el avatar tiene variante animada, arrancar la descarga ya para
+      // que el home lo muestre en movimiento apenas se cierre el picker.
+      final animatedId = UserAvatar.animatedPremiumAvatarIdFor(
+        normalizedAvatar,
+      );
+      if (animatedId != null) {
+        PremiumAvatarMotionCache.prefetch(animatedId);
+      }
+
       ref.invalidate(userProfileProvider);
       ref.invalidate(householdMembersProvider);
       ref.invalidate(recentActivityProvider);
@@ -92,22 +131,21 @@ class AvatarPickerSheet extends ConsumerWidget {
 
       if (context.mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).avatarPickerUpdated),
-            backgroundColor: AppColors.success,
-          ),
+        AppSnackBar.show(
+          context,
+          message: AppLocalizations.of(context).avatarPickerUpdated,
+          type: AppSnackBarType.success,
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context).avatarPickerUpdateError('$e'),
-            ),
-            backgroundColor: AppColors.error,
+        final t = AppLocalizations.of(context);
+        AppSnackBar.show(
+          context,
+          message: t.avatarPickerUpdateError(
+            e is CustomAvatarGenerationException ? e.localized(t) : '$e',
           ),
+          type: AppSnackBarType.error,
         );
       }
     }
@@ -123,6 +161,7 @@ class AvatarPickerSheet extends ConsumerWidget {
       ),
     );
     final googlePhotoUrl = _resolveGooglePhotoUrl();
+    final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
 
     return Container(
       constraints: BoxConstraints(
@@ -132,173 +171,163 @@ class AvatarPickerSheet extends ConsumerWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
       ),
-      padding: const EdgeInsets.only(left: 24, right: 24, top: 12, bottom: 40),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 48,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(10),
-              ),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.lg + safeBottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 48,
+            height: 5,
+            decoration: BoxDecoration(
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(10),
             ),
-            const SizedBox(height: 28),
-            Text(
-              t.avatarPickerTitle,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-              ),
+          ),
+          const SizedBox(height: 28),
+          Text(
+            t.avatarPickerTitle,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
             ),
-            const SizedBox(height: 12),
-            Text(
-              t.avatarPickerSubtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurfaceVariant
-                    .withValues(alpha: 0.7),
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            t.avatarPickerSubtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurfaceVariant
+                  .withValues(alpha: 0.7),
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
             ),
-            const SizedBox(height: 32),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Column(
-                  children: [
-                    if (googlePhotoUrl != null) ...[
-                      _GoogleAvatarOption(
-                        photoUrl: googlePhotoUrl,
-                        isSelected: currentAvatar == googlePhotoUrl,
-                        onTap: () =>
-                            _updateAvatar(context, ref, googlePhotoUrl),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      alignment: WrapAlignment.center,
-                      children: UserAvatar.defaultAvatars.map((animal) {
-                        final normalizedEmoji = UserAvatar.normalizeAvatarValue(
-                              animal['emoji'] as String?,
-                            ) ??
-                            '';
-                        final isSelected = currentAvatar == normalizedEmoji;
-                        return _AvatarOption(
-                          emoji: normalizedEmoji,
-                          color: animal['color'],
-                          isSelected: isSelected,
-                          onTap: () => _updateAvatar(
-                            context,
-                            ref,
-                            normalizedEmoji,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 28),
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final isPremium =
-                            ref.watch(premiumProvider).value ?? false;
-                        return Column(
-                          children: [
-                            _CustomAvatarOptionsSection(
-                              currentAvatar: currentAvatar,
-                              isPremium: isPremium,
-                              onSelect: (avatarUrl) => _updateAvatar(
-                                context,
-                                ref,
-                                avatarUrl,
-                              ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.auto_awesome_rounded,
-                                  color: AppColors.accentGold,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  t.avatarPickerPremiumSection,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Wrap(
-                              spacing: 14,
-                              runSpacing: 16,
-                              alignment: WrapAlignment.center,
-                              children: UserAvatar.premiumAvatars.map((avatar) {
-                                final value =
-                                    UserAvatar.premiumAvatarValue(avatar);
-                                final legacyValue =
-                                    'premium://${avatar['url'] as String}';
-                                final isSelected = currentAvatar == value ||
-                                    currentAvatar == legacyValue;
-                                return _PremiumAvatarOption(
-                                  avatarValue: value,
-                                  name: avatar['name'] as String,
-                                  color: avatar['color'] as Color,
-                                  isLocked: !isPremium,
-                                  isSelected: isSelected,
-                                  onTap: isPremium
-                                      ? () => _updateAvatar(
-                                            context,
-                                            ref,
-                                            value,
-                                          )
-                                      : () => PremiumPaywall.show(context),
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                        );
-                      },
+          ),
+          const SizedBox(height: 32),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+              child: Column(
+                children: [
+                  if (googlePhotoUrl != null) ...[
+                    _GoogleAvatarOption(
+                      photoUrl: googlePhotoUrl,
+                      isSelected: currentAvatar == googlePhotoUrl,
+                      onTap: () => _updateAvatar(context, ref, googlePhotoUrl),
                     ),
                     const SizedBox(height: 24),
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final isPremium =
-                            ref.watch(premiumProvider).value ?? false;
-                        return OutlinedButton.icon(
-                          onPressed: isPremium
-                              ? () => _showCustomAvatarSourceSheet(context, ref)
-                              : () => PremiumPaywall.show(context),
-                          icon: const Icon(Icons.auto_awesome_rounded),
-                          label: Text(
-                            isPremium
-                                ? AppLocalizations.of(context)
-                                    .avatarPickerCreateCustom
-                                : AppLocalizations.of(context)
-                                    .avatarPickerUnlockCustom,
-                          ),
-                        );
-                      },
-                    ),
                   ],
-                ),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    alignment: WrapAlignment.center,
+                    children: UserAvatar.defaultAvatars.map((animal) {
+                      final normalizedEmoji = UserAvatar.normalizeAvatarValue(
+                            animal['emoji'] as String?,
+                          ) ??
+                          '';
+                      final isSelected = currentAvatar == normalizedEmoji;
+                      return _AvatarOption(
+                        emoji: normalizedEmoji,
+                        color: animal['color'],
+                        isSelected: isSelected,
+                        onTap: () => _updateAvatar(
+                          context,
+                          ref,
+                          normalizedEmoji,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 28),
+                  _AiAvatarCreationCard(
+                    onCreate: () => _showCustomAvatarSourceSheet(context, ref),
+                  ),
+                  const SizedBox(height: 28),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final isPremium =
+                          ref.watch(premiumProvider).value ?? false;
+                      return Column(
+                        children: [
+                          _CustomAvatarOptionsSection(
+                            currentAvatar: currentAvatar,
+                            isPremium: isPremium,
+                            onSelect: (avatarUrl) => _updateAvatar(
+                              context,
+                              ref,
+                              avatarUrl,
+                            ),
+                            onDelete: (avatar) => _deleteCustomAvatar(
+                              context,
+                              ref,
+                              avatar,
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.auto_awesome_rounded,
+                                color: AppColors.accentGold,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                t.avatarPickerPremiumSection,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 14,
+                            runSpacing: 16,
+                            alignment: WrapAlignment.center,
+                            children: UserAvatar.premiumAvatars.map((avatar) {
+                              final value =
+                                  UserAvatar.premiumAvatarValue(avatar);
+                              final legacyValue =
+                                  'premium://${avatar['url'] as String}';
+                              final isSelected = currentAvatar == value ||
+                                  currentAvatar == legacyValue;
+                              return _PremiumAvatarOption(
+                                avatarValue: value,
+                                name: avatar['name'] as String,
+                                color: avatar['color'] as Color,
+                                isLocked: !isPremium,
+                                isSelected: isSelected,
+                                onTap: isPremium
+                                    ? () => _updateAvatar(
+                                          context,
+                                          ref,
+                                          value,
+                                        )
+                                    : () => PremiumPaywall.show(context),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -328,16 +357,16 @@ class AvatarPickerSheet extends ConsumerWidget {
   }
 
   void _showCustomAvatarSourceSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => SafeArea(
         child: Container(
-          margin: const EdgeInsets.all(16),
+          margin: const EdgeInsets.all(AppSpacing.md),
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(AppRadii.xxl),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.08),
@@ -415,15 +444,22 @@ class AvatarPickerSheet extends ConsumerWidget {
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
+      ref.invalidate(customAvatarQuotaResetProvider);
       if (avatarUrl == null || !context.mounted) return;
       ref.invalidate(customAvatarOptionsProvider);
       await _updateAvatar(context, ref, avatarUrl);
     } catch (e) {
+      ref.invalidate(customAvatarQuotaResetProvider);
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
+        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(
+              e is CustomAvatarGenerationException
+                  ? e.localized(t)
+                  : friendlyErrorMessage(e, t: t),
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -431,36 +467,189 @@ class AvatarPickerSheet extends ConsumerWidget {
     }
   }
 
-  // ignore: unused_element
-  void _showCustomAvatarDialog(BuildContext context, WidgetRef ref) {
-    final controller = TextEditingController();
+  Future<void> _deleteCustomAvatar(
+    BuildContext context,
+    WidgetRef ref,
+    CustomAvatarOption avatar,
+  ) async {
     final t = AppLocalizations.of(context);
-    showDialog(
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(t.avatarPickerCustomSheetTitle),
-        content: TextField(
-          controller: controller,
-          maxLength: 2,
-          decoration: const InputDecoration(
-            hintText: 'Ej: 🌞',
-          ),
-        ),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(t.avatarPickerDeleteCustomTitle),
+        content: Text(t.avatarPickerDeleteCustomBody),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: Text(t.commonCancel),
           ),
           FilledButton(
-            onPressed: () {
-              final value = controller.text.trim();
-              if (value.isNotEmpty) {
-                Navigator.pop(context);
-                _updateAvatar(context, ref, value);
-              }
-            },
-            child: Text(t.commonSave),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(t.commonDelete),
           ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      final service = CustomAvatarGenerationService(Supabase.instance.client);
+      await service.deleteAvatar(avatarId: avatar.id);
+
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(householdMembersProvider);
+      ref.invalidate(recentActivityProvider);
+      ref.invalidate(customAvatarOptionsProvider);
+
+      if (context.mounted) {
+        AppSnackBar.show(
+          context,
+          message: t.avatarPickerCustomDeleted,
+          type: AppSnackBarType.success,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppSnackBar.show(
+          context,
+          message: t.avatarPickerCustomDeleteError(
+            e is CustomAvatarGenerationException ? e.localized(t) : '$e',
+          ),
+          type: AppSnackBarType.error,
+        );
+      }
+    }
+  }
+
+}
+
+class _AiAvatarCreationCard extends ConsumerWidget {
+  final VoidCallback onCreate;
+
+  const _AiAvatarCreationCard({required this.onCreate});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isPremium = ref.watch(premiumProvider).value ?? false;
+    final quotaReset =
+        isPremium ? ref.watch(customAvatarQuotaResetProvider).value : null;
+    final quotaUsed = quotaReset != null;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.10),
+            AppColors.accentGold.withValues(alpha: 0.16),
+          ],
+        ),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: AppColors.accentGold,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.avatarPickerAiCardTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      t.avatarPickerAiCardBody,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: quotaUsed
+                  ? null
+                  : isPremium
+                      ? onCreate
+                      : () => PremiumPaywall.show(context),
+              icon: Icon(
+                isPremium
+                    ? Icons.auto_awesome_rounded
+                    : Icons.lock_rounded,
+                size: 18,
+              ),
+              label: Text(
+                isPremium
+                    ? t.avatarPickerAiCreateButton
+                    : t.avatarPickerUnlockCustom,
+              ),
+            ),
+          ),
+          if (quotaUsed) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(
+                  Icons.schedule_rounded,
+                  size: 16,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    t.avatarPickerAiUsedThisMonth(
+                      DateFormat.MMMMd(
+                        Localizations.localeOf(context).toString(),
+                      ).format(quotaReset),
+                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                      height: 1.25,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -520,9 +709,11 @@ class _CustomAvatarLoadingDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -556,11 +747,13 @@ class _CustomAvatarOptionsSection extends ConsumerWidget {
   final String? currentAvatar;
   final bool isPremium;
   final ValueChanged<String> onSelect;
+  final ValueChanged<CustomAvatarOption> onDelete;
 
   const _CustomAvatarOptionsSection({
     required this.currentAvatar,
     required this.isPremium,
     required this.onSelect,
+    required this.onDelete,
   });
 
   @override
@@ -614,6 +807,7 @@ class _CustomAvatarOptionsSection extends ConsumerWidget {
                   onTap: isPremium
                       ? () => onSelect(avatar.avatarUrl)
                       : () => PremiumPaywall.show(context),
+                  onDelete: isPremium ? () => onDelete(avatar) : null,
                 );
               }).toList(),
             ),
@@ -634,6 +828,7 @@ class _PremiumAvatarOption extends StatelessWidget {
   final bool isLocked;
   final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
   const _PremiumAvatarOption({
     required this.avatarValue,
@@ -642,81 +837,119 @@ class _PremiumAvatarOption extends StatelessWidget {
     required this.isLocked,
     required this.isSelected,
     required this.onTap,
+    this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        width: 96,
-        padding: const EdgeInsets.fromLTRB(8, 10, 8, 9),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: isLocked ? 0.35 : 0.7),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: isLocked ? 0.18 : 0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 9),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                Opacity(
-                  opacity: isLocked ? 0.42 : 1,
-                  child: CustomUserAvatar(
-                    avatarUrl: avatarValue,
-                    radius: 26,
-                    isAnimated: !isLocked,
-                  ),
+    return SizedBox(
+      width: 96,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          GestureDetector(
+            onTap: onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 96,
+              padding: const EdgeInsets.fromLTRB(8, 10, 8, 9),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: isLocked ? 0.35 : 0.7),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: isSelected ? AppColors.primary : Colors.transparent,
+                  width: 2,
                 ),
-                if (isLocked)
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.38),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.lock_rounded,
-                      color: Colors.white,
-                      size: 18,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: isLocked ? 0.18 : 0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 9),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Opacity(
+                        opacity: isLocked ? 0.42 : 1,
+                        // Solo la imagen: la variante animada se descarga recien
+                        // al seleccionar el avatar (no viene en el APK).
+                        child: CustomUserAvatar(
+                          avatarUrl: avatarValue,
+                          radius: 26,
+                          isAnimated: !isLocked,
+                          allowMotion: false,
+                        ),
+                      ),
+                      if (isLocked)
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.38),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.lock_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: isLocked
+                          ? Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withValues(alpha: 0.74)
+                          : Theme.of(context).colorScheme.onSurface,
+                      fontSize: 11,
+                      height: 1.05,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            Text(
-              name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isLocked
-                    ? Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant
-                        .withValues(alpha: 0.74)
-                    : Theme.of(context).colorScheme.onSurface,
-                fontSize: 11,
-                height: 1.05,
-                fontWeight: FontWeight.w800,
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+          if (onDelete != null)
+            Positioned(
+              top: -8,
+              right: -6,
+              child: Material(
+                color: AppColors.error,
+                shape: const CircleBorder(),
+                elevation: 4,
+                child: IconButton(
+                  tooltip:
+                      AppLocalizations.of(context).avatarPickerDeleteCustom,
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 30,
+                    height: 30,
+                  ),
+                  padding: EdgeInsets.zero,
+                  onPressed: onDelete,
+                  icon: const Icon(
+                    Icons.delete_rounded,
+                    color: Colors.white,
+                    size: 17,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -739,14 +972,14 @@ class _GoogleAvatarOption extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(AppRadii.xl),
       child: Ink(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerHighest.withValues(
             alpha: 0.45,
           ),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.transparent,
             width: 2,

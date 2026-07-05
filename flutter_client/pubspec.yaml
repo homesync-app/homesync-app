@@ -1,7 +1,7 @@
 name: homesync_client
 description: HomeSync Flutter Client - App de gestión de tareas, gastos y recompensas para parejas
 publish_to: "none"
-version: 1.0.0+74
+version: 1.2.3+84
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -13,7 +13,7 @@ dependencies:
     sdk: flutter
 
   # Supabase client
-  supabase_flutter: ^2.12.0
+  supabase_flutter: ^2.15.1
 
   # HTTP client
   http: ^1.2.0
@@ -22,12 +22,11 @@ dependencies:
   shared_preferences: ^2.3.0
 
   # State management
-  flutter_riverpod: ^3.3.1
-  riverpod_annotation: ^4.0.2
+  flutter_riverpod: ^3.3.2
+  riverpod_annotation: ^4.0.3
 
   # UI Framework / Icons
   font_awesome_flutter: ^11.0.0
-  google_fonts: ^8.0.2
 
   # Date and formatting
   intl: ^0.20.2
@@ -36,11 +35,11 @@ dependencies:
   fl_chart: ^1.1.1
 
   # Firebase Services
-  firebase_core: ^4.5.0
-  firebase_auth: ^6.2.0
-  firebase_analytics: ^12.1.3
-  firebase_crashlytics: ^5.0.8
-  firebase_messaging: ^16.1.2
+  firebase_core: ^4.11.0
+  firebase_auth: ^6.5.4
+  firebase_analytics: ^12.4.3
+  firebase_crashlytics: ^5.2.4
+  firebase_messaging: ^16.4.1
 
   # Utils
   logger: ^2.4.0
@@ -48,30 +47,27 @@ dependencies:
   permission_handler: ^12.0.1
   image_picker: ^1.1.2
   flutter_image_compress: ^2.3.0
-  path_provider: ^2.1.4
+  path_provider: ^2.1.6
   cached_network_image: ^3.4.1
-  shimmer: ^3.0.0
+  flutter_cache_manager: ^3.4.1
   confetti: ^0.8.0
   url_launcher: ^6.3.0
-  app_links: ^7.0.0
-  share_plus: ^13.1.0
-  vibration: ^3.1.8
-  local_auth: ^3.0.1
+  app_links: ^7.2.0
   google_sign_in: ^7.2.0
   fpdart: ^1.2.0
-  connectivity_plus: ^7.0.0
+  connectivity_plus: ^7.2.0
   timeago: ^3.7.1
   video_player: ^2.11.0
-  table_calendar: ^3.2.0
 
   # Offline Storage
   sqflite: ^2.3.3+1
   path: ^1.9.0
   flutter_animate: ^4.5.2
-  package_info_plus: ^10.1.0
-  device_info_plus: ^13.1.0
+  package_info_plus: ^10.2.0
+  device_info_plus: ^13.2.0
+  purchases_flutter: ^10.3.0
+  motor: ^1.1.0
 
-  in_app_purchase: ^3.2.3
 
 
 dev_dependencies:
@@ -81,7 +77,7 @@ dev_dependencies:
     sdk: flutter
 
   # Code generation
-  riverpod_generator: ^4.0.3
+  riverpod_generator: ^4.0.4
   build_runner: ^2.4.11
 
   # Linting
@@ -91,10 +87,11 @@ dev_dependencies:
   mockito: ^5.4.6
   flutter_native_splash: ^2.4.7
   flutter_launcher_icons: ^0.14.4
+  riverpod_lint: ^3.1.4
 
   # i18n: AI-assisted ARB translation. Activate globally instead of as a
-  # dev dep — locking it here forced intl ^0.19, which clashes with
-  # table_calendar (intl ^0.20). Run via:
+  # dev dep — locking it here forced intl ^0.19, which clashes with the
+  # intl 0.20.x pinned by flutter_localizations. Run via:
   #   dart pub global activate arb_translate
   #   dart pub global run arb_translate
   # See AGENTS.md for the workflow.
@@ -108,6 +105,7 @@ flutter:
     - assets/images/
     - assets/images/shopping_icons/products/
     - assets/images/premium_3d_avatars/
+    - assets/images/premium_3d_avatars/animated/
     - assets/images/custom_avatars/
     - assets/fonts/outfit/
     - shorebird.yaml

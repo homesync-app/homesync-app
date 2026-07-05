@@ -183,13 +183,17 @@
   "@settingsPremiumTitle": {
     "description": "Brand name — keep as 'HomeSync Premium' in all locales."
   },
-  "settingsPremiumActiveSubtitle": "Premium active",
+  "settingsPremiumActiveSubtitle": "Manage plan",
   "@settingsPremiumActiveSubtitle": {
     "description": "Card subtitle when the user already has premium."
   },
   "settingsPremiumInactiveSubtitle": "Advanced features",
   "@settingsPremiumInactiveSubtitle": {
     "description": "Card subtitle when the user does NOT have premium yet — teaser to upsell."
+  },
+  "settingsPremiumFeedbackRewardNote": "Report bugs or suggest useful improvements and you may earn free Premium months.",
+  "@settingsPremiumFeedbackRewardNote": {
+    "description": "Note below the Premium card encouraging users to report bugs or suggest useful improvements in exchange for possible free Premium months."
   },
   "settingsPremiumFeatureShoppingFinanceSync": "Shopping → Finance sync",
   "@settingsPremiumFeatureShoppingFinanceSync": {
@@ -257,6 +261,34 @@
   "settingsResetDialogConfirm": "Reset",
   "@settingsResetDialogConfirm": {
     "description": "Destructive confirm button on the reset-account dialog."
+  },
+  "settingsDeleteAccountButton": "Delete my account",
+  "@settingsDeleteAccountButton": {
+    "description": "Destructive button label that permanently deletes the user's account and all their data (Play Store account-deletion requirement)."
+  },
+  "settingsDeleteAccountDialogTitle": "Delete your account?",
+  "@settingsDeleteAccountDialogTitle": {
+    "description": "Title of the confirmation dialog for permanent account deletion."
+  },
+  "settingsDeleteAccountDialogBody": "This permanently deletes your account and all your data (tasks, expenses, rewards and progress). It can't be undone. If you share a household, you'll be removed from it.",
+  "@settingsDeleteAccountDialogBody": {
+    "description": "Body of the permanent account-deletion confirmation dialog. Must make clear the action is irreversible."
+  },
+  "settingsDeleteAccountConfirm": "Delete permanently",
+  "@settingsDeleteAccountConfirm": {
+    "description": "Destructive confirm button on the delete-account dialog."
+  },
+  "settingsDeleteAccountSuccess": "Account deleted",
+  "@settingsDeleteAccountSuccess": {
+    "description": "Snackbar shown after the account was deleted successfully."
+  },
+  "settingsDeleteAccountError": "Couldn't delete your account. Please try again.",
+  "@settingsDeleteAccountError": {
+    "description": "Snackbar shown when account deletion fails on the backend."
+  },
+  "settingsDeleteAccountReauthNeeded": "For your security, sign in again and then delete your account.",
+  "@settingsDeleteAccountReauthNeeded": {
+    "description": "Shown when Firebase requires a recent login before deleting the credential."
   },
   "splashLoadingMessage": "Setting up your shared home.",
   "@splashLoadingMessage": {
@@ -358,7 +390,31 @@
   "@homeViewWeekButton": {
     "description": "Small button next to the day-tasks list that takes the user to the full weekly view."
   },
-  "homeAllDoneToday": "All done for today",
+  "homeTodayProgressLabel": "{done} of {total}",
+  "@homeTodayProgressLabel": {
+    "description": "Daily task progress chip next to the home tasks title, e.g. '2 of 5'.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTodayProgressSemantic": "Today's progress: {done} of {total} tasks completed",
+  "@homeTodayProgressSemantic": {
+    "description": "Screen-reader label for the daily progress chip.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAllDoneToday":"All done for today",
   "@homeAllDoneToday": {
     "description": "Empty-state message shown on the dashboard when there are no tasks left for today."
   },
@@ -428,6 +484,310 @@
     "description": "CTA in the solo dashboard empty task state. Opens the tasks tab so the user can create or manage tasks."
   },
   "homeSoloActivityTitle": "Your activity",
+  "homeGreetingMorning": "Good morning,",
+  "@homeGreetingMorning": {
+    "description": "Time-of-day greeting on the editorial home header, shared by solo and family-adult modes (05:00–12:59). Ends with a comma; the user's first name renders below as the hero line."
+  },
+  "homeGreetingAfternoon": "Good afternoon,",
+  "@homeGreetingAfternoon": {
+    "description": "Time-of-day greeting on the editorial home header (13:00–19:59)."
+  },
+  "homeGreetingEvening": "Good evening,",
+  "@homeGreetingEvening": {
+    "description": "Time-of-day greeting on the editorial home header (20:00–04:59)."
+  },
+  "homeSoloSpentEmpty": "No spending yet ✨",
+  "@homeSoloSpentEmpty": {
+    "description": "Shown in place of the monthly-spend amount on the solo bento tile when the month's spend is exactly zero (a giant $0 reads like broken data)."
+  },
+  "homeSoloSpentDailyAvg": "{month} · {amount}/day",
+  "@homeSoloSpentDailyAvg": {
+    "description": "Footer of the solo spending tile once there is spending: current month plus the running daily average (already currency-formatted).",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "soloSpaceEyebrow": "My space",
+  "@soloSpaceEyebrow": {
+    "description": "Small eyebrow above the solo personal-space progress stage."
+  },
+  "soloSpaceLevel": "Level {level}",
+  "@soloSpaceLevel": {
+    "description": "Compact level pill on the solo space hero.",
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceXpToNext": "{xp} XP to the next level.",
+  "@soloSpaceXpToNext": {
+    "description": "Progress helper text below the solo space level bar.",
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceStageRecentMove": "Fresh start",
+  "soloSpaceStageRecentMoveSubtitle": "Your space is starting to take shape. Choose one simple action and build from there.",
+  "soloSpaceStageInMotion": "Home in motion",
+  "soloSpaceStageInMotionSubtitle": "There is movement now: a few routines, expenses, or tasks are starting to organize your days.",
+  "soloSpaceStageSteadyRoutine": "Steady routine",
+  "soloSpaceStageSteadyRoutineSubtitle": "You already have a base; now it is about keeping it going without overthinking it.",
+  "soloSpaceStageOrganizedHome": "Organized home",
+  "soloSpaceStageOrganizedHomeSubtitle": "Your tasks, spending, and activity are starting to read like a clear system.",
+  "soloSpaceStageOwnRhythm": "Your space, your rhythm",
+  "soloSpaceStageOwnRhythmSubtitle": "This is no longer just tracking things: you are building your own way to live at home.",
+  "soloSpaceSignalsTitle": "Weekly signals",
+  "soloSpaceStreakTitle": "Streak",
+  "soloSpaceStreakMetric": "{days, plural, =0{No streak} =1{1 day} other{{days} days}}",
+  "@soloSpaceStreakMetric": {
+    "description": "Solo space streak metric.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceActiveDays14": "{days, plural, =0{No recent active days} =1{1 active day in 14 days} other{{days} active days in 14 days}}",
+  "@soloSpaceActiveDays14": {
+    "description": "Active days in the last 14 days helper for solo progress.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceWeeklyXpTitle": "Weekly XP",
+  "soloSpaceWeeklyTasksTitle": "Weekly tasks",
+  "soloSpaceDeltaUp": "+{value} vs previous week",
+  "@soloSpaceDeltaUp": {
+    "description": "Positive weekly delta helper for solo progress.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceDeltaDown": "{value} vs previous week",
+  "@soloSpaceDeltaDown": {
+    "description": "Negative weekly delta helper for solo progress.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceDeltaSame": "Same as previous week",
+  "soloSpaceTopTaskCategory": "Tasks: {category}",
+  "@soloSpaceTopTaskCategory": {
+    "description": "Top task category chip in solo progress.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "soloSpaceTopExpenseCategory": "Spending: {category}",
+  "@soloSpaceTopExpenseCategory": {
+    "description": "Top expense category chip in solo progress.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "soloSpaceSignalsSyncing": "Refreshing real signals from your home.",
+  "soloSpaceDimensionsTitle": "How your home is doing",
+  "soloSpaceOrderTitle": "Order",
+  "soloSpaceOrderSubtitle": "Tasks, pending items, and closing the day.",
+  "soloSpaceClarityTitle": "Clarity",
+  "soloSpaceClaritySubtitle": "Tracked spending and monthly context.",
+  "soloSpaceContinuityTitle": "Continuity",
+  "soloSpaceContinuitySubtitle": "Recent activity and real consistency.",
+  "soloSpaceNextTitle": "Next gesture",
+  "soloSpaceNextCreateTask": "Create a base task",
+  "soloSpaceNextCreateTaskSubtitle": "One small routine is enough to start shaping your space.",
+  "soloSpaceNextCompleteTask": "Close a task for today",
+  "soloSpaceNextCompleteTaskSubtitle": "Reducing pending items is the most direct way to improve Order.",
+  "soloSpaceNextRegisterExpense": "Track your first expense this month",
+  "soloSpaceNextRegisterExpenseSubtitle": "With one movement logged, your Clarity starts to have context.",
+  "soloSpaceNextReviewShopping": "Review your shopping list",
+  "soloSpaceNextReviewShoppingSubtitle": "An organized shop keeps noise down and the month lighter.",
+  "soloSpaceNextKeepGoing": "Add one simple action",
+  "soloSpaceNextKeepGoingSubtitle": "One small gesture today keeps your home continuity going.",
+  "soloSpaceMilestonesTitle": "Personal milestones",
+  "soloSpaceMilestoneFirstStep": "First step",
+  "soloSpaceMilestoneFirstStepDesc": "You completed your first task.",
+  "soloSpaceMilestoneWeekInMotion": "Week in motion",
+  "soloSpaceMilestoneWeekInMotionDesc": "You had enough recent activity to mark a rhythm.",
+  "soloSpaceMilestoneClearerHome": "Clearer home",
+  "soloSpaceMilestoneClearerHomeDesc": "Your finances already have useful signals this month.",
+  "soloSpaceMilestoneSteadyRoutine": "Sustained routine",
+  "soloSpaceMilestoneSteadyRoutineDesc": "Order and continuity are starting to work together.",
+  "soloSpaceMilestoneOwnRhythm": "Own rhythm",
+  "soloSpaceMilestoneOwnRhythmDesc": "Your progress is already showing a personal identity.",
+  "soloSpaceFutureHint": "Your space adjusts with your tasks, spending, and weekly rhythm.",
+  "soloSpaceRitualTitle": "Weekly review",
+  "soloSpaceRitualProgress": "{done} of {total} gestures",
+  "@soloSpaceRitualProgress": {
+    "description": "Weekly solo ritual completion progress.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceRitualReviewTasks": "Review open tasks",
+  "soloSpaceRitualCheckSpending": "Check monthly spending",
+  "soloSpaceRitualPlanShopping": "Adjust the shopping list",
+  "soloSpaceRitualChooseNextRoutine": "Choose one routine to keep",
+  "soloSpaceInsightsTitle": "Weekly read",
+  "soloSpaceInsightNoActivity": "Starting point",
+  "soloSpaceInsightNoActivityDesc": "There are no strong signals this week yet. One simple gesture is enough to begin.",
+  "soloSpaceInsightStreak": "Streak building",
+  "soloSpaceInsightStreakDesc": "{days, plural, =1{One active day already marks continuity.} other{{days} active days in a row are starting to form a rhythm.}}",
+  "@soloSpaceInsightStreakDesc": {
+    "description": "Insight text for a solo streak.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceInsightWeekImproved": "Stronger week",
+  "soloSpaceInsightWeekImprovedDesc": "+{value} XP versus the previous week. There is more movement at home.",
+  "@soloSpaceInsightWeekImprovedDesc": {
+    "description": "Insight text when weekly XP improved.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "soloSpaceInsightWeekSlowed": "Quieter week",
+  "soloSpaceInsightWeekSlowedDesc": "Movement slowed down. Choose one small action and close the day.",
+  "soloSpaceInsightFinanceVisible": "Finances with context",
+  "soloSpaceInsightFinanceVisibleDesc": "There are enough movements now to read the month more clearly.",
+  "soloSpaceInsightNoFinance": "Missing finance read",
+  "soloSpaceInsightNoFinanceDesc": "Tracking one real expense activates better Clarity signals.",
+  "soloSpaceInsightTaskCategory": "Task pattern",
+  "soloSpaceInsightTaskCategoryDesc": "{category} is showing up as a strong focus this month.",
+  "@soloSpaceInsightTaskCategoryDesc": {
+    "description": "Insight text for the top task category.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "soloSpaceInsightExpenseCategory": "Spending pattern",
+  "soloSpaceInsightExpenseCategoryDesc": "{category} has the most movement this month.",
+  "@soloSpaceInsightExpenseCategoryDesc": {
+    "description": "Insight text for the top expense category.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "soloSpaceSuggestionsTitle": "Suggested tools",
+  "soloSpaceSuggestionRecurringTask": "Turn something into a routine",
+  "soloSpaceSuggestionRecurringTaskDesc": "A recurring task lowers friction and supports Order.",
+  "soloSpaceSuggestionClosePending": "Close what is pending",
+  "soloSpaceSuggestionClosePendingDesc": "Resolving one task today clears mental space.",
+  "soloSpaceSuggestionRegisterExpense": "Track a real expense",
+  "soloSpaceSuggestionRegisterExpenseDesc": "With one movement, the month no longer reads empty.",
+  "soloSpaceSuggestionReviewShopping": "Review shopping",
+  "soloSpaceSuggestionReviewShoppingDesc": "A clear list avoids duplicate or last-minute purchases.",
+  "soloSpaceSuggestionProtectStreak": "Protect the streak",
+  "soloSpaceSuggestionProtectStreakDesc": "One small action today keeps continuity alive.",
+  "soloSpaceSuggestionWeeklyReview": "Run the weekly review",
+  "soloSpaceSuggestionWeeklyReviewDesc": "Check the ritual gestures and leave the week organized.",
+  "soloSpaceUnlocksTitle": "Soft unlocks",
+  "soloSpaceUnlockActive": "Active",
+  "soloSpaceUnlockNext": "Next",
+  "soloSpaceUnlockWeeklyReview": "Review view",
+  "soloSpaceUnlockWeeklyReviewDesc": "Available from the start to organize the week without pressure.",
+  "soloSpaceUnlockRecurringTemplates": "Recurring templates",
+  "soloSpaceUnlockRecurringTemplatesDesc": "Appear when there is enough base to repeat routines.",
+  "soloSpaceUnlockHabitInsights": "Habit insights",
+  "soloSpaceUnlockHabitInsightsDesc": "Activate after several days of real activity.",
+  "soloSpaceUnlockPersonalMedal": "Personal medal",
+  "soloSpaceUnlockPersonalMedalDesc": "Recognizes a sustained stage without competing with anyone.",
+  "soloSpaceUnlockRhythmRecommendations": "Rhythm recommendations",
+  "soloSpaceUnlockRhythmRecommendationsDesc": "Connect financial clarity with weekly continuity.",
+  "activityCoinsPlus": "{count, plural, =1{+1 coin} other{+{count} coins}}",
+  "@activityCoinsPlus": {
+    "description": "Coins-earned figure on activity feed entries ('coin' is the app's game-currency name, kept in English in both locales).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "activityCoinsMinus": "{count, plural, =1{-1 coin} other{-{count} coins}}",
+  "@activityCoinsMinus": {
+    "description": "Coins-spent figure on activity feed entries (redeemed rewards).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFamilyApprovalsTileLabel": "Approvals",
+  "@homeFamilyApprovalsTileLabel": {
+    "description": "Tiny uppercase eyebrow on the approvals bento tile of the family-adult dashboard (Parent Mode inbox)."
+  },
+  "homeFamilyApprovalsPendingLabel": "{count, plural, =1{pending} other{pending}}",
+  "@homeFamilyApprovalsPendingLabel": {
+    "description": "Caption under the pending-approvals count on the family dashboard approvals tile. The number renders separately in the tile chip.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFamilyApprovalsAllClear": "All clear",
+  "@homeFamilyApprovalsAllClear": {
+    "description": "Caption on the family dashboard approvals tile when there is nothing awaiting review."
+  },
+  "expensesYouAreOwed": "You're owed {amount}",
+  "@expensesYouAreOwed": {
+    "description": "Chip on the Finances summary card when household members owe the user money for shared expenses (divided economy). Amount arrives currency-formatted.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesYouOwe": "You owe {amount}",
+  "@expensesYouOwe": {
+    "description": "Chip on the Finances summary card when the user owes money for shared expenses (divided economy).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesDailyAvg": "≈ {amount}/day",
+  "@expensesDailyAvg": {
+    "description": "Running daily average under the Finances hero amount (simple expenses mode). Amount arrives already currency-formatted; the month renders separately in the header pill.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "homeCoupleHeadlineSecondary": "of your home",
   "@homeCoupleHeadlineSecondary": {
     "description": "Second line of the couple-mode dashboard headline ('Todo lo importante / del hogar')."
@@ -460,6 +820,40 @@
   "homeCoupleSettlementErrorNoUser": "We couldn't identify your user.",
   "@homeCoupleSettlementErrorNoUser": {
     "description": "Snackbar shown when the user tries to settle but their user id can't be resolved."
+  },
+  "homeCoupleSettlementDialogTitle": "Record settlement",
+  "@homeCoupleSettlementDialogTitle": {
+    "description": "Main title for the settle-up confirmation dialog."
+  },
+  "homeCoupleSettlementDialogDirectionPay": "You → {partnerName}",
+  "@homeCoupleSettlementDialogDirectionPay": {
+    "description": "Compact payer-to-receiver label when the current user pays the partner.",
+    "placeholders": {
+      "partnerName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCoupleSettlementDialogDirectionReceive": "{partnerName} → you",
+  "@homeCoupleSettlementDialogDirectionReceive": {
+    "description": "Compact payer-to-receiver label when the partner pays the current user.",
+    "placeholders": {
+      "partnerName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCoupleSettlementDialogBalanceZero": "This will bring the household balance to zero.",
+  "@homeCoupleSettlementDialogBalanceZero": {
+    "description": "Short helper copy in the settle-up dialog explaining the result of the payment."
+  },
+  "homeCoupleSettlementDialogCancel": "Not now",
+  "@homeCoupleSettlementDialogCancel": {
+    "description": "Secondary action in the settle-up dialog."
+  },
+  "homeCoupleSettlementDialogConfirm": "Record payment",
+  "@homeCoupleSettlementDialogConfirm": {
+    "description": "Primary action in the settle-up dialog."
   },
   "homeCoupleSettlementDialogTitlePay": "Settle up with {partnerName}",
   "@homeCoupleSettlementDialogTitlePay": {
@@ -573,6 +967,164 @@
   "homeFriendsActivityTitle": "Group activity",
   "homeFriendsActivitySubtitle": "The latest shared activity in the household.",
   "homeFriendsActivityEmpty": "No shared activity yet.",
+  "homeFriendsSettleTitle": "Settle up",
+  "@homeFriendsSettleTitle": {
+    "description": "Section header above the debt-settlement card in friends mode, where roommates settle outstanding balances."
+  },
+  "homeFriendsSettleSubtitle": "Who pays whom to get back to zero.",
+  "@homeFriendsSettleSubtitle": {
+    "description": "Subtitle under the settle-up section header in friends mode."
+  },
+  "homeFriendsBalancesLoadError": "We couldn't load the balances. Tap to retry.",
+  "@homeFriendsBalancesLoadError": {
+    "description": "Error state shown when the household balances fail to load in friends mode. Tappable to retry."
+  },
+  "homeFriendsTasksLoadError": "We couldn't load the tasks. Tap to retry.",
+  "@homeFriendsTasksLoadError": {
+    "description": "Error state shown when the today tasks fail to load in friends mode. Tappable to retry."
+  },
+  "homeFriendsShoppingLoadError": "We couldn't load the shopping list. Tap to retry.",
+  "@homeFriendsShoppingLoadError": {
+    "description": "Error state shown when the shopping list fails to load in friends mode. Tappable to retry."
+  },
+  "homeFriendsActivityLoadError": "We couldn't load the activity. Tap to retry.",
+  "@homeFriendsActivityLoadError": {
+    "description": "Error state shown when the recent activity feed fails to load in friends mode. Tappable to retry."
+  },
+  "balanceCardStatusOwed": "Time to settle your balance",
+  "@balanceCardStatusOwed": {
+    "description": "Status line on the shared balance card when the current user owes money to the group."
+  },
+  "balanceCardStatusFavor": "In your favor",
+  "@balanceCardStatusFavor": {
+    "description": "Status line on the shared balance card when the group owes money to the current user."
+  },
+  "balanceCardStatusShared": "Shared balance",
+  "@balanceCardStatusShared": {
+    "description": "Status line on the shared balance card when there's no current-user balance to highlight (generic group view)."
+  },
+  "balanceCardBadgeSettled": "Settled",
+  "@balanceCardBadgeSettled": {
+    "description": "Short badge on the balance card when the current user's balance is settled (zero)."
+  },
+  "balanceCardBadgeOwes": "You owe",
+  "@balanceCardBadgeOwes": {
+    "description": "Short badge on the balance card when the current user owes money."
+  },
+  "balanceCardBadgeFavor": "In favor",
+  "@balanceCardBadgeFavor": {
+    "description": "Short badge on the balance card when the current user is owed money."
+  },
+  "balanceCardMovements": "{count, plural, =0{0 movements} one{1 movement} other{{count} movements}}",
+  "@balanceCardMovements": {
+    "description": "Headline on the balance card showing the number of open shared movements when there's no per-user balance.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceCardMembers": "{count, plural, one{Member} other{Members}}",
+  "@balanceCardMembers": {
+    "description": "Inline metric label for the number of household members on the balance card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceCardOpenBalances": "{count, plural, =0{All settled} one{Open balance} other{Open balances}}",
+  "@balanceCardOpenBalances": {
+    "description": "Inline metric label for the number of open (unsettled) balances on the balance card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceCardSingleMemberHint": "Once you add more members, you'll see the shared balance here.",
+  "@balanceCardSingleMemberHint": {
+    "description": "Hint shown on the balance card when the household has a single member, inviting them to add more."
+  },
+  "balanceCardMemberOwes": "Owes",
+  "@balanceCardMemberOwes": {
+    "description": "Per-member balance label when that member owes money to the group."
+  },
+  "balanceCardMemberFavor": "In favor",
+  "@balanceCardMemberFavor": {
+    "description": "Per-member balance label when the group owes money to that member."
+  },
+  "balanceCardMemberSettled": "Settled",
+  "@balanceCardMemberSettled": {
+    "description": "Per-member balance label when that member is settled (zero balance)."
+  },
+  "settleSectionTitle": "Settle debts",
+  "@settleSectionTitle": {
+    "description": "Title of the debt-settlement card that lists who pays whom to balance the household."
+  },
+  "settleSectionOnePayment": "1 payment needed to balance",
+  "@settleSectionOnePayment": {
+    "description": "Subtitle of the settle-up card when a single payment is needed to balance everyone."
+  },
+  "settleSectionPayments": "{count} payments to balance everything",
+  "@settleSectionPayments": {
+    "description": "Subtitle of the settle-up card when multiple payments are needed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settleAllSettled": "All balanced. Nobody owes anyone.",
+  "@settleAllSettled": {
+    "description": "Empty/positive state of the settle-up card when there are no outstanding debts."
+  },
+  "settlePaysTo": "pays {name}",
+  "@settlePaysTo": {
+    "description": "Caption under a debtor's name in the settle-up row, naming the creditor they pay.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settleConfirmTitle": "Confirm payment",
+  "@settleConfirmTitle": {
+    "description": "Title of the dialog confirming a settlement payment between two members."
+  },
+  "settleConfirmBody": "{from} pays {amount} to {to}.",
+  "@settleConfirmBody": {
+    "description": "Body of the settlement confirmation dialog.",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "settleSuccess": "Payment of {amount} recorded.",
+  "@settleSuccess": {
+    "description": "Snackbar shown after a settlement payment is recorded.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "settleError": "Couldn't record the payment: {error}",
+  "@settleError": {
+    "description": "Snackbar shown when recording a settlement payment fails.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "homeFamilyMemberNotFound": "We couldn't find your profile in this household.",
   "homeFamilyMetricCoins": "Coins",
   "@homeFamilyMetricCoins": {
@@ -582,9 +1134,13 @@
   "@homeFamilyAdultFallbackName": {
     "description": "Fallback display name on the adult/teen welcome line when the current user's name isn't loaded."
   },
-  "homeFamilyChildHello": "Hi, ",
+  "homeFamilyChildHello": "Let's go, ",
   "@homeFamilyChildHello": {
-    "description": "Greeting prefix shown to a child member. Includes trailing comma+space; the child's first name is appended after."
+    "description": "Motivational greeting prefix shown to a child member. Includes trailing comma+space; the child's first name is appended after."
+  },
+  "homeFamilyChildGreetingSuffix": "!",
+  "@homeFamilyChildGreetingSuffix": {
+    "description": "Greeting suffix shown after the child member's name."
   },
   "homeFamilyChildFallbackName": "champ",
   "@homeFamilyChildFallbackName": {
@@ -868,16 +1424,16 @@
   "setupConnectJoinButton": "Join now",
   "setupConnectBackButton": "Go back",
   "setupInvitationEyebrow": "Invitation",
-  "setupInvitationTitle": "{mode, select, family{Family created} friends{Family created} couple{Home created} solo{Home created} other{Home created}}",
+  "setupInvitationTitle": "{mode, select, family{Family created} friends{Place created} couple{Home created} solo{Home created} other{Home created}}",
   "@setupInvitationTitle": {
-    "description": "Heading on the invite-code result step. Family and friends modes share 'Familia creada' (multi-member group); couple/solo show 'Hogar creado'.",
+    "description": "Heading on the invite-code result step. family = whole family; friends = shared place/roommates; couple/solo show 'Home created'.",
     "placeholders": {
       "mode": {
         "type": "String"
       }
     }
   },
-  "setupInvitationSubtitle": "{mode, select, family{Share this code with everyone who's part of the household.} friends{Share this code with everyone who's part of the household.} couple{Share this code to invite the other person.} solo{Share this code to invite the other person.} other{Share this code to invite the other person.}}",
+  "setupInvitationSubtitle": "{mode, select, family{Share this code with everyone who's part of the household.} friends{Share this code with your housemates.} couple{Share this code to invite the other person.} solo{Share this code to invite the other person.} other{Share this code to invite the other person.}}",
   "@setupInvitationSubtitle": {
     "placeholders": {
       "mode": {
@@ -1077,8 +1633,6 @@
   "settingsParentModeApprovalOffSubtitle": "Tasks are credited as soon as they're completed.",
   "settingsParentModeApprovalChildrenOnlyTitle": "Kids and teens only",
   "settingsParentModeApprovalChildrenOnlySubtitle": "Adults complete directly; everyone else needs approval.",
-  "settingsParentModeApprovalAllTitle": "All members",
-  "settingsParentModeApprovalAllSubtitle": "Every completion goes through your OK before paying coins.",
   "settingsParentModeApprovalPerMemberTitle": "Per member",
   "settingsParentModeApprovalPerMemberSubtitle": "You pick exactly who needs approval in the list below.",
   "settingsParentModeInboxIdle": "Approval inbox",
@@ -1094,6 +1648,9 @@
   },
   "settingsParentModeMemberView": "Per-member view",
   "settingsParentModeWeeklySummary": "Weekly summary",
+  "settingsParentModeAllowanceTitle": "Allowances",
+  "settingsParentModeAllowanceSubtitle": "Send allowances to teens with personal finances.",
+  "settingsParentModeAllowanceCta": "Send allowance",
   "settingsParentModePerMemberEmpty": "No other members in the household yet.",
   "settingsParentModeSaveError": "We couldn't save the change: {message}",
   "@settingsParentModeSaveError": {
@@ -1229,6 +1786,26 @@
   "tasksEmptySharedSubtitle": "Add your first task or turn on a category to start organizing.",
   "tasksEmptyFilteredSubtitle": "Try changing the category or creating a new task.",
   "tasksPillNoDate": "No date",
+  "tasksSectionOverdue": "Overdue",
+  "@tasksSectionOverdue": {
+    "description": "Tasks list section header: overdue tasks."
+  },
+  "tasksSectionToday": "Today",
+  "@tasksSectionToday": {
+    "description": "Tasks list section header: tasks due today."
+  },
+  "tasksSectionThisWeek": "This week",
+  "@tasksSectionThisWeek": {
+    "description": "Tasks list section header: tasks due within the next 7 days."
+  },
+  "tasksSectionUpcoming": "Later",
+  "@tasksSectionUpcoming": {
+    "description": "Tasks list section header: tasks due beyond this week."
+  },
+  "tasksSectionNoDate": "No date",
+  "@tasksSectionNoDate": {
+    "description": "Tasks list section header: unscheduled tasks."
+  },
   "tasksPillOverdue": "Overdue",
   "tasksPillInReview": "In review",
   "tasksActionSchedule": "Schedule",
@@ -1347,6 +1924,14 @@
   "completeTaskTasksSubtitle": "Search and pick what's done",
   "completeTaskSearchHint": "Search task...",
   "completeTaskNoTasksAvailable": "No tasks available",
+  "completeTaskAddPromptTitle": "Can't find the task?",
+  "@completeTaskAddPromptTitle": {
+    "description": "Helper text shown at the bottom of the complete tasks sheet when the user may need to create a missing task."
+  },
+  "completeTaskAddPromptButton": "Add new task",
+  "@completeTaskAddPromptButton": {
+    "description": "Secondary action button at the bottom of the complete tasks sheet to open the existing new task flow."
+  },
   "completeTaskRewardVerb": "{count, plural, =1{Earned} other{Earned}}",
   "@completeTaskRewardVerb": {
     "description": "Verb shown next to the rewards earned after completing tasks. Singular when only the current user did it; plural when multiple members participated.",
@@ -1381,6 +1966,15 @@
   "taskDetailNoRecord": "No record",
   "taskDetailExperience": "Experience",
   "taskDetailReward": "Reward",
+  "taskDetailCoinsAwarded": "+{count, plural, =1{1 coin} other{{count} coins}}",
+  "@taskDetailCoinsAwarded": {
+    "description": "Compact coin reward shown in the task detail sheet.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "taskDetailCompletedBy": "Completed by",
   "taskDetailAssignedTo": "Assigned to",
   "taskDetailComment": "Comment",
@@ -1446,10 +2040,14 @@
   "pendingApprovalsAppBarShortTitle": "Approvals",
   "pendingApprovalsAppBarTitle": "Pending approvals",
   "pendingApprovalsLockedNotice": "This section is for family-household admins.",
+  "pendingApprovalsSubmittedBy": "Submitted by {name}",
   "pendingApprovalsApproveButton": "Approve",
   "pendingApprovalsRejectButton": "Reject",
+  "pendingApprovalsLoadError": "We couldn't load approvals: {message}",
+  "pendingApprovalsApprovedSnack": "Approved. {coins} coins were credited.",
   "pendingApprovalsApproveErrorRetry": "We couldn't approve the task. Try again.",
   "pendingApprovalsRejectedSnack": "Task rejected.",
+  "pendingApprovalsRejectErrorRetry": "We couldn't reject the task. Try again.",
   "pendingApprovalsRejectDialogTitle": "Reason for rejection",
   "pendingApprovalsRejectDialogHint": "Why isn't it approved (optional)",
   "pendingApprovalsEmptyTitle": "Nothing pending right now",
@@ -1537,6 +2135,27 @@
   "@expensesFormOcrLowConfidence": {
     "description": "Snackbar warning when OCR confidence is low — user should double-check the prefilled data."
   },
+  "expensesFormOcrRateLimited": "Too many scans in a row. Wait a few seconds and try again.",
+  "@expensesFormOcrRateLimited": {
+    "description": "Snackbar shown when the server throttles receipt scans (anti-abuse). Not a plan limit; OCR is free for everyone."
+  },
+  "expensesFormOcrImageTooLarge": "The image is too large ({sizeMb} MB, max 5 MB). Try another photo or pick one from the gallery.",
+  "@expensesFormOcrImageTooLarge": {
+    "description": "Snackbar shown when the compressed receipt image exceeds the 5 MB scan limit.",
+    "placeholders": {
+      "sizeMb": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesFormOcrSessionExpired": "Session expired. Sign in again to scan.",
+  "@expensesFormOcrSessionExpired": {
+    "description": "Snackbar shown when there is no valid Firebase session to authorize the receipt scan."
+  },
+  "expensesFormOcrTimeout": "The scan took too long. Check your connection and try again.",
+  "@expensesFormOcrTimeout": {
+    "description": "Snackbar shown when the receipt scan request times out (slow or hung mobile network)."
+  },
   "expensesFormValidationAmountRequired": "Enter a valid amount.",
   "@expensesFormValidationAmountRequired": {
     "description": "Validation error when the amount field is empty or invalid."
@@ -1550,6 +2169,10 @@
   "expensesFormUpdatedExpense": "Updated",
   "@expensesFormUpdatedExpense": {
     "description": "Success label on the save button when editing an existing expense."
+  },
+  "plannedExpensePaymentConfirmButton": "Confirm and record",
+  "@plannedExpensePaymentConfirmButton": {
+    "description": "Primary button on the planned expense payment sheet. Confirms the payment and records it as an actual expense."
   },
   "expensesFormDeleteDialogTitle": "Delete expense?",
   "@expensesFormDeleteDialogTitle": {
@@ -1704,6 +2327,26 @@
   "expensesFormHeaderEditExpense": "Edit Expense",
   "expensesFormHeaderNewIncome": "New Income",
   "expensesFormHeaderNewExpense": "New Expense",
+  "allowanceEntryTitle": "Send allowance",
+  "allowanceSheetTitle": "Send allowance",
+  "allowanceSheetSubtitle": "Choose a recipient and amount. It is recorded as personal income.",
+  "allowanceRecipientLabel": "To",
+  "allowanceAmountLabel": "Amount",
+  "allowanceNoteHint": "Optional note, e.g. June allowance",
+  "allowanceSubmitButton": "Send allowance",
+  "allowanceNoRecipients": "There are no teens with personal finances in this household.",
+  "allowanceRecipientRequired": "Choose who should receive the allowance.",
+  "allowanceAmountInvalid": "Enter a valid amount.",
+  "allowanceSendGenericError": "We couldn't send the allowance.",
+  "allowanceSentSnack": "Allowance sent.",
+  "allowanceSendError": "Error sending allowance: {error}",
+  "@allowanceSendError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "expensesFormSelectCategoryTitle": "Select category",
   "expensesFormAutoTitleSupermarketShopping": "Grocery shopping",
   "expensesFormShoppingSynced": "{count, plural, =1{1 item purchased} other{{count} items purchased}}",
@@ -1728,6 +2371,7 @@
     }
   },
   "expensesFormShoppingWillMarkBought": "They'll be marked as purchased when you save",
+  "expensesFormShoppingPreparingProducts": "Preparing products...",
   "expensesFormShoppingTapToLink": "Tap to link items",
   "expensesFormShoppingClearAllSemantic": "Remove all links",
   "expensesFormShoppingDetectedCount": "{count, plural, =1{1 detected product} other{{count} detected products}}",
@@ -1781,8 +2425,8 @@
   "notificationsErrorTitle": "We couldn't load your notifications",
   "notificationsErrorSubtitle": "Swipe down to retry",
   "premiumPaywallCloseTooltip": "Close",
-  "premiumPaywallEyebrow": "Premium for households that stay organized",
-  "premiumPaywallTitle": "Automate your household without entering everything twice",
+  "premiumPaywallEyebrow": "HomeSync Premium",
+  "premiumPaywallTitle": "Automate your household without duplicate entry",
   "premiumPaywallSubtitle": "Payments, shopping, and stats working together so the balance always stays clear.",
   "premiumBenefitRecurringPayments": "Recurring payments",
   "premiumBenefitRecurringPaymentsDesc": "Schedule subscriptions, services, and installments so they repeat on their own and do not get lost during the month.",
@@ -1793,34 +2437,136 @@
   "premiumBenefitFullCustomization": "Full customization",
   "premiumBenefitFullCustomizationDesc": "Choose colors, themes, and custom avatars so the household feels like yours.",
   "premiumRestorePurchases": "Restore purchases",
+  "premiumCancelAnytime": "Cancel anytime",
   "premiumFreeTrialAvailable": "Free Trial Available",
   "premiumActivateButton": "Activate Premium",
   "premiumTestingModeLabel": "Testing mode · no charge",
   "premiumSavePercent": "Save 20%",
-  "premiumAlreadyActiveTitle": "You're already Premium!",
-  "premiumAlreadyActiveBody": "Thanks for supporting HomeSync development.",
+  "premiumChoosePlanTitle": "Choose your plan",
+  "premiumAnnualPlan": "Annual",
+  "premiumMonthlyPlan": "Monthly",
+  "premiumBestValueBadge": "Best value",
+  "premiumBilledAnnually": "Billed once a year",
+  "premiumBilledMonthly": "Renews month to month",
+  "premiumMonthlyEquivalent": "{price}/mo",
+  "@premiumMonthlyEquivalent": {
+    "description": "Shows the equivalent monthly price for an annual subscription.",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumContinueWithPlan": "Continue",
+  "premiumAlreadyActiveTitle": "Premium is active in your household",
+  "premiumAlreadyActiveBody": "You're all set: premium features are now available for this household.",
+  "premiumActiveStatusPill": "Plan active",
+  "premiumActiveBenefitsTitle": "Enabled benefits",
   "premiumContinueButton": "Continue",
   "premiumDeactivateTesting": "Deactivate Premium (testing)",
   "premiumStoreErrorTitle": "Error connecting to store",
   "premiumDeveloperModeButton": "Developer Mode: Activate Premium",
-  "faqSheetTitle": "FAQ",
-  "faqSheetSubtitle": "Everything you need to know about HomeSync",
-  "faqHowSharedHome": "How does the shared home work?",
-  "faqHowSharedHomeAnswer": "HomeSync is designed for couples and people living together. When you join a household with a code, you both share the same task list, expenses, and savings. Everything one person does is reflected for the other.",
+  "faqSheetTitle": "Frequently Asked Questions",
+  "faqSheetSubtitle": "Help tailored to your home",
+  "faqSearchHint": "Search for a question...",
+  "faqSearchEmpty": "Nothing matched your search. Try another word or tell us via “Send feedback”.",
+  "faqContextPill": "Help for: {label}",
+  "@faqContextPill": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "faqCatHousehold": "Your home",
+  "faqCatTasks": "Tasks",
+  "faqCatRewards": "Points & rewards",
+  "faqCatFinances": "Finances",
+  "faqCatApp": "The app & your account",
+  "faqHowSharedHome": "How does my home work in HomeSync?",
+  "faqHowSharedHomeAnswer": "{mode, select, couple{You and your partner share one digital home: tasks, expenses, the shopping list and savings live in one place and sync instantly. Whatever one adds, the other sees right away.} family{The whole family shares one digital home. Every member has a role (father, mother, guardian, teen or kid) and the app adapts what each one sees and can do: adults manage, kids contribute by completing tasks.} friends{Everyone living together shares tasks, expenses and shopping in one place, as equals: no hierarchies and no kid-style prizes, just a clear picture of what each person contributes.} solo{Your home is your personal space: organize your tasks, expenses and shopping list at your own pace. If you ever live with someone, invite them with a code and you're set.} other{You share one digital home: tasks, expenses, shopping and savings synced instantly across all members.}}",
+  "@faqHowSharedHomeAnswer": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "faqInviteMembers": "How do I invite someone to my home?",
+  "faqInviteMembersAnswer": "{mode, select, family{Your home's invitation code is in Settings: share it and, once entered in their app, that person joins with everything synced. Then, from the members list, adults assign their role (father, mother, guardian, teen or kid).} other{Your home's invitation code is in Settings: share it with whoever you want to add and, once entered in their app, they join with tasks, expenses and shopping already synced.}}",
+  "@faqInviteMembersAnswer": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "faqFamilyRoles": "What do the family roles mean?",
+  "faqFamilyRolesAnswer": "Father, mother and guardians are the adults: they manage the home, approve tasks, handle shared finances and the rewards store. Teens get more autonomy and their own personal finance space. Kids get the simplest, most playful experience: complete tasks, earn coins and redeem rewards.",
+  "faqWhoSeesWhat": "What does each member see?",
+  "faqWhoSeesWhatAnswer": "Each role sees what belongs to them: adults see everything, shared finances included; teens see their personal finances but not the adults' shared expenses; and kids don't see finances at all — their world is tasks, points and rewards.",
+  "faqTasksBasics": "How do tasks work?",
+  "faqTasksBasicsAnswer": "Create one-time or recurring tasks (daily, weekly, monthly), assign them to someone or leave them open for whoever grabs them. Every task pays XP and coins when completed, the calendar shows what's coming, and recurring ones reschedule themselves.",
+  "faqApprovals": "How do task approvals work?",
+  "faqApprovalsAnswer": "{role, select, parent{When a kid or teen marks a task as done, it waits for your approval: review it under Approvals and, once you confirm, the XP and coins are credited. Who needs approval is set in the household settings.} teen{Depending on how the home is set up, marking a task as done may leave it pending until an adult confirms it. Only then are your XP and coins credited.} child{When you mark a task as done, an adult reviews and confirms it. As soon as they approve, your XP and coins arrive!} other{Tasks completed by kids and teens may require an adult's confirmation before XP and coins are credited, depending on household settings.}}",
+  "@faqApprovalsAnswer": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "faqHowEarnXp": "How do I earn XP and level up?",
+  "faqHowEarnXpAnswer": "Every completed task earns XP (harder ones pay more). XP levels you up and unlocks achievements: medals for milestones like completing 50 tasks. All your progress lives in Stats.",
   "faqWhatCoins": "What are Coins for?",
-  "faqWhatCoinsAnswer": "Coins are the reward for completing tasks. You can use them in the rewards section to redeem vouchers created by your partner, like a romantic dinner or a day of relaxation.",
+  "faqWhatCoinsAnswer": "{mode, select, family{Coins are the home currency: kids earn them by completing tasks and spend them in the rewards store on prizes the adults created — an outing, screen time, their favorite meal.} other{The coins you earn completing tasks are redeemed in Rewards for vouchers your partner creates: a dinner, a massage, a surprise date. The idea is to reward each other for keeping the home running.}}",
+  "@faqWhatCoinsAnswer": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
   "faqWhatWeeklyDuels": "What are Weekly Duels?",
-  "faqWhatWeeklyDuelsAnswer": "Each week a new XP duel begins. The member who completes more tasks and earns more experience points will be the winner. It's a fun way to motivate each other.",
-  "faqHowEarnXp": "How do I earn XP?",
-  "faqHowEarnXpAnswer": "You earn XP every time you complete a task. Harder or more important tasks usually give more XP. Leveling up shows your progress within the household.",
+  "faqWhatWeeklyDuelsAnswer": "Every week a new XP duel against your partner starts, with a hidden score: you see your own progress, but the real result is revealed at Sunday's close. Whoever earned more takes the crown and a coin bonus.",
+  "faqFamilyRanking": "How does the family ranking work?",
+  "faqFamilyRankingAnswer": "Every week the family competes in a healthy way: the ranking shows who earned the most XP completing tasks. At week's close there's a winner with a crown and bonus, and the weekly summary shows how everyone did.",
+  "faqWhatSpecialEvents": "What is the weekly couple event?",
+  "faqWhatSpecialEventsAnswer": "Every week brings a challenge designed for the two of you: recreate your first date, cook together, a screen-free night. When you complete it, you both receive coins and the event is marked as done for both until the next one arrives.",
+  "faqContributionBalance": "What is the contribution balance?",
+  "faqContributionBalanceAnswer": "It's the month's neutral snapshot: it combines completed tasks and shared expenses to show how much each person is contributing to the household. No winners or losers — it's for talking with data, not competing.",
+  "faqRewardsStore": "How does the rewards store work?",
+  "faqRewardsStoreAnswer": "{role, select, parent{You create the rewards (an outing, game time, their favorite dessert) and set a coin price. Kids redeem them with what they earned completing tasks, and you confirm the redemption.} other{The store holds the rewards created by the adults of your home. Earn coins by completing tasks and redeem them when you have enough: the reward stays pending until an adult confirms it.}}",
+  "@faqRewardsStoreAnswer": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
   "faqHowFinancesWork": "How do finances work?",
-  "faqHowFinancesWorkAnswer": "In HomeSync you can record real expenses and also anticipate expenses you haven't paid yet. Confirmed expenses are the ones that affect the actual balance between you. Pending ones serve as a reminder and projection, but they don't change the debt until they're paid.",
+  "faqHowFinancesWorkAnswer": "{mode, select, friends{Every shared expense is split the way you configure it (equal parts or percentages). The balance shows who's up to date and who owes, and anyone can register a payment to settle up.} family{Shared finances are adult territory: household expenses are split among them. Teens get their own personal finance space, separate from the big accounts.} other{Record real expenses and also plan ones you haven't paid yet. Confirmed expenses affect the real balance between you; pending ones work as reminders and projections, but don't change the debt until paid.}}",
+  "@faqHowFinancesWorkAnswer": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
   "faqHowRecurringCount": "How do recurring expenses and the estimated balance count?",
-  "faqHowRecurringCountAnswer": "A new recurring expense starts from its first valid date. If you create it before or on the due date, it may count this month. If you create it after, it starts on the next cycle. \"Your pending share\" shows only what corresponds to you according to the split, and \"Estimated balance\" uses your current balance minus that pending share.",
-  "faqWhatSpecialEvents": "What are Special Events?",
-  "faqWhatSpecialEventsAnswer": "Each week a couple challenge appears in the store. They're activities designed to strengthen the relationship. When you complete them, both receive Coins and unlock medals on their achievements profile.",
-  "faqLevelsAndAchievements": "Levels and achievements?",
-  "faqLevelsAndAchievementsAnswer": "As you earn XP, you level up. In the statistics section you can see your achievements, which are medals for milestones reached, like completing 50 tasks or beating weekly challenges.",
+  "faqHowRecurringCountAnswer": "A new recurring expense starts from its first valid date. If you create it before or on the due date, it can count this month; if you create it after, it starts next cycle. “Your pending share” shows only what corresponds to you per the split, and “Estimated balance” takes your current balance minus that pending share.",
+  "faqWhoCanPay": "Who can register a payment?",
+  "faqWhoCanPayAnswer": "Either side can register a shared payment, even on behalf of the other — handy when one pays and the other logs it. “Paid” and “Pending” always show the household total, so everyone sees the same picture.",
+  "faqSavingsGoals": "How do savings goals work?",
+  "faqSavingsGoalsAnswer": "Create a goal with a target amount (a trip, an emergency fund) and add contributions over time. Progress is crystal clear and, in shared homes, everyone can contribute to the same goal.",
+  "faqPremium": "What's included in HomeSync Premium?",
+  "faqPremiumAnswer": "Premium activates for the whole home with a single purchase: animated premium mascots, exclusive theme colors and everything we keep adding. It's managed from Settings and only adults can purchase it.",
+  "faqCustomization": "Can I customize the app?",
+  "faqCustomizationAnswer": "Yes: light, dark or system theme, primary color (with Premium), language (Spanish or English) and the currency used to display finances. All under Settings → Appearance.",
+  "faqNotifications": "Which notifications will I get?",
+  "faqNotificationsAnswer": "Updates about your home: tasks assigned to you, expense news and pending approvals. Turn them on or off under Settings → Notifications.",
+  "faqAccountSafety": "How do I keep my account and data safe?",
+  "faqAccountSafetyAnswer": "Your session is personal: sign out anytime from Settings. If you need a fresh start, “Reset data” clears the home's content, and “Delete my account” removes it permanently. Your data lives encrypted in the cloud and only your home's members see what's shared.",
   "feedbackThanksBug": "Thanks for reporting it!",
   "feedbackThanksSuggestion": "Thanks for the idea!",
   "feedbackReviewBug": "We'll look into it shortly.",
@@ -1861,6 +2607,14 @@
   "membersRoleGuardian": "Guardian",
   "membersRoleTeen": "Teen",
   "membersRoleChild": "Child",
+  "membersRoleFather": "Father",
+  "membersRoleMother": "Mother",
+  "membersRoleDad": "Dad",
+  "membersRoleMom": "Mom",
+  "membersRoleGuardianMale": "Guardian",
+  "membersRoleGuardianFemale": "Guardian",
+  "membersRoleSon": "Son",
+  "membersRoleDaughter": "Daughter",
   "membersRoleParentGuardianDesc": "Approves tasks, manages the household.",
   "membersRoleTeenDesc": "Creates their own tasks, but completes them under review.",
   "membersRoleChildDesc": "Only completes their tasks, always under review.",
@@ -2153,6 +2907,92 @@
     }
   },
   "coupleChallengeWeDidIt": "We did it",
+  "coupleChallengeDoneThisWeek": "Completed this week!",
+  "coupleChallengeAlreadyDone": "You two already completed this week's challenge 💚",
+  "tourStepLabel": "Step {current} of {total}",
+  "@tourStepLabel": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "tourWelcomeEyebrow": "Welcome",
+  "tourCtaStart": "Start",
+  "tourCtaNext": "Next",
+  "tourCtaLater": "Later",
+  "tourFinaleTitle": "All set!",
+  "tourFinaleCta": "Start using",
+  "tourCoupleWelcomeTitle": "Your home, in 30 seconds",
+  "tourCoupleWelcomeBody": "A quick look at the essentials: tasks, coins, the duel and expenses. Short and sweet.",
+  "tourCoupleWelcomeBodyNamed": "A quick look at the essentials to organize everything with {partnerName}: tasks, coins, the duel and expenses.",
+  "@tourCoupleWelcomeBodyNamed": {
+    "placeholders": {
+      "partnerName": {
+        "type": "String"
+      }
+    }
+  },
+  "tourTasksTitleHas": "Do tasks, earn points",
+  "tourTasksBodyHas": "Tap ✓ to complete. Every task earns coins and XP just for you.",
+  "tourTasksTitleEmpty": "Today at home is empty",
+  "tourTasksBodyEmpty": "Your daily tasks will live here. Schedule the first one now and watch it appear — or keep the tour going and do it later.",
+  "tourTasksCtaCreate": "Schedule a task",
+  "tourBalanceTitle": "The home's pulse",
+  "tourBalanceBody": "{mode, select, shared{You have an integrated economy: no debts between you here. You see what the home spent this month and, below, each one's points.} other{Here you see what you owe each other in shared expenses and, below, what each one earned. “Settle” squares things up in one tap.}}",
+  "@tourBalanceBody": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "tourBalanceBulletSettle": "Settle → square up shared expenses",
+  "tourBalanceBulletMonth": "Monthly spend → the home's pulse",
+  "tourBalanceBulletXp": "XP → for the weekly duel",
+  "tourBalanceBulletCoins": "Coins → to redeem rewards",
+  "tourDuelTitle": "Weekly duel",
+  "tourDuelBody": "Every week you compete for XP with a hidden score. Sunday reveals the winner. Resets on Mondays.",
+  "tourRewardsTitle": "Redeem your coins",
+  "tourRewardsBody": "Rewards live here: movie night, a massage, a day off. You two build the store and treat each other.",
+  "tourExpensesTitle": "{mode, select, shared{The home's finances} other{Split your expenses}}",
+  "@tourExpensesTitle": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "tourExpensesBody": "{mode, select, shared{Record the home's expenses here: recurring bills, purchases and savings goals, all in one place.} other{Add home expenses and the app calculates who owes whom, using the split you configured.}}",
+  "@tourExpensesBody": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "tourCoupleFinaleBody": "Enjoy your home. If anything comes up, the FAQ adapts to you both.",
+  "tourFamilyWelcomeTitle": "Your family, organized",
+  "tourFamilyWelcomeBody": "A one-minute look at how to manage the whole family's tasks, points and rewards.",
+  "tourFamilyTasksTitleHas": "The family's tasks",
+  "tourFamilyTasksBody": "{mode, select, approvals{Assign tasks to everyone. When the kids complete theirs, they come to you for approval — only then do they collect their coins.} other{Assign tasks to everyone and follow the whole family's progress from here.}}",
+  "@tourFamilyTasksBody": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "tourFamilyFinanceTitle": "Expenses, adults only",
+  "tourFamilyFinanceBody": "The home's shared expenses are managed here, between adults only. Kids never see them.",
+  "tourFamilyRankingTitle": "Weekly ranking",
+  "tourFamilyRankingBody": "Every week, whoever earns the most XP completing tasks takes the crown. Healthy family competition.",
+  "tourFamilyRewardsTitle": "The rewards store",
+  "tourFamilyRewardsBody": "Create rewards (an outing, screen time, their favorite dessert) and the kids redeem them with the coins they earn.",
+  "tourFamilyFinaleBody": "Go organize the troop. The FAQ adapts to your role if you need help.",
   "familyRewardsCoinsLabel": "coins",
   "statsTabWeek": "Week",
   "statsTabEvolution": "Evolution",
@@ -2175,8 +3015,17 @@
   "weeklyWinnerEmptyBody": "Complete tasks this week and the duel will start to take shape.",
   "weeklyWinnerWeeklyClose": "WEEKLY CLOSE",
   "weeklyWinnerTitle": "Weekly winner",
-  "weeklyWinnerSubtitle": "This is how the weekly duel ended between you.",
-  "weeklyWinnerCardSubtitle": "Finished ahead in XP and took the weekly close.",
+  "weeklyWinnerHeadline": "{name} won the week",
+  "@weeklyWinnerHeadline": {
+    "description": "Headline for the weekly duel winner screen.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "weeklyWinnerSubtitle": "This is how the week closed between you.",
+  "weeklyWinnerCardSubtitle": "A strong close: more consistency, more points, and more rhythm.",
   "weeklyWinnerCoinsReward": "+20 coins",
   "weeklyWinnerCoinsAwarded": "+{coins} coins",
   "@weeklyWinnerCoinsAwarded": {
@@ -2327,6 +3176,24 @@
   "rewardsCostCoins": "{cost} coins",
   "householdSocialHubYourRole": "Your role: {role}",
   "householdSocialHubRoleFallback": "Roles and rewards ready to organize the week.",
+  "householdSocialHubRoleMember": "Member",
+  "contributionBalanceTitle": "This month's contribution",
+  "contributionBalanceSubtitle": "How things are split across the place.",
+  "contributionBalanceEmptyTitle": "No contributions yet this month",
+  "contributionBalanceEmptyBody": "Once you complete tasks or add shared expenses, you'll see how the split looks here.",
+  "contributionBalanceTasksLabel": "{count, plural, =0{No tasks} one{{count} task} other{{count} tasks}}",
+  "contributionBalanceFootnote": "No winners here: this is just to check we're even.",
+  "householdBillsTitle": "Household bills",
+  "householdBillsSubtitle": "Fixed expenses split between everyone each month.",
+  "householdBillsEmptyTitle": "No fixed bills yet",
+  "householdBillsEmptyBody": "Add rent, electricity or internet and they'll split automatically each month.",
+  "householdBillsAddButton": "Add household bill",
+  "householdBillsPremiumBody": "Fixed bills that split automatically every month are part of Premium.",
+  "householdBillsPremiumUnlock": "Unlock with Premium",
+  "householdBillsPerMonth": "{amount} / mo",
+  "householdBillsDayOfMonth": "Day {day}",
+  "householdSettleUpTitle": "Settle up",
+  "householdSettleUpSubtitle": "Who owes who, so everyone's even.",
   "householdSocialHubStoreButton": "Store",
   "householdSocialHubTrackingTitle": "Family tracking",
   "householdSocialHubTrackingSubtitle": "Progress by member and weekly closing.",
@@ -2688,6 +3555,26 @@
   "@taskTemplatePlanHouseholdTasks": {
     "description": "Localized task template title from the system catalog."
   },
+  "taskTemplateCleanMicrowave": "Clean the microwave",
+  "@taskTemplateCleanMicrowave": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateWashCar": "Wash the car",
+  "@taskTemplateWashCar": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanTrashBins": "Clean the trash bins",
+  "@taskTemplateCleanTrashBins": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplatePackSchoolBag": "Pack the school bag",
+  "@taskTemplatePackSchoolBag": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateGivePetWater": "Refresh the pet's water",
+  "@taskTemplateGivePetWater": {
+    "description": "Localized task template title from the system catalog."
+  },
   "addTaskOptionsAddedSnack": "\"{title}\" added",
   "@addTaskOptionsAddedSnack": {
     "description": "Snackbar shown after adding a suggested task template.",
@@ -2747,7 +3634,7 @@
       }
     }
   },
-  "expensesNewItemsDetectedTitle": "New items detected",
+  "expensesNewItemsDetectedTitle": "New for your list",
   "expensesNewItemsDetectedSubtitle": "Should we add them to the list for next time?",
   "expensesNewItemsIgnore": "Ignore",
   "expensesNewItemsAddToList": "Add {count} to list",
@@ -2829,11 +3716,12 @@
   "savingsGoalTarget": "Goal: {amount}",
   "savingsGoalProgressCaption": "of goal",
   "savingsGoalSaved": "Saved: {amount}",
+  "savingsGoalSavedOf": "saved of {amount}",
   "savingsGoalContributeAction": "Add funds",
   "savingsNewGoalTitle": "New Goal",
-  "savingsNewGoalSubtitle": "Define what you want to achieve and how much you need to save to make it happen.",
+  "savingsNewGoalSubtitle": "{mode, select, solo{Define what you want to achieve and how much you need to save to make it happen.} family{Define what your family wants to achieve and how much you need to save together.} friends{Define what you want to achieve and how much you need to save together.} other{Define what you want to achieve together and how much you need to save to make it happen.}}",
   "savingsSectionDetail": "DETAILS",
-  "savingsSectionDetailTitle": "What you want to reach",
+  "savingsSectionDetailTitle": "{mode, select, solo{What you want to reach} family{What your family wants to reach} friends{What you want to reach} other{What you want to reach}}",
   "savingsSectionPersonalization": "PERSONALIZATION",
   "savingsSectionPersonalizationTitle": "Make it yours",
   "savingsFieldEmoji": "Emoji",
@@ -2843,6 +3731,39 @@
   "savingsCreateGoalAction": "Create Goal",
   "savingsContributeTo": "Add money to",
   "savingsConfirmContribution": "Confirm Contribution",
+  "savingsTotalLabel": "Total Saved",
+  "savingsStatGoals": "Goals",
+  "savingsStatCompleted": "Completed",
+  "savingsHistoryTitle": "CONTRIBUTION HISTORY",
+  "savingsCompletedGoalsHistoryTitle": "Completed goals",
+  "savingsContributionLine": "{name} added {amount}",
+  "savingsSharedContributionLine": "{names} added {amount}",
+  "savingsContributionSomeone": "Someone",
+  "savingsCompletedBadge": "Reached!",
+  "savingsDeadlineChip": "By {date}",
+  "savingsEditAction": "Edit goal",
+  "savingsDeleteAction": "Delete",
+  "savingsDeleteConfirmTitle": "Delete goal?",
+  "savingsDeleteConfirmBody": "The record for \"{title}\" will be lost.",
+  "savingsArchiveAction": "Archive",
+  "savingsArchiveConfirmTitle": "Archive completed goal?",
+  "savingsArchiveConfirmBody": "The goal will be saved as completed and stop showing in the list.",
+  "savingsEditGoalTitle": "Edit Goal",
+  "savingsSaveChangesAction": "Save changes",
+  "savingsContributeSplitTitle": "HOW TO LOG THIS CONTRIBUTION?",
+  "savingsContributeSoloLabel": "Just me",
+  "savingsContributeSoloDesc": "Comes out of your pocket, like a gift.",
+  "savingsContributeSharedLabel": "{mode, select, family{As a family} friends{Everyone} solo{Everyone} other{As a couple}}",
+  "savingsContributeSharedDesc": "{mode, select, family{Split among the household adults.} friends{Split among housemates.} solo{Split per the household economy.} other{Split between you and your partner.}}",
+  "savingsNoteLabel": "Note (optional)",
+  "savingsNoteHint": "What is this contribution for?",
+  "savingsTargetDateLabel": "Target date (optional)",
+  "savingsTargetDateClear": "No deadline",
+  "savingsSuggesterMessage": "Based on your plan, you could save {amount} extra this month. That would advance your \"{goal}\" goal by {percent}%!",
+  "savingsSuggesterCta": "Contribute now",
+  "savingsCompletedCelebrationTitle": "Goal reached! 🎉",
+  "savingsCompletedCelebrationBody": "You saved it all for \"{title}\". Congrats!",
+  "savingsCelebrationDismiss": "Awesome!",
   "achievementsBadgesSection": "Your Badges",
   "achievementsCoupleChallengesSection": "Couple Challenges",
   "achievementsIconicMomentsSection": "Iconic Moments",
@@ -2864,6 +3785,20 @@
   "achievementsBlindDateDesc": "You completed a blind or sensory dinner.",
   "achievementsDreamArchitectsTitle": "Dream Architects",
   "achievementsDreamArchitectsDesc": "You designed your shared goals list.",
+  "achievementsSoloMilestonesSection": "Your milestones",
+  "achievementsSoloFirstStepTitle": "First step",
+  "achievementsSoloFirstStepDesc": "You completed your first task in your space.",
+  "achievementsSoloRoutineTitle": "Routine in motion",
+  "achievementsSoloRoutineDesc": "You completed 50 personal tasks.",
+  "achievementsSoloHomeClearTitle": "Clearer home",
+  "achievementsSoloHomeClearDesc": "You reached 5000 XP while building your rhythm.",
+  "achievementsSoloNextSection": "Next milestones",
+  "achievementsSoloWeekTitle": "Active week",
+  "achievementsSoloWeekDesc": "You sustained several actions in your home.",
+  "achievementsSoloRhythmTitle": "Own rhythm",
+  "achievementsSoloRhythmDesc": "Your routine is starting to have continuity.",
+  "achievementsSoloOwnSpaceTitle": "Own space",
+  "achievementsSoloOwnSpaceDesc": "Your personal progress already has identity.",
   "scheduleTitle": "Schedule task",
   "scheduleSubtitle": "Choose how it repeats and who's in charge.",
   "scheduleSectionRepeat": "REPEAT",
@@ -2919,8 +3854,17 @@
   "avatarPickerYourCustomSection": "Your custom ones",
   "avatarPickerCustomKeepHint": "We keep the last 6 generated by AI.",
   "avatarPickerCustomName": "Custom",
+  "avatarPickerDeleteCustom": "Delete custom avatar",
+  "avatarPickerDeleteCustomTitle": "Delete avatar?",
+  "avatarPickerDeleteCustomBody": "This custom avatar will be deleted. If you're using it, we'll switch you back to the basic avatar.",
+  "avatarPickerCustomDeleted": "Custom avatar deleted",
+  "avatarPickerCustomDeleteError": "Could not delete avatar: {error}",
   "avatarPickerCreateCustom": "Create custom avatar (1 per month)",
   "avatarPickerUnlockCustom": "Unlock custom avatar",
+  "avatarPickerAiCardTitle": "Your AI avatar",
+  "avatarPickerAiCardBody": "Turn a photo into an illustrated HomeSync-style avatar. You get 1 creation per month.",
+  "avatarPickerAiCreateButton": "Create my avatar",
+  "avatarPickerAiUsedThisMonth": "You already created this month's avatar. You can create a new one on {date}.",
   "avatarPickerGooglePhotoTitle": "Google photo",
   "avatarPickerGooglePhotoSubtitle": "Use your Google account picture as your avatar.",
   "avatarPickerCustomSheetTitle": "Custom avatar",
@@ -3231,5 +4175,165 @@
   "rewardTemplateWeekendFamilyPlan": "Weekend family plan",
   "rewardTemplateWeekendFamilyPlanDescription": "Choose an outing or activity to do together.",
   "rewardTemplateSpecialDessert": "Special dessert",
-  "rewardTemplateSpecialDessertDescription": "Pick a favorite dessert for after dinner."
+  "rewardTemplateSpecialDessertDescription": "Pick a favorite dessert for after dinner.",
+  "errorGeneric": "Something went wrong. Try again in a moment.",
+  "errorOffline": "No connection. Check your network and try again.",
+  "errorTooManyRequests": "Too many requests. Try again in a moment.",
+  "errorServerUnreachable": "We couldn't reach the server. Check your network.",
+  "errorTimeout": "The operation took too long. Try again.",
+  "errorNetworkCheckConnection": "Network error: check your connection",
+  "errorUnexpected": "An unexpected error occurred",
+  "errorOfflineQueued": "You're offline. Action saved for later.",
+  "errorNotAuthenticated": "Not signed in",
+  "errorHouseholdNotFound": "Household not found",
+  "avatarErrorImageTooLarge": "That image is too large. Try another photo.",
+  "avatarErrorSessionExpired": "Session expired. Please sign in again.",
+  "avatarErrorTimeout": "Generation took too long. Try again in a moment.",
+  "avatarErrorMonthlyLimit": "You already used this month's avatar creation. You can create another one next month.",
+  "avatarErrorPremiumRequired": "This feature is for Premium users.",
+  "avatarErrorCreateFailed": "Couldn't create the avatar. Try again.",
+  "avatarErrorInvalidResult": "The generator didn't return a valid avatar.",
+  "avatarErrorDeleteFailed": "Couldn't delete the avatar. Try again.",
+  "avatarErrorSaveFailed": "Couldn't save the generated avatar.",
+  "editTaskDeleteBody": "\"{title}\" will be deleted and this can't be undone.",
+  "@editTaskDeleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "notifTaskAssignedTitle": "New task assigned",
+  "notifTaskAssignedBody": "{actor} assigned you the task: {task}",
+  "@notifTaskAssignedBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "notifTaskCompletedTitle": "Task completed",
+  "notifTaskCompletedBody": "{actor} completed: {task}",
+  "@notifTaskCompletedBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "notifTaskPendingApprovalTitle": "Task awaiting approval",
+  "notifTaskPendingApprovalBody": "{actor} completed \"{task}\"",
+  "@notifTaskPendingApprovalBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "notifTaskApprovedTitle": "Task approved",
+  "notifTaskApprovedBody": "\"{task}\" was approved. You earned {coins} coins.",
+  "@notifTaskApprovedBody": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      },
+      "coins": {
+        "type": "int"
+      }
+    }
+  },
+  "notifTaskRejectedTitle": "Task not approved",
+  "notifTaskRejectedBody": "Your task \"{task}\" needs some changes.",
+  "@notifTaskRejectedBody": {
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "notifExpenseAddedTitle": "New transaction",
+  "notifExpenseAddedBody": "{actor} {kind, select, groceries{shopped at} other{spent on}} {title} ({amount})",
+  "@notifExpenseAddedBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "kind": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSettlementTitle": "Debt settled!",
+  "notifSettlementBody": "{actor} settled their debt of {amount}",
+  "@notifSettlementBody": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifWeeklySummaryTitle": "Your weekly summary is ready",
+  "notifWeeklySummaryBody": "See how the household's week went: completion, MVP and spending.",
+  "notifPlannedUpcomingTitle": "Upcoming payment: {title}",
+  "@notifPlannedUpcomingTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPlannedUpcomingBody": "Due {date} - {amount}",
+  "@notifPlannedUpcomingBody": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPlannedDueTitle": "Due today: {title}",
+  "@notifPlannedDueTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPlannedDueBody": "Log it from Finances once you pay it - {amount}",
+  "@notifPlannedDueBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "financeOnlyConfirmTitle": "Confirm change",
+  "financeOnlyConfirmBody": "When you {action, select, enable{enable} other{disable}} \"Finance only\" mode, ALL household members will see only finance features (no tasks, shopping, etc.). This setting applies to the whole household.",
+  "@financeOnlyConfirmBody": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  }
 }

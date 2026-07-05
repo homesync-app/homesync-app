@@ -24,7 +24,7 @@ BEGIN
     RAISE EXCEPTION 'Missing function: public.get_home_bootstrap(integer,integer,integer)';
   END IF;
 
-  IF to_regprocedure('public.pay_planned_expense(uuid,numeric,timestamp with time zone,uuid)') IS NULL THEN
+  IF to_regprocedure('public.pay_planned_expense(uuid,numeric,timestamp with time zone,text)') IS NULL THEN
     RAISE EXCEPTION 'Missing function: public.pay_planned_expense(...)';
   END IF;
 
@@ -100,3 +100,110 @@ SELECT
   (SELECT count(*) FROM public.expenses) AS expenses_rows,
   (SELECT count(*) FROM public.expense_splits) AS expense_splits_rows,
   (SELECT count(*) FROM pg_policies WHERE schemaname = 'public' AND tablename IN ('expenses','expense_splits')) AS relevant_policies;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Critical-flow RPC coverage (AGENTS.md smoke checklist).
+-- Checked by NAME (not full signature) so the gate is robust to the frequent
+-- argument-overload churn these functions go through. Each name maps to a flow
+-- the app cannot live without:
+--   complete_task_v1            → completar una tarea normal / recurrente
+--   approve_task_v1             → aprobar/verificar una tarea pendiente
+--   get_combined_feed           → cargar el feed de finanzas
+--   save_expense_v4             → registrar un gasto
+--   upsert_catalog_request      → usar el catálogo de shopping
+--   join_household_by_code      → onboarding / linking de hogar
+--   settle_debt_v1              → saldar un balance (idempotente por request_id)
+--   process_recurring_expenses  → materializar planned/recurring del mes
+-- ─────────────────────────────────────────────────────────────────────────────
+DO $$
+DECLARE
+  v_name text;
+  v_required text[] := ARRAY[
+    'complete_task_v1',
+    'approve_task_v1',
+    'reject_task_v1',
+    'get_pending_approvals',
+    'update_member_task_approval',
+    'get_combined_feed',
+    'save_expense_v4',
+    'upsert_catalog_request',
+    'join_household_by_code',
+    'settle_debt_v1',
+    'process_recurring_expenses'
+  ];
+BEGIN
+  FOREACH v_name IN ARRAY v_required LOOP
+    IF NOT EXISTS (
+      SELECT 1
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'public' AND p.proname = v_name
+    ) THEN
+      RAISE EXCEPTION 'Missing critical RPC: public.% (AGENTS.md smoke checklist)', v_name;
+    END IF;
+  END LOOP;
+END $$;
+
+-- Mutation RPCs must NOT be executable by anon. A regression here means an
+-- unauthenticated caller could complete tasks / mutate finance state.
+DO $$
+DECLARE
+  v_proc oid;
+  v_name text;
+  v_mutating text[] := ARRAY[
+    'complete_task_v1',
+    'approve_task_v1',
+    'reject_task_v1',
+    'update_member_task_approval',
+    'upsert_catalog_request',
+    'settle_debt_v1'
+  ];
+BEGIN
+  FOREACH v_name IN ARRAY v_mutating LOOP
+    FOR v_proc IN
+      SELECT p.oid
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'public' AND p.proname = v_name
+    LOOP
+      IF has_function_privilege('anon', v_proc, 'EXECUTE') THEN
+        RAISE EXCEPTION 'Security regression: anon can EXECUTE public.% — revoke anon grant', v_name;
+      END IF;
+    END LOOP;
+  END LOOP;
+END $$;
+
+-- Row Level Security must stay ENABLED on every sensitive table. Disabling RLS
+-- (even briefly via a migration) exposes cross-household data.
+DO $$
+DECLARE
+  v_table text;
+  v_sensitive text[] := ARRAY[
+    'expenses',
+    'expense_splits',
+    'households',
+    'household_members',
+    'tasks',
+    'notifications',
+    'planned_expenses',
+    'expense_templates',
+    'user_feedback'
+  ];
+BEGIN
+  FOREACH v_table IN ARRAY v_sensitive LOOP
+    -- Only assert on tables that exist in this database.
+    IF EXISTS (
+      SELECT 1 FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = 'public' AND c.relname = v_table AND c.relkind = 'r'
+    ) THEN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname = 'public' AND c.relname = v_table AND c.relrowsecurity
+      ) THEN
+        RAISE EXCEPTION 'RLS is DISABLED on sensitive table public.%', v_table;
+      END IF;
+    END IF;
+  END LOOP;
+END $$;

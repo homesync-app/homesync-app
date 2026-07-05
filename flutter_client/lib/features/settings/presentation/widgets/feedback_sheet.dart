@@ -4,15 +4,18 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/breadcrumb_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -34,7 +37,7 @@ class FeedbackSheet extends ConsumerStatefulWidget {
     FeedbackType type = FeedbackType.bug,
     String? screen,
   }) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -103,7 +106,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
     if (title.isEmpty) return;
 
     setState(() => _isSending = true);
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
 
     try {
       final client = ref.read(supabaseClientProvider);
@@ -181,12 +184,14 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
+    final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
 
     return Container(
       padding: EdgeInsets.only(bottom: bottom),
       decoration: BoxDecoration(
         color: theme.scaffoldBackground,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.18),
@@ -195,14 +200,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           ),
         ],
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 14, 24, 24),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 350),
-            child: _sent ? _buildSuccess(theme) : _buildForm(theme),
-          ),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(24, 14, 24, 24 + safeBottom),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          child: _sent ? _buildSuccess(theme) : _buildForm(theme),
         ),
       ),
     );
@@ -315,11 +317,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
             filled: true,
             fillColor: theme.surfaceContainer,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               borderSide: BorderSide(color: theme.primary, width: 1.5),
             ),
             counterStyle: TextStyle(fontSize: 11, color: theme.textMuted),
@@ -340,11 +342,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
             filled: true,
             fillColor: theme.surfaceContainer,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               borderSide: BorderSide(color: theme.primary, width: 1.5),
             ),
             counterStyle: TextStyle(fontSize: 11, color: theme.textMuted),
@@ -358,7 +360,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           onChanged: _isSending
               ? null
               : (value) {
-                  HapticFeedback.selectionClick();
+                  AppHaptics.selection();
                   setState(() => _wantsEmailResponse = value);
                 },
           contentPadding: EdgeInsets.zero,
@@ -427,17 +429,17 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          HapticFeedback.selectionClick();
+          AppHaptics.selection();
           setState(() => _type = type);
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.primary.withValues(alpha: 0.12)
                 : theme.surfaceContainer,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadii.md),
             border: Border.all(
               color: isSelected
                   ? theme.primary.withValues(alpha: 0.6)

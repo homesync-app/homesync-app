@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/mascot_motion_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/home_header_avatar.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/love_note_envelope.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/settlement_confirm_dialog.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -28,7 +31,10 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/widgets/task_completion_flow_mixin.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_feed_entry_motion.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 
 class HomeCoupleView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -98,10 +104,9 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       final stillUnseen =
           !(ref.read(sharedPreferencesProvider).getBool(tourFlagKey) ?? false);
       if (!stillUnseen) return;
-      final tasks = ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
-      ref.read(coupleHomeTourControllerProvider.notifier).start(
-            hasTasks: (tasks?.isNotEmpty ?? false),
-          );
+      ref
+          .read(coupleHomeTourControllerProvider.notifier)
+          .start(buildHomeTourContext(ref));
     });
   }
 
@@ -173,43 +178,41 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     final partnerMember =
         members.where((m) => m.userId != currentUserId).firstOrNull;
 
+    // Jerarquia: saludo contextual chico arriba, el hero ("Todo lo
+    // importante del hogar") es el protagonista y la mascota lo acompana
+    // a la altura del hero, no del saludo.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text.rich(
+          _buildWelcomeGreetingSpan(
+            theme: theme,
+            currentMemberName: currentMember?.displayName,
+          ),
+          style: TextStyle(
+            color: theme.textSecondary,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            height: 1.1,
+            letterSpacing: -0.2,
+          ),
+        ).animateEntrance(),
+        const SizedBox(height: 10),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text.rich(
-                    _buildWelcomeGreetingSpan(
-                      theme: theme,
-                      currentMemberName: currentMember?.displayName,
-                    ),
-                    style: TextStyle(
-                      color: theme.textPrimary,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      height: 1.02,
-                      letterSpacing: -0.8,
-                    ),
-                  ).animateEntrance(),
-                ],
+              child: _buildHomeWelcome(
+                theme: theme,
+                partnerMember: partnerMember,
+                senderName: partnerMember != null
+                    ? (partnerMember.displayName.split(' ').first)
+                    : AppLocalizations.of(context).homeCouplePartnerFallback,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
             _buildProfileAvatar(currentMember).animateScaleIn(delay: 70),
           ],
-        ),
-        const SizedBox(height: 8),
-        _buildHomeWelcome(
-          theme: theme,
-          partnerMember: partnerMember,
-          senderName: partnerMember != null
-              ? (partnerMember.displayName.split(' ').first)
-              : AppLocalizations.of(context).homeCouplePartnerFallback,
         ),
       ],
     );
@@ -260,7 +263,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
                     width: 54,
                     height: 2,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
                       gradient: LinearGradient(
                         colors: [
                           theme.primary.withValues(alpha: 0.55),
@@ -331,7 +334,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       children: [
         TextSpan(
           text: '$welcome, ',
-          style: TextStyle(color: theme.textPrimary),
+          style: TextStyle(color: theme.textSecondary),
         ),
         TextSpan(
           text: firstName ?? t.commonUserFallback,
@@ -349,31 +352,17 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
   }
 
   Widget _buildProfileAvatar(MemberModel? member) {
-    return AnimatedPress(
+    return HomeHeaderAvatar(
+      name: member?.displayName,
+      avatarUrl: member?.avatarUrl,
       onTap: widget.onAvatarTap,
-      child: Transform.translate(
-        offset: const Offset(6, 0),
-        child: SizedBox(
-          width: 88,
-          height: 58,
-          child: OverflowBox(
-            alignment: Alignment.topRight,
-            maxWidth: 104,
-            maxHeight: 104,
-            child: CustomUserAvatar(
-              name: member?.displayName,
-              avatarUrl: member?.avatarUrl,
-              radius: 26,
-              isAnimated: true,
-            ),
-          ),
-        ),
-      ),
+      motionController: ref.read(homeMascotMotionProvider),
     );
   }
 
   Widget _buildFinancialSummary(String householdId) {
     final balanceAsync = ref.watch(userBalanceProvider);
+    final balanceData = balanceAsync.value;
     final membersAsync = ref.watch(householdMembersProvider);
     final expenseBalancesAsync = ref.watch(expenseBalancesProvider);
     final currentUserId = ref.read(currentUserIdProvider);
@@ -406,16 +395,16 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     if (isIntegratedEconomy) {
       final projection = ref.watch(monthlyProjectionProvider).value;
       return BalanceCard(
-        coins: balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0,
-        xp: balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0,
+        coins: (balanceData?['coins'] as num?)?.toInt() ?? 0,
+        xp: (balanceData?['xp'] as num?)?.toInt() ?? 0,
         integratedEconomy: true,
         monthlySpent: projection?.spent,
       ).animateEntrance(delay: 100);
     }
 
     return BalanceCard(
-      coins: balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0,
-      xp: balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0,
+      coins: (balanceData?['coins'] as num?)?.toInt() ?? 0,
+      xp: (balanceData?['xp'] as num?)?.toInt() ?? 0,
       userBalance: displayedExpenseBalance,
       partnerName: partner?.displayName,
       settlementJustCompleted: _settlementJustCompleted,
@@ -437,20 +426,51 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
         ref.watch(householdMembersProvider).value ?? const <MemberModel>[];
     final caps = ref.watch(householdCapabilitiesProvider);
     final t = AppLocalizations.of(context);
+    final progress = ref.watch(todayTaskProgressProvider).value;
+    final locale = Localizations.localeOf(context).toString();
+    final dateEyebrow =
+        DateFormat('EEEE, d MMM', locale).format(DateTime.now()).toUpperCase();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          dateEyebrow,
+          style: TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.1,
+            color: theme.textMuted,
+          ),
+        ),
+        const SizedBox(height: 2),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              t.homeCoupleTasksTitle,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: theme.textPrimary,
-                letterSpacing: -0.7,
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      t.homeCoupleTasksTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: theme.textPrimary,
+                        letterSpacing: -0.7,
+                      ),
+                    ),
+                  ),
+                  if (progress != null && progress.total > 0) ...[
+                    const SizedBox(width: 10),
+                    _TodayProgressChip(
+                      done: progress.done,
+                      total: progress.total,
+                    ),
+                  ],
+                ],
               ),
             ),
             TextButton(
@@ -484,7 +504,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
               itemCount: tasks.length,
               separatorBuilder: (_, __) => const SizedBox(height: 14),
               itemBuilder: (context, index) =>
-                  _buildTaskCard(tasks.elementAt(index), theme, members),
+                  _buildTaskCard(tasks.elementAt(index), theme, members)
+                      .animateStaggered(index),
             );
           },
         ),
@@ -534,10 +555,10 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
         activityAsync.when(
           loading: () => const Padding(
             padding: EdgeInsets.symmetric(vertical: 20),
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(child: AppLoader()),
           ),
           error: (e, _) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: Text(t.commonErrorWithDetails(e.toString())),
           ),
           data: (activities) {
@@ -571,32 +592,29 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
   }
 
   String _activityStableKey(Map<String, dynamic> activity) {
+    final type = activity['type']?.toString() ?? 'unknown';
+    // Prefer the REAL server activity id. Optimistic rows carry it in
+    // data['activity_id'] (the complete-task RPC returns it — see
+    // task_provider.dart) and it equals the real remote row's top-level `id`.
+    // Keying on it makes the optimistic→real swap reuse the SAME widget, so the
+    // feed-entry animation does NOT replay (fixes the "movement re-enters a few
+    // seconds later" glitch). The optimistic/remote merge already suppresses the
+    // optimistic once the real arrives, so the two never coexist → no
+    // duplicate-key risk. Multiple completions of the same task get distinct
+    // activity ids; offline/queued rows (no activity_id yet) fall back to id.
     final data = (activity['data'] as Map<String, dynamic>?) ?? {};
-    final type = activity['type']?.toString();
-    // Prefer a STABLE identity so the optimistic row and the real row that
-    // replaces it (arriving via realtime ~1s later) share the same widget key.
-    // Keying on the volatile top-level `id`/`created_at` made Flutter treat the
-    // real row as a brand-new widget and replay the entry animation — the
-    // "card animates in, then refreshes itself a moment later" glitch.
-    //
-    // Both the optimistic row and the real `household_activities` row carry
-    // `task_id`, so task_id + completion-day is the identity they share. (The
-    // optimistic-only `activity_id` is NOT present on the real row, so it can't
-    // be used as the shared key.) Day-scoping keeps repeated daily completions
-    // visually distinct.
-    final taskId = data['task_id']?.toString();
-    if (type == 'task' && taskId != null && taskId.isNotEmpty) {
-      final day = (activity['created_at']?.toString() ?? '').split('T').first;
-      return 'task-$taskId-$day';
+    final activityId = data['activity_id']?.toString();
+    if (activityId != null && activityId.isNotEmpty) {
+      return '$type-$activityId';
     }
-    final expenseId = data['expense_id']?.toString();
-    if (expenseId != null && expenseId.isNotEmpty) {
-      return 'expense-$expenseId';
+    final id = activity['id']?.toString();
+    if (id != null && id.isNotEmpty) {
+      return '$type-$id';
     }
     return [
-      activity['id'],
-      type,
       activity['created_at'],
+      data['task_id'],
+      data['expense_id'],
     ].whereType<Object>().join('-');
   }
 
@@ -605,7 +623,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: AppSpacing.xs),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -615,7 +633,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(color: theme.border.withValues(alpha: 0.22)),
       ),
       child: Row(
@@ -675,10 +693,10 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
         (_) => ShimmerLoading(
           child: Container(
             height: 70,
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: AppSpacing.xs),
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
             ),
           ),
         ),
@@ -741,173 +759,50 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     final payerId = isOwedByMe ? currentUserId : partnerId;
     final receiverId = isOwedByMe ? partnerId : currentUserId;
     final formattedAmount = ref.read(currencyProvider).format(amount);
+    // One idempotency key per dialog (i.e. per settlement intent): reused if the
+    // user retries after an error/timeout so the server resolves to the same
+    // settlement instead of duplicating it. A new dialog → new key.
+    final requestId = const Uuid().v4();
 
     showDialog<void>(
       context: context,
-      builder: (dialogContext) {
-        final theme = dialogContext.theme;
-        var isSubmitting = false;
-        var showSuccess = false;
-
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: theme.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              title: Text(
-                isOwedByMe
-                    ? t.homeCoupleSettlementDialogTitlePay(partnerName)
-                    : t.homeCoupleSettlementDialogTitleReceive,
-                style: TextStyle(
-                  color: theme.textPrimary,
-                  fontWeight: FontWeight.w900,
+      builder: (dialogContext) => SettlementConfirmDialog(
+        titleText: t.homeCoupleSettlementDialogTitle,
+        amountText: formattedAmount,
+        directionText: isOwedByMe
+            ? t.homeCoupleSettlementDialogDirectionPay(partnerName)
+            : t.homeCoupleSettlementDialogDirectionReceive(partnerName),
+        bodyText: t.homeCoupleSettlementDialogBalanceZero,
+        confirmLabel: t.homeCoupleSettlementDialogConfirm,
+        cancelLabel: t.homeCoupleSettlementDialogCancel,
+        doneBadgeText: t.homeCoupleSettlementDoneBadge,
+        errorTextBuilder: t.homeCoupleSettlementError,
+        onConfirm: () =>
+            ref.read(expenseControllerProvider.notifier).settleDebt(
+                  fromUserId: payerId,
+                  toUserId: receiverId,
+                  amount: amount,
+                  requestId: requestId,
                 ),
-              ),
-              content: Text(
-                isOwedByMe
-                    ? t.homeCoupleSettlementDialogBodyPay(
-                        formattedAmount,
-                        partnerName,
-                      )
-                    : t.homeCoupleSettlementDialogBodyReceive(
-                        partnerName,
-                        formattedAmount,
-                      ),
-                style: TextStyle(
-                  color: theme.textSecondary,
-                  height: 1.4,
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: isSubmitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: Text(
-                    t.commonCancel,
-                    style: TextStyle(
-                      color: theme.textSecondary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                FilledButton(
-                  onPressed: isSubmitting
-                      ? null
-                      : () async {
-                          setDialogState(() => isSubmitting = true);
-
-                          try {
-                            await ref
-                                .read(expenseControllerProvider.notifier)
-                                .settleDebt(
-                                  fromUserId: payerId,
-                                  toUserId: receiverId,
-                                  amount: amount,
-                                );
-
-                            if (mounted) {
-                              setState(() {
-                                _optimisticExpenseBalance = 0;
-                                _settlementJustCompleted = true;
-                              });
-                            }
-                            HapticFeedback.mediumImpact();
-                            setDialogState(() {
-                              isSubmitting = false;
-                              showSuccess = true;
-                            });
-
-                            await Future<void>.delayed(
-                              const Duration(milliseconds: 420),
-                            );
-
-                            Future<void>.delayed(
-                              const Duration(milliseconds: 2200),
-                              () {
-                                if (!mounted) return;
-                                setState(() {
-                                  _settlementJustCompleted = false;
-                                });
-                              },
-                            );
-
-                            if (!mounted || !dialogContext.mounted) return;
-                            Navigator.of(dialogContext).pop();
-                            _showMessage(
-                              isOwedByMe
-                                  ? t.homeCoupleSettlementSuccessPay(
-                                      partnerName,
-                                    )
-                                  : t.homeCoupleSettlementSuccessReceive(
-                                      partnerName,
-                                    ),
-                            );
-                          } catch (e) {
-                            if (!dialogContext.mounted) return;
-                            setDialogState(() => isSubmitting = false);
-                            _showMessage(
-                              t.homeCoupleSettlementError(e.toString()),
-                            );
-                          }
-                        },
-                  style: FilledButton.styleFrom(
-                    backgroundColor:
-                        showSuccess ? AppColors.sage : theme.primary,
-                    disabledBackgroundColor:
-                        showSuccess ? AppColors.sage : theme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 12,
-                    ),
-                  ),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    switchInCurve: Curves.easeOutBack,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: ScaleTransition(
-                          scale: animation,
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: isSubmitting
-                        ? const SizedBox(
-                            key: ValueKey('loading'),
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : showSuccess
-                            ? Row(
-                                key: const ValueKey('success'),
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.check_rounded, size: 18),
-                                  const SizedBox(width: 8),
-                                  Text(t.homeCoupleSettlementDoneBadge),
-                                ],
-                              )
-                            : Text(
-                                t.commonConfirm,
-                                key: const ValueKey('idle'),
-                              ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+        onSettled: () {
+          if (mounted) {
+            setState(() {
+              _optimisticExpenseBalance = 0;
+              _settlementJustCompleted = true;
+            });
+          }
+          // Let the balance-card "just settled" flourish play, then clear it.
+          Future<void>.delayed(const Duration(milliseconds: 2200), () {
+            if (!mounted) return;
+            setState(() => _settlementJustCompleted = false);
+          });
+          _showMessage(
+            isOwedByMe
+                ? t.homeCoupleSettlementSuccessPay(partnerName)
+                : t.homeCoupleSettlementSuccessReceive(partnerName),
+          );
+        },
+      ),
     );
   }
 
@@ -918,6 +813,74 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       messenger.context,
       message: message,
       type: AppSnackBarType.neutral,
+    );
+  }
+}
+
+/// Chip de progreso diario junto al título "Hoy en casa": anillo + "2 de 5".
+/// Vira a verde (sage) cuando el día queda completo.
+class _TodayProgressChip extends StatelessWidget {
+  final int done;
+  final int total;
+
+  const _TodayProgressChip({
+    required this.done,
+    required this.total,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    final complete = total > 0 && done >= total;
+    final color = complete ? AppColors.sage : theme.primary;
+
+    return Semantics(
+      label: t.homeTodayProgressSemantic(done, total),
+      // El anillo y el "2 de 5" son la misma información: un solo nodo.
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
+          border: Border.all(color: color.withValues(alpha: 0.14)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 12,
+              height: 12,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(
+                  begin: 0,
+                  end: total == 0 ? 0 : done / total,
+                ),
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) => CircularProgressIndicator(
+                  value: value,
+                  strokeWidth: 2.4,
+                  strokeCap: StrokeCap.round,
+                  color: color,
+                  backgroundColor: color.withValues(alpha: 0.16),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              t.homeTodayProgressLabel(done, total),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: color,
+                letterSpacing: -0.1,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

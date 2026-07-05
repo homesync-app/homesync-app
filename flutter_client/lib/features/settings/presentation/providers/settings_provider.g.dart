@@ -22,7 +22,7 @@ final class SettingsRepositoryProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'settingsRepositoryProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -51,7 +51,7 @@ final class SettingsRepositoryProvider extends $FunctionalProvider<
 }
 
 String _$settingsRepositoryHash() =>
-    r'c6e9a6bfb312b0655ac88d857f9b3760f001aee5';
+    r'bc6023891d7bc0990e7cadf8222450b6caa559b4';
 
 @ProviderFor(resetAccountUseCase)
 final resetAccountUseCaseProvider = ResetAccountUseCaseProvider._();
@@ -96,6 +96,50 @@ final class ResetAccountUseCaseProvider extends $FunctionalProvider<
 
 String _$resetAccountUseCaseHash() =>
     r'a00a5c169f3e4cb4d5e1e20bc9131e02f59ff537';
+
+@ProviderFor(deleteAccountUseCase)
+final deleteAccountUseCaseProvider = DeleteAccountUseCaseProvider._();
+
+final class DeleteAccountUseCaseProvider extends $FunctionalProvider<
+    DeleteAccountUseCase,
+    DeleteAccountUseCase,
+    DeleteAccountUseCase> with $Provider<DeleteAccountUseCase> {
+  DeleteAccountUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'deleteAccountUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$deleteAccountUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<DeleteAccountUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  DeleteAccountUseCase create(Ref ref) {
+    return deleteAccountUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DeleteAccountUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DeleteAccountUseCase>(value),
+    );
+  }
+}
+
+String _$deleteAccountUseCaseHash() =>
+    r'3206b4aafca491afa492c0cf9d25bed922dbf093';
 
 @ProviderFor(updateAvatarUseCase)
 final updateAvatarUseCaseProvider = UpdateAvatarUseCaseProvider._();
@@ -180,10 +224,10 @@ abstract class _$NotificationEnabled extends $Notifier<bool> {
   bool build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<bool, bool>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<bool, bool>, bool, Object?, Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

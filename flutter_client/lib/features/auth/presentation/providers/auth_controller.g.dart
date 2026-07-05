@@ -80,7 +80,7 @@ final class AuthControllerProvider
   AuthController create() => AuthController();
 }
 
-String _$authControllerHash() => r'939c3808c8e20d3dd99ae6e3ea3e640965f9ef7e';
+String _$authControllerHash() => r'e2ca25245bad3b32706110cf9d0191883fc52a17';
 
 /// Controller that manages the authentication state and actions.
 /// It wraps the AuthRepository and provides a unified interface for the UI.
@@ -89,14 +89,14 @@ abstract class _$AuthController extends $StreamNotifier<AuthState> {
   Stream<AuthState> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<AuthState>, AuthState>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<AsyncValue<AuthState>, AuthState>,
         AsyncValue<AuthState>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

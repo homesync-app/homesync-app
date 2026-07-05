@@ -3,8 +3,10 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    // Kotlin: migrado a Built-in Kotlin (Flutter aplica KGP via flutter-gradle-plugin
+    // con android.builtInKotlin=false en gradle.properties). Ya no declaramos
+    // id("kotlin-android") aca; la version de jvmTarget va en el bloque kotlin{} abajo.
+    // The Flutter Gradle Plugin must be applied after the Android Gradle plugin.
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
@@ -42,10 +44,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     signingConfigs {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String? ?: ""
@@ -81,6 +79,14 @@ android {
                 unstrippedNativeLibsDir = "build/intermediates/merged_native_libs/release/out/lib"
             }
         }
+    }
+}
+
+// Built-in Kotlin: jvmTarget se configura via el DSL kotlin.compilerOptions
+// (reemplaza al viejo android.kotlinOptions). Ver migracion a Built-in Kotlin.
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 

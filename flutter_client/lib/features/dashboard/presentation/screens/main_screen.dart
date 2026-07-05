@@ -3,12 +3,16 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/widgets/app_background.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
@@ -18,6 +22,7 @@ import 'package:homesync_client/features/dashboard/presentation/screens/admin_wo
 import 'package:homesync_client/features/dashboard/presentation/screens/couple_space_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/home_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/household_social_hub_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/solo_space_screen.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/screens/expenses_screen.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
@@ -28,6 +33,8 @@ import 'package:homesync_client/features/notifications/presentation/screens/noti
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
 import 'package:homesync_client/features/onboarding/presentation/widgets/coachmark_overlay.dart';
+import 'package:homesync_client/features/rewards/presentation/providers/couple_duel_stats_provider.dart';
+import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
@@ -68,6 +75,16 @@ class _MainScreenState extends ConsumerState<MainScreen>
   int? _lastTrackedTabIndex;
   MemberModel? _currentMember;
   bool _reportedFirstMainFrame = false;
+
+  // ── Prefetch ocioso de pestañas secundarias ───────────────────────────────
+  // Mientras el usuario está en el Home, calentamos en segundo plano los
+  // providers de las otras pestañas (hoy se construyen recién al visitarlas por
+  // el montaje perezoso del FadeIndexedStack). Mantenemos un listener vivo: como
+  // son autoDispose, un read fire-and-forget se computaría y se descartaría al
+  // instante; el listener los deja cacheados hasta que MainScreen se destruye,
+  // así Finanzas abre su widget de "gastos del mes" de forma instantánea.
+  bool _idlePrefetchScheduled = false;
+  final List<ProviderSubscription> _idlePrefetchSubs = [];
 
   // Anchor keys for the onboarding coachmark tour. Live for the lifetime of
   // MainScreen so the registry stays consistent across rebuilds.
@@ -123,6 +140,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
     _notifService.dispose();
     _linkSubscription?.cancel();
     _taskRealtimeNoticeSubscription?.close();
+    for (final sub in _idlePrefetchSubs) {
+      sub.close();
+    }
+    _idlePrefetchSubs.clear();
     // Diferido a microtask: modificar un provider durante dispose() tira
     // "Tried to modify a provider while the widget tree was building".
     // El unregister es idempotente (no-op si el key cambio) asi que es
@@ -211,8 +232,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
         ),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+        ),
+        margin: const EdgeInsets.all(AppSpacing.md),
       ),
     );
   }
@@ -296,6 +319,41 @@ class _MainScreenState extends ConsumerState<MainScreen>
     ref.invalidate(recentActivityProvider);
   }
 
+  /// Calienta en segundo plano los providers de la pestaña Finanzas que no
+  /// quedan cacheados por el arranque del Home. Se llama una sola vez, recién
+  /// cuando el scaffold principal ya está en pantalla, y difiere el trabajo
+  /// para no competir con la carga inicial ni con las animaciones de entrada
+  /// del Home.
+  void _scheduleSecondaryTabPrefetch() {
+    if (_idlePrefetchScheduled) return;
+    _idlePrefetchScheduled = true;
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (!mounted || _idlePrefetchSubs.isNotEmpty) return;
+      // Solo tiene sentido si hay red; offline se resolvería con caché/errores
+      // igual al entrar a la pestaña, sin ganancia por adelantarlo.
+      if (!ref.read(isOnlineProvider)) return;
+      // Finanzas (tab "Movimientos"). monthlyProjectionProvider ya lo calienta
+      // el Home en modo pareja, pero no en solo/familia; estos tres lo cubren en
+      // todos los modos. combinedFeed y expenseBalances ya vienen del arranque.
+      _idlePrefetchSubs
+        ..add(ref.listenManual(personalFinanceSummaryProvider, (_, __) {}))
+        ..add(ref.listenManual(expenseControllerProvider, (_, __) {}))
+        ..add(ref.listenManual(monthlyProjectionProvider, (_, __) {}));
+
+      // Pareja (solo en modo couple, que usa CoupleRewardsScreen). Los premios
+      // viven en un provider autoDispose (hay que sostener un listener); las
+      // stats del duelo en uno keepAlive (basta gatillar el build con un read).
+      final caps = ref.read(householdCapabilitiesProvider);
+      if (caps.usesCoupleRewardsExperience) {
+        _idlePrefetchSubs.add(ref.listenManual(rewardsProvider, (_, __) {}));
+        ref.read(coupleDuelStatsProvider.future).catchError(
+              (_) => CoupleDuelStats.empty,
+            );
+      }
+      log.d('MainScreen: prefetch ocioso de pestañas secundarias iniciado');
+    });
+  }
+
   void _showTaskRealtimeNotice(TaskRealtimeNotice notice) {
     final t = AppLocalizations.of(context);
     final taskTitle = localizedTaskTitle(t, notice.task);
@@ -341,18 +399,9 @@ class _MainScreenState extends ConsumerState<MainScreen>
     }
 
     return householdAsync.when(
-      loading: () => Scaffold(
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: AppBackground(isDarkMode: context.theme.isDarkMode),
-            ),
-            Center(
-              child: CircularProgressIndicator(color: context.theme.primary),
-            ),
-          ],
-        ),
-      ),
+      // Mantiene el splash del gato (video compartido via cache) en vez de
+      // cortar a un spinner entre el splash de arranque y el Home.
+      loading: () => const SplashScreen(),
       error: (e, st) => Scaffold(
         body: Stack(
           children: [
@@ -361,7 +410,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
             ),
             Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Text(
                   'Error de carga de identidad. Intenta salir de la app y volver a entrar: $e',
                   textAlign: TextAlign.center,
@@ -420,27 +469,13 @@ class _MainScreenState extends ConsumerState<MainScreen>
         // Home/MemberOnboarding mid-flow, skipping steps and losing the chosen
         // name/avatar (persisted only on the final step).
         final setupInProgress = ref.watch(setupInProgressProvider);
-        if (householdId == null ||
-            householdId.isEmpty ||
-            setupInProgress) {
+        if (householdId == null || householdId.isEmpty || setupInProgress) {
           return _buildSetupScreen();
         }
 
         final onboardingDone = ref.watch(memberOnboardingProvider);
         if (onboardingDone.isLoading) {
-          return Scaffold(
-            body: Stack(
-              children: [
-                Positioned.fill(
-                  child: AppBackground(isDarkMode: context.theme.isDarkMode),
-                ),
-                Center(
-                  child:
-                      CircularProgressIndicator(color: context.theme.primary),
-                ),
-              ],
-            ),
-          );
+          return const SplashScreen();
         }
         if (onboardingDone.value == false) {
           return MemberOnboardingScreen(
@@ -474,6 +509,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
         final safeIndex = currentIndex >= navConfigs.length ? 0 : currentIndex;
         final currentConfig = navConfigs[safeIndex];
         _trackMainTabIfNeeded(index: safeIndex, source: 'state_sync');
+
+        // Ya pasamos todos los gates (setup/onboarding): estamos en la app real.
+        // Aprovechamos el tiempo ocioso en el Home para calentar Finanzas.
+        _scheduleSecondaryTabPrefetch();
 
         // Wrap with a Stack so the coachmark overlay can sit on top of the
         // Scaffold AND its bottomNavigationBar (otherwise an overlay mounted
@@ -514,6 +553,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
         }
       },
       child: Scaffold(
+        // Let page content scroll underneath the floating blurred nav pill.
+        extendBody: true,
         appBar: safeIndex == 0
             ? null
             : AppBar(
@@ -523,7 +564,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
                   theme: theme,
                 ),
                 toolbarHeight: 86,
-                actionsPadding: const EdgeInsets.only(right: 12),
+                actionsPadding: const EdgeInsets.only(right: AppSpacing.sm),
                 actions: [
                   SizedBox(
                     width: 48,
@@ -538,7 +579,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
                             color: theme.surface.withValues(
                               alpha: theme.isDarkMode ? 0.72 : 0.9,
                             ),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(AppRadii.md),
                             border: Border.all(
                               color: theme.border.withValues(
                                 alpha: theme.isDarkMode ? 0.46 : 0.72,
@@ -561,9 +602,11 @@ class _MainScreenState extends ConsumerState<MainScreen>
             Positioned.fill(
               child: AppBackground(isDarkMode: theme.isDarkMode),
             ),
-            FadeIndexedStack(
-              index: safeIndex,
-              children: navConfigs.map((c) => c.screen).toList(),
+            NavClearance(
+              child: FadeIndexedStack(
+                index: safeIndex,
+                children: navConfigs.map((c) => c.screen).toList(),
+              ),
             ),
             // In-app notification banner (slides from top)
             InAppNotificationBanner(
@@ -686,33 +729,46 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
     return switch (tab) {
       MainTab.home => NavItemConfig(
+          tab: tab,
           title: t.mainTabHome,
           icon: Icons.home_rounded,
-          screen: HomeScreen(onAvatarTap: () => _openSettings(context)),
+          screen: HomeScreen(
+            key: const ValueKey(MainTab.home),
+            onAvatarTap: () => _openSettings(context),
+          ),
         ),
       MainTab.tasks => NavItemConfig(
+          tab: tab,
           title: t.mainTabTasks,
           icon: Icons.task_alt_rounded,
-          screen: const TasksScreen(),
+          screen: const TasksScreen(key: ValueKey(MainTab.tasks)),
         ),
       MainTab.expenses => NavItemConfig(
+          tab: tab,
           title: t.mainTabExpenses,
           icon: Icons.account_balance_wallet_rounded,
-          screen: const ExpensesScreen(),
+          screen: const ExpensesScreen(key: ValueKey(MainTab.expenses)),
         ),
       MainTab.social => NavItemConfig(
+          tab: tab,
           title: caps.socialTabLabel(t),
           icon: caps.partnerIcon,
-          screen: caps.usesCoupleRewardsExperience
-              ? const CoupleSpaceScreen()
-              : const HouseholdSocialHubScreen(),
+          screen: caps.type == HouseholdType.solo
+              ? const SoloSpaceScreen(key: ValueKey(MainTab.social))
+              : caps.usesCoupleRewardsExperience
+                  ? const CoupleSpaceScreen(key: ValueKey(MainTab.social))
+                  : const HouseholdSocialHubScreen(
+                      key: ValueKey(MainTab.social),
+                    ),
         ),
       MainTab.stats => NavItemConfig(
+          tab: tab,
           title: t.mainTabProgress,
           icon: Icons.bar_chart_rounded,
-          screen: const StatsScreen(),
+          screen: const StatsScreen(key: ValueKey(MainTab.stats)),
         ),
       MainTab.shopping => NavItemConfig(
+          tab: tab,
           title: _currentMember?.isChild == true
               ? t.mainTabShoppingChild
               : t.mainTabShopping,
@@ -720,8 +776,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
               ? Icons.storefront_rounded
               : Icons.shopping_cart_rounded,
           screen: _currentMember?.isChild == true
-              ? const FamilyRewardsScreen()
-              : const ShoppingListScreen(),
+              ? const FamilyRewardsScreen(key: ValueKey(MainTab.shopping))
+              : const ShoppingListScreen(key: ValueKey(MainTab.shopping)),
         ),
     };
   }
@@ -788,6 +844,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
       return;
     }
 
+    AppHaptics.selection();
     ref.read(bottomNavIndexProvider.notifier).setIndex(index);
     if (targetTab == MainTab.home || targetTab == MainTab.tasks) {
       _refreshRealtimeBackedData();
@@ -818,11 +875,13 @@ class _MainScreenState extends ConsumerState<MainScreen>
 }
 
 class NavItemConfig {
+  final MainTab tab;
   final String title;
   final IconData icon;
   final Widget screen;
 
   NavItemConfig({
+    required this.tab,
     required this.title,
     required this.icon,
     required this.screen,

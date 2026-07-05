@@ -55,10 +55,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - name: Setup Shorebird
+        uses: shorebirdtech/setup-shorebird@v1
         with:
-          channel: stable
           cache: true
 
       - name: Get dependencies
@@ -83,6 +82,10 @@ jobs:
             exit 1
           fi
           echo "✅ All secrets present"
+          if [ -z "${{ secrets.SHOREBIRD_TOKEN }}" ]; then
+            echo "⚠️ SHOREBIRD_TOKEN not set — the release AAB will NOT be patchable via OTA."
+            echo "   Create a CI token with 'shorebird login:ci' and add it as a repo secret."
+          fi
 
       - name: Create production env file
         env:
@@ -143,20 +146,45 @@ jobs:
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
           echo "Building with versionCode: $VERSION_CODE"
 
-      - name: Build AAB (Release)
+      - name: Build AAB (Shorebird release — patchable via OTA)
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         run: |
           cd flutter_client
-          if [ "${{ env.KEYSTORE_AVAILABLE }}" = "true" ]; then
-            flutter build appbundle --release \
-              --dart-define-from-file=.env.production \
-              --dart-define=APP_ENV=production \
-              --build-number=${{ env.VERSION_CODE }}
-          else
-            echo "No keystore → building debug AAB (not deployable to Play)"
+          if [ "${{ env.KEYSTORE_AVAILABLE }}" != "true" ]; then
+            echo "No keystore → building debug AAB (not deployable to Play, not patchable)"
             flutter build appbundle --debug \
               --dart-define-from-file=.env.production \
               --dart-define=APP_ENV=production \
               --build-number=${{ env.VERSION_CODE }}
+          elif [ -z "$SHOREBIRD_TOKEN" ]; then
+            # Hard guard: a plain `flutter build appbundle` produces an AAB WITHOUT
+            # the Shorebird updater embedded, so it can NEVER receive OTA patches
+            # (AGENTS.md "regla de oro"). We refuse to ship that silently.
+            echo "❌ SHOREBIRD_TOKEN missing but a release build was requested."
+            echo "   A non-Shorebird release AAB is permanently un-patchable."
+            echo "   Add SHOREBIRD_TOKEN (shorebird login:ci) or build manually."
+            exit 1
+          else
+            # `shorebird release android` wraps `flutter build appbundle --release`
+            # and embeds the updater so the AAB stays OTA-patchable. Flutter args
+            # are forwarded after `--`.
+            #
+            # NOTE: Shorebird only supports specific Flutter revisions. If your
+            # team pins one (AGENTS.md says 3.41+), add it explicitly once you've
+            # confirmed it's supported: `--flutter-version=<rev>`. Patches MUST be
+            # built with the same Flutter version as the release.
+            # --obfuscate hardens the Dart code in the AAB; --split-debug-info
+            # saves the symbol map so Crashlytics stack traces stay readable.
+            # The symbols dir is uploaded as an artifact below — keep it per release.
+            shorebird release android \
+              --no-confirm \
+              -- \
+              --dart-define-from-file=.env.production \
+              --dart-define=APP_ENV=production \
+              --build-number=${{ env.VERSION_CODE }} \
+              --obfuscate \
+              --split-debug-info=build/symbols
           fi
 
       - name: Upload AAB as Artifact
@@ -164,6 +192,16 @@ jobs:
         with:
           name: homesync-appbundle-${{ github.sha }}
           path: flutter_client/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: warn
+
+      # Obfuscation symbols — required to de-obfuscate Crashlytics stack traces.
+      # Without these, release crash reports are unreadable. Keep per release.
+      - name: Upload obfuscation symbols
+        if: env.KEYSTORE_AVAILABLE == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: homesync-symbols-${{ github.sha }}
+          path: flutter_client/build/symbols
           if-no-files-found: warn
 
       - name: Create release notes

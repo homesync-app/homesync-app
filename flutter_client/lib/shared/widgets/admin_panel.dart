@@ -3,15 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class AdminPanel extends ConsumerStatefulWidget {
   const AdminPanel({super.key});
 
   static void show(BuildContext context) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -66,14 +69,18 @@ class _AdminPanelState extends ConsumerState<AdminPanel> {
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
       child: Column(
         children: [
           _buildHandle(theme),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.md,
+              ),
               children: [
                 _buildSectionTitle('ESCENARIOS DE TESTING'),
                 const Text(
@@ -181,9 +188,9 @@ class _AdminPanelState extends ConsumerState<AdminPanel> {
 
     return Card(
       elevation: isSelected ? 4 : 0,
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         side: BorderSide(
           color: isSelected ? color : Colors.transparent,
           width: 2,
@@ -194,7 +201,7 @@ class _AdminPanelState extends ConsumerState<AdminPanel> {
           ref.read(adminProvider.notifier).setAdminScenario(scenario);
         },
         leading: Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(AppSpacing.xs),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
@@ -215,7 +222,7 @@ class _AdminPanelState extends ConsumerState<AdminPanel> {
 
   Widget _buildHandle(ThemeData theme) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12),
+      margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       width: 40,
       height: 4,
       decoration: BoxDecoration(
@@ -227,7 +234,7 @@ class _AdminPanelState extends ConsumerState<AdminPanel> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Text(
         title,
         style: const TextStyle(

@@ -216,6 +216,12 @@ class AuthController extends _$AuthController {
     state = const AsyncValue.loading();
     final result = await _repository.signOut();
 
+    // Signing out tears down the authed UI, which can dispose this auto-dispose
+    // controller before we resume here. Touching ref/state on a disposed Ref
+    // throws "Cannot use the Ref ... after it has been disposed"; the auth-state
+    // stream still propagates the logout, so skipping the manual refresh is safe.
+    if (!ref.mounted) return;
+
     result.fold(
       (failure) {
         log.setCustomKey('auth_flow', 'sign_out');

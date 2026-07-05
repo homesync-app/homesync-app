@@ -165,9 +165,10 @@ Error / no completable:
 
 ## approve_task_v1
 
-Aprueba la ultima `task_approval` pendiente de una tarea. Solo admins/owners. Aca recien se crea la activity y se acreditan recompensas.
+Aprueba la ultima `task_approval` pendiente de una tarea. Solo adultos operativos del hogar (`owner/admin` con `member_type` `parent` o `guardian`). Aca recien se crea la activity y se acreditan recompensas.
 
 - **Migration canonica**: `supabase/migrations/20260514120000_task_commands_v1.sql`
+- **Hardening vigente**: `supabase/migrations/20260606135502_harden_parent_mode_task_approval_rpcs.sql`
 - **Legacy alias**: `verify_task_transaction` queda como wrapper SQL. Borrar despues de 1-2 releases.
 - **Versionado**: ✅ `_v1`
 - **Transaccional**: ✅ explicito
@@ -178,10 +179,17 @@ Aprueba la ultima `task_approval` pendiente de una tarea. Solo admins/owners. Ac
 | nombre | tipo | descripcion |
 |---|---|---|
 | `p_request_id` | `text` | idempotencia |
-| `p_user_id` | `uuid` | (legacy, no se usa internamente) |
+| `p_user_id` | `uuid` | actor esperado; debe coincidir con `current_app_user_id()` |
 | `p_task_id` | `uuid` | tarea |
-| `p_verified_by` | `uuid` | admin que aprueba |
+| `p_verified_by` | `uuid` | actor que aprueba; debe coincidir con `current_app_user_id()` |
 | `p_next_due_at` | `timestamptz` | **ignorado**, el server recalcula |
+
+**Autorizacion**
+
+- `current_app_user_id()` debe resolver un usuario autenticado.
+- `p_user_id` y `p_verified_by` deben coincidir con `current_app_user_id()`.
+- El actor debe pasar `private.is_adult_household_admin(task.household_id, null)`: `role in ('owner','admin')` y `member_type in ('parent','guardian')`.
+- `anon` no tiene `EXECUTE`; `authenticated` y `service_role` si.
 
 **Output** (`jsonb`)
 
@@ -201,8 +209,10 @@ Aprueba la ultima `task_approval` pendiente de una tarea. Solo admins/owners. Ac
 
 Errores como `success: false`:
 
+- `"Not authenticated"` (`status=unauthenticated`)
+- `"User mismatch"` (`status=forbidden`)
 - `"Task not found"` (status `not_found`)
-- `"Only admins can approve tasks"` (status `forbidden`)
+- `"Only adult household admins can approve tasks"` (status `forbidden`)
 - `"No pending approval for task"` (status `not_found`)
 
 **Tablas afectadas**
@@ -215,7 +225,7 @@ Errores como `success: false`:
 | `public.ledger_entries` | W (insert, idempotente) | por cada performer |
 | `public.notifications` | W (insert) | al submitter |
 | `public.audit_logs` | W (insert) | |
-| `public.household_members` | R | check de rol admin |
+| `public.household_members` | R | check adulto owner/admin via `private.is_adult_household_admin` |
 
 **Idempotencia**: full. Activity guarded por `request_id = 'approve:' || p_request_id` con unique index parcial. Ledger por `on conflict (user_id, type, reference_id)`. Notificacion de aprobacion guarded por `not exists` contra rows posteriores a la creacion del approval. Update del approval guarded por `status = 'pending'`.
 
@@ -236,9 +246,10 @@ Errores como `success: false`:
 
 ## reject_task_v1
 
-Rechaza la ultima `task_approval` pendiente de una tarea. Solo admins/owners. No acredita XP/coins; vuelve la tarea a `assigned`, guarda motivo y notifica al submitter.
+Rechaza la ultima `task_approval` pendiente de una tarea. Solo adultos operativos del hogar (`owner/admin` con `member_type` `parent` o `guardian`). No acredita XP/coins; vuelve la tarea a `assigned`, guarda motivo y notifica al submitter.
 
 - **Migration canonica**: `supabase/migrations/20260514194500_reject_task_v1.sql`
+- **Hardening vigente**: `supabase/migrations/20260606135502_harden_parent_mode_task_approval_rpcs.sql`
 - **Legacy alias**: `reject_task_transaction` queda como wrapper SQL. Borrar despues de 1-2 releases.
 - **Versionado**: si, `_v1`
 - **Transaccional**: implicito (plpgsql)
@@ -253,6 +264,13 @@ Rechaza la ultima `task_approval` pendiente de una tarea. Solo admins/owners. No
 | `p_task_id` | `uuid` | tarea |
 | `p_rejected_by` | `uuid` | admin que rechaza; debe coincidir con `current_app_user_id()` |
 | `p_reason` | `text` | motivo opcional |
+
+**Autorizacion**
+
+- `current_app_user_id()` debe resolver un usuario autenticado.
+- `p_user_id` y `p_rejected_by` deben coincidir con `current_app_user_id()`.
+- El actor debe pasar `private.is_adult_household_admin(task.household_id, null)`: `role in ('owner','admin')` y `member_type in ('parent','guardian')`.
+- `anon` no tiene `EXECUTE`; `authenticated` y `service_role` si.
 
 **Output** (`jsonb`)
 
@@ -272,7 +290,7 @@ Errores como `success: false`:
 - `"Not authenticated"` (`status=unauthenticated`)
 - `"User mismatch"` (`status=forbidden`)
 - `"Task not found"` (`status=not_found`)
-- `"Only admins can reject tasks"` (`status=forbidden`)
+- `"Only adult household admins can reject tasks"` (`status=forbidden`)
 - `"No pending approval for task"` (`status=not_found`)
 
 **Tablas afectadas**
@@ -283,7 +301,7 @@ Errores como `success: false`:
 | `public.task_approvals` | R + W (update status=rejected) | guarda `decision_request_id` |
 | `public.notifications` | W (insert) | notifica al submitter |
 | `public.audit_logs` | W (insert) | registra rechazo |
-| `public.household_members` | R | check de rol admin |
+| `public.household_members` | R | check adulto owner/admin via `private.is_adult_household_admin` |
 
 **Idempotencia**: full para retries con el mismo `p_request_id`. Si la decision ya fue aplicada, devuelve success con `idempotent_replay=true` sin duplicar notificacion ni audit log.
 
@@ -449,6 +467,199 @@ RPC actual para crear/editar gastos.
 - **Estado**: se mantiene como comando canonico por ahora. El backlog permite documentar `save_expense_v4` como principal o crear `save_expense_v1`; no hacer ambos sin motivo.
 
 Pendiente para un corte futuro: entrada completa con inputs/output/tablas/idempotencia/providers.
+
+---
+
+## settle_debt_v1
+
+Saldar un balance entre dos miembros del hogar. Crea un `expense` de tipo `settlement` (`split_type='fixed'`, `is_shared=true`) que ajusta el balance al instante. Reemplaza el path anterior (`save_expense_v4` con `p_type='settlement'`) que no era idempotente y producía duplicados en doble-tap o reintento.
+
+- **Migration canonica**: `supabase/migrations/20260519204019_settle_debt_v1.sql` (RPC reconstruida en `20260601180000_fix_settle_debt_v1_encoding.sql` para limpiar el título UTF-8 y re-confirmar grants).
+- **Versionado**: ✅ `_v1`
+- **Transaccional**: implicito (plpgsql)
+- **Idempotente full**: ✅ (vía `p_request_id` + unique index `uq_expenses_request_id` + EXCEPTION `unique_violation`)
+
+**Inputs**
+
+| nombre | tipo | descripcion |
+|---|---|---|
+| `p_request_id` | `text` | clave de idempotencia (UUID v4 generado en cliente) |
+| `p_household_id` | `uuid` | hogar del settlement |
+| `p_from_user_id` | `uuid` | miembro que paga / salda |
+| `p_to_user_id` | `uuid` | miembro que recibe / es saldado |
+| `p_amount` | `numeric` | monto a liquidar (> 0) |
+
+**Output** (`jsonb`)
+
+Caso normal:
+
+```json
+{
+  "success": true,
+  "message": "Debt settled",
+  "status": "settled",
+  "expense_id": "uuid",
+  "idempotent": false
+}
+```
+
+Caso idempotente (mismo `p_request_id` reenviado):
+
+```json
+{
+  "success": true,
+  "message": "Already settled",
+  "status": "idempotent",
+  "expense_id": "uuid",
+  "expense_id_existente": "uuid",
+  "idempotent": true
+}
+```
+
+**Tablas afectadas**
+
+| tabla | R/W | nota |
+|---|---|---|
+| `public.expenses` | R + W | SELECT pre-insert por `request_id`; INSERT vía `save_expense_v4`; UPDATE para setear `request_id` |
+| `public.audit_logs` | W | una fila con `action='settle_debt'`, `entity_type='expense'`, `source='rpc'` |
+| `public.expense_splits` | W (via `save_expense_v4`) | un split `fixed` para el `to_user_id` |
+
+**Idempotencia**: si (clave = `p_request_id`). Unique index `uq_expenses_request_id` (parcial: `where request_id is not null`) + SELECT pre-insert + `EXCEPTION unique_violation` como safety net. El cliente DEBE generar un `request_id` nuevo por tap; el server garantiza que el mismo `request_id` devuelve siempre el mismo `expense_id`.
+
+**Errores** (via `jsonb` con `success: false`)
+
+- `status='unauthenticated'` -> `current_app_user_id()` devolvio null.
+- `status='invalid'` con `message='request_id is required'` -> `p_request_id` null/vacío.
+- `status='invalid'` con `message='household and users are required'` -> algun uuid null.
+- `status='invalid'` con `message='amount must be greater than 0'` -> `p_amount <= 0`.
+
+**Providers a invalidar en cliente (tras exito)**
+
+- `expenseBalancesProvider`
+- `personalFinanceSummaryProvider`
+- `combinedFeedControllerProvider`
+- `recentActivityRemoteProvider`
+
+**Cliente**
+
+- Repositorio: [supabase_expense_repository.dart:369](flutter_client/lib/features/expenses/data/repositories/supabase_expense_repository.dart:369) (`settleDebt`)
+- Controller: [expense_provider.dart:213](flutter_client/lib/features/expenses/presentation/providers/expense_provider.dart:213) (`ExpenseController.settleDebt`, genera `requestId = Uuid().v4()`)
+- Use case: [settle_debt_usecase.dart](flutter_client/lib/features/expenses/domain/usecases/settle_debt_usecase.dart) (documenta la validacion + generacion de UUID, mismo path)
+- Tests: [settle_debt_idempotency_test.dart](flutter_client/test/settle_debt_idempotency_test.dart) (6 tests, valida UUID v4, idempotencia, validaciones, propagacion de failures)
+
+**Notas**
+
+- El cliente NUNCA debe llamar a `save_expense_v4` con `p_type='settlement'` para liquidar: ese path no es idempotente. Toda liquidación pasa por `settle_debt_v1`.
+- Smoke gate (`scripts/prod_ops/post_deploy_smoke.sql`) incluye `settle_debt_v1` en su lista de RPCs críticos y en la lista de mutaciones no ejecutables por `anon`.
+
+---
+
+## `get_solo_progress_snapshot(p_user_id, p_household_id)`
+
+Snapshot de lectura para Modo Solo. Centraliza XP total, XP semanal, racha real, tareas completadas, dias activos, categorias fuertes y resumen financiero personal para que Home y `Mi espacio` no calculen progreso con reglas divergentes.
+
+**Inputs**
+
+| parametro | tipo | nota |
+|---|---|---|
+| `p_user_id` | `uuid` | usuario autenticado esperado; debe coincidir con `current_app_user_id()` |
+| `p_household_id` | `uuid` | hogar actual; el usuario debe ser miembro |
+
+**Output**
+
+Devuelve `jsonb`. En exito:
+
+- `authorized: true`
+- `xp`, `weekly_xp`, `previous_week_xp`, `weekly_xp_delta`
+- `tasks_completed`, `weekly_tasks_completed`, `previous_week_tasks_completed`, `tasks_completed_delta`
+- `current_streak_days`, `active_days_14`, `recent_activity_count`
+- `monthly_expense`, `monthly_income`
+- `top_task_category`, `top_expense_category`
+- `generated_at`, `week_start`, `household_type`
+
+Si falla la autorizacion devuelve `authorized: false` con contadores en cero y `reason`.
+
+**Tablas / RPCs**
+
+| objeto | R/W | nota |
+|---|---|---|
+| `public.households` | R | valida tipo de hogar y existencia |
+| `public.household_members` | R | valida membresia del caller |
+| `public.ledger_entries` | R | XP total y semanal |
+| `public.household_activities` | R | tareas completadas, racha, actividad reciente |
+| `public.expenses` | R | categoria fuerte de gasto del mes |
+| `public.get_personal_finance_summary` | R | ingreso/gasto personal existente |
+
+**Seguridad**
+
+- `security definer`, `set search_path = ''`, referencias `public.` completas.
+- Usa `current_app_user_id()` y exige `v_uid = p_user_id`.
+- Rechaza usuarios que no pertenecen al hogar pedido.
+- `EXECUTE` revocado a `public`/`anon`, concedido a `authenticated`.
+
+**Idempotencia**
+
+Solo lectura. No escribe datos ni necesita `request_id`.
+
+**Providers a invalidar en cliente**
+
+- `soloProgressServerSnapshotProvider`
+- `userBalanceProvider`
+- `personalFinanceSummaryProvider`
+- `recentActivityRemoteProvider`
+- `statsControllerProvider`
+- `tasksProvider`
+
+**Cliente**
+
+- Provider: `flutter_client/lib/features/dashboard/presentation/providers/solo_progress_provider.dart`
+- Modelo: `flutter_client/lib/features/dashboard/domain/models/solo_progress_snapshot.dart`
+- UI: `flutter_client/lib/features/dashboard/presentation/screens/solo_space_screen.dart`
+
+---
+
+## `generate_planned_payment_reminders_v1()`
+
+Genera recordatorios de pagos planificados para hogares PREMIUM. NO es un RPC de clientes: lo ejecuta el cron diario via la edge function `planned-payment-reminders` (auth `CRON_SECRET`/service role, mismo patron que `cleanup-old-receipts`).
+
+- `planned_payment_upcoming`: el planificado `pending` vence en exactamente 3 dias.
+- `planned_payment_due`: vence hoy.
+
+**Inputs**
+
+Sin parametros (opera sobre `current_date` del servidor).
+
+**Output**
+
+`jsonb`: `{ success, upcoming, due_today, run_date }` — contadores de notificaciones insertadas en esta corrida.
+
+**Tablas / RPCs**
+
+| objeto | R/W | nota |
+|---|---|---|
+| `public.planned_expenses` | R | `status = 'pending'` con `due_date` en hoy o hoy+3 |
+| `public.households` | R | gate premium: `is_premium` y `premium_until` vigente |
+| `public.household_members` | R | destinatarios: `payer_default` o todos los adultos (`parent`/`guardian`/`adult`) |
+| `public.notifications` | W | inserta el recordatorio; el webhook existente lo convierte en push (send-notification) |
+
+**Seguridad**
+
+- `security definer`, `set search_path = public`.
+- `EXECUTE` revocado a `public`/`anon`/`authenticated`; solo `service_role`.
+
+**Idempotencia**
+
+Si: `NOT EXISTS` por `(type, related_entity_id, user_id)`. Correr el cron N veces el mismo dia no duplica; cada periodo de un recurrente es una fila nueva de `planned_expenses`, asi que recuerda una vez por vencimiento.
+
+**Providers a invalidar en cliente**
+
+Ninguno de forma directa (el cliente recibe la notificacion por push/realtime y el listado sale del controller de notificaciones al refrescar).
+
+**Cliente / Ops**
+
+- Edge function: `supabase/functions/planned-payment-reminders/index.ts`.
+- Cron sugerido: diario 12:00 UTC (manana en AR). Configurar en Supabase Cron con header `Authorization: Bearer <CRON_SECRET>`.
+- Copy sin tildes a proposito (convencion de notificaciones de RPC); `type` + `related_entity_*` quedan estructurados para localizarlas client-side mas adelante.
 
 ---
 

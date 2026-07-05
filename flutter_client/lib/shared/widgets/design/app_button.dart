@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 
@@ -17,6 +17,7 @@ class AppButton extends StatelessWidget {
   final AppButtonVariant variant;
   final AppButtonSize size;
   final bool isFullWidth;
+  final AppPressHaptic haptic;
 
   const AppButton({
     super.key,
@@ -28,6 +29,7 @@ class AppButton extends StatelessWidget {
     this.variant = AppButtonVariant.primary,
     this.size = AppButtonSize.medium,
     this.isFullWidth = false,
+    this.haptic = AppPressHaptic.light,
   });
 
   @override
@@ -74,12 +76,8 @@ class AppButton extends StatelessWidget {
     }
 
     return AnimatedPress(
-      onTap: (isDisabled || isLoading)
-          ? null
-          : () {
-              HapticFeedback.lightImpact();
-              onTap?.call();
-            },
+      haptic: haptic,
+      onTap: (isDisabled || isLoading) ? null : onTap,
       child: Opacity(
         opacity: (isDisabled || isLoading) ? 0.6 : 1.0,
         child: Container(
@@ -163,11 +161,11 @@ class AppButton extends StatelessWidget {
   EdgeInsets _getPadding() {
     switch (size) {
       case AppButtonSize.small:
-        return const EdgeInsets.symmetric(horizontal: 16);
+        return const EdgeInsets.symmetric(horizontal: AppSpacing.md);
       case AppButtonSize.medium:
-        return const EdgeInsets.symmetric(horizontal: 24);
+        return const EdgeInsets.symmetric(horizontal: AppSpacing.lg);
       case AppButtonSize.large:
-        return const EdgeInsets.symmetric(horizontal: 32);
+        return const EdgeInsets.symmetric(horizontal: AppSpacing.xl);
     }
   }
 
@@ -177,10 +175,16 @@ class AppButton extends StatelessWidget {
         return const TextStyle(fontSize: 14, fontWeight: FontWeight.w700);
       case AppButtonSize.medium:
         return const TextStyle(
-            fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.3,);
+          fontSize: 16,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.3,
+        );
       case AppButtonSize.large:
         return const TextStyle(
-            fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.4,);
+          fontSize: 18,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.4,
+        );
     }
   }
 

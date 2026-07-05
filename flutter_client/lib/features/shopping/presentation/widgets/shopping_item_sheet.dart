@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 
 import '../../domain/models/shopping_categories.dart';
 import '../../domain/models/shopping_model.dart';
@@ -31,7 +34,7 @@ class ShoppingItemSheet extends ConsumerStatefulWidget {
     String? initialCategory,
     String? initialEmoji,
   }) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -56,18 +59,13 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
   late TextEditingController _quantityController;
   late String _category;
   late String _emoji;
+  bool _didLocalizeInitialName = false;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(
-      text: widget.item == null
-          ? widget.initialName ?? ''
-          : localizedShoppingCatalogName(
-              context,
-              name: widget.item!.name,
-              nameKey: widget.item!.nameKey,
-            ),
+      text: widget.item == null ? widget.initialName ?? '' : widget.item!.name,
     );
     _quantityController = TextEditingController(
       text: widget.item?.quantity ?? '',
@@ -88,6 +86,19 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didLocalizeInitialName || widget.item == null) return;
+
+    _didLocalizeInitialName = true;
+    _nameController.text = localizedShoppingCatalogName(
+      context,
+      name: widget.item!.name,
+      nameKey: widget.item!.nameKey,
+    );
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _quantityController.dispose();
@@ -96,6 +107,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     final productKey =
         widget.item?.nameKey ?? shoppingCatalogKeyForName(_nameController.text);
@@ -106,9 +118,10 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
         right: 24,
         top: 12,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -119,7 +132,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.divider,
+                color: theme.divider,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -128,10 +141,10 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(16),
+                  color: theme.background,
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 child: ShoppingIcon(
                   productKey: productKey,
@@ -146,15 +159,15 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
               Expanded(
                 child: TextField(
                   controller: _nameController,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
+                    color: theme.textPrimary,
                   ),
                   decoration: InputDecoration(
                     hintText: t.shoppingItemNameHint,
                     border: InputBorder.none,
-                    hintStyle: const TextStyle(color: AppColors.textMuted),
+                    hintStyle: TextStyle(color: theme.textMuted),
                   ),
                 ),
               ),
@@ -172,10 +185,10 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
           const SizedBox(height: 24),
           Text(
             t.shoppingCategoryLabel,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: theme.textSecondary,
             ),
           ),
           const SizedBox(height: 12),
@@ -215,12 +228,11 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                   backgroundColor: context.theme.scaffoldBackground,
                   selectedColor: AppColors.primary.withValues(alpha: 0.1),
                   labelStyle: TextStyle(
-                    color:
-                        isSelected ? AppColors.primary : AppColors.textPrimary,
+                    color: isSelected ? AppColors.primary : theme.textPrimary,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                     side: BorderSide(
                       color:
                           isSelected ? AppColors.primary : Colors.transparent,
@@ -241,7 +253,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 elevation: 0,
               ),

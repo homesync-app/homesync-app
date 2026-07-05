@@ -67,6 +67,7 @@ class _FailingExpenseRepository implements ExpenseRepository {
     required String fromUserId,
     required String toUserId,
     required double amount,
+    required String requestId,
   }) async =>
       throw UnimplementedError();
 
@@ -206,7 +207,23 @@ class _FailingSavingsRepository implements SavingsRepository {
     required double targetAmount,
     required String color,
     required String icon,
+    DateTime? targetDate,
   }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, void>> updateGoal({
+    required String goalId,
+    String? title,
+    double? targetAmount,
+    String? color,
+    String? icon,
+    DateTime? targetDate,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, void>> archiveGoal({required String goalId}) async =>
       throw UnimplementedError();
 
   @override
@@ -215,6 +232,8 @@ class _FailingSavingsRepository implements SavingsRepository {
     required String userId,
     required double amount,
     String? note,
+    String splitType = 'personal',
+    List<Map<String, dynamic>> participants = const [],
   }) async =>
       throw UnimplementedError();
 

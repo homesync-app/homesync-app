@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/offline/sync_service.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 
 class OfflineIndicator extends ConsumerWidget {
   const OfflineIndicator({super.key});
@@ -19,7 +20,10 @@ class OfflineIndicator extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: _getBackgroundColor(connectivity, syncState),
         boxShadow: [

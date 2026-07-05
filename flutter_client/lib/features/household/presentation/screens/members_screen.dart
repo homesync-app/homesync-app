@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
+import 'package:homesync_client/features/household/domain/models/family_role_option.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/widgets/invitation_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 
 class MembersScreen extends ConsumerStatefulWidget {
   const MembersScreen({super.key});
@@ -34,7 +39,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
           // mutation instead of flashing a full-screen spinner.
           skipLoadingOnReload: true,
           data: (members) => _buildContent(members, theme),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: AppLoader()),
           error: (e, _) => Center(child: Text('Error: $e')),
         ),
       ),
@@ -47,7 +52,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     final currentMember =
         members.where((m) => m.userId == currentUserId).firstOrNull;
     final isChild = currentMember?.isChild ?? false;
-    final canEditRoles = currentMember?.isAdmin ?? false;
+    final canEditRoles = currentMember?.canManageHousehold ?? false;
 
     return ListView(
       physics:
@@ -61,6 +66,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                 entry.value,
                 theme,
                 canEditRoles: canEditRoles,
+                currentUserId: currentUserId,
               ).animateStaggered(entry.key),
             ),
         const SizedBox(height: 16),
@@ -99,19 +105,20 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     MemberModel member,
     AppThemeColors theme, {
     required bool canEditRoles,
+    required String? currentUserId,
   }) {
     final t = AppLocalizations.of(context);
-    // Owners can't be downgraded to minors (would lock the household out of
-    // admin-only actions), so we only open the role picker for non-owners.
-    final tappable = canEditRoles && !member.isOwner;
+    // Owners and the current user can't be downgraded from this flow.
+    final tappable =
+        canEditRoles && !member.isOwner && member.userId != currentUserId;
     return AnimatedPress(
       onPressed: tappable ? () => _openRolePicker(member) : null,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: theme.surfaceContainer,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
         ),
         child: Row(
@@ -194,14 +201,19 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
   Future<void> _openRolePicker(MemberModel member) async {
     final t = AppLocalizations.of(context);
     final theme = context.theme;
-    final selected = await showModalBottomSheet<MemberType>(
+    final current = FamilyRoleOption.fromMember(
+      displayRole: member.displayRole,
+      type: member.type,
+    );
+    final selected = await AppSheet.show<FamilyRoleOption>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
         decoration: BoxDecoration(
           color: theme.background,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(AppRadii.xxl)),
         ),
         child: SafeArea(
           top: false,
@@ -227,17 +239,21 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              for (final type in MemberType.values)
-                _buildRoleOption(type, member, theme, t),
+              for (final option in FamilyRoleOption.values)
+                _buildRoleOption(option, current, theme, t),
             ],
           ),
         ),
       ),
     );
 
-    if (selected == null || selected == member.type) return;
+    if (selected == null || selected == current) return;
     final repo = ref.read(householdRepositoryProvider);
-    final result = await repo.updateMemberType(member.userId, selected.name);
+    final result = await repo.updateMemberType(
+      member.userId,
+      selected.memberType.name,
+      displayRole: selected.displayRole,
+    );
     if (!mounted) return;
     result.fold(
       (failure) {
@@ -258,19 +274,14 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
   }
 
   Widget _buildRoleOption(
-    MemberType type,
-    MemberModel member,
+    FamilyRoleOption option,
+    FamilyRoleOption? current,
     AppThemeColors theme,
     AppLocalizations t,
   ) {
-    final isCurrent = member.type == type;
-    final label = switch (type) {
-      MemberType.parent => t.membersRoleParent,
-      MemberType.guardian => t.membersRoleGuardian,
-      MemberType.teen => t.membersRoleTeen,
-      MemberType.child => t.membersRoleChild,
-    };
-    final subtitle = switch (type) {
+    final isCurrent = current == option;
+    final label = option.label(t);
+    final subtitle = switch (option.memberType) {
       MemberType.parent ||
       MemberType.guardian =>
         t.membersRoleParentGuardianDesc,
@@ -278,15 +289,15 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
       MemberType.child => t.membersRoleChildDesc,
     };
     return AnimatedPress(
-      onPressed: () => Navigator.pop(context, type),
+      onPressed: () => Navigator.pop(context, option),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
+        margin: const EdgeInsets.only(bottom: AppSpacing.xs),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isCurrent
               ? theme.primary.withValues(alpha: 0.08)
               : theme.surfaceContainer,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(
             color: isCurrent
                 ? theme.primary.withValues(alpha: 0.4)
@@ -335,7 +346,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: theme.surfaceContainer.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
         ),
         child: Row(
@@ -345,7 +356,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
               height: 48,
               decoration: BoxDecoration(
                 color: theme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadii.md),
               ),
               child: Icon(
                 Icons.person_add_rounded,

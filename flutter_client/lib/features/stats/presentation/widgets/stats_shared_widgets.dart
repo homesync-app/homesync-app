@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
@@ -28,10 +29,8 @@ class XPToggleButton extends StatelessWidget {
           curve: Curves.easeOutQuart,
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: isSelected
-                ? Colors.white
-                : Colors.black.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(20),
+            color: isSelected ? theme.surface : theme.surfaceContainer,
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             boxShadow: isSelected ? theme.cardShadow : [],
             border: Border.all(
               color: isSelected
@@ -43,9 +42,7 @@ class XPToggleButton extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: isSelected
-                    ? color
-                    : AppColors.textPrimary.withValues(alpha: 0.4),
+                color: isSelected ? color : theme.textMuted,
                 fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
                 fontSize: 13,
                 letterSpacing: 0.8,
@@ -69,7 +66,7 @@ class PrivacyBadge extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(AppRadii.modal),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.05)),
         boxShadow: theme.cardShadow,
       ),
@@ -92,7 +89,7 @@ class PrivacyBadge extends StatelessWidget {
             child: Text(
               text,
               style: TextStyle(
-                color: AppColors.textPrimary.withValues(alpha: 0.7),
+                color: theme.textSecondary,
                 fontSize: 13,
                 height: 1.5,
                 fontWeight: FontWeight.w500,
@@ -152,7 +149,7 @@ class MiniStatCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         boxShadow: theme.cardShadow,
         border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
       ),
@@ -160,10 +157,10 @@ class MiniStatCard extends StatelessWidget {
         children: [
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary,
+              color: theme.textPrimary,
               letterSpacing: -1,
               height: 1,
             ),
@@ -202,9 +199,11 @@ class DuelHistoryWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Container(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.modal),
+        border: Border.all(color: theme.border.withValues(alpha: 0.38)),
         boxShadow: theme.cardShadow,
       ),
       child: Column(
@@ -231,138 +230,112 @@ class DuelHistoryWidget extends StatelessWidget {
           }
 
           return Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
             decoration: BoxDecoration(
               border: isLast
                   ? null
                   : Border(
                       bottom: BorderSide(
-                        color: AppColors.border.withValues(alpha: 0.5),
+                        color: theme.border.withValues(alpha: 0.32),
                       ),
                     ),
             ),
             child: Row(
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: userResult == 'win'
-                          ? [
-                              AppColors.success,
-                              AppColors.success.withValues(alpha: 0.8),
-                            ]
-                          : userResult == 'loss'
-                              ? [Colors.red.shade400, Colors.red.shade300]
-                              : [
-                                  AppColors.textMuted.withValues(alpha: 0.3),
-                                  AppColors.textMuted.withValues(alpha: 0.2),
-                                ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      userResult == 'win'
-                          ? '🏆'
-                          : userResult == 'loss'
-                              ? '😢'
-                              : '⚔️',
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
+                _DuelResultIcon(result: userResult),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      RichText(
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        text: TextSpan(
+                          style: TextStyle(
+                            color: theme.textPrimary,
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: winnerName,
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' vs ',
+                              style: TextStyle(
+                                color: theme.textMuted,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            TextSpan(
+                              text: loserName,
+                              style: TextStyle(
+                                color: theme.textSecondary,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
                       Row(
                         children: [
+                          Icon(
+                            Icons.calendar_today_rounded,
+                            size: 12,
+                            color: theme.textMuted,
+                          ),
+                          const SizedBox(width: 5),
                           Text(
-                            winnerName,
+                            weekLabel,
                             style: TextStyle(
+                              fontSize: 11.5,
+                              color: theme.textMuted,
                               fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              color: userResult == 'win'
-                                  ? AppColors.success
-                                  : AppColors.textPrimary,
-                            ),
-                          ),
-                          const Text(
-                            ' vs ',
-                            style: TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 12,
-                            ),
-                          ),
-                          Text(
-                            loserName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text(
-                        weekLabel,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textMuted,
-                        ),
-                      ),
                     ],
                   ),
                 ),
+                const SizedBox(width: AppSpacing.sm),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xs,
+                    horizontal: 11,
+                    vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: userResult == 'win'
-                        ? AppColors.success.withValues(alpha: 0.1)
-                        : userResult == 'loss'
-                            ? Colors.red.withValues(alpha: 0.1)
-                            : AppColors.accentGold.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: theme.surfaceContainer.withValues(alpha: 0.72),
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
+                    border: Border.all(
+                      color: _resultAccent(userResult).withValues(alpha: 0.16),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        userResult == 'win'
-                            ? '✓'
-                            : userResult == 'loss'
-                                ? '✗'
-                                : '=',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: userResult == 'win'
-                              ? AppColors.success
-                              : userResult == 'loss'
-                                  ? Colors.red
-                                  : AppColors.accentGold,
-                        ),
+                      Icon(
+                        _resultScoreIcon(userResult),
+                        size: 15,
+                        color: _resultAccent(userResult),
                       ),
-                      const SizedBox(width: AppSpacing.xxs),
+                      const SizedBox(width: 6),
                       Text(
                         '$winnerXp - $loserXp',
                         style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                          color: userResult == 'win'
-                              ? AppColors.success
-                              : userResult == 'loss'
-                                  ? Colors.red.shade600
-                                  : AppColors.textSecondary,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 13.5,
+                          color: theme.textPrimary,
                         ),
                       ),
                     ],
@@ -373,6 +346,54 @@ class DuelHistoryWidget extends StatelessWidget {
           );
         }).toList(),
       ),
+    );
+  }
+
+  Color _resultAccent(String result) {
+    return switch (result) {
+      'win' => AppColors.primary,
+      'loss' => AppColors.textMuted,
+      _ => AppColors.accentGold,
+    };
+  }
+
+  IconData _resultScoreIcon(String result) {
+    return switch (result) {
+      'win' => Icons.check_rounded,
+      'loss' => Icons.arrow_downward_rounded,
+      _ => Icons.remove_rounded,
+    };
+  }
+}
+
+class _DuelResultIcon extends StatelessWidget {
+  const _DuelResultIcon({required this.result});
+
+  final String result;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final accent = switch (result) {
+      'win' => AppColors.primary,
+      'loss' => theme.textMuted,
+      _ => AppColors.accentGold,
+    };
+    final icon = switch (result) {
+      'win' => Icons.emoji_events_rounded,
+      'loss' => Icons.flag_rounded,
+      _ => Icons.sports_martial_arts_rounded,
+    };
+
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: result == 'loss' ? 0.08 : 0.10),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(color: accent.withValues(alpha: 0.14)),
+      ),
+      child: Icon(icon, color: accent, size: 21),
     );
   }
 }

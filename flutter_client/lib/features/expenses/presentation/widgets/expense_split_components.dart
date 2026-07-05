@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -81,7 +83,7 @@ class ExpenseEqualSplitSelection extends StatelessWidget {
       children: members.map((member) {
         final isSelected = selectedMembers.contains(member.userId);
         return InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           onTap: () => onToggle(member.userId),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
@@ -90,7 +92,7 @@ class ExpenseEqualSplitSelection extends StatelessWidget {
               color: isSelected
                   ? AppColors.primary.withValues(alpha: 0.08)
                   : AppColors.surface,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               border: Border.all(
                 color: isSelected
                     ? AppColors.primary.withValues(alpha: 0.24)
@@ -150,7 +152,7 @@ class ExpenseFixedSplitRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: theme.surface,
@@ -189,7 +191,7 @@ class ExpenseFixedSplitRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: theme.elevatedSurface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               border: Border.all(color: theme.border.withValues(alpha: 0.7)),
             ),
             child: TextFormField(

@@ -3,10 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/premium_avatar_motion_cache.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 
 import 'app_smooth_network_image.dart';
+import 'premium_animated_avatar.dart';
 import 'video_avatar_player.dart';
+
+export 'premium_animated_avatar.dart'
+    show AvatarMotion, PremiumAvatarMotionController;
 
 class UserAvatar {
   static const Map<String, String> _legacyAvatarAliases = {
@@ -113,6 +118,21 @@ class UserAvatar {
     return _legacyAvatarAliases[trimmed] ?? trimmed;
   }
 
+  /// Id del avatar premium si [value] corresponde a uno con variante
+  /// animada descargable (registro en kAnimatedPremiumAvatarFiles).
+  static String? animatedPremiumAvatarIdFor(String value) {
+    final cleanValue = value.startsWith('premium://')
+        ? value.replaceFirst('premium://', '')
+        : value;
+    for (final avatar in premiumAvatars) {
+      if (avatar['id'] == cleanValue || avatar['url'] == cleanValue) {
+        final id = avatar['id'] as String;
+        return kAnimatedPremiumAvatarFiles.containsKey(id) ? id : null;
+      }
+    }
+    return null;
+  }
+
   static Map<String, dynamic>? premiumAvatarById(String id) {
     for (final avatar in premiumAvatars) {
       if (avatar['id'] == id) return avatar;
@@ -140,6 +160,12 @@ class UserAvatar {
         normalized.startsWith('assets/images/custom_avatars/') ||
         normalized.contains('/storage/v1/object/public/custom-avatars/');
   }
+
+  static bool isPremiumCharacterAvatarValue(String? value) {
+    final normalized = normalizeAvatarValue(value);
+    if (normalized == null || normalized.trim().isEmpty) return false;
+    return normalized.startsWith('premium://');
+  }
 }
 
 class CustomUserAvatar extends ConsumerWidget {
@@ -153,6 +179,17 @@ class CustomUserAvatar extends ConsumerWidget {
   final bool isPriority;
   final bool forceCircular;
 
+  /// Movimiento ambiental del avatar premium animado (idle por defecto;
+  /// versus para el faceoff, etc.).
+  final AvatarMotion ambientMotion;
+
+  /// Permite disparar movimientos de evento (victoria, festejo) desde afuera.
+  final PremiumAvatarMotionController? motionController;
+
+  /// false => nunca usar la variante animada aunque exista
+  /// (ej. tiles del picker, que muestran solo la imagen).
+  final bool allowMotion;
+
   const CustomUserAvatar({
     super.key,
     this.name,
@@ -164,23 +201,31 @@ class CustomUserAvatar extends ConsumerWidget {
     this.isAnimated = false,
     this.isPriority = false,
     this.forceCircular = false,
+    this.ambientMotion = AvatarMotion.idle,
+    this.motionController,
+    this.allowMotion = true,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bool isPremium = UserAvatar.isPremiumAvatarValue(avatarUrl);
+    // Los avatares generados por IA (custom-avatars) comparten el formato
+    // sticker de los premium: mismo render grande, sin recorte circular.
+    final bool isSticker = UserAvatar.isPremiumAvatarValue(avatarUrl);
     final admin = ref.watch(adminProvider);
 
     Widget avatarContent;
-    if (isPremium && !forceCircular) {
+    if (isSticker && !forceCircular) {
       avatarContent = _PremiumCharacterAvatar(
         url: avatarUrl!,
         radius: radius,
         isAnimated: isAnimated,
         isPriority: isPriority,
         onTap: onTap,
+        ambientMotion: ambientMotion,
+        motionController: motionController,
+        allowMotion: allowMotion,
       );
-    } else if (isAnimated || isPriority) {
+    } else if (isPriority) {
       avatarContent = _AnimatedAvatar(
         name: name,
         avatarUrl: avatarUrl,
@@ -375,6 +420,7 @@ class _AvatarContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final normalizedAvatarUrl = UserAvatar.normalizeAvatarValue(avatarUrl);
     final bool hasAvatar =
         normalizedAvatarUrl != null && normalizedAvatarUrl.trim().isNotEmpty;
@@ -394,6 +440,10 @@ class _AvatarContent extends StatelessWidget {
     final color = isEmoji
         ? UserAvatar.getColorForEmoji(normalizedAvatarUrl)
         : ((isNetwork || isAsset) ? Colors.transparent : AppColors.primary);
+    final imageBackground =
+        isDarkMode ? AppColors.elevatedSurfaceDark : Colors.grey.shade100;
+    final resolvedBorderColor = borderColor ??
+        (isDarkMode ? Colors.white.withValues(alpha: 0.18) : Colors.white);
 
     final safeName = name?.trim() ?? '';
     final initial =
@@ -405,12 +455,10 @@ class _AvatarContent extends StatelessWidget {
       decoration: BoxDecoration(
         color: isEmoji
             ? color
-            : ((isNetwork || isAsset)
-                ? Colors.grey.shade100
-                : AppColors.primary),
+            : ((isNetwork || isAsset) ? imageBackground : AppColors.primary),
         shape: BoxShape.circle,
         border: showBorder
-            ? Border.all(color: borderColor ?? Colors.white, width: 2)
+            ? Border.all(color: resolvedBorderColor, width: 2)
             : null,
         boxShadow: showBorder
             ? [
@@ -513,12 +561,15 @@ class _InitialAvatarFallback extends StatelessWidget {
   }
 }
 
-class _PremiumCharacterAvatar extends StatelessWidget {
+class _PremiumCharacterAvatar extends ConsumerWidget {
   final String url;
   final double radius;
   final bool isAnimated;
   final bool isPriority;
   final VoidCallback? onTap;
+  final AvatarMotion ambientMotion;
+  final PremiumAvatarMotionController? motionController;
+  final bool allowMotion;
 
   const _PremiumCharacterAvatar({
     required this.url,
@@ -526,11 +577,46 @@ class _PremiumCharacterAvatar extends StatelessWidget {
     required this.isAnimated,
     required this.isPriority,
     this.onTap,
+    this.ambientMotion = AvatarMotion.idle,
+    this.motionController,
+    this.allowMotion = true,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final String cleanUrl = UserAvatar.resolvePremiumAvatarUrl(url);
+
+    // WebP animado descargado bajo demanda: player propio que saluda una
+    // vez y descansa (Image.asset loopearia infinito y con cacheWidth se
+    // congela). Mientras descarga (o si fallo) se ve el PNG estatico.
+    final String? animatedId = UserAvatar.animatedPremiumAvatarIdFor(url);
+    final bool wantsMotion =
+        allowMotion && (isAnimated || isPriority || radius >= 24);
+    final Map<AvatarMotion, String>? motionPaths =
+        (animatedId != null && wantsMotion)
+            ? ref.watch(premiumAvatarMotionPathsProvider(animatedId)).value
+            : null;
+    if (motionPaths != null) {
+      final double webpSize = radius * 3.38;
+      Widget webpContent = PremiumAnimatedAvatar(
+        motionAssets: motionPaths,
+        ambientMotion: ambientMotion,
+        controller: motionController,
+        fallbackAsset: cleanUrl,
+        size: webpSize,
+      );
+      if (isAnimated || isPriority) {
+        webpContent = _PremiumAvatarMotion(
+          size: webpSize,
+          isPriority: isPriority,
+          child: webpContent,
+        );
+      }
+      if (onTap != null) {
+        return GestureDetector(onTap: onTap, child: webpContent);
+      }
+      return webpContent;
+    }
 
     final bool isVideo = cleanUrl.toLowerCase().endsWith('.mp4');
     final bool shouldPlayVideo =
@@ -724,22 +810,25 @@ class _PremiumAvatarMotionState extends State<_PremiumAvatarMotion>
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-            Container(
-              width: widget.size * 0.92,
-              height: widget.size * 0.92,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.accentGold.withValues(
-                      alpha: _glowAnimation.value,
+            // Solo isPriority lleva glow: es la senal de "te toca".
+            // El avatar comun va sin halo para integrarse al fondo.
+            if (widget.isPriority)
+              Container(
+                width: widget.size * 0.92,
+                height: widget.size * 0.92,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accentGold.withValues(
+                        alpha: _glowAnimation.value,
+                      ),
+                      blurRadius: 16,
+                      spreadRadius: 2,
                     ),
-                    blurRadius: widget.isPriority ? 16 : 10,
-                    spreadRadius: widget.isPriority ? 2 : 0,
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
             Transform.translate(
               offset: Offset(0, _offsetAnimation.value),
               child: Transform.scale(

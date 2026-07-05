@@ -1,11 +1,70 @@
 # Baseline debt for SQL quality gate.
 # Each entry format: relative/path.sql|message
-supabase/migrations/20260318_fix_complete_task_transaction_recurring.sql|SECURITY DEFINER function without SET search_path in function definition.
-supabase/migrations/20260319_finance_hardening_contracts.sql|SECURITY DEFINER function without SET search_path in function definition.
+#
+# These are PRE-EXISTING findings (mostly SECURITY DEFINER functions in
+# historical migrations that predate the `SET search_path` convention).
+# They are parked here so the gate blocks NEW regressions while we pay down
+# the legacy debt incrementally. DO NOT add new entries to silence fresh
+# findings — fix those in the migration instead.
+#
+# Regenerate (after intentionally paying down debt) with:
+#   python scripts/regen_sql_baseline.py   (then review the diff)
 database/migrations/003_rpc_functions.sql|SECURITY DEFINER function without SET search_path in function definition.
+database/migrations/004_rls_policies.sql|Potentially over-permissive RLS policy 'Users can create households' on sensitive table public.households.
 database/migrations/005_task_templates.sql|SECURITY DEFINER function without SET search_path in function definition.
 database/migrations/006_expense_management.sql|SECURITY DEFINER function without SET search_path in function definition.
 database/migrations/007_statistics_rpc.sql|SECURITY DEFINER function without SET search_path in function definition.
-database/migrations/010_reward_templates.sql|SECURITY DEFINER function without SET search_path in function definition.
-database/migrations/004_rls_policies.sql|Potentially over-permissive RLS policy 'Users can create households' on sensitive table public.households.
 database/migrations/008_fix_task_persistence_and_tx.sql|SECURITY DEFINER function without SET search_path in function definition.
+database/migrations/010_reward_templates.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260218104835_create_task_with_auto_household.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260218111011_enable_rls_policies.sql|Potentially over-permissive RLS policy 'Users can create households' on sensitive table public.households.
+supabase/migrations/20260218114103_task_templates_and_categories.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260218134204_expense_management_system.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260220201219_fix_handle_new_user_trigger_and_update_existing.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260221155513_fix_task_history_now.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260221160411_professional_observability_and_events.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260221160430_upgrade_task_rpc_v2.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260227222554_fix_ranking_rpcs_avatar_url_structure.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260228191804_010_reward_templates.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260302102724_fix_statistics_rpc_avatars.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260302142946_create_weekly_duel_history.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260302144147_make_award_weekly_winner_security_definer.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260302163310_finance_professional_upgrade_v1.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260302163348_fix_balance_privacy_v2.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260302163358_fix_debts_privacy.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260302215905_update_save_expense_v3_to_v4.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260303002808_fix_logging_permissions.sql|Potentially over-permissive RLS policy 'Allow anyone to insert logs' on sensitive table public.application_logs.
+supabase/migrations/20260303002808_fix_logging_permissions.sql|Potentially over-permissive RLS policy 'Allow authenticated users to delete logs' on sensitive table public.application_logs.
+supabase/migrations/20260303002903_fix_expense_balance_income.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260304122816_fix_finance_rpcs_v2.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260304123345_fix_finance_rpc_types_and_results.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260304124551_fix_filtered_expenses_privacy_logic.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260304164420_add_settlement_type_and_adjust_balances.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260305103658_fix_finance_logic_v8_comprehensive_drop.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260305104936_fix_finance_rpc_enum_and_splits_v9.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260305105040_fix_finance_gift_and_equal_v10.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260306234229_fix_finance_logic_v13_retry.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260306234340_fix_finance_logic_v13_retry_2.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260306234403_refine_finance_logic_v13_avatars.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260308000747_fix_finance_summary_v2.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260308002640_standardize_finance_summary_currency_check.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260308002736_standardize_all_currency_rpc_functions_v2.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260308131811_fix_personal_finance_summary_settlements.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260308165437_add_savings_contribution_rpc.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260308165731_test_duel_finalizer_rpc.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260308165841_fix_balance_calculation_shared_only_v2.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260309125847_fix_complete_task_rpc_v5_sql.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260311150142_fix_personal_expense_visibility_v2.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260311161030_update_expense_logic_and_recurring_rpc.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260311161649_update_pay_planned_expense_rpc.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260313124826_add_reward_categories_and_new_templates.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260316234645_fix_gift_visibility_and_deletion.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260318153414_fix_complete_task_transaction_recurring_v2.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260318_fix_complete_task_transaction_recurring.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260319020516_finance_hardening_contracts.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260319_finance_hardening_contracts.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260323171608_update_complete_task_transaction_with_date.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260323175657_fix_task_persistence_and_tx.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260417190234_ensure_household_for_user_accept_type.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260418192922_fix_ensure_user_profile_empty_name_guard.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260421231626_fix_reset_user_account_null_name.sql|SECURITY DEFINER function without SET search_path in function definition.

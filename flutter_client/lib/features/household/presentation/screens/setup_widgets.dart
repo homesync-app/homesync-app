@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/shared/widgets/design/app_pill.dart';
 
 class SetupStepEyebrow extends StatelessWidget {
@@ -454,7 +454,7 @@ class SetupFamilyChoiceChip extends StatelessWidget {
     final tone = accent ?? theme.primary;
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selection();
         onTap();
       },
       child: AnimatedContainer(

@@ -47,7 +47,7 @@ void main() {
       expect(indexForMainTab(caps, MainTab.stats), -1);
     });
 
-    test('reindexes tabs without social hub', () {
+    test('keeps solo space visible without tasks', () {
       const caps = HouseholdCapabilities(
         type: HouseholdType.solo,
         tasksEnabled: false,
@@ -58,11 +58,12 @@ void main() {
         [
           MainTab.home,
           MainTab.expenses,
+          MainTab.social,
           MainTab.shopping,
         ],
       );
-      expect(indexForMainTab(caps, MainTab.social), -1);
-      expect(indexForMainTab(caps, MainTab.shopping), 2);
+      expect(indexForMainTab(caps, MainTab.social), 2);
+      expect(indexForMainTab(caps, MainTab.shopping), 3);
     });
   });
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -132,7 +134,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
               height: 6,
               decoration: BoxDecoration(
                 color: theme.border.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadii.pill),
               ),
             ),
             Expanded(
@@ -265,15 +267,35 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
       runSpacing: 8,
       children: [
         _buildModeChip(
-            theme, t.scheduleRepeatNone, TaskRepeatMode.none, Icons.block_rounded,),
+          theme,
+          t.scheduleRepeatNone,
+          TaskRepeatMode.none,
+          Icons.block_rounded,
+        ),
         _buildModeChip(
-            theme, t.scheduleRepeatDaily, TaskRepeatMode.daily, Icons.today_rounded,),
+          theme,
+          t.scheduleRepeatDaily,
+          TaskRepeatMode.daily,
+          Icons.today_rounded,
+        ),
         _buildModeChip(
-            theme, t.scheduleRepeatWeekly, TaskRepeatMode.weekly, Icons.date_range_rounded,),
-        _buildModeChip(theme, t.scheduleRepeatMonthly, TaskRepeatMode.monthly,
-            Icons.calendar_month_rounded,),
+          theme,
+          t.scheduleRepeatWeekly,
+          TaskRepeatMode.weekly,
+          Icons.date_range_rounded,
+        ),
         _buildModeChip(
-            theme, t.scheduleRepeatCustom, TaskRepeatMode.custom, Icons.tune_rounded,),
+          theme,
+          t.scheduleRepeatMonthly,
+          TaskRepeatMode.monthly,
+          Icons.calendar_month_rounded,
+        ),
+        _buildModeChip(
+          theme,
+          t.scheduleRepeatCustom,
+          TaskRepeatMode.custom,
+          Icons.tune_rounded,
+        ),
       ],
     );
   }
@@ -343,10 +365,10 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: AppSpacing.md),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: theme.surfaceVariant.withValues(alpha: 0.42),
           borderRadius: BorderRadius.circular(22),
@@ -483,7 +505,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
           color: isSelected
               ? theme.primary.withValues(alpha: 0.11)
               : theme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(
             color: isSelected
                 ? theme.primary.withValues(alpha: 0.24)
@@ -680,7 +702,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
         decoration: BoxDecoration(
           color:
               selected ? AppColors.sage.withValues(alpha: 0.15) : theme.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
           border: Border.all(
             color: selected
                 ? AppColors.sage.withValues(alpha: 0.3)
@@ -768,7 +790,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                     height: 42,
                     decoration: BoxDecoration(
                       color: theme.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
                     ),
                     child: Icon(
                       Icons.people_alt_rounded,
@@ -814,7 +836,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                 color: selected
                     ? theme.primary.withValues(alpha: 0.14)
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadii.xs),
                 border: Border.all(
                   color: selected
                       ? theme.primary.withValues(alpha: 0.22)
@@ -845,7 +867,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 17),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadii.lg),
               ),
             ),
             child: Text(
@@ -863,7 +885,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
           flex: 2,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               boxShadow: [
                 BoxShadow(
                   color: theme.primary.withValues(alpha: 0.13),
@@ -880,7 +902,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 17),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
                 ),
               ),
               child: Text(
@@ -916,7 +938,8 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
         if (_customRecurrenceMode == 'weekdays') {
           if (_selectedDays.isEmpty) {
             _showError(
-                AppLocalizations.of(context).scheduleErrorPickWeekday,);
+              AppLocalizations.of(context).scheduleErrorPickWeekday,
+            );
             return;
           }
           weekdays = _selectedDays.toList()..sort();

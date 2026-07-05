@@ -3,18 +3,23 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
+import 'package:homesync_client/shared/widgets/portal_labs/reveal_copy_interaction.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class InvitationSheet extends ConsumerStatefulWidget {
   const InvitationSheet({super.key});
 
   static Future<void> show(BuildContext context) {
-    return showModalBottomSheet(
+    return AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -63,9 +68,17 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
     );
   }
 
+  // Used by the WhatsApp-share fallback: copies to the clipboard and confirms.
   void _copyCode() {
     if (_invitationCode == null) return;
     Clipboard.setData(ClipboardData(text: _invitationCode!));
+    _showCopiedFeedback();
+  }
+
+  // RevealCopyInteraction writes to the clipboard itself; this only surfaces
+  // the confirmation feedback.
+  void _showCopiedFeedback() {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppLocalizations.of(context).invitationCopied),
@@ -120,9 +133,15 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.xxl,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -160,33 +179,31 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
           const SizedBox(height: 32),
           if (_isLoading)
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: CircularProgressIndicator(),
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+              child: AppLoader(),
             )
           else if (_invitationCode != null) ...[
-            GestureDetector(
-              onTap: _copyCode,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                decoration: BoxDecoration(
-                  color: theme.primary.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: theme.primary.withValues(alpha: 0.2),
-                    width: 2,
-                  ),
-                ),
-                child: Text(
-                  _invitationCode!,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 4,
-                    color: theme.primary,
-                  ),
-                ),
+            RevealCopyInteraction(
+              value: _invitationCode!,
+              maskCharacter: '•',
+              revealDuration: const Duration(seconds: 30),
+              successColor: AppColors.success,
+              backgroundColor: theme.primary.withValues(alpha: 0.05),
+              borderColor: theme.primary.withValues(alpha: 0.2),
+              borderRadius: 20,
+              textStyle: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 4,
+                color: theme.primary,
               ),
+              maskedTextStyle: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 4,
+                color: theme.primary.withValues(alpha: 0.45),
+              ),
+              onCopied: _showCopiedFeedback,
             ),
             const SizedBox(height: 12),
             Text(
@@ -205,9 +222,9 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF25D366),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                   ),
                 ),
                 icon: const Icon(Icons.share_rounded),

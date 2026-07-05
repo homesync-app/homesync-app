@@ -13,6 +13,7 @@ class CreateSavingsGoalUseCase {
     required double targetAmount,
     required String color,
     required String icon,
+    DateTime? targetDate,
   }) {
     if (householdId.isEmpty) {
       return Future.value(
@@ -33,6 +34,7 @@ class CreateSavingsGoalUseCase {
       targetAmount: targetAmount,
       color: color,
       icon: icon,
+      targetDate: targetDate,
     );
   }
 }

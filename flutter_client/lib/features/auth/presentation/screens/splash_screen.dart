@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -5,8 +6,71 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:video_player/video_player.dart';
+
+/// Shares one [VideoPlayerController] across every [SplashScreen] mount.
+/// Startup routes through several SplashScreen instances (auth bootstrap →
+/// household load → onboarding check); without the cache each remount would
+/// restart the video with a visible gradient flash in between.
+class _SplashVideoCache {
+  static const _videoAsset = 'assets/images/splash_cat_lights.mp4';
+
+  static Future<VideoPlayerController>? _initFuture;
+  static int _refs = 0;
+  static Timer? _disposeTimer;
+
+  static Future<VideoPlayerController> acquire() {
+    _refs++;
+    _disposeTimer?.cancel();
+    _disposeTimer = null;
+    return _initFuture ??= _create();
+  }
+
+  static Future<VideoPlayerController> _create() async {
+    // Deja pintar el primer frame antes del init pesado del decoder.
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+
+    var assetPath = _videoAsset;
+    if (kIsWeb && assetPath.startsWith('assets/')) {
+      assetPath = assetPath.replaceFirst('assets/', '');
+    }
+
+    final controller = VideoPlayerController.asset(assetPath);
+    try {
+      await controller.initialize();
+      await controller.setLooping(true);
+      await controller.setVolume(0);
+      await controller.play();
+    } catch (_) {
+      _initFuture = null;
+      unawaited(controller.dispose());
+      rethrow;
+    }
+    return controller;
+  }
+
+  static void release() {
+    _refs--;
+    if (_refs > 0) return;
+    // Margen para los swaps de ruta del arranque: el siguiente SplashScreen
+    // se monta un frame despues de que el anterior se desmonta. Pasado el
+    // margen ya estamos en Home/Login y se libera el decoder.
+    _disposeTimer = Timer(const Duration(seconds: 3), () async {
+      _disposeTimer = null;
+      final future = _initFuture;
+      _initFuture = null;
+      if (future != null) {
+        try {
+          (await future).dispose();
+        } catch (_) {
+          // _create ya logueo el fallo; nada que liberar.
+        }
+      }
+    });
+  }
+}
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -17,8 +81,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  static const _videoAsset = 'assets/images/splash_cat_lights.mp4';
-
   late final AnimationController _loadingController;
   VideoPlayerController? _videoController;
   bool _videoReady = false;
@@ -34,32 +96,10 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _initializeVideo() async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-
-    if (!mounted) return;
-
     try {
-      var assetPath = _videoAsset;
-      if (kIsWeb && assetPath.startsWith('assets/')) {
-        assetPath = assetPath.replaceFirst('assets/', '');
-      }
+      final controller = await _SplashVideoCache.acquire();
 
-      final controller = VideoPlayerController.asset(assetPath);
-      await controller.initialize();
-
-      if (!mounted) {
-        controller.dispose();
-        return;
-      }
-
-      await controller.setLooping(true);
-      await controller.setVolume(0);
-      await controller.play();
-
-      if (!mounted) {
-        controller.dispose();
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         _videoController = controller;
@@ -77,7 +117,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _loadingController.dispose();
-    _videoController?.dispose();
+    _SplashVideoCache.release();
     super.dispose();
   }
 
@@ -294,12 +334,12 @@ class _ElegantProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(AppRadii.pill),
       child: Container(
         height: 7,
         decoration: BoxDecoration(
           color: const Color(0x1A8E6F5A),
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
         ),
         child: Stack(
           children: [

@@ -3,21 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_approval_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
-/// Sprint 1 Modo Padres: bandeja de aprobaciones para owner/admin del hogar.
+/// Sprint 1 Modo Padres: bandeja de aprobaciones para adultos owner/admin.
 ///
 /// Lista las submisiones en estado `pending` y permite aprobarlas o rechazarlas
 /// con motivo. Las acciones invocan `verify_task_transaction` /
 /// `reject_task_v1` (RPCs que validan rol del lado servidor).
 ///
-/// Si el usuario no esta en modo "Modo Padres" (no es admin de un hogar
+/// Si el usuario no esta en modo "Modo Padres" (no puede gestionar un hogar
 /// familiar premium), la pantalla muestra el placeholder hacia el paywall.
 class PendingApprovalsScreen extends ConsumerWidget {
   const PendingApprovalsScreen({super.key});
@@ -35,7 +38,7 @@ class PendingApprovalsScreen extends ConsumerWidget {
         appBar: AppBar(title: Text(t.pendingApprovalsAppBarShortTitle)),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Text(
               t.pendingApprovalsLockedNotice,
               textAlign: TextAlign.center,
@@ -69,12 +72,12 @@ class PendingApprovalsScreen extends ConsumerWidget {
       ),
       body: approvalsAsync.when(
         skipLoadingOnReload: true,
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: AppLoader()),
         error: (e, _) => Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Text(
-              'No pudimos cargar las aprobaciones: $e',
+              t.pendingApprovalsLoadError(e.toString()),
               style: TextStyle(color: theme.textSecondary),
               textAlign: TextAlign.center,
             ),
@@ -162,7 +165,9 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Enviada por ${a.submittedByName}',
+                      AppLocalizations.of(
+                        context,
+                      ).pendingApprovalsSubmittedBy(a.submittedByName),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -209,7 +214,8 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.accentRed,
                     minimumSize: const Size(0, 46),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                     side: BorderSide(
                       color: AppColors.accentRed.withValues(alpha: 0.76),
                       width: 1.2,
@@ -259,6 +265,9 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
   }
 
   Future<void> _onApprove() async {
+    // Haptico inmediato al tap, igual que completar una tarea en Hoy/Inicio:
+    // el feedback fisico acompaña la intencion, no el resultado del RPC.
+    AppHaptics.success();
     setState(() => _busy = true);
     try {
       // Construimos un TaskModel minimo para reusar approvePendingTask del
@@ -269,11 +278,14 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
       if (!mounted) return;
       if (res != null) {
         _snack(
-          'Aprobada. Se acreditaron ${widget.approval.coinReward} coins.',
+          AppLocalizations.of(context).pendingApprovalsApprovedSnack(
+            widget.approval.coinReward,
+          ),
         );
       } else {
         _snack(
           AppLocalizations.of(context).pendingApprovalsApproveErrorRetry,
+          type: AppSnackBarType.error,
         );
       }
     } finally {
@@ -287,21 +299,35 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
     setState(() => _busy = true);
     try {
       final stub = TaskModel.minimalForApproval(id: widget.approval.taskId);
-      await ref
+      final ok = await ref
           .read(tasksProvider.notifier)
           .rejectPendingTask(stub, reason: reason.isEmpty ? null : reason);
       if (!mounted) return;
-      _snack(AppLocalizations.of(context).pendingApprovalsRejectedSnack);
+      if (ok) {
+        _snack(AppLocalizations.of(context).pendingApprovalsRejectedSnack);
+      } else {
+        _snack(
+          AppLocalizations.of(context).pendingApprovalsRejectErrorRetry,
+          type: AppSnackBarType.error,
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        _snack(
+          AppLocalizations.of(context).pendingApprovalsRejectErrorRetry,
+          type: AppSnackBarType.error,
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  void _snack(String msg) {
+  void _snack(String msg, {AppSnackBarType type = AppSnackBarType.success}) {
     AppSnackBar.show(
       context,
       message: msg,
-      type: AppSnackBarType.success,
+      type: type,
       duration: const Duration(milliseconds: 1500),
     );
   }
@@ -357,7 +383,7 @@ class _RewardChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(color: color.withValues(alpha: 0.08)),
       ),
       child: Row(
@@ -388,7 +414,7 @@ class _EmptyState extends StatelessWidget {
     final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -428,7 +454,7 @@ class _LockedHero extends StatelessWidget {
     final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

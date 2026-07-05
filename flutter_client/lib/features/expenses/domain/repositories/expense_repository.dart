@@ -48,6 +48,7 @@ abstract class ExpenseRepository {
     required String fromUserId,
     required String toUserId,
     required double amount,
+    required String requestId,
   });
 
   Future<Map<String, dynamic>> getPersonalFinanceSummary(

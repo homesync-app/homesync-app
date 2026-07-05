@@ -33,13 +33,13 @@ final class RewardsProvider
   Rewards create() => Rewards();
 }
 
-String _$rewardsHash() => r'e3f615c89e51bc7b2ae003efffcaa88d7b7c7e3e';
+String _$rewardsHash() => r'3c56c8fe08082c67ac922a4ff1185cd1752da95d';
 
 abstract class _$Rewards extends $AsyncNotifier<List<RewardModel>> {
   FutureOr<List<RewardModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<List<RewardModel>>, List<RewardModel>>;
     final element = ref.element as $ClassProviderElement<
@@ -47,7 +47,7 @@ abstract class _$Rewards extends $AsyncNotifier<List<RewardModel>> {
         AsyncValue<List<RewardModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

@@ -3,12 +3,14 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 class ExpenseSplitModel {
   final String userId;
   final double amount;
+  final String? email;
   final String? fullName;
   final String? avatarUrl;
 
   const ExpenseSplitModel({
     required this.userId,
     required this.amount,
+    this.email,
     this.fullName,
     this.avatarUrl,
   });
@@ -26,9 +28,20 @@ class ExpenseSplitModel {
     return ExpenseSplitModel(
       userId: map['user_id'] as String? ?? '',
       amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
+      email: userMap?['email'] as String?,
       fullName: userMap?['full_name'] as String?,
       avatarUrl: userMap?['avatar_url'] as String?,
     );
+  }
+
+  String get displayName {
+    if (fullName != null && fullName!.trim().isNotEmpty) {
+      return fullName!.trim().split(' ').first;
+    }
+    if (email != null && email!.trim().isNotEmpty) {
+      return email!.trim().split('@').first;
+    }
+    return 'Usuario';
   }
 }
 

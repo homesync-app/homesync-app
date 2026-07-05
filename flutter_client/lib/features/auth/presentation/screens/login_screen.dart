@@ -1,15 +1,18 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   final dynamic prefs;
@@ -80,7 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   void _toggleMode() {
-    HapticFeedback.selectionClick();
+    AppHaptics.selection();
     setState(() {
       _isSignUpMode = !_isSignUpMode;
       _formKey.currentState?.reset();
@@ -89,7 +92,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   void _showError(String message) {
     if (!mounted) return;
-    HapticFeedback.heavyImpact();
+    AppHaptics.warning();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -110,7 +113,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   void _showSuccess(String message) {
     if (!mounted) return;
-    HapticFeedback.lightImpact();
+    AppHaptics.tap();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -138,7 +141,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
 
     final authController = ref.read(authControllerProvider.notifier);
     setState(() => _isSubmitting = true);
@@ -159,7 +162,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
 
     final fullName = _nameController.text.trim();
     final authController = ref.read(authControllerProvider.notifier);
@@ -183,7 +186,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Future<void> _handleGoogleSignIn() async {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
 
     final authController = ref.read(authControllerProvider.notifier);
     setState(() => _isSubmitting = true);
@@ -205,7 +208,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Future<void> _handleForgotPassword() async {
-    HapticFeedback.lightImpact();
+    AppHaptics.tap();
     final t = AppLocalizations.of(context);
     final emailController = TextEditingController(
       text: _emailController.text.trim(),
@@ -217,7 +220,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         backgroundColor: Theme.of(context).cardColor,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(AppRadii.xxl),
         ),
         title: Text(
           t.authForgotDialogTitle,
@@ -250,7 +253,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ? const Color(0xFF1E1E1E)
                     : const Color(0xFFF6F2ED),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -269,7 +272,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             child: Text(t.commonCancel),
           ),
           Padding(
-            padding: const EdgeInsets.only(left: 8),
+            padding: const EdgeInsets.only(left: AppSpacing.xs),
             child: ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(
@@ -278,7 +281,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
               ),
               child: Text(t.authForgotDialogSendButton),
@@ -406,10 +409,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     return Column(
       children: [
         Image.asset(
-          'assets/images/login_home_hero.png',
+          'assets/images/login_home_hero.webp',
           width: 286,
           height: 286,
           fit: BoxFit.contain,
+          // Decodificar al tamaño mostrado: el PNG es 1179x1334 y sin esto
+          // se decodifica entero (~6 MB de RAM para un widget de 286px).
+          cacheWidth: (286 * MediaQuery.devicePixelRatioOf(context)).round(),
           filterQuality: FilterQuality.high,
           isAntiAlias: true,
         ),
@@ -444,8 +450,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildAuthPanel(ThemeData theme) {
+    final appTheme = context.theme;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(32),
+      borderRadius: BorderRadius.circular(AppRadii.modal),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
@@ -454,20 +461,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                context.theme.surface.withValues(alpha: 0.9),
-                AppColors.elevatedSurface.withValues(alpha: 0.93),
-              ],
+              colors: appTheme.isDarkMode
+                  ? [
+                      appTheme.surface.withValues(alpha: 0.96),
+                      appTheme.elevatedSurface.withValues(alpha: 0.94),
+                    ]
+                  : [
+                      appTheme.surface.withValues(alpha: 0.9),
+                      AppColors.elevatedSurface.withValues(alpha: 0.93),
+                    ],
             ),
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: BorderRadius.circular(AppRadii.modal),
             border: Border.all(
-              color: AppColors.border.withValues(alpha: 0.34),
+              color: appTheme.border.withValues(alpha: 0.58),
               width: 0.7,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.shadowBase.withValues(alpha: 0.012),
-                blurRadius: 12,
+                color: appTheme.shadowBase.withValues(
+                  alpha: appTheme.isDarkMode ? 0.34 : 0.012,
+                ),
+                blurRadius: appTheme.isDarkMode ? 30 : 12,
                 offset: const Offset(0, 8),
               ),
             ],
@@ -550,7 +564,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             alignment: Alignment.centerRight,
             child: InkWell(
               onTap: _handleForgotPassword,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadii.xs),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(6, 4, 6, 2),
                 child: Text(
@@ -664,39 +678,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     TextCapitalization textCapitalization = TextCapitalization.none,
     String? Function(String?)? validator,
   }) {
+    final appTheme = context.theme;
     return TextFormField(
       controller: controller,
       obscureText: isPassword && _obscurePassword,
       keyboardType: keyboardType,
       textCapitalization: textCapitalization,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
+        color: appTheme.textPrimary,
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(
+        hintStyle: TextStyle(
           fontSize: 16.5,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF9E948D),
+          color: appTheme.textMuted,
         ),
         filled: true,
-        fillColor: context.theme.surface.withValues(alpha: 0.9),
+        fillColor: appTheme.surfaceContainer.withValues(alpha: 0.9),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 22, vertical: 17),
         prefixIcon: Padding(
           padding: const EdgeInsets.only(left: 20, right: 12),
           child: Icon(
             icon,
-            color: AppColors.textMuted.withValues(alpha: 0.82),
+            color: appTheme.textMuted.withValues(alpha: 0.92),
             size: 23,
           ),
         ),
         prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
         suffixIcon: isPassword
             ? Padding(
-                padding: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.only(right: AppSpacing.sm),
                 child: IconButton(
                   tooltip: _obscurePassword
                       ? AppLocalizations.of(context).authShowPasswordTooltip
@@ -705,7 +720,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     _obscurePassword
                         ? Icons.visibility_outlined
                         : Icons.visibility_off_outlined,
-                    color: AppColors.textMuted.withValues(alpha: 0.8),
+                    color: appTheme.textMuted.withValues(alpha: 0.9),
                     size: 23,
                   ),
                   onPressed: () =>
@@ -715,29 +730,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               )
             : null,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           borderSide: BorderSide(
-            color: AppColors.border.withValues(alpha: 0.82),
+            color: appTheme.border.withValues(alpha: 0.82),
             width: 1.2,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           borderSide: BorderSide(
             color: AppColors.primary.withValues(alpha: 0.35),
             width: 1.4,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
         ),
       ),
@@ -752,7 +767,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     return ElevatedButton(
       onPressed: _isSubmitting ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
@@ -780,16 +795,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildGoogleButton(ThemeData theme) {
+    final appTheme = context.theme;
     return OutlinedButton(
       onPressed: _isSubmitting ? null : _handleGoogleSignIn,
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 13.5),
         foregroundColor: theme.colorScheme.onSurface,
         side: BorderSide(
-          color: AppColors.border.withValues(alpha: 0.74),
+          color: appTheme.border.withValues(alpha: 0.74),
           width: 1.2,
         ),
-        backgroundColor: context.theme.surface.withValues(alpha: 0.9),
+        backgroundColor: appTheme.surfaceContainer.withValues(alpha: 0.9),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         elevation: 0,
       ),
@@ -822,7 +838,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       children: [
         Expanded(child: Divider(color: color, thickness: 1)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Text(
             AppLocalizations.of(context).authOrContinueWith,
             style: TextStyle(
@@ -855,9 +871,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ),
         InkWell(
           onTap: _isSubmitting ? null : _toggleMode,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadii.xs),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xxs,
+              vertical: AppSpacing.xxs,
+            ),
             child: Text(
               _isSignUpMode ? t.authToggleSignInLink : t.authToggleSignUpLink,
               style: const TextStyle(
@@ -924,10 +943,10 @@ class _PremiumLoadingOverlay extends StatelessWidget {
               color: theme.colorScheme.surface.withValues(alpha: 0.6 * value),
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(AppSpacing.xl),
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                    borderRadius: BorderRadius.circular(32),
+                    borderRadius: BorderRadius.circular(AppRadii.modal),
                     boxShadow: [
                       BoxShadow(
                         color:
@@ -940,17 +959,7 @@ class _PremiumLoadingOverlay extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3.5,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.primary,
-                          ),
-                          strokeCap: StrokeCap.round,
-                        ),
-                      ),
+                      const AppLoader(size: 42),
                       if (message.isNotEmpty) ...[
                         const SizedBox(height: 24),
                         Text(

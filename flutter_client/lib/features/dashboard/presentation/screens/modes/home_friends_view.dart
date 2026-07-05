@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/debt_settlement_section.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_task_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
@@ -18,6 +20,8 @@ import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/features/shopping/presentation/widgets/shopping_icon.dart';
+import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -213,7 +217,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                 right: 0,
                 top: 0,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(AppSpacing.xxs),
                   decoration: const BoxDecoration(
                     color: AppColors.error,
                     shape: BoxShape.circle,
@@ -247,7 +251,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.warning.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         border: Border.all(color: AppColors.warning.withValues(alpha: 0.25)),
       ),
       child: Row(
@@ -275,7 +279,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             },
             style: TextButton.styleFrom(
               foregroundColor: AppColors.warning,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
@@ -305,10 +309,10 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             if (balances.isEmpty) {
               return Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: theme.surfaceContainer.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppRadii.xl),
                   border: Border.all(
                     color: theme.divider.withValues(alpha: 0.05),
                     width: 1,
@@ -344,16 +348,87 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                 ),
               );
             }
-            return FamilyBalanceCard(
-              balances: balances,
-              title: t.homeFriendsBalanceCardTitle,
-              currentUserId: currentUserId,
+
+            // Settle-up only makes sense with more than one member and at
+            // least one open balance. DebtSimplifier also short-circuits the
+            // fully-settled case, but gating here avoids an extra header.
+            final hasMultipleMembers = balances.length > 1;
+            final hasOpenBalances = balances.any((b) => !b.isSettled);
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FamilyBalanceCard(
+                  balances: balances,
+                  title: t.homeFriendsBalanceCardTitle,
+                  currentUserId: currentUserId,
+                ),
+                if (hasMultipleMembers && hasOpenBalances) ...[
+                  const SizedBox(height: 24),
+                  _buildSectionHeader(
+                    theme,
+                    title: t.homeFriendsSettleTitle,
+                    subtitle: t.homeFriendsSettleSubtitle,
+                  ),
+                  const SizedBox(height: 12),
+                  DebtSettlementSection(balances: balances),
+                ],
+              ],
             );
           },
           loading: () => const ShimmerLoading(height: 140, borderRadius: 24),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, __) => _buildSectionError(
+            theme,
+            message: t.homeFriendsBalancesLoadError,
+            onRetry: () => ref.invalidate(expenseBalancesProvider),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSectionError(
+    AppThemeColors theme, {
+    required String message,
+    required VoidCallback onRetry,
+  }) {
+    return AnimatedPress(
+      onPressed: onRetry,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.18)),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.cloud_off_rounded,
+              color: AppColors.error,
+              size: 22,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: theme.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.refresh_rounded,
+              color: AppColors.error.withValues(alpha: 0.8),
+              size: 20,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -397,7 +472,11 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             );
           },
           loading: () => const ShimmerLoading(height: 60, borderRadius: 16),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, __) => _buildSectionError(
+            theme,
+            message: t.homeFriendsTasksLoadError,
+            onRetry: () => ref.invalidate(todayTasksProvider),
+          ),
         ),
       ],
     );
@@ -474,66 +553,115 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             if (pending.isEmpty) {
               return const SizedBox.shrink();
             }
+            final visiblePending = pending.take(4).toList();
+            final remainingPending = pending.length - visiblePending.length;
             return Container(
               decoration: BoxDecoration(
                 color: theme.surfaceContainer.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppRadii.xl),
                 border: Border.all(
                   color: theme.divider.withValues(alpha: 0.05),
                 ),
               ),
               child: Column(
-                children: pending.take(2).toList().asMap().entries.map((entry) {
-                  final item = entry.value;
-                  final isLast = entry.key == pending.take(2).length - 1;
-                  final displayQuantity = item.displayQuantity;
-                  return Column(
-                    children: [
-                      ListTile(
-                        leading: Text(
-                          item.emoji,
-                          style: const TextStyle(fontSize: 20),
-                        ),
-                        title: Text(
-                          item.name,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: theme.textPrimary,
+                children: [
+                  ...visiblePending.asMap().entries.map((entry) {
+                    final item = entry.value;
+                    final isLast = entry.key == visiblePending.length - 1;
+                    final displayQuantity = item.displayQuantity;
+                    return Column(
+                      children: [
+                        ListTile(
+                          leading: ShoppingIcon(
+                            productKey: item.nameKey ??
+                                shoppingCatalogKeyForName(item.name),
+                            categoryId: item.category,
+                            fallbackEmoji: item.emoji,
+                            allowProductAsset: true,
+                            size: 26,
                           ),
+                          title: Text(
+                            item.name,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: theme.textPrimary,
+                            ),
+                          ),
+                          subtitle: displayQuantity.isNotEmpty
+                              ? Text(displayQuantity)
+                              : null,
+                          trailing: Icon(
+                            Icons.chevron_right_rounded,
+                            color: theme.textMuted,
+                            size: 20,
+                          ),
+                          onTap: () {
+                            final index =
+                                indexForMainTab(caps, MainTab.shopping);
+                            if (index >= 0) {
+                              ref
+                                  .read(bottomNavIndexProvider.notifier)
+                                  .setIndex(index);
+                            }
+                          },
                         ),
-                        subtitle: displayQuantity.isNotEmpty
-                            ? Text(displayQuantity)
-                            : null,
-                        trailing: Icon(
-                          Icons.chevron_right_rounded,
-                          color: theme.textMuted,
-                          size: 20,
+                        if (!isLast || remainingPending > 0)
+                          Divider(
+                            height: 1,
+                            indent: 16,
+                            endIndent: 16,
+                            color: theme.divider.withValues(alpha: 0.08),
+                          ),
+                      ],
+                    );
+                  }),
+                  if (remainingPending > 0)
+                    InkWell(
+                      onTap: () {
+                        final index = indexForMainTab(caps, MainTab.shopping);
+                        if (index >= 0) {
+                          ref
+                              .read(bottomNavIndexProvider.notifier)
+                              .setIndex(index);
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 14,
                         ),
-                        onTap: () {
-                          final index = indexForMainTab(caps, MainTab.shopping);
-                          if (index >= 0) {
-                            ref
-                                .read(bottomNavIndexProvider.notifier)
-                                .setIndex(index);
-                          }
-                        },
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                t.homeFamilyShoppingMoreItems(remainingPending),
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.textSecondary,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: theme.textMuted,
+                              size: 20,
+                            ),
+                          ],
+                        ),
                       ),
-                      if (!isLast)
-                        Divider(
-                          height: 1,
-                          indent: 16,
-                          endIndent: 16,
-                          color: theme.divider.withValues(alpha: 0.08),
-                        ),
-                    ],
-                  );
-                }).toList(),
+                    ),
+                ],
               ),
             );
           },
           loading: () => const ShimmerLoading(height: 60, borderRadius: 20),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, __) => _buildSectionError(
+            theme,
+            message: t.homeFriendsShoppingLoadError,
+            onRetry: () => ref.invalidate(shoppingItemsProvider),
+          ),
         ),
       ],
     );
@@ -560,7 +688,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: theme.surfaceContainer.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
                   border: Border.all(
                     color: theme.divider.withValues(alpha: 0.05),
                   ),
@@ -587,7 +715,11 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             );
           },
           loading: () => const ShimmerLoading(height: 70, borderRadius: 20),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, __) => _buildSectionError(
+            theme,
+            message: t.homeFriendsActivityLoadError,
+            onRetry: () => ref.invalidate(recentActivityRemoteProvider),
+          ),
         ),
       ],
     );

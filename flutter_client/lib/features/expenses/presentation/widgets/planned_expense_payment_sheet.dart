@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
+import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -26,7 +34,7 @@ class PlannedExpensePaymentSheet extends ConsumerStatefulWidget {
     BuildContext context,
     FeedItemModel plannedExpense,
   ) {
-    return showModalBottomSheet<Map<String, dynamic>>(
+    return AppSheet.show<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -56,6 +64,33 @@ class _PlannedExpensePaymentSheetState
   void dispose() {
     _amountController.dispose();
     super.dispose();
+  }
+
+  /// Guarantees [_paidBy] always points at an eligible member so the selector
+  /// highlights a chip and the value sent to the RPC is a real adult member id.
+  ///
+  /// The planned expense's payer id can come from a different identity space
+  /// than [MemberModel.userId] (Supabase UUID vs Firebase UID, depending on the
+  /// source). When it doesn't match any member we fall back to the current user
+  /// — the person registering the payment is the natural default — and finally
+  /// to the first member.
+  void _ensureValidPayer(List<MemberModel> members) {
+    final eligiblePayers = _eligiblePayers(members);
+    if (eligiblePayers.isEmpty) return;
+    if (eligiblePayers.any((m) => m.userId == _paidBy)) return;
+
+    final currentUserId = ref.read(currentUserIdProvider);
+    _paidBy = eligiblePayers
+        .firstWhere(
+          (m) => m.userId == currentUserId,
+          orElse: () => eligiblePayers.first,
+        )
+        .userId;
+  }
+
+  List<MemberModel> _eligiblePayers(List<MemberModel> members) {
+    final adults = members.where((member) => member.isAdult).toList();
+    return adults.isNotEmpty ? adults : members;
   }
 
   void _onAmountChanged(String val) {
@@ -96,6 +131,7 @@ class _PlannedExpensePaymentSheetState
       if (!mounted) return;
 
       final templateUpdated = result['template_updated'] == true;
+      AppHaptics.success();
       Navigator.pop(context, {
         'success': true,
         'template_updated': templateUpdated,
@@ -103,13 +139,13 @@ class _PlannedExpensePaymentSheetState
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context).commonErrorWithDetails('$e'),
-          ),
-          backgroundColor: Colors.red,
-        ),
+      // Use the overlay-based snackbar: a ScaffoldMessenger snackbar renders
+      // *behind* this modal bottom sheet, so the user would see no feedback and
+      // an open form. AppSnackBar draws on the root overlay, above the sheet.
+      AppSnackBar.show(
+        context,
+        message: AppLocalizations.of(context).commonErrorWithDetails('$e'),
+        type: AppSnackBarType.error,
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -118,7 +154,10 @@ class _PlannedExpensePaymentSheetState
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final membersAsync = ref.watch(householdMembersProvider);
+    final isSharedEconomy =
+        ref.watch(currentHouseholdProvider).value?.financeMode == 'shared';
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -127,23 +166,23 @@ class _PlannedExpensePaymentSheetState
         24,
         MediaQuery.of(context).viewInsets.bottom + 32,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      decoration: BoxDecoration(
+        color: theme.background,
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
       child: membersAsync.when(
         loading: () => const SizedBox(
           height: 200,
-          child: Center(child: CircularProgressIndicator()),
+          child: Center(child: AppLoader()),
         ),
         error: (e, _) => Center(
           child:
               Text(AppLocalizations.of(context).commonErrorWithDetails('$e')),
         ),
         data: (List<MemberModel> members) {
-          if (_paidBy.isEmpty && members.isNotEmpty) {
-            _paidBy = members.first.userId;
-          }
+          _ensureValidPayer(members);
+          final eligiblePayers = _eligiblePayers(members);
 
           return SingleChildScrollView(
             child: Column(
@@ -155,7 +194,7 @@ class _PlannedExpensePaymentSheetState
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.divider,
+                      color: theme.divider,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -163,19 +202,20 @@ class _PlannedExpensePaymentSheetState
                 const SizedBox(height: 16),
                 Text(
                   AppLocalizations.of(context).expensesPlannedPaymentTitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
+                    color: theme.textPrimary,
                     letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   AppLocalizations.of(context).expensesPlannedPaymentSubtitle(
-                      widget.plannedExpense.title,),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                    widget.plannedExpense.title,
+                  ),
+                  style: TextStyle(
+                    color: theme.textSecondary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -183,8 +223,10 @@ class _PlannedExpensePaymentSheetState
                 _buildAmountField(),
                 const SizedBox(height: 20),
                 _buildDatePicker(context),
-                const SizedBox(height: 20),
-                _buildPayerSelector(members),
+                if (!isSharedEconomy) ...[
+                  const SizedBox(height: 20),
+                  _buildPayerSelector(eligiblePayers),
+                ],
                 const SizedBox(height: 32),
                 _buildConfirmButton(),
               ],
@@ -196,15 +238,16 @@ class _PlannedExpensePaymentSheetState
   }
 
   Widget _buildAmountField() {
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           AppLocalizations.of(context).expensesPlannedPaymentAmountEyebrow,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
-            color: AppColors.textMuted,
+            color: theme.textMuted,
             letterSpacing: 1,
           ),
         ),
@@ -214,18 +257,28 @@ class _PlannedExpensePaymentSheetState
           controller: _amountController,
           onChanged: _onAmountChanged,
           keyboardType: TextInputType.number,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w900,
-            color: AppColors.textPrimary,
+            color: theme.textPrimary,
           ),
           decoration: InputDecoration(
             prefixText: ref.watch(currencyProvider).inputPrefix(),
             filled: true,
-            fillColor: AppColors.surface,
+            fillColor: theme.surface,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20),
-              borderSide: BorderSide.none,
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+              borderSide: BorderSide(color: theme.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+              borderSide:
+                  BorderSide(color: theme.border.withValues(alpha: 0.5)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+              borderSide:
+                  BorderSide(color: theme.primary.withValues(alpha: 0.7)),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
@@ -238,15 +291,16 @@ class _PlannedExpensePaymentSheetState
   }
 
   Widget _buildDatePicker(BuildContext context) {
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           AppLocalizations.of(context).expensesPlannedPaymentDateEyebrow,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
-            color: AppColors.textMuted,
+            color: theme.textMuted,
             letterSpacing: 1,
           ),
         ),
@@ -262,10 +316,11 @@ class _PlannedExpensePaymentSheetState
             if (picked != null) setState(() => _paidAt = picked);
           },
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(20),
+              color: theme.surface,
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+              border: Border.all(color: theme.border.withValues(alpha: 0.5)),
             ),
             child: Row(
               children: [
@@ -277,16 +332,16 @@ class _PlannedExpensePaymentSheetState
                 const SizedBox(width: 12),
                 Text(
                   DateFormat('EEEE d, MMMM', 'es').format(_paidAt),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: theme.textPrimary,
                   ),
                 ),
                 const Spacer(),
-                const Icon(
+                Icon(
                   Icons.edit_calendar_rounded,
                   size: 20,
-                  color: AppColors.textMuted,
+                  color: theme.textMuted,
                 ),
               ],
             ),
@@ -297,15 +352,16 @@ class _PlannedExpensePaymentSheetState
   }
 
   Widget _buildPayerSelector(List<MemberModel> members) {
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'QUIEN PAGO?',
+        Text(
+          AppLocalizations.of(context).expensesFormFieldPayer.toUpperCase(),
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
-            color: AppColors.textMuted,
+            color: theme.textMuted,
             letterSpacing: 1,
           ),
         ),
@@ -345,9 +401,8 @@ class _PlannedExpensePaymentSheetState
                       fontSize: 10,
                       fontWeight:
                           isSelected ? FontWeight.w900 : FontWeight.w600,
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.textSecondary,
+                      color:
+                          isSelected ? AppColors.primary : theme.textSecondary,
                     ),
                   ),
                 ],
@@ -360,23 +415,28 @@ class _PlannedExpensePaymentSheetState
   }
 
   Widget _buildConfirmButton() {
+    final theme = context.theme;
     return SizedBox(
       width: double.infinity,
       height: 60,
       child: ElevatedButton(
         onPressed: _isLoading ? null : _confirmPayment,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.textPrimary,
+          backgroundColor: theme.primary,
           foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+          ),
           elevation: 0,
         ),
         child: _isLoading
             ? const CircularProgressIndicator(color: Colors.white)
-            : const Text(
-                'Confirmar y registrar',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+            : Text(
+                AppLocalizations.of(context).plannedExpensePaymentConfirmButton,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
       ),
     );

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/modes/home_couple_view.dart';
@@ -21,6 +24,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
@@ -53,7 +57,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           !next.hasError) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
-          HapticFeedback.mediumImpact();
+          AppHaptics.success();
         });
       }
     });
@@ -69,6 +73,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final householdAsync = ref.watch(householdIdProvider);
     final theme = context.theme;
+
+    // Mantener el balance fresco cross-device: el feed de actividad (que nace
+    // del stream realtime + poll de respaldo) avisa cuando otro miembro carga
+    // un gasto. Los providers de balance no escuchan realtime, asi que los
+    // invalidamos cuando la firma de actividades de gasto cambia. Sin esto, el
+    // balance del otro dispositivo quedaba viejo hasta recargar (a diferencia
+    // de "movimientos del hogar", que si se actualizaba solo).
+    ref.listen(financeActivitySignatureProvider, (previous, next) {
+      if (previous == null || previous == next) return;
+      ref.invalidate(expenseBalancesProvider);
+      ref.invalidate(personalFinanceSummaryProvider);
+      ref.invalidate(monthlyPendingPlannedExpensesProvider);
+    });
 
     return householdAsync.when(
       loading: () => Scaffold(
@@ -174,13 +191,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     };
   }
 
-  Widget _buildFAB(
+  Widget? _buildFAB(
     String householdId,
     HouseholdCapabilities caps,
   ) {
     // Friends view has less vertical content; the FAB overlaps the nav bar
     // label text without this offset due to shorter bottom padding.
     final fabOffsetY = caps.type == HouseholdType.friends ? 28.0 : 0.0;
+    final currentMember = ref.watch(currentMemberProvider);
+    final canCreateExpense = caps.type == HouseholdType.family
+        ? currentMember?.canSeeFinanceTab == true
+        : true;
+    if (caps.type == HouseholdType.family && currentMember?.isChild == true) {
+      return null;
+    }
+    final canCompleteTask = caps.showTasks;
+    final hasMultipleActions = canCreateExpense && canCompleteTask;
+    final fabLabel = hasMultipleActions
+        ? AppLocalizations.of(context).homeFabActions
+        : canCompleteTask
+            ? AppLocalizations.of(context).homeFabTasks
+            : AppLocalizations.of(context).homeFabExpenses;
 
     return ValueListenableBuilder<bool>(
       valueListenable: AppSnackBar.isVisible,
@@ -204,13 +235,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
       },
       child: AppFloatingActionButton(
-        label: caps.showTasks
-            ? AppLocalizations.of(context).homeFabActions
-            : AppLocalizations.of(context).homeFabExpenses,
+        label: fabLabel,
         icon: Icons.add_rounded,
-        onPressed: () => caps.showTasks
-            ? _showQuickActionMenu(householdId, caps)
-            : ExpenseFormSheet.show(context),
+        onPressed: () {
+          if (hasMultipleActions) {
+            _showQuickActionMenu(
+              showExpense: canCreateExpense,
+              showTask: canCompleteTask,
+            );
+            return;
+          }
+          if (canCompleteTask) {
+            CompleteTaskSheet.show(context);
+            return;
+          }
+          ExpenseFormSheet.show(context);
+        },
         heroTag: 'home_fab',
         margin: const EdgeInsets.only(bottom: 2),
       ),
@@ -225,22 +265,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
   }
 
-  void _showQuickActionMenu(
-    String householdId,
-    HouseholdCapabilities caps,
-  ) {
+  void _showQuickActionMenu({
+    required bool showExpense,
+    required bool showTask,
+  }) {
     final theme = context.theme;
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) {
         final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
         return Container(
-          padding: EdgeInsets.fromLTRB(24, 12, 24, 32 + bottomInset),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.xl + bottomInset,
+          ),
           decoration: BoxDecoration(
             color: theme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadii.modal),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -256,19 +303,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 24),
               Row(
                 children: [
-                  Expanded(
-                    child: _buildActionItem(
-                      variant: _QuickActionVariant.expense,
-                      label: AppLocalizations.of(context).homeFabExpenses,
-                      color: AppColors.primary,
-                      onTap: () {
-                        Navigator.pop(context);
-                        ExpenseFormSheet.show(context);
-                      },
+                  if (showExpense)
+                    Expanded(
+                      child: _buildActionItem(
+                        variant: _QuickActionVariant.expense,
+                        label: AppLocalizations.of(context).homeFabExpenses,
+                        color: AppColors.primary,
+                        onTap: () {
+                          Navigator.pop(context);
+                          ExpenseFormSheet.show(context);
+                        },
+                      ),
                     ),
-                  ),
-                  if (caps.showTasks) ...[
+                  if (showExpense && showTask) ...[
                     const SizedBox(width: 14),
+                  ],
+                  if (showTask)
                     Expanded(
                       child: _buildActionItem(
                         variant: _QuickActionVariant.task,
@@ -280,7 +330,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         },
                       ),
                     ),
-                  ],
                 ],
               ),
             ],
@@ -301,14 +350,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         onTap: onTap,
         child: Ink(
           height: 96,
           padding: const EdgeInsets.fromLTRB(18, 18, 14, 18),
           decoration: BoxDecoration(
             color: theme.isDarkMode ? theme.surface : Colors.white,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(AppRadii.xxl),
             border: Border.all(
               color: color.withValues(alpha: theme.isDarkMode ? 0.2 : 0.12),
             ),
@@ -372,7 +421,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _refreshHome() async {
     ref.invalidate(todayTasksProvider);
-    ref.invalidate(recentActivityProvider);
+    ref.invalidate(recentActivityRemoteProvider);
     ref.invalidate(personalFinanceSummaryProvider);
     ref.invalidate(expenseBalancesProvider);
     ref.invalidate(expenseControllerProvider);

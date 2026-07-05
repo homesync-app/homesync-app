@@ -1,4 +1,4 @@
-import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../repositories/premium_repository.dart';
 
@@ -7,7 +7,7 @@ class GetPremiumProductsUseCase {
 
   const GetPremiumProductsUseCase(this._repository);
 
-  Future<List<ProductDetails>> call() {
-    return _repository.getProducts();
+  Future<List<Package>> call({required String offeringId}) {
+    return _repository.getProducts(offeringId: offeringId);
   }
 }

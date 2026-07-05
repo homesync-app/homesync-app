@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/utils/app_scroll_physics.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/stats/presentation/widgets/widgets.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 
 class StatsScreen extends ConsumerStatefulWidget {
@@ -86,6 +90,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final statsAsync = ref.watch(statsControllerProvider);
+    final isSolo =
+        ref.watch(householdCapabilitiesProvider).type == HouseholdType.solo;
 
     ref.listen(userProfileProvider, (previous, next) {
       if (next.hasValue && previous?.value != next.value) {
@@ -96,7 +102,12 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.xs,
+            AppSpacing.md,
+            AppSpacing.xs,
+          ),
           child: AppSegmentedTabs(
             controller: _tabController,
             labels: _getTabs(t),
@@ -105,7 +116,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
         Expanded(
           child: statsAsync.when(
             loading: () => const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+              child: AppLoader(),
             ),
             error: (_, __) => Center(
               child: TextButton(
@@ -116,6 +127,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
             ),
             data: (stats) => TabBarView(
               controller: _tabController,
+              physics: const AppSnappyPagePhysics(),
               children: [
                 WeeklyProgressTab(
                   weeklyRanking: stats.weeklyRanking,
@@ -123,7 +135,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                   duelHistory: stats.duelHistory,
                   weekRange: _getWeekRange(),
                   totalTasks: _totalTasksCompleted(
-                      stats.taskStats, stats.memberActivity,),
+                    stats.taskStats,
+                    stats.memberActivity,
+                  ),
                   totalXp:
                       _totalXpEarned(stats.taskStats, stats.memberActivity),
                   totalCoins: _totalCoinsEarned(stats.memberActivity),
@@ -138,6 +152,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                 AchievementsTab(
                   memberStats: stats.memberActivity,
                   taskStats: stats.taskStats,
+                  isSolo: isSolo,
                   onRefresh: ref.read(statsControllerProvider.notifier).refresh,
                 ),
               ],

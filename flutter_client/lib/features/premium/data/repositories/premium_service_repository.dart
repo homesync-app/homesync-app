@@ -1,6 +1,6 @@
 import 'package:homesync_client/core/services/premium_service.dart';
 import 'package:homesync_client/features/premium/domain/repositories/premium_repository.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 class PremiumServiceRepository implements PremiumRepository {
   final PremiumService _service;
@@ -8,13 +8,13 @@ class PremiumServiceRepository implements PremiumRepository {
   PremiumServiceRepository(this._service);
 
   @override
-  Future<void> buyProduct(ProductDetails product) {
-    return _service.buyProduct(product);
+  Future<bool> buyProduct(Package package) {
+    return _service.buyProduct(package);
   }
 
   @override
-  Future<List<ProductDetails>> getProducts() {
-    return _service.getProducts();
+  Future<List<Package>> getProducts({required String offeringId}) {
+    return _service.getProducts(offeringId: offeringId);
   }
 
   @override
@@ -23,7 +23,7 @@ class PremiumServiceRepository implements PremiumRepository {
   }
 
   @override
-  Future<void> restorePurchases() {
+  Future<bool> restorePurchases() {
     return _service.restorePurchases();
   }
 

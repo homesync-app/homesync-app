@@ -181,6 +181,16 @@ String localizedTaskCatalogText(
       return t.taskTemplateOrganizeDocuments;
     case 'taskTemplatePlanHouseholdTasks':
       return t.taskTemplatePlanHouseholdTasks;
+    case 'taskTemplateCleanMicrowave':
+      return t.taskTemplateCleanMicrowave;
+    case 'taskTemplateWashCar':
+      return t.taskTemplateWashCar;
+    case 'taskTemplateCleanTrashBins':
+      return t.taskTemplateCleanTrashBins;
+    case 'taskTemplatePackSchoolBag':
+      return t.taskTemplatePackSchoolBag;
+    case 'taskTemplateGivePetWater':
+      return t.taskTemplateGivePetWater;
     default:
       return fallback;
   }

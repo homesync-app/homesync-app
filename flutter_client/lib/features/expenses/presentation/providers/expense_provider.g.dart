@@ -22,7 +22,7 @@ final class ExpenseRepositoryProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'expenseRepositoryProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -50,7 +50,7 @@ final class ExpenseRepositoryProvider extends $FunctionalProvider<
   }
 }
 
-String _$expenseRepositoryHash() => r'5da251b699e286e75db8e21ed09c45abf2b798b8';
+String _$expenseRepositoryHash() => r'67c211d51ec6e047092a7c804808324925e7d48a';
 
 @ProviderFor(getExpensesUseCase)
 final getExpensesUseCaseProvider = GetExpensesUseCaseProvider._();
@@ -262,7 +262,7 @@ abstract class _$PersonalFinanceSummary
   FutureOr<Map<String, dynamic>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref
         as $Ref<AsyncValue<Map<String, dynamic>>, Map<String, dynamic>>;
     final element = ref.element as $ClassProviderElement<
@@ -270,7 +270,7 @@ abstract class _$PersonalFinanceSummary
         AsyncValue<Map<String, dynamic>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -298,14 +298,14 @@ final class ExpenseBalancesProvider extends $AsyncNotifierProvider<
   ExpenseBalances create() => ExpenseBalances();
 }
 
-String _$expenseBalancesHash() => r'ed9878a7b5b3e783c8a3a043b39aab15dd2753fa';
+String _$expenseBalancesHash() => r'05cb264e6b74d38817e810c4b123f54b67f341b7';
 
 abstract class _$ExpenseBalances
     extends $AsyncNotifier<List<HouseholdBalanceModel>> {
   FutureOr<List<HouseholdBalanceModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<List<HouseholdBalanceModel>>,
         List<HouseholdBalanceModel>>;
     final element = ref.element as $ClassProviderElement<
@@ -314,7 +314,7 @@ abstract class _$ExpenseBalances
         AsyncValue<List<HouseholdBalanceModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -342,13 +342,13 @@ final class ExpenseControllerProvider
   ExpenseController create() => ExpenseController();
 }
 
-String _$expenseControllerHash() => r'8c021728e1c66ff1fb982548541db521b930eb23';
+String _$expenseControllerHash() => r'e6e967d235e73895a212d88b056cb411b71bef8a';
 
 abstract class _$ExpenseController extends $AsyncNotifier<List<ExpenseModel>> {
   FutureOr<List<ExpenseModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<List<ExpenseModel>>, List<ExpenseModel>>;
     final element = ref.element as $ClassProviderElement<
@@ -356,7 +356,7 @@ abstract class _$ExpenseController extends $AsyncNotifier<List<ExpenseModel>> {
         AsyncValue<List<ExpenseModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -385,14 +385,14 @@ final class CombinedFeedControllerProvider extends $AsyncNotifierProvider<
 }
 
 String _$combinedFeedControllerHash() =>
-    r'03e0e828d6c28b377f6f9fd16f18d6bc8fcce6a3';
+    r'c5db2e3027c66ac14e579d767632cd1a6eee6e77';
 
 abstract class _$CombinedFeedController
     extends $AsyncNotifier<List<FeedItemModel>> {
   FutureOr<List<FeedItemModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<List<FeedItemModel>>, List<FeedItemModel>>;
     final element = ref.element as $ClassProviderElement<
@@ -400,7 +400,7 @@ abstract class _$CombinedFeedController
         AsyncValue<List<FeedItemModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -429,14 +429,14 @@ final class ExpenseTemplateControllerProvider extends $AsyncNotifierProvider<
 }
 
 String _$expenseTemplateControllerHash() =>
-    r'4116020e7c8072eb9f3c61c54bf70c0a7a9c024c';
+    r'9104faad45e11663517b44b7d1c853efc11edf62';
 
 abstract class _$ExpenseTemplateController
     extends $AsyncNotifier<List<ExpenseTemplateModel>> {
   FutureOr<List<ExpenseTemplateModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<List<ExpenseTemplateModel>>,
         List<ExpenseTemplateModel>>;
     final element = ref.element as $ClassProviderElement<
@@ -445,7 +445,7 @@ abstract class _$ExpenseTemplateController
         AsyncValue<List<ExpenseTemplateModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -525,7 +525,7 @@ final class MonthlyProjectionProvider extends $FunctionalProvider<
   }
 }
 
-String _$monthlyProjectionHash() => r'29000c214d4de889017ec3241ddbedd2c4710da2';
+String _$monthlyProjectionHash() => r'7e5d1295d2fb1d7c6b40787c77edfc63923e15b3';
 
 @ProviderFor(ExpenseFiltersNotifier)
 final expenseFiltersProvider = ExpenseFiltersNotifierProvider._();
@@ -567,14 +567,14 @@ abstract class _$ExpenseFiltersNotifier
   Map<String, dynamic> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<Map<String, dynamic>, Map<String, dynamic>>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<Map<String, dynamic>, Map<String, dynamic>>,
         Map<String, dynamic>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -610,7 +610,7 @@ abstract class _$MercadopagoMovements
   FutureOr<List<Map<String, dynamic>>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<List<Map<String, dynamic>>>,
         List<Map<String, dynamic>>>;
     final element = ref.element as $ClassProviderElement<
@@ -619,6 +619,6 @@ abstract class _$MercadopagoMovements
         AsyncValue<List<Map<String, dynamic>>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

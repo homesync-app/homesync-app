@@ -22,7 +22,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'supabase_task_repository.g.dart';
 
-@riverpod
+// keepAlive: repos are session-lived singletons that read their Ref after async
+// gaps; auto-dispose risks "Cannot use the Ref ... after it has been disposed"
+// if torn down mid-await (see expense/stats repos).
+@Riverpod(keepAlive: true)
 TaskRepository taskRepository(Ref ref) {
   final client = ref.read(supabaseClientProvider);
   final rpc = ref.read(taskRpcServiceProvider);

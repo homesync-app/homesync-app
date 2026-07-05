@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 /// Storage key — bumped suffix invalidates older tours when redesigned.
-const tourFlagKey = 'couple_home_tour_seen_v1';
+/// v2: guía adaptativa (pareja + familia, finanzas según configuración,
+/// CTA funcional de crear tarea).
+const tourFlagKey = 'home_tour_seen_v2';
 
-/// Whether the user already completed/skipped the couple home tour.
+/// Whether the user already completed/skipped the home tour.
 ///
 /// Reads SharedPreferences synchronously; this provider gets invalidated by
 /// the controller after every persistence change so callers get a fresh
@@ -18,31 +24,61 @@ final coupleHomeTourSeenProvider = Provider<bool>((ref) {
   return prefs.getBool(tourFlagKey) ?? false;
 });
 
+/// Lee el estado real del hogar para adaptar la guía. Usa los providers ya
+/// calentados por el arranque; los valores faltantes degradan con defaults
+/// seguros (la guía nunca debe romperse por datos a medio cargar).
+HomeTourContext buildHomeTourContext(WidgetRef ref) {
+  final household = ref.read(currentHouseholdProvider).value;
+  final caps = ref.read(householdCapabilitiesProvider);
+  final members = ref.read(householdMembersProvider).value ?? const [];
+  final currentUserId = ref.read(currentUserIdProvider);
+  final tasks = ref.read(todayTasksProvider).value;
+
+  final partner = members
+      .where((m) => m.userId != currentUserId)
+      .map((m) => m.displayName)
+      .firstOrNull;
+  final adultCount = members.where((m) => m.isAdult).length;
+
+  return HomeTourContext(
+    isFamily: caps.usesFamilyRoles,
+    hasTasks: tasks?.isNotEmpty ?? false,
+    integratedFinances: household?.financeMode == 'shared',
+    approvalsOn: (household?.taskApprovalMode ?? 'off') != 'off',
+    hasFinanceSection: adultCount > 1,
+    partnerName: partner,
+  );
+}
+
 class CoupleHomeTourState {
   final bool isActive;
   final int currentStep;
-  final bool hasTasks;
+  final HomeTourContext context;
 
   const CoupleHomeTourState({
     required this.isActive,
     required this.currentStep,
-    required this.hasTasks,
+    required this.context,
   });
 
   const CoupleHomeTourState.initial()
       : isActive = false,
         currentStep = 0,
-        hasTasks = false;
+        context = const HomeTourContext(
+          isFamily: false,
+          hasTasks: false,
+          integratedFinances: false,
+        );
 
   CoupleHomeTourState copyWith({
     bool? isActive,
     int? currentStep,
-    bool? hasTasks,
+    HomeTourContext? context,
   }) {
     return CoupleHomeTourState(
       isActive: isActive ?? this.isActive,
       currentStep: currentStep ?? this.currentStep,
-      hasTasks: hasTasks ?? this.hasTasks,
+      context: context ?? this.context,
     );
   }
 }
@@ -51,107 +87,192 @@ class CoupleHomeTourController extends Notifier<CoupleHomeTourState> {
   @override
   CoupleHomeTourState build() => const CoupleHomeTourState.initial();
 
-  /// Returns the ordered list of steps. Some copy adapts to whether the user
-  /// has any tasks yet.
-  List<CoachmarkStep> stepsFor({required bool hasTasks}) {
+  /// Pasos de la guía, adaptados al estado real del hogar: modo (pareja o
+  /// familia), si hay tareas hoy, y cómo configuraron las finanzas.
+  List<CoachmarkStep> stepsFor(AppLocalizations t, HomeTourContext ctx) {
+    return ctx.isFamily ? _familySteps(t, ctx) : _coupleSteps(t, ctx);
+  }
+
+  List<CoachmarkStep> _coupleSteps(AppLocalizations t, HomeTourContext ctx) {
+    final financeMode = ctx.integratedFinances ? 'shared' : 'divided';
     return [
-      const CoachmarkStep(
+      CoachmarkStep(
         kind: CoachmarkStepKind.welcomeModal,
-        eyebrow: 'Bienvenidos',
-        title: 'Tu hogar, en 30 segundos',
-        body:
-            'Te muestro lo esencial: tareas, monedas, duelo y recompensas. Después, a disfrutar.',
-        primaryCta: 'Empezar',
+        eyebrow: t.tourWelcomeEyebrow,
+        title: t.tourCoupleWelcomeTitle,
+        body: ctx.partnerName != null
+            ? t.tourCoupleWelcomeBodyNamed(ctx.partnerName!)
+            : t.tourCoupleWelcomeBody,
+        primaryCta: t.tourCtaStart,
         icon: Icons.auto_awesome_rounded,
       ),
+      // Tareas: si el "Hoy en casa" está vacío, el CTA primario abre el flujo
+      // real de creación — la guía deja el hogar andando, no solo lo muestra.
+      if (ctx.hasTasks)
+        CoachmarkStep(
+          kind: CoachmarkStepKind.spotlight,
+          title: t.tourTasksTitleHas,
+          body: t.tourTasksBodyHas,
+          primaryCta: t.tourCtaNext,
+          target: TourTarget.tasksSection,
+        )
+      else
+        CoachmarkStep(
+          kind: CoachmarkStepKind.spotlight,
+          title: t.tourTasksTitleEmpty,
+          body: t.tourTasksBodyEmpty,
+          primaryCta: t.tourTasksCtaCreate,
+          primaryAction: CoachmarkAction.createTask,
+          secondaryCta: t.tourCtaLater,
+          target: TourTarget.tasksSection,
+        ),
+      // Balance: el widget y su explicación cambian según la configuración
+      // de finanzas del hogar (integrada vs dividida).
       CoachmarkStep(
         kind: CoachmarkStepKind.spotlight,
-        eyebrow: 'Paso 1',
-        title: hasTasks ? 'Hacé tareas, ganá puntos' : 'Tareas del día',
-        body: hasTasks
-            ? 'Tocá ✓ para completar. Cada tarea suma 🪙 monedas y ⚡ XP solo para vos.'
-            : 'Cuando programes tareas para hoy, aparecen acá. Cada una te da 🪙 monedas y ⚡ XP al completarla.',
-        primaryCta: 'Siguiente',
-        target: TourTarget.tasksSection,
-        placement: TooltipPlacement.auto,
-      ),
-      const CoachmarkStep(
-        kind: CoachmarkStepKind.spotlight,
-        eyebrow: 'Paso 2',
-        title: 'El balance del hogar',
-        body:
-            'Acá ven cuánto se deben en gastos compartidos y, abajo, lo que ganó cada uno: XP y monedas son personales.',
-        primaryCta: 'Siguiente',
+        title: t.tourBalanceTitle,
+        body: t.tourBalanceBody(financeMode),
+        primaryCta: t.tourCtaNext,
         target: TourTarget.balanceCard,
         bullets: [
-          CoachmarkBullet(
-            icon: Icons.payment_rounded,
-            tint: AppColors.accentOrange,
-            text: 'Equilibrar → gastos compartidos pendientes',
-          ),
+          if (ctx.integratedFinances)
+            CoachmarkBullet(
+              icon: Icons.timeline_rounded,
+              tint: AppColors.accentOrange,
+              text: t.tourBalanceBulletMonth,
+            )
+          else
+            CoachmarkBullet(
+              icon: Icons.payment_rounded,
+              tint: AppColors.accentOrange,
+              text: t.tourBalanceBulletSettle,
+            ),
           CoachmarkBullet(
             icon: Icons.star_rounded,
-            tint: Color(0xFFE8943A),
-            text: 'XP → para el duelo semanal',
+            tint: const Color(0xFFE8943A),
+            text: t.tourBalanceBulletXp,
           ),
           CoachmarkBullet(
             icon: Icons.monetization_on_rounded,
             tint: AppColors.sage,
-            text: 'Monedas → para canjear recompensas',
+            text: t.tourBalanceBulletCoins,
           ),
         ],
       ),
-      const CoachmarkStep(
+      CoachmarkStep(
         kind: CoachmarkStepKind.infoModal,
-        eyebrow: 'Paso 3',
-        title: 'Duelo semanal',
-        body:
-            'Cada semana compiten por XP. Quien sume más, gana. Se reinicia los lunes.',
-        primaryCta: 'Siguiente',
+        title: t.tourDuelTitle,
+        body: t.tourDuelBody,
+        primaryCta: t.tourCtaNext,
         icon: Icons.emoji_events_rounded,
       ),
-      const CoachmarkStep(
+      CoachmarkStep(
         kind: CoachmarkStepKind.spotlight,
-        eyebrow: 'Paso 4',
-        title: 'Canjeá las monedas',
-        body:
-            'Acá viven las recompensas: peli, masaje, día libre. Vos y tu pareja arman la tienda.',
-        primaryCta: 'Siguiente',
+        title: t.tourRewardsTitle,
+        body: t.tourRewardsBody,
+        primaryCta: t.tourCtaNext,
         target: TourTarget.rewardsTab,
         placement: TooltipPlacement.above,
       ),
-      const CoachmarkStep(
+      CoachmarkStep(
         kind: CoachmarkStepKind.spotlight,
-        eyebrow: 'Paso 5',
-        title: 'Dividan los gastos',
-        body:
-            'Cuando lo necesiten, sumen gastos del hogar y la app calcula quién le debe a quién.',
-        primaryCta: 'Siguiente',
+        title: t.tourExpensesTitle(financeMode),
+        body: t.tourExpensesBody(financeMode),
+        primaryCta: t.tourCtaNext,
         target: TourTarget.expensesTab,
         placement: TooltipPlacement.above,
       ),
-      const CoachmarkStep(
+      CoachmarkStep(
         kind: CoachmarkStepKind.finale,
-        title: '¡Listo!',
-        body: 'Disfruten de su hogar.',
-        primaryCta: 'Empezar a usar',
+        title: t.tourFinaleTitle,
+        body: t.tourCoupleFinaleBody,
+        primaryCta: t.tourFinaleCta,
         icon: Icons.favorite_rounded,
       ),
     ];
   }
 
-  void start({required bool hasTasks}) {
-    HapticFeedback.lightImpact();
+  /// Guía de familia — la ven solo padres/tutores (gate en quien dispara).
+  List<CoachmarkStep> _familySteps(AppLocalizations t, HomeTourContext ctx) {
+    return [
+      CoachmarkStep(
+        kind: CoachmarkStepKind.welcomeModal,
+        eyebrow: t.tourWelcomeEyebrow,
+        title: t.tourFamilyWelcomeTitle,
+        body: t.tourFamilyWelcomeBody,
+        primaryCta: t.tourCtaStart,
+        icon: Icons.family_restroom_rounded,
+      ),
+      if (ctx.hasTasks)
+        CoachmarkStep(
+          kind: CoachmarkStepKind.spotlight,
+          title: t.tourFamilyTasksTitleHas,
+          body: t.tourFamilyTasksBody(
+            ctx.approvalsOn ? 'approvals' : 'direct',
+          ),
+          primaryCta: t.tourCtaNext,
+          target: TourTarget.tasksSection,
+        )
+      else
+        CoachmarkStep(
+          kind: CoachmarkStepKind.spotlight,
+          title: t.tourTasksTitleEmpty,
+          body: t.tourTasksBodyEmpty,
+          primaryCta: t.tourTasksCtaCreate,
+          primaryAction: CoachmarkAction.createTask,
+          secondaryCta: t.tourCtaLater,
+          target: TourTarget.tasksSection,
+        ),
+      // Finanzas: solo si el home muestra la sección (2+ adultos).
+      if (ctx.hasFinanceSection)
+        CoachmarkStep(
+          kind: CoachmarkStepKind.spotlight,
+          title: t.tourFamilyFinanceTitle,
+          body: t.tourFamilyFinanceBody,
+          primaryCta: t.tourCtaNext,
+          target: TourTarget.balanceCard,
+        ),
+      CoachmarkStep(
+        kind: CoachmarkStepKind.infoModal,
+        title: t.tourFamilyRankingTitle,
+        body: t.tourFamilyRankingBody,
+        primaryCta: t.tourCtaNext,
+        icon: Icons.emoji_events_rounded,
+      ),
+      CoachmarkStep(
+        kind: CoachmarkStepKind.spotlight,
+        title: t.tourFamilyRewardsTitle,
+        body: t.tourFamilyRewardsBody,
+        primaryCta: t.tourCtaNext,
+        target: TourTarget.rewardsTab,
+        placement: TooltipPlacement.above,
+      ),
+      CoachmarkStep(
+        kind: CoachmarkStepKind.finale,
+        title: t.tourFinaleTitle,
+        body: t.tourFamilyFinaleBody,
+        primaryCta: t.tourFinaleCta,
+        icon: Icons.family_restroom_rounded,
+      ),
+    ];
+  }
+
+  void start(HomeTourContext context) {
+    AppHaptics.tap();
     state = CoupleHomeTourState(
       isActive: true,
       currentStep: 0,
-      hasTasks: hasTasks,
+      context: context,
     );
   }
 
-  void next() {
-    HapticFeedback.selectionClick();
-    final steps = stepsFor(hasTasks: state.hasTasks);
+  /// Cantidad total de pasos del tour activo (para el progreso). Necesita el
+  /// mismo AppLocalizations que usa el overlay.
+  int stepCount(AppLocalizations t) => stepsFor(t, state.context).length;
+
+  void next(AppLocalizations t) {
+    AppHaptics.selection();
+    final steps = stepsFor(t, state.context);
     final nextIndex = state.currentStep + 1;
     if (nextIndex >= steps.length) {
       _finishAndPersist();
@@ -162,12 +283,12 @@ class CoupleHomeTourController extends Notifier<CoupleHomeTourState> {
 
   void back() {
     if (state.currentStep == 0) return;
-    HapticFeedback.selectionClick();
+    AppHaptics.selection();
     state = state.copyWith(currentStep: state.currentStep - 1);
   }
 
   void skip() {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     _finishAndPersist();
   }
 
@@ -181,7 +302,7 @@ class CoupleHomeTourController extends Notifier<CoupleHomeTourState> {
   }
 
   /// Removes the persistence flag so the tour will fire again next time the
-  /// user lands on the couple home. Used by Settings → "Ver guía de nuevo".
+  /// user lands on the home. Used by Settings → "Ver guía de nuevo".
   Future<void> reset() async {
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.remove(tourFlagKey);

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/feedback_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsNotificationsCard extends StatelessWidget {
   final bool isEnabled;
@@ -23,7 +26,7 @@ class SettingsNotificationsCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -42,7 +45,7 @@ class SettingsNotificationsCard extends StatelessWidget {
                 padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
                   color: theme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Icon(
                   Icons.notifications_active_rounded,
@@ -102,7 +105,7 @@ class SettingsFaqCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -112,34 +115,40 @@ class SettingsFaqCard extends StatelessWidget {
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-        leading: Container(
-          padding: const EdgeInsets.all(9),
-          decoration: BoxDecoration(
-            color: theme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+          leading: Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              color: theme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+            ),
+            child: Icon(
+              Icons.help_outline_rounded,
+              color: theme.primary,
+              size: 20,
+            ),
           ),
-          child: Icon(
-            Icons.help_outline_rounded,
-            color: theme.primary,
-            size: 20,
+          title: Text(
+            t.settingsFaqTitle,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: theme.textPrimary,
+            ),
           ),
-        ),
-        title: Text(
-          t.settingsFaqTitle,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: theme.textPrimary,
+          subtitle: Text(
+            t.settingsFaqSubtitle,
+            style: TextStyle(color: theme.textSecondary, fontSize: 12),
           ),
+          trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
+          onTap: onTap,
         ),
-        subtitle: Text(
-          t.settingsFaqSubtitle,
-          style: TextStyle(color: theme.textSecondary, fontSize: 12),
-        ),
-        trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
-        onTap: onTap,
       ),
     );
   }
@@ -169,7 +178,7 @@ class SettingsLogoutButton extends StatelessWidget {
             width: 1.5,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
           ),
           foregroundColor: theme.error,
         ),
@@ -195,10 +204,12 @@ class SettingsLogoutButton extends StatelessWidget {
 
 class SettingsDangerZone extends StatelessWidget {
   final VoidCallback onResetPressed;
+  final VoidCallback? onDeletePressed;
 
   const SettingsDangerZone({
     super.key,
     required this.onResetPressed,
+    this.onDeletePressed,
   });
 
   @override
@@ -210,7 +221,8 @@ class SettingsDangerZone extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 8, bottom: 12),
+          padding:
+              const EdgeInsets.only(left: AppSpacing.xs, bottom: AppSpacing.sm),
           child: Text(
             t.settingsDangerZoneEyebrow,
             style: TextStyle(
@@ -232,7 +244,7 @@ class SettingsDangerZone extends StatelessWidget {
                 width: 1.5,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadii.lg),
               ),
               foregroundColor: theme.error,
             ),
@@ -253,6 +265,37 @@ class SettingsDangerZone extends StatelessWidget {
             ),
           ),
         ),
+        if (onDeletePressed != null) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: TextButton(
+              onPressed: onDeletePressed,
+              style: TextButton.styleFrom(
+                foregroundColor: theme.error,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.person_off_rounded, size: 20),
+                  const SizedBox(width: 10),
+                  Text(
+                    t.settingsDeleteAccountButton,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -288,12 +331,20 @@ class SettingsVersionFooter extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              'Version 1.0.0',
-              style: TextStyle(
-                fontSize: 11,
-                color: theme.textSecondary,
-              ),
+            FutureBuilder<PackageInfo>(
+              future: PackageInfo.fromPlatform(),
+              builder: (context, snapshot) {
+                final info = snapshot.data;
+                return Text(
+                  info == null
+                      ? ''
+                      : 'Version ${info.version}+${info.buildNumber}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: theme.textSecondary,
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -313,7 +364,7 @@ class SettingsFeedbackCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -323,78 +374,88 @@ class SettingsFeedbackCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-            leading: Container(
-              padding: const EdgeInsets.all(9),
-              decoration: BoxDecoration(
-                color: theme.error.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(12),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+              leading: Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: theme.error.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
+                ),
+                child: Icon(
+                  Icons.bug_report_outlined,
+                  color: theme.error,
+                  size: 20,
+                ),
               ),
-              child:
-                  Icon(Icons.bug_report_outlined, color: theme.error, size: 20),
-            ),
-            title: Text(
-              t.settingsFeedbackBugTitle,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: theme.textPrimary,
+              title: Text(
+                t.settingsFeedbackBugTitle,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary,
+                ),
               ),
-            ),
-            subtitle: Text(
-              t.settingsFeedbackBugSubtitle,
-              style: TextStyle(color: theme.textSecondary, fontSize: 12),
-            ),
-            trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
-            onTap: () {
-              HapticFeedback.lightImpact();
-              FeedbackSheet.show(context, type: FeedbackType.bug);
-            },
-          ),
-          Divider(
-            height: 1,
-            color: theme.divider.withValues(alpha: 0.1),
-            indent: 16,
-            endIndent: 16,
-          ),
-          ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-            leading: Container(
-              padding: const EdgeInsets.all(9),
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(12),
+              subtitle: Text(
+                t.settingsFeedbackBugSubtitle,
+                style: TextStyle(color: theme.textSecondary, fontSize: 12),
               ),
-              child: Icon(
-                Icons.lightbulb_outline_rounded,
-                color: theme.primary,
-                size: 20,
+              trailing:
+                  Icon(Icons.chevron_right_rounded, color: theme.textMuted),
+              onTap: () {
+                AppHaptics.tap();
+                FeedbackSheet.show(context, type: FeedbackType.bug);
+              },
+            ),
+            Divider(
+              height: 1,
+              color: theme.divider.withValues(alpha: 0.1),
+              indent: 16,
+              endIndent: 16,
+            ),
+            ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+              leading: Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: theme.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
+                ),
+                child: Icon(
+                  Icons.lightbulb_outline_rounded,
+                  color: theme.primary,
+                  size: 20,
+                ),
               ),
-            ),
-            title: Text(
-              t.settingsFeedbackSuggestionTitle,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: theme.textPrimary,
+              title: Text(
+                t.settingsFeedbackSuggestionTitle,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary,
+                ),
               ),
+              subtitle: Text(
+                t.settingsFeedbackSuggestionSubtitle,
+                style: TextStyle(color: theme.textSecondary, fontSize: 12),
+              ),
+              trailing:
+                  Icon(Icons.chevron_right_rounded, color: theme.textMuted),
+              onTap: () {
+                AppHaptics.tap();
+                FeedbackSheet.show(context, type: FeedbackType.suggestion);
+              },
             ),
-            subtitle: Text(
-              t.settingsFeedbackSuggestionSubtitle,
-              style: TextStyle(color: theme.textSecondary, fontSize: 12),
-            ),
-            trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
-            onTap: () {
-              HapticFeedback.lightImpact();
-              FeedbackSheet.show(context, type: FeedbackType.suggestion);
-            },
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -437,7 +498,7 @@ Future<bool?> showSettingsLogoutDialog(BuildContext context) {
                     height: 46,
                     decoration: BoxDecoration(
                       color: theme.error.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
                     ),
                     child: Icon(
                       Icons.logout_rounded,
@@ -544,7 +605,9 @@ Future<bool?> showSettingsResetAccountDialog(BuildContext context) {
     context: context,
     builder: (dialogContext) => AlertDialog(
       backgroundColor: theme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+      ),
       title: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: theme.error),
@@ -568,7 +631,7 @@ Future<bool?> showSettingsResetAccountDialog(BuildContext context) {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 8),
+          padding: const EdgeInsets.only(left: AppSpacing.xs),
           child: ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
@@ -576,11 +639,69 @@ Future<bool?> showSettingsResetAccountDialog(BuildContext context) {
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
             ),
             child: Text(
               t.settingsResetDialogConfirm,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<bool?> showSettingsDeleteAccountDialog(BuildContext context) {
+  final theme = context.theme;
+  final t = AppLocalizations.of(context);
+
+  return showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      backgroundColor: theme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+      ),
+      title: Row(
+        children: [
+          Icon(Icons.person_off_rounded, color: theme.error),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              t.settingsDeleteAccountDialogTitle,
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                color: theme.error,
+              ),
+            ),
+          ),
+        ],
+      ),
+      content: Text(t.settingsDeleteAccountDialogBody),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: Text(
+            t.commonCancel,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: AppSpacing.xs),
+          child: ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.error,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadii.sm),
+              ),
+            ),
+            child: Text(
+              t.settingsDeleteAccountConfirm,
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ),

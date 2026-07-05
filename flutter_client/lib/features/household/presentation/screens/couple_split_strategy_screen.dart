@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 import 'package:homesync_client/features/household/presentation/widgets/couple_finance_config_body.dart';
@@ -32,8 +35,15 @@ class _CoupleSplitStrategyScreenState
   void _loadCurrentRatio() {
     final household = ref.read(currentHouseholdProvider).value;
     if (household != null) {
+      // The slider always represents the CURRENT user's share. The stored ratio
+      // belongs to the anchor member, so flip it when the anchor is the partner.
+      final currentUserId = ref.read(currentUserIdProvider);
+      final anchor = household.splitRatioAnchorId;
+      final myShare = (anchor == null || anchor == currentUserId)
+          ? household.defaultSplitRatio
+          : (1.0 - household.defaultSplitRatio);
       setState(() {
-        _splitRatio = household.defaultSplitRatio;
+        _splitRatio = myShare;
         _financeMode = household.financeMode;
       });
     }
@@ -41,7 +51,7 @@ class _CoupleSplitStrategyScreenState
 
   Future<void> _saveRatio() async {
     setState(() => _isSaving = true);
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
 
     try {
       final household = ref.read(currentHouseholdProvider).value;
@@ -88,13 +98,15 @@ class _CoupleSplitStrategyScreenState
     final household = ref.watch(currentHouseholdProvider).value;
     final isShared = _financeMode == 'shared';
     final t = AppLocalizations.of(context);
+    final theme = context.theme;
     final modeKey = household?.householdType ?? 'couple';
     // Couples and families can choose between an integrated/shared economy
     // (no debt between adults) and a divided economy (percentages + balances).
-    final supportsFinanceModeChoice = modeKey == 'family' || modeKey == 'couple';
+    final supportsFinanceModeChoice =
+        modeKey == 'family' || modeKey == 'couple';
 
     return Scaffold(
-      backgroundColor: context.theme.scaffoldBackground,
+      backgroundColor: theme.scaffoldBackground,
       body: Stack(
         children: [
           // Background Decor
@@ -118,15 +130,15 @@ class _CoupleSplitStrategyScreenState
                 expandedHeight: 200,
                 pinned: true,
                 stretch: true,
-                backgroundColor: context.theme.scaffoldBackground,
+                backgroundColor: theme.scaffoldBackground,
                 elevation: 0,
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: true,
                   title: Text(
                     t.coupleSplitTitle(modeKey),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
+                      color: theme.textPrimary,
                     ),
                   ),
                   background: Center(
@@ -151,7 +163,7 @@ class _CoupleSplitStrategyScreenState
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     CoupleFinanceConfigBody(
@@ -170,7 +182,7 @@ class _CoupleSplitStrategyScreenState
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(AppRadii.lg),
                         ),
                       ),
                       child: _isSaving

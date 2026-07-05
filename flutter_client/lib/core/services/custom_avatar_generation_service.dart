@@ -1,8 +1,9 @@
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart' as fa;
-import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -35,7 +36,7 @@ class CustomAvatarGenerationService {
     final imageBytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(imageBytes);
 
-    debugPrint(
+    log.d(
       '[CustomAvatar] Imagen comprimida: '
       '${(imageBytes.length / 1024).toStringAsFixed(1)} KB',
     );
@@ -43,6 +44,7 @@ class CustomAvatarGenerationService {
     const maxBase64Bytes = 5 * 1024 * 1024;
     if (base64Image.length > maxBase64Bytes) {
       throw const CustomAvatarGenerationException(
+        CustomAvatarErrorCode.imageTooLarge,
         'La imagen es demasiado grande. Probá con otra foto.',
       );
     }
@@ -51,11 +53,12 @@ class CustomAvatarGenerationService {
         await fa.FirebaseAuth.instance.currentUser?.getIdToken(true);
     if (accessToken == null) {
       throw const CustomAvatarGenerationException(
+        CustomAvatarErrorCode.sessionExpired,
         'Sesión expirada. Iniciá sesión nuevamente.',
       );
     }
 
-    debugPrint('[CustomAvatar] Invocando Edge Function...');
+    log.d('[CustomAvatar] Invocando Edge Function...');
     late final FunctionResponse response;
     try {
       response = await _supabase.functions.invoke(
@@ -69,43 +72,49 @@ class CustomAvatarGenerationService {
         const Duration(seconds: 90),
         onTimeout: () {
           throw const CustomAvatarGenerationException(
+            CustomAvatarErrorCode.timeout,
             'La generación tardó demasiado. Probá de nuevo en un momento.',
           );
         },
       );
     } on FunctionException catch (e) {
       final details = e.details;
-      debugPrint(
-        '[CustomAvatar] FunctionException status=${e.status} '
-        'details=$details error=$e',
+      log.w(
+        '[CustomAvatar] FunctionException status=${e.status} details=$details',
+        error: e,
       );
       if (e.status == 429) {
         throw const CustomAvatarGenerationException(
+          CustomAvatarErrorCode.monthlyLimitReached,
           'Ya usaste tu creación de avatar de este mes. Vas a poder crear otro el mes que viene.',
         );
       }
       if (e.status == 403) {
         throw const CustomAvatarGenerationException(
+          CustomAvatarErrorCode.premiumRequired,
           'Esta función es para usuarios Premium.',
         );
       }
-      throw CustomAvatarGenerationException(
-        _messageFromFunctionDetails(details) ??
+      throw _exceptionFromFunctionDetails(details) ??
+          CustomAvatarGenerationException(
+            CustomAvatarErrorCode.createFailed,
             'No se pudo crear el avatar (${e.status}). Probá de nuevo.',
-      );
+          );
     } catch (e) {
-      debugPrint('[CustomAvatar] Error inesperado: $e');
+      log.e('[CustomAvatar] Error inesperado', error: e);
       if (e is CustomAvatarGenerationException) rethrow;
       throw const CustomAvatarGenerationException(
+        CustomAvatarErrorCode.createFailed,
         'No se pudo crear el avatar. Probá de nuevo.',
       );
     }
 
-    debugPrint(
+    log.d(
       '[CustomAvatar] Respuesta status=${response.status} data=${response.data}',
     );
     if (response.status != 200 || response.data == null) {
       throw CustomAvatarGenerationException(
+        CustomAvatarErrorCode.createFailed,
         'No se pudo crear el avatar (status ${response.status}).',
       );
     }
@@ -114,6 +123,7 @@ class CustomAvatarGenerationService {
     final avatarUrl = data['avatarUrl'] as String?;
     if (avatarUrl == null || avatarUrl.trim().isEmpty) {
       throw const CustomAvatarGenerationException(
+        CustomAvatarErrorCode.invalidResult,
         'El generador no devolvió un avatar válido.',
       );
     }
@@ -121,47 +131,166 @@ class CustomAvatarGenerationService {
     return avatarUrl;
   }
 
-  static String? _messageFromFunctionDetails(Object? details) {
+  Future<void> deleteAvatar({required String avatarId}) async {
+    final accessToken =
+        await fa.FirebaseAuth.instance.currentUser?.getIdToken(true);
+    if (accessToken == null) {
+      throw const CustomAvatarGenerationException(
+        CustomAvatarErrorCode.sessionExpired,
+        'Sesión expirada. Iniciá sesión nuevamente.',
+      );
+    }
+
+    try {
+      final response = await _supabase.functions.invoke(
+        'delete-custom-avatar',
+        body: {'avatarId': avatarId},
+        headers: {'Authorization': 'Bearer $accessToken'},
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw const CustomAvatarGenerationException(
+            CustomAvatarErrorCode.deleteFailed,
+            'No se pudo eliminar el avatar. Probá de nuevo en un momento.',
+          );
+        },
+      );
+
+      if (response.status != 200) {
+        throw CustomAvatarGenerationException(
+          CustomAvatarErrorCode.deleteFailed,
+          'No se pudo eliminar el avatar (status ${response.status}).',
+        );
+      }
+    } on FunctionException catch (e) {
+      log.w(
+        '[CustomAvatar] Delete FunctionException status=${e.status} '
+        'details=${e.details}',
+        error: e,
+      );
+      throw const CustomAvatarGenerationException(
+        CustomAvatarErrorCode.deleteFailed,
+        'No se pudo eliminar el avatar. Probá de nuevo.',
+      );
+    } catch (e) {
+      log.e('[CustomAvatar] Error eliminando avatar', error: e);
+      if (e is CustomAvatarGenerationException) rethrow;
+      throw const CustomAvatarGenerationException(
+        CustomAvatarErrorCode.deleteFailed,
+        'No se pudo eliminar el avatar. Probá de nuevo.',
+      );
+    }
+  }
+
+  static CustomAvatarGenerationException? _exceptionFromFunctionDetails(
+    Object? details,
+  ) {
     if (details is Map) {
       final error = details['error']?.toString();
       if (error == 'monthly_limit_reached') {
-        return 'Ya usaste tu creación de avatar de este mes. Vas a poder crear otro el mes que viene.';
+        return const CustomAvatarGenerationException(
+          CustomAvatarErrorCode.monthlyLimitReached,
+          'Ya usaste tu creación de avatar de este mes. Vas a poder crear otro el mes que viene.',
+        );
       }
       if (error == 'premium_required') {
-        return 'Esta función es para usuarios Premium.';
+        return const CustomAvatarGenerationException(
+          CustomAvatarErrorCode.premiumRequired,
+          'Esta función es para usuarios Premium.',
+        );
       }
       if (error == 'image_too_large') {
-        return 'La imagen es demasiado grande. Probá con otra foto.';
+        return const CustomAvatarGenerationException(
+          CustomAvatarErrorCode.imageTooLarge,
+          'La imagen es demasiado grande. Probá con otra foto.',
+        );
       }
       if (error == 'upload_failed') {
-        final message = details['message']?.toString();
-        if (message != null && message.trim().isNotEmpty) {
-          return 'No se pudo guardar el avatar: $message';
-        }
-        return 'No se pudo guardar el avatar generado.';
+        return const CustomAvatarGenerationException(
+          CustomAvatarErrorCode.saveFailed,
+          'No se pudo guardar el avatar generado.',
+        );
       }
       if (error == 'generation_failed') {
         final message = details['message']?.toString();
-        if (message != null && message.trim().isNotEmpty) {
-          return message;
-        }
         final detail = details['detail']?.toString();
-        if (detail != null && detail.trim().isNotEmpty) {
-          return detail;
+        final server = (message != null && message.trim().isNotEmpty)
+            ? message
+            : (detail != null && detail.trim().isNotEmpty ? detail : null);
+        if (server != null) {
+          return CustomAvatarGenerationException(
+            CustomAvatarErrorCode.serverMessage,
+            server,
+            serverMessage: server,
+          );
         }
       }
       if (error == 'OPENAI_API_KEY missing') {
-        return 'Falta configurar la API key de OpenAI en Supabase.';
+        return const CustomAvatarGenerationException(
+          CustomAvatarErrorCode.createFailed,
+          'Falta configurar la API key de OpenAI en Supabase.',
+        );
       }
     }
     return null;
   }
 }
 
-class CustomAvatarGenerationException implements Exception {
-  final String message;
+/// Semantic error codes so the UI can localize; [message] is only the
+/// log/`toString` fallback (kept in Spanish for legacy paths without context).
+enum CustomAvatarErrorCode {
+  imageTooLarge,
+  sessionExpired,
+  timeout,
+  monthlyLimitReached,
+  premiumRequired,
+  createFailed,
+  invalidResult,
+  deleteFailed,
+  saveFailed,
 
-  const CustomAvatarGenerationException(this.message);
+  /// A human-readable message came from the server (`serverMessage`); show it
+  /// verbatim.
+  serverMessage,
+}
+
+class CustomAvatarGenerationException implements Exception {
+  final CustomAvatarErrorCode code;
+  final String message;
+  final String? serverMessage;
+
+  const CustomAvatarGenerationException(
+    this.code,
+    this.message, {
+    this.serverMessage,
+  });
+
+  /// User-facing text following the app locale. Falls back to the Spanish
+  /// [message] for codes carrying server-provided text.
+  String localized(AppLocalizations t) {
+    switch (code) {
+      case CustomAvatarErrorCode.imageTooLarge:
+        return t.avatarErrorImageTooLarge;
+      case CustomAvatarErrorCode.sessionExpired:
+        return t.avatarErrorSessionExpired;
+      case CustomAvatarErrorCode.timeout:
+        return t.avatarErrorTimeout;
+      case CustomAvatarErrorCode.monthlyLimitReached:
+        return t.avatarErrorMonthlyLimit;
+      case CustomAvatarErrorCode.premiumRequired:
+        return t.avatarErrorPremiumRequired;
+      case CustomAvatarErrorCode.createFailed:
+        return t.avatarErrorCreateFailed;
+      case CustomAvatarErrorCode.invalidResult:
+        return t.avatarErrorInvalidResult;
+      case CustomAvatarErrorCode.deleteFailed:
+        return t.avatarErrorDeleteFailed;
+      case CustomAvatarErrorCode.saveFailed:
+        return t.avatarErrorSaveFailed;
+      case CustomAvatarErrorCode.serverMessage:
+        return serverMessage ?? message;
+    }
+  }
 
   @override
   String toString() => message;

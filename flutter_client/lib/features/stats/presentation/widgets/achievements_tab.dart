@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme_extension.dart';
+import '../../../../core/widgets/concept_icon.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/widgets/app_refresh_indicator.dart';
+import '../../../../shared/widgets/design/app_progress_fill_card.dart';
 import 'stats_shared_widgets.dart';
 
 class AchievementsTab extends StatelessWidget {
   final List<Map<String, dynamic>> memberStats;
   final List<Map<String, dynamic>> taskStats;
+  final bool isSolo;
   final Future<void> Function() onRefresh;
 
   const AchievementsTab({
     super.key,
     required this.memberStats,
     required this.taskStats,
+    this.isSolo = false,
     required this.onRefresh,
   });
 
@@ -20,10 +27,16 @@ class AchievementsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     // Definimos algunos logros predeterminados basados en las estadísticas
-    final totalTasks = taskStats.fold<int>(
+    final totalTasksByCategory = taskStats.fold<int>(
       0,
       (sum, item) => sum + ((item['completed_count'] as num?)?.toInt() ?? 0),
     );
+    final totalTasksByMember = memberStats.fold<int>(
+      0,
+      (sum, item) => sum + ((item['tasks_completed'] as num?)?.toInt() ?? 0),
+    );
+    final totalTasks =
+        totalTasksByCategory > 0 ? totalTasksByCategory : totalTasksByMember;
     final totalXp = memberStats.fold<int>(
       0,
       (sum, item) => sum + ((item['xp_earned'] as num?)?.toInt() ?? 0),
@@ -35,9 +48,17 @@ class AchievementsTab extends StatelessWidget {
       orElse: () => {'completed_count': 0},
     )['completed_count'] as int;
 
-    return RefreshIndicator(
+    if (isSolo) {
+      return _buildSoloAchievements(
+        context,
+        totalTasks: totalTasks,
+        totalXp: totalXp,
+        onRefresh: onRefresh,
+      );
+    }
+
+    return AppRefreshIndicator(
       onRefresh: onRefresh,
-      color: AppColors.primary,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
         children: [
@@ -71,7 +92,10 @@ class AchievementsTab extends StatelessWidget {
             progressText: '$totalXp/5000',
           ),
           const SizedBox(height: 32),
-          SectionLabel(label: t.achievementsCoupleChallengesSection, icon: '💖'),
+          SectionLabel(
+            label: t.achievementsCoupleChallengesSection,
+            icon: '💖',
+          ),
           const SizedBox(height: 16),
           _buildAchievementCard(
             context,
@@ -113,22 +137,102 @@ class AchievementsTab extends StatelessWidget {
           SectionLabel(label: t.achievementsIconicMomentsSection, icon: '✨'),
           const SizedBox(height: 16),
           _buildChallengeAchievement(
+            context,
             title: t.achievementsLoveRootsTitle,
             description: t.achievementsLoveRootsDesc,
             icon: '❤️',
             isUnlocked: connectionTasks >= 1, // Heurístico
           ),
           _buildChallengeAchievement(
+            context,
             title: t.achievementsBlindDateTitle,
             description: t.achievementsBlindDateDesc,
             icon: '🕯️',
             isUnlocked: false,
           ),
           _buildChallengeAchievement(
+            context,
             title: t.achievementsDreamArchitectsTitle,
             description: t.achievementsDreamArchitectsDesc,
             icon: '✨',
             isUnlocked: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSoloAchievements(
+    BuildContext context, {
+    required int totalTasks,
+    required int totalXp,
+    required Future<void> Function() onRefresh,
+  }) {
+    final t = AppLocalizations.of(context);
+
+    return AppRefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+        children: [
+          SectionLabel(
+            label: t.achievementsSoloMilestonesSection,
+            icon: '\u{1F331}',
+          ),
+          const SizedBox(height: 20),
+          _buildAchievementCard(
+            context,
+            title: t.achievementsSoloFirstStepTitle,
+            description: t.achievementsSoloFirstStepDesc,
+            icon: '\u{1F331}',
+            isUnlocked: totalTasks >= 1,
+            progress: totalTasks >= 1 ? 1.0 : 0.0,
+            progressText: totalTasks >= 1 ? '1/1' : '0/1',
+          ),
+          _buildAchievementCard(
+            context,
+            title: t.achievementsSoloRoutineTitle,
+            description: t.achievementsSoloRoutineDesc,
+            icon: '\u{1F9F9}',
+            isUnlocked: totalTasks >= 50,
+            progress: (totalTasks / 50).clamp(0.0, 1.0),
+            progressText: '$totalTasks/50',
+          ),
+          _buildAchievementCard(
+            context,
+            title: t.achievementsSoloHomeClearTitle,
+            description: t.achievementsSoloHomeClearDesc,
+            icon: '\u{2728}',
+            isUnlocked: totalXp >= 5000,
+            progress: (totalXp / 5000).clamp(0.0, 1.0),
+            progressText: '$totalXp/5000',
+          ),
+          const SizedBox(height: 32),
+          SectionLabel(
+            label: t.achievementsSoloNextSection,
+            icon: '\u{1F4CD}',
+          ),
+          const SizedBox(height: 16),
+          _buildChallengeAchievement(
+            context,
+            title: t.achievementsSoloWeekTitle,
+            description: t.achievementsSoloWeekDesc,
+            icon: '\u{1F4C6}',
+            isUnlocked: totalTasks >= 7,
+          ),
+          _buildChallengeAchievement(
+            context,
+            title: t.achievementsSoloRhythmTitle,
+            description: t.achievementsSoloRhythmDesc,
+            icon: '\u{1F501}',
+            isUnlocked: totalTasks >= 20,
+          ),
+          _buildChallengeAchievement(
+            context,
+            title: t.achievementsSoloOwnSpaceTitle,
+            description: t.achievementsSoloOwnSpaceDesc,
+            icon: '\u{1F3E0}',
+            isUnlocked: totalXp >= 3000,
           ),
         ],
       ),
@@ -145,40 +249,25 @@ class AchievementsTab extends StatelessWidget {
     required String progressText,
   }) {
     final theme = context.theme;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+    final accentColor = isUnlocked ? AppColors.accentGold : AppColors.primary;
+
+    return AppProgressFillCard(
+      progress: progress,
+      accentColor: accentColor,
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: theme.cardShadow,
-        border: Border.all(
-          color: isUnlocked
-              ? AppColors.accentGold.withValues(alpha: 0.2)
-              : Colors.black.withValues(alpha: 0.02),
-          width: 1.5,
-        ),
-      ),
+      borderColor: isUnlocked
+          ? AppColors.accentGold.withValues(alpha: 0.2)
+          : theme.border.withValues(alpha: 0.45),
       child: Row(
         children: [
-          Container(
+          SizedBox(
             width: 60,
             height: 60,
-            decoration: BoxDecoration(
-              color: isUnlocked
-                  ? AppColors.accentGold.withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.05),
-              shape: BoxShape.circle,
-            ),
             child: Center(
               child: Opacity(
                 opacity: isUnlocked ? 1.0 : 0.4,
-                child: Text(
-                  icon,
-                  style: const TextStyle(
-                    fontSize: 28,
-                  ),
-                ),
+                child: ConceptIcon(emoji: icon, size: 52),
               ),
             ),
           ),
@@ -192,9 +281,7 @@ class AchievementsTab extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 14,
-                    color: isUnlocked
-                        ? AppColors.textPrimary
-                        : AppColors.textPrimary.withValues(alpha: 0.4),
+                    color: isUnlocked ? theme.textPrimary : theme.textMuted,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -203,22 +290,14 @@ class AchievementsTab extends StatelessWidget {
                   description,
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary.withValues(alpha: 0.7),
+                    color: theme.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    backgroundColor: Colors.black.withValues(alpha: 0.05),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      isUnlocked
-                          ? AppColors.accentGold
-                          : AppColors.primary.withValues(alpha: 0.3),
-                    ),
-                    minHeight: 6,
-                  ),
+                const SizedBox(height: 10),
+                _achievementProgressHint(
+                  progress: progress,
+                  color: accentColor,
+                  isUnlocked: isUnlocked,
                 ),
               ],
             ),
@@ -237,18 +316,59 @@ class AchievementsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildChallengeAchievement({
+  Widget _achievementProgressHint({
+    required double progress,
+    required Color color,
+    required bool isUnlocked,
+  }) {
+    final clamped = progress.clamp(0.0, 1.0).toDouble();
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 4,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppRadii.pill),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: clamped,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: isUnlocked ? 0.92 : 0.45),
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (isUnlocked) ...[
+          const SizedBox(width: AppSpacing.xs),
+          Icon(
+            Icons.check_circle_rounded,
+            size: 16,
+            color: color.withValues(alpha: 0.9),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildChallengeAchievement(
+    BuildContext context, {
     required String title,
     required String description,
     required String icon,
     required bool isUnlocked,
   }) {
+    final theme = context.theme;
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isUnlocked ? Colors.white : Colors.black.withValues(alpha: 0.02),
-        borderRadius: BorderRadius.circular(20),
+        color: isUnlocked ? theme.surface : theme.surfaceContainer,
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(
           color: isUnlocked
               ? AppColors.primary.withValues(alpha: 0.1)
@@ -257,10 +377,7 @@ class AchievementsTab extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(
-            isUnlocked ? icon : '🔒',
-            style: const TextStyle(fontSize: 20),
-          ),
+          ConceptIcon(emoji: isUnlocked ? icon : '🔒', size: 24),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -271,9 +388,7 @@ class AchievementsTab extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
-                    color: isUnlocked
-                        ? AppColors.textPrimary
-                        : AppColors.textMuted,
+                    color: isUnlocked ? theme.textPrimary : theme.textMuted,
                   ),
                 ),
                 if (isUnlocked)
@@ -281,18 +396,24 @@ class AchievementsTab extends StatelessWidget {
                     description,
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppColors.textSecondary.withValues(alpha: 0.6),
+                      color: theme.textSecondary,
                     ),
                   ),
               ],
             ),
           ),
           if (isUnlocked)
-            const Icon(Icons.check_circle_rounded,
-                color: AppColors.success, size: 20,)
+            const Icon(
+              Icons.check_circle_rounded,
+              color: AppColors.success,
+              size: 20,
+            )
           else
-            const Icon(Icons.lock_outline_rounded,
-                color: AppColors.textMuted, size: 18,),
+            const Icon(
+              Icons.lock_outline_rounded,
+              color: AppColors.textMuted,
+              size: 18,
+            ),
         ],
       ),
     );

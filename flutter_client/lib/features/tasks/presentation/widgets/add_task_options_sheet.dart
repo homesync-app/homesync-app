@@ -4,6 +4,8 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -12,21 +14,36 @@ import 'package:homesync_client/features/tasks/presentation/providers/category_p
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 import 'create_task_dialog.dart';
+import 'task_creation_result.dart';
 
 class AddTaskOptionsSheet extends ConsumerStatefulWidget {
   final List<MemberModel> members;
+  final ValueChanged<TaskCreationResult>? onTaskAdded;
 
-  const AddTaskOptionsSheet({super.key, required this.members});
+  const AddTaskOptionsSheet({
+    super.key,
+    required this.members,
+    this.onTaskAdded,
+  });
 
-  static Future<bool?> show(BuildContext context, List<MemberModel> members) {
-    return showModalBottomSheet<bool>(
+  static Future<bool?> show(
+    BuildContext context,
+    List<MemberModel> members, {
+    ValueChanged<TaskCreationResult>? onTaskAdded,
+  }) {
+    return AppSheet.show<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => AddTaskOptionsSheet(members: members),
+      builder: (context) => AddTaskOptionsSheet(
+        members: members,
+        onTaskAdded: onTaskAdded,
+      ),
     );
   }
 
@@ -126,6 +143,12 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
       });
 
       if (!mounted) return;
+      widget.onTaskAdded?.call(
+        TaskCreationResult(
+          title: template.title,
+          category: template.categoryId,
+        ),
+      );
       final t = AppLocalizations.of(context);
       final title = localizedTaskTemplateTitle(t, template);
       AppSnackBar.show(
@@ -211,7 +234,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           ),
           const SizedBox(height: 18),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -220,7 +243,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   height: 44,
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                     border: Border.all(
                       color: AppColors.primary.withValues(alpha: 0.14),
                     ),
@@ -284,14 +307,19 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           Expanded(
             child: (_isLoading || tasksAsync.isLoading)
                 ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
+                    child: AppLoader(),
                   )
                 : filtered.isEmpty
                     ? _buildEmpty()
                     : _buildTemplateList(filtered),
           ),
           Container(
-            padding: EdgeInsets.fromLTRB(24, 16, 24, bottomActionPadding),
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.lg,
+              bottomActionPadding,
+            ),
             decoration: BoxDecoration(
               color: context.theme.background,
               boxShadow: [
@@ -307,7 +335,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      final result = await showDialog<bool>(
+                      final result = await showDialog<TaskCreationResult>(
                         context: context,
                         builder: (context) => CreateTaskDialog(
                           members: widget.members
@@ -315,7 +343,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                               .toList(),
                         ),
                       );
-                      if (result == true && context.mounted) {
+                      if (result != null && context.mounted) {
+                        widget.onTaskAdded?.call(result);
                         Navigator.pop(context, true);
                       }
                     },
@@ -328,7 +357,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                       foregroundColor: AppColors.primary,
                       minimumSize: const Size(0, 52),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
                         side: BorderSide(
                           color: AppColors.primary.withValues(alpha: 0.18),
                         ),
@@ -348,11 +377,11 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                           .addTaskOptionsDone(_addedIds.length),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textPrimary,
+                      backgroundColor: context.theme.primary,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(0, 52),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
                       ),
                     ),
                   ),
@@ -382,7 +411,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
     final isSelected = _selectedCategory == id;
     final color = category != null
         ? AppColors.fromHex(category.color)
-        : AppColors.textSecondary;
+        : context.theme.textSecondary;
+    final theme = context.theme;
 
     return GestureDetector(
       onTap: () => setState(() => _selectedCategory = id),
@@ -391,11 +421,10 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.12) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: isSelected ? color.withValues(alpha: 0.12) : theme.surface,
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           border: Border.all(
-            color:
-                isSelected ? color : AppColors.divider.withValues(alpha: 0.6),
+            color: isSelected ? color : theme.border.withValues(alpha: 0.6),
             width: isSelected ? 1.5 : 1,
           ),
           boxShadow: [
@@ -414,7 +443,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   ? Icons.format_list_bulleted_rounded
                   : CategoryMapping.getCategoryMaterialIcon(id),
               size: 16,
-              color: isSelected ? color : AppColors.textSecondary,
+              color: isSelected ? color : theme.textSecondary,
             ),
             const SizedBox(width: 6),
             Text(
@@ -422,7 +451,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? color : AppColors.textSecondary,
+                color: isSelected ? color : theme.textSecondary,
               ),
             ),
           ],
@@ -432,6 +461,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
   }
 
   Widget _buildEmpty() {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     return Center(
       child: Column(
@@ -445,7 +475,11 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           const SizedBox(height: 20),
           Text(
             t.addTaskOptionsAllSuggestedDone,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -481,7 +515,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         if (_isLoadingMore) ...[
           const SizedBox(height: 16),
           const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
+            child: AppLoader(size: 24),
           ),
         ] else if (_hasMore && _selectedCategory == null) ...[
           const SizedBox(height: 16),
@@ -550,6 +584,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
   }
 
   Widget _buildTemplateCard(TaskTemplate template) {
+    final theme = context.theme;
     final isAdding = _addingIds.contains(template.id);
     final isAdded = _addedIds.contains(template.id);
 
@@ -571,14 +606,18 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
       duration: const Duration(milliseconds: 250),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: color.withValues(alpha: isAdded ? 0.24 : 0.12),
+          color: isAdded
+              ? AppColors.accentGreen.withValues(alpha: 0.28)
+              : theme.border,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.025),
+            color: theme.shadowBase.withValues(
+              alpha: theme.isDarkMode ? 0.18 : 0.025,
+            ),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -605,7 +644,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
             fontWeight: FontWeight.w700,
             fontSize: 15,
             decoration: isAdded ? TextDecoration.lineThrough : null,
-            color: isAdded ? AppColors.textSecondary : AppColors.textPrimary,
+            color: isAdded ? theme.textSecondary : theme.textPrimary,
           ),
         ),
         subtitle: Row(
@@ -643,7 +682,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         ),
         trailing: isAdded
             ? Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.xs),
                 decoration: BoxDecoration(
                   color: AppColors.accentGreen.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
@@ -656,7 +695,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
               )
             : Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.surfaceContainer,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
@@ -667,7 +706,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                 ),
                 child: isAdding
                     ? Padding(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(AppSpacing.sm),
                         child: SizedBox(
                           width: 18,
                           height: 18,

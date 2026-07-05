@@ -21,7 +21,7 @@ final class TaskRepositoryProvider
           argument: null,
           retry: null,
           name: r'taskRepositoryProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -48,4 +48,4 @@ final class TaskRepositoryProvider
   }
 }
 
-String _$taskRepositoryHash() => r'd124453466809ba95ababc5104d9007bca6d7648';
+String _$taskRepositoryHash() => r'72298347b47b9cd73f38422def2882d296a31448';

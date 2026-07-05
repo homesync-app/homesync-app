@@ -4,7 +4,11 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/contribution_balance_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/debt_settlement_section.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_ranking_section.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/household_bills_card.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -56,17 +60,30 @@ class _HouseholdSocialHubScreenState
               _HeaderCard(
                 caps: caps,
                 currentMember: currentMember,
-                onRewards: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const FamilyRewardsScreen(),
-                    ),
-                  );
-                },
+                onRewards: caps.usesRewardsStore
+                    ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const FamilyRewardsScreen(),
+                          ),
+                        );
+                      }
+                    : null,
               ),
               const SizedBox(height: 18),
-              FamilyRankingSection(currentMember: currentMember),
+              // Familia: ranking competitivo (corona, puntos, adultos vs chicos).
+              // Convivencia: equilibrio de aporte neutro (tareas + plata del mes,
+              // sin ganador). Cada modo usa su propia experiencia.
+              if (caps.usesCompetitiveRanking)
+                FamilyRankingSection(currentMember: currentMember)
+              else if (caps.usesContributionBalance) ...[
+                const ContributionBalanceCard(),
+                const SizedBox(height: 18),
+                _SettleUpSection(),
+                const SizedBox(height: 18),
+                const HouseholdBillsCard(),
+              ],
               // Configuracion del Modo Padres (toggle de aprobacion de tareas,
               // bandeja de pendientes). El widget se auto-oculta si el usuario
               // no es admin adulto de una familia, asi que es seguro siempre.
@@ -89,7 +106,7 @@ class _HeaderCard extends StatelessWidget {
 
   final HouseholdCapabilities caps;
   final MemberModel? currentMember;
-  final VoidCallback onRewards;
+  final VoidCallback? onRewards;
 
   @override
   Widget build(BuildContext context) {
@@ -182,33 +199,60 @@ class _HeaderCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  currentMember == null
-                      ? t.householdSocialHubRoleFallback
-                      : t.householdSocialHubYourRole(
-                          // Si el usuario es admin/owner del hogar, lo agregamos
-                          // como sufijo para que sepa que tiene permisos
-                          // adicionales (aprobar tareas, configurar, etc.).
-                          currentMember!.isAdmin
-                              ? '${currentMember!.localizedRoleLabel(t)} · Admin'
-                              : currentMember!.localizedRoleLabel(t),
+                child: Builder(
+                  builder: (context) {
+                    final roleStyle = TextStyle(
+                      color: theme.textSecondary,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      height: 1.2,
+                    );
+                    if (currentMember == null) {
+                      return Text(
+                        t.householdSocialHubRoleFallback,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: roleStyle,
+                      );
+                    }
+                    // Convivencia (friends) trata a todos como adultos pares:
+                    // nunca mostramos rol familiar (Padre/Madre).
+                    final roleLabel = caps.usesFamilyRoles
+                        ? currentMember!.localizedGenderedRoleLabel(t)
+                        : t.householdSocialHubRoleMember;
+                    return Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            t.householdSocialHubYourRole(roleLabel),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: roleStyle,
+                          ),
                         ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: theme.textSecondary,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w800,
-                    height: 1.2,
-                  ),
+                        // El escudo indica que este miembro gestiona el hogar
+                        // (aprueba tareas, configura). Reemplaza al viejo texto
+                        // "· Admin", mas tecnico.
+                        if (currentMember!.isAdmin) ...[
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.shield_rounded,
+                            size: 14,
+                            color: theme.primary,
+                          ),
+                        ],
+                      ],
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: 10),
-              _QuickActionButton(
-                icon: Icons.storefront_rounded,
-                label: t.householdSocialHubStoreButton,
-                onPressed: onRewards,
-              ),
+              if (onRewards != null)
+                _QuickActionButton(
+                  icon: Icons.storefront_rounded,
+                  label: t.householdSocialHubStoreButton,
+                  onPressed: onRewards!,
+                ),
             ],
           ),
         ],
@@ -261,6 +305,55 @@ class _QuickActionButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Sección "Saldar cuentas" para convivencia. Para roomies, saber quién le debe
+/// a quién es EL feature, no un extra — por eso es protagonista en el hub.
+/// Reusa `DebtSettlementSection`, que ya maneja la simplificación de deudas y el
+/// estado "todo saldado".
+class _SettleUpSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    final balancesAsync = ref.watch(expenseBalancesProvider);
+
+    return balancesAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (balances) {
+        // Con un solo integrante o sin balances no hay nada que saldar.
+        if (balances.length < 2) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              t.householdSettleUpTitle,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: theme.textPrimary,
+                letterSpacing: -0.35,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              t.householdSettleUpSubtitle,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w500,
+                color: theme.textSecondary,
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 12),
+            DebtSettlementSection(balances: balances),
+          ],
+        );
+      },
     );
   }
 }

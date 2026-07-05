@@ -291,10 +291,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPremiumTitle => 'HomeSync Premium';
 
   @override
-  String get settingsPremiumActiveSubtitle => 'Premium active';
+  String get settingsPremiumActiveSubtitle => 'Manage plan';
 
   @override
   String get settingsPremiumInactiveSubtitle => 'Advanced features';
+
+  @override
+  String get settingsPremiumFeedbackRewardNote =>
+      'Report bugs or suggest useful improvements and you may earn free Premium months.';
 
   @override
   String get settingsPremiumFeatureShoppingFinanceSync =>
@@ -409,6 +413,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsResetDialogConfirm => 'Reset';
 
   @override
+  String get settingsDeleteAccountButton => 'Delete my account';
+
+  @override
+  String get settingsDeleteAccountDialogTitle => 'Delete your account?';
+
+  @override
+  String get settingsDeleteAccountDialogBody =>
+      'This permanently deletes your account and all your data (tasks, expenses, rewards and progress). It can\'t be undone. If you share a household, you\'ll be removed from it.';
+
+  @override
+  String get settingsDeleteAccountConfirm => 'Delete permanently';
+
+  @override
+  String get settingsDeleteAccountSuccess => 'Account deleted';
+
+  @override
+  String get settingsDeleteAccountError =>
+      'Couldn\'t delete your account. Please try again.';
+
+  @override
+  String get settingsDeleteAccountReauthNeeded =>
+      'For your security, sign in again and then delete your account.';
+
+  @override
   String get splashLoadingMessage => 'Setting up your shared home.';
 
   @override
@@ -520,6 +548,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeViewWeekButton => 'View week';
 
   @override
+  String homeTodayProgressLabel(int done, int total) {
+    return '$done of $total';
+  }
+
+  @override
+  String homeTodayProgressSemantic(int done, int total) {
+    return 'Today\'s progress: $done of $total tasks completed';
+  }
+
+  @override
   String get homeAllDoneToday => 'All done for today';
 
   @override
@@ -600,6 +638,472 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSoloActivityTitle => 'Your activity';
 
   @override
+  String get homeGreetingMorning => 'Good morning,';
+
+  @override
+  String get homeGreetingAfternoon => 'Good afternoon,';
+
+  @override
+  String get homeGreetingEvening => 'Good evening,';
+
+  @override
+  String get homeSoloSpentEmpty => 'No spending yet ✨';
+
+  @override
+  String homeSoloSpentDailyAvg(String month, String amount) {
+    return '$month · $amount/day';
+  }
+
+  @override
+  String get soloSpaceEyebrow => 'My space';
+
+  @override
+  String soloSpaceLevel(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String soloSpaceXpToNext(int xp) {
+    return '$xp XP to the next level.';
+  }
+
+  @override
+  String get soloSpaceStageRecentMove => 'Fresh start';
+
+  @override
+  String get soloSpaceStageRecentMoveSubtitle =>
+      'Your space is starting to take shape. Choose one simple action and build from there.';
+
+  @override
+  String get soloSpaceStageInMotion => 'Home in motion';
+
+  @override
+  String get soloSpaceStageInMotionSubtitle =>
+      'There is movement now: a few routines, expenses, or tasks are starting to organize your days.';
+
+  @override
+  String get soloSpaceStageSteadyRoutine => 'Steady routine';
+
+  @override
+  String get soloSpaceStageSteadyRoutineSubtitle =>
+      'You already have a base; now it is about keeping it going without overthinking it.';
+
+  @override
+  String get soloSpaceStageOrganizedHome => 'Organized home';
+
+  @override
+  String get soloSpaceStageOrganizedHomeSubtitle =>
+      'Your tasks, spending, and activity are starting to read like a clear system.';
+
+  @override
+  String get soloSpaceStageOwnRhythm => 'Your space, your rhythm';
+
+  @override
+  String get soloSpaceStageOwnRhythmSubtitle =>
+      'This is no longer just tracking things: you are building your own way to live at home.';
+
+  @override
+  String get soloSpaceSignalsTitle => 'Weekly signals';
+
+  @override
+  String get soloSpaceStreakTitle => 'Streak';
+
+  @override
+  String soloSpaceStreakMetric(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+      zero: 'No streak',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String soloSpaceActiveDays14(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days active days in 14 days',
+      one: '1 active day in 14 days',
+      zero: 'No recent active days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get soloSpaceWeeklyXpTitle => 'Weekly XP';
+
+  @override
+  String get soloSpaceWeeklyTasksTitle => 'Weekly tasks';
+
+  @override
+  String soloSpaceDeltaUp(int value) {
+    return '+$value vs previous week';
+  }
+
+  @override
+  String soloSpaceDeltaDown(int value) {
+    return '$value vs previous week';
+  }
+
+  @override
+  String get soloSpaceDeltaSame => 'Same as previous week';
+
+  @override
+  String soloSpaceTopTaskCategory(String category) {
+    return 'Tasks: $category';
+  }
+
+  @override
+  String soloSpaceTopExpenseCategory(String category) {
+    return 'Spending: $category';
+  }
+
+  @override
+  String get soloSpaceSignalsSyncing =>
+      'Refreshing real signals from your home.';
+
+  @override
+  String get soloSpaceDimensionsTitle => 'How your home is doing';
+
+  @override
+  String get soloSpaceOrderTitle => 'Order';
+
+  @override
+  String get soloSpaceOrderSubtitle =>
+      'Tasks, pending items, and closing the day.';
+
+  @override
+  String get soloSpaceClarityTitle => 'Clarity';
+
+  @override
+  String get soloSpaceClaritySubtitle =>
+      'Tracked spending and monthly context.';
+
+  @override
+  String get soloSpaceContinuityTitle => 'Continuity';
+
+  @override
+  String get soloSpaceContinuitySubtitle =>
+      'Recent activity and real consistency.';
+
+  @override
+  String get soloSpaceNextTitle => 'Next gesture';
+
+  @override
+  String get soloSpaceNextCreateTask => 'Create a base task';
+
+  @override
+  String get soloSpaceNextCreateTaskSubtitle =>
+      'One small routine is enough to start shaping your space.';
+
+  @override
+  String get soloSpaceNextCompleteTask => 'Close a task for today';
+
+  @override
+  String get soloSpaceNextCompleteTaskSubtitle =>
+      'Reducing pending items is the most direct way to improve Order.';
+
+  @override
+  String get soloSpaceNextRegisterExpense =>
+      'Track your first expense this month';
+
+  @override
+  String get soloSpaceNextRegisterExpenseSubtitle =>
+      'With one movement logged, your Clarity starts to have context.';
+
+  @override
+  String get soloSpaceNextReviewShopping => 'Review your shopping list';
+
+  @override
+  String get soloSpaceNextReviewShoppingSubtitle =>
+      'An organized shop keeps noise down and the month lighter.';
+
+  @override
+  String get soloSpaceNextKeepGoing => 'Add one simple action';
+
+  @override
+  String get soloSpaceNextKeepGoingSubtitle =>
+      'One small gesture today keeps your home continuity going.';
+
+  @override
+  String get soloSpaceMilestonesTitle => 'Personal milestones';
+
+  @override
+  String get soloSpaceMilestoneFirstStep => 'First step';
+
+  @override
+  String get soloSpaceMilestoneFirstStepDesc =>
+      'You completed your first task.';
+
+  @override
+  String get soloSpaceMilestoneWeekInMotion => 'Week in motion';
+
+  @override
+  String get soloSpaceMilestoneWeekInMotionDesc =>
+      'You had enough recent activity to mark a rhythm.';
+
+  @override
+  String get soloSpaceMilestoneClearerHome => 'Clearer home';
+
+  @override
+  String get soloSpaceMilestoneClearerHomeDesc =>
+      'Your finances already have useful signals this month.';
+
+  @override
+  String get soloSpaceMilestoneSteadyRoutine => 'Sustained routine';
+
+  @override
+  String get soloSpaceMilestoneSteadyRoutineDesc =>
+      'Order and continuity are starting to work together.';
+
+  @override
+  String get soloSpaceMilestoneOwnRhythm => 'Own rhythm';
+
+  @override
+  String get soloSpaceMilestoneOwnRhythmDesc =>
+      'Your progress is already showing a personal identity.';
+
+  @override
+  String get soloSpaceFutureHint =>
+      'Your space adjusts with your tasks, spending, and weekly rhythm.';
+
+  @override
+  String get soloSpaceRitualTitle => 'Weekly review';
+
+  @override
+  String soloSpaceRitualProgress(int done, int total) {
+    return '$done of $total gestures';
+  }
+
+  @override
+  String get soloSpaceRitualReviewTasks => 'Review open tasks';
+
+  @override
+  String get soloSpaceRitualCheckSpending => 'Check monthly spending';
+
+  @override
+  String get soloSpaceRitualPlanShopping => 'Adjust the shopping list';
+
+  @override
+  String get soloSpaceRitualChooseNextRoutine => 'Choose one routine to keep';
+
+  @override
+  String get soloSpaceInsightsTitle => 'Weekly read';
+
+  @override
+  String get soloSpaceInsightNoActivity => 'Starting point';
+
+  @override
+  String get soloSpaceInsightNoActivityDesc =>
+      'There are no strong signals this week yet. One simple gesture is enough to begin.';
+
+  @override
+  String get soloSpaceInsightStreak => 'Streak building';
+
+  @override
+  String soloSpaceInsightStreakDesc(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days active days in a row are starting to form a rhythm.',
+      one: 'One active day already marks continuity.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get soloSpaceInsightWeekImproved => 'Stronger week';
+
+  @override
+  String soloSpaceInsightWeekImprovedDesc(int value) {
+    return '+$value XP versus the previous week. There is more movement at home.';
+  }
+
+  @override
+  String get soloSpaceInsightWeekSlowed => 'Quieter week';
+
+  @override
+  String get soloSpaceInsightWeekSlowedDesc =>
+      'Movement slowed down. Choose one small action and close the day.';
+
+  @override
+  String get soloSpaceInsightFinanceVisible => 'Finances with context';
+
+  @override
+  String get soloSpaceInsightFinanceVisibleDesc =>
+      'There are enough movements now to read the month more clearly.';
+
+  @override
+  String get soloSpaceInsightNoFinance => 'Missing finance read';
+
+  @override
+  String get soloSpaceInsightNoFinanceDesc =>
+      'Tracking one real expense activates better Clarity signals.';
+
+  @override
+  String get soloSpaceInsightTaskCategory => 'Task pattern';
+
+  @override
+  String soloSpaceInsightTaskCategoryDesc(String category) {
+    return '$category is showing up as a strong focus this month.';
+  }
+
+  @override
+  String get soloSpaceInsightExpenseCategory => 'Spending pattern';
+
+  @override
+  String soloSpaceInsightExpenseCategoryDesc(String category) {
+    return '$category has the most movement this month.';
+  }
+
+  @override
+  String get soloSpaceSuggestionsTitle => 'Suggested tools';
+
+  @override
+  String get soloSpaceSuggestionRecurringTask =>
+      'Turn something into a routine';
+
+  @override
+  String get soloSpaceSuggestionRecurringTaskDesc =>
+      'A recurring task lowers friction and supports Order.';
+
+  @override
+  String get soloSpaceSuggestionClosePending => 'Close what is pending';
+
+  @override
+  String get soloSpaceSuggestionClosePendingDesc =>
+      'Resolving one task today clears mental space.';
+
+  @override
+  String get soloSpaceSuggestionRegisterExpense => 'Track a real expense';
+
+  @override
+  String get soloSpaceSuggestionRegisterExpenseDesc =>
+      'With one movement, the month no longer reads empty.';
+
+  @override
+  String get soloSpaceSuggestionReviewShopping => 'Review shopping';
+
+  @override
+  String get soloSpaceSuggestionReviewShoppingDesc =>
+      'A clear list avoids duplicate or last-minute purchases.';
+
+  @override
+  String get soloSpaceSuggestionProtectStreak => 'Protect the streak';
+
+  @override
+  String get soloSpaceSuggestionProtectStreakDesc =>
+      'One small action today keeps continuity alive.';
+
+  @override
+  String get soloSpaceSuggestionWeeklyReview => 'Run the weekly review';
+
+  @override
+  String get soloSpaceSuggestionWeeklyReviewDesc =>
+      'Check the ritual gestures and leave the week organized.';
+
+  @override
+  String get soloSpaceUnlocksTitle => 'Soft unlocks';
+
+  @override
+  String get soloSpaceUnlockActive => 'Active';
+
+  @override
+  String get soloSpaceUnlockNext => 'Next';
+
+  @override
+  String get soloSpaceUnlockWeeklyReview => 'Review view';
+
+  @override
+  String get soloSpaceUnlockWeeklyReviewDesc =>
+      'Available from the start to organize the week without pressure.';
+
+  @override
+  String get soloSpaceUnlockRecurringTemplates => 'Recurring templates';
+
+  @override
+  String get soloSpaceUnlockRecurringTemplatesDesc =>
+      'Appear when there is enough base to repeat routines.';
+
+  @override
+  String get soloSpaceUnlockHabitInsights => 'Habit insights';
+
+  @override
+  String get soloSpaceUnlockHabitInsightsDesc =>
+      'Activate after several days of real activity.';
+
+  @override
+  String get soloSpaceUnlockPersonalMedal => 'Personal medal';
+
+  @override
+  String get soloSpaceUnlockPersonalMedalDesc =>
+      'Recognizes a sustained stage without competing with anyone.';
+
+  @override
+  String get soloSpaceUnlockRhythmRecommendations => 'Rhythm recommendations';
+
+  @override
+  String get soloSpaceUnlockRhythmRecommendationsDesc =>
+      'Connect financial clarity with weekly continuity.';
+
+  @override
+  String activityCoinsPlus(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count coins',
+      one: '+1 coin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityCoinsMinus(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '-$count coins',
+      one: '-1 coin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeFamilyApprovalsTileLabel => 'Approvals';
+
+  @override
+  String homeFamilyApprovalsPendingLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'pending',
+      one: 'pending',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeFamilyApprovalsAllClear => 'All clear';
+
+  @override
+  String expensesYouAreOwed(String amount) {
+    return 'You\'re owed $amount';
+  }
+
+  @override
+  String expensesYouOwe(String amount) {
+    return 'You owe $amount';
+  }
+
+  @override
+  String expensesDailyAvg(String amount) {
+    return '≈ $amount/day';
+  }
+
+  @override
   String get homeCoupleHeadlineSecondary => 'of your home';
 
   @override
@@ -627,6 +1131,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homeCoupleSettlementErrorNoUser =>
       'We couldn\'t identify your user.';
+
+  @override
+  String get homeCoupleSettlementDialogTitle => 'Record settlement';
+
+  @override
+  String homeCoupleSettlementDialogDirectionPay(String partnerName) {
+    return 'You → $partnerName';
+  }
+
+  @override
+  String homeCoupleSettlementDialogDirectionReceive(String partnerName) {
+    return '$partnerName → you';
+  }
+
+  @override
+  String get homeCoupleSettlementDialogBalanceZero =>
+      'This will bring the household balance to zero.';
+
+  @override
+  String get homeCoupleSettlementDialogCancel => 'Not now';
+
+  @override
+  String get homeCoupleSettlementDialogConfirm => 'Record payment';
 
   @override
   String homeCoupleSettlementDialogTitlePay(String partnerName) {
@@ -731,6 +1258,131 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeFriendsActivityEmpty => 'No shared activity yet.';
 
   @override
+  String get homeFriendsSettleTitle => 'Settle up';
+
+  @override
+  String get homeFriendsSettleSubtitle => 'Who pays whom to get back to zero.';
+
+  @override
+  String get homeFriendsBalancesLoadError =>
+      'We couldn\'t load the balances. Tap to retry.';
+
+  @override
+  String get homeFriendsTasksLoadError =>
+      'We couldn\'t load the tasks. Tap to retry.';
+
+  @override
+  String get homeFriendsShoppingLoadError =>
+      'We couldn\'t load the shopping list. Tap to retry.';
+
+  @override
+  String get homeFriendsActivityLoadError =>
+      'We couldn\'t load the activity. Tap to retry.';
+
+  @override
+  String get balanceCardStatusOwed => 'Time to settle your balance';
+
+  @override
+  String get balanceCardStatusFavor => 'In your favor';
+
+  @override
+  String get balanceCardStatusShared => 'Shared balance';
+
+  @override
+  String get balanceCardBadgeSettled => 'Settled';
+
+  @override
+  String get balanceCardBadgeOwes => 'You owe';
+
+  @override
+  String get balanceCardBadgeFavor => 'In favor';
+
+  @override
+  String balanceCardMovements(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count movements',
+      one: '1 movement',
+      zero: '0 movements',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String balanceCardMembers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Members',
+      one: 'Member',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String balanceCardOpenBalances(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Open balances',
+      one: 'Open balance',
+      zero: 'All settled',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get balanceCardSingleMemberHint =>
+      'Once you add more members, you\'ll see the shared balance here.';
+
+  @override
+  String get balanceCardMemberOwes => 'Owes';
+
+  @override
+  String get balanceCardMemberFavor => 'In favor';
+
+  @override
+  String get balanceCardMemberSettled => 'Settled';
+
+  @override
+  String get settleSectionTitle => 'Settle debts';
+
+  @override
+  String get settleSectionOnePayment => '1 payment needed to balance';
+
+  @override
+  String settleSectionPayments(int count) {
+    return '$count payments to balance everything';
+  }
+
+  @override
+  String get settleAllSettled => 'All balanced. Nobody owes anyone.';
+
+  @override
+  String settlePaysTo(String name) {
+    return 'pays $name';
+  }
+
+  @override
+  String get settleConfirmTitle => 'Confirm payment';
+
+  @override
+  String settleConfirmBody(String from, String amount, String to) {
+    return '$from pays $amount to $to.';
+  }
+
+  @override
+  String settleSuccess(String amount) {
+    return 'Payment of $amount recorded.';
+  }
+
+  @override
+  String settleError(String error) {
+    return 'Couldn\'t record the payment: $error';
+  }
+
+  @override
   String get homeFamilyMemberNotFound =>
       'We couldn\'t find your profile in this household.';
 
@@ -741,7 +1393,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeFamilyAdultFallbackName => 'Family';
 
   @override
-  String get homeFamilyChildHello => 'Hi, ';
+  String get homeFamilyChildHello => 'Let\'s go, ';
+
+  @override
+  String get homeFamilyChildGreetingSuffix => '!';
 
   @override
   String get homeFamilyChildFallbackName => 'champ';
@@ -1150,7 +1805,7 @@ class AppLocalizationsEn extends AppLocalizations {
       mode,
       {
         'family': 'Family created',
-        'friends': 'Family created',
+        'friends': 'Place created',
         'couple': 'Home created',
         'solo': 'Home created',
         'other': 'Home created',
@@ -1165,8 +1820,7 @@ class AppLocalizationsEn extends AppLocalizations {
       mode,
       {
         'family': 'Share this code with everyone who\'s part of the household.',
-        'friends':
-            'Share this code with everyone who\'s part of the household.',
+        'friends': 'Share this code with your housemates.',
         'couple': 'Share this code to invite the other person.',
         'solo': 'Share this code to invite the other person.',
         'other': 'Share this code to invite the other person.',
@@ -1573,13 +2227,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Adults complete directly; everyone else needs approval.';
 
   @override
-  String get settingsParentModeApprovalAllTitle => 'All members';
-
-  @override
-  String get settingsParentModeApprovalAllSubtitle =>
-      'Every completion goes through your OK before paying coins.';
-
-  @override
   String get settingsParentModeApprovalPerMemberTitle => 'Per member';
 
   @override
@@ -1610,6 +2257,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsParentModeWeeklySummary => 'Weekly summary';
+
+  @override
+  String get settingsParentModeAllowanceTitle => 'Allowances';
+
+  @override
+  String get settingsParentModeAllowanceSubtitle =>
+      'Send allowances to teens with personal finances.';
+
+  @override
+  String get settingsParentModeAllowanceCta => 'Send allowance';
 
   @override
   String get settingsParentModePerMemberEmpty =>
@@ -1869,6 +2526,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tasksPillNoDate => 'No date';
+
+  @override
+  String get tasksSectionOverdue => 'Overdue';
+
+  @override
+  String get tasksSectionToday => 'Today';
+
+  @override
+  String get tasksSectionThisWeek => 'This week';
+
+  @override
+  String get tasksSectionUpcoming => 'Later';
+
+  @override
+  String get tasksSectionNoDate => 'No date';
 
   @override
   String get tasksPillOverdue => 'Overdue';
@@ -2178,6 +2850,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get completeTaskNoTasksAvailable => 'No tasks available';
 
   @override
+  String get completeTaskAddPromptTitle => 'Can\'t find the task?';
+
+  @override
+  String get completeTaskAddPromptButton => 'Add new task';
+
+  @override
   String completeTaskRewardVerb(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2263,6 +2941,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taskDetailReward => 'Reward';
+
+  @override
+  String taskDetailCoinsAwarded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count coins',
+      one: '1 coin',
+    );
+    return '+$_temp0';
+  }
 
   @override
   String get taskDetailCompletedBy => 'Completed by';
@@ -2486,10 +3175,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'This section is for family-household admins.';
 
   @override
+  String pendingApprovalsSubmittedBy(Object name) {
+    return 'Submitted by $name';
+  }
+
+  @override
   String get pendingApprovalsApproveButton => 'Approve';
 
   @override
   String get pendingApprovalsRejectButton => 'Reject';
+
+  @override
+  String pendingApprovalsLoadError(Object message) {
+    return 'We couldn\'t load approvals: $message';
+  }
+
+  @override
+  String pendingApprovalsApprovedSnack(Object coins) {
+    return 'Approved. $coins coins were credited.';
+  }
 
   @override
   String get pendingApprovalsApproveErrorRetry =>
@@ -2497,6 +3201,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pendingApprovalsRejectedSnack => 'Task rejected.';
+
+  @override
+  String get pendingApprovalsRejectErrorRetry =>
+      'We couldn\'t reject the task. Try again.';
 
   @override
   String get pendingApprovalsRejectDialogTitle => 'Reason for rejection';
@@ -2700,6 +3408,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Receipt hard to read — check the data before saving';
 
   @override
+  String get expensesFormOcrRateLimited =>
+      'Too many scans in a row. Wait a few seconds and try again.';
+
+  @override
+  String expensesFormOcrImageTooLarge(String sizeMb) {
+    return 'The image is too large ($sizeMb MB, max 5 MB). Try another photo or pick one from the gallery.';
+  }
+
+  @override
+  String get expensesFormOcrSessionExpired =>
+      'Session expired. Sign in again to scan.';
+
+  @override
+  String get expensesFormOcrTimeout =>
+      'The scan took too long. Check your connection and try again.';
+
+  @override
   String get expensesFormValidationAmountRequired => 'Enter a valid amount.';
 
   @override
@@ -2714,6 +3439,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expensesFormUpdatedExpense => 'Updated';
+
+  @override
+  String get plannedExpensePaymentConfirmButton => 'Confirm and record';
 
   @override
   String get expensesFormDeleteDialogTitle => 'Delete expense?';
@@ -2858,6 +3586,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expensesFormHeaderNewExpense => 'New Expense';
 
   @override
+  String get allowanceEntryTitle => 'Send allowance';
+
+  @override
+  String get allowanceSheetTitle => 'Send allowance';
+
+  @override
+  String get allowanceSheetSubtitle =>
+      'Choose a recipient and amount. It is recorded as personal income.';
+
+  @override
+  String get allowanceRecipientLabel => 'To';
+
+  @override
+  String get allowanceAmountLabel => 'Amount';
+
+  @override
+  String get allowanceNoteHint => 'Optional note, e.g. June allowance';
+
+  @override
+  String get allowanceSubmitButton => 'Send allowance';
+
+  @override
+  String get allowanceNoRecipients =>
+      'There are no teens with personal finances in this household.';
+
+  @override
+  String get allowanceRecipientRequired =>
+      'Choose who should receive the allowance.';
+
+  @override
+  String get allowanceAmountInvalid => 'Enter a valid amount.';
+
+  @override
+  String get allowanceSendGenericError => 'We couldn\'t send the allowance.';
+
+  @override
+  String get allowanceSentSnack => 'Allowance sent.';
+
+  @override
+  String allowanceSendError(String error) {
+    return 'Error sending allowance: $error';
+  }
+
+  @override
   String get expensesFormSelectCategoryTitle => 'Select category';
 
   @override
@@ -2900,6 +3672,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get expensesFormShoppingWillMarkBought =>
       'They\'ll be marked as purchased when you save';
+
+  @override
+  String get expensesFormShoppingPreparingProducts => 'Preparing products...';
 
   @override
   String get expensesFormShoppingTapToLink => 'Tap to link items';
@@ -3029,12 +3804,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumPaywallCloseTooltip => 'Close';
 
   @override
-  String get premiumPaywallEyebrow =>
-      'Premium for households that stay organized';
+  String get premiumPaywallEyebrow => 'HomeSync Premium';
 
   @override
   String get premiumPaywallTitle =>
-      'Automate your household without entering everything twice';
+      'Automate your household without duplicate entry';
 
   @override
   String get premiumPaywallSubtitle =>
@@ -3073,6 +3847,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumRestorePurchases => 'Restore purchases';
 
   @override
+  String get premiumCancelAnytime => 'Cancel anytime';
+
+  @override
   String get premiumFreeTrialAvailable => 'Free Trial Available';
 
   @override
@@ -3085,11 +3862,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumSavePercent => 'Save 20%';
 
   @override
-  String get premiumAlreadyActiveTitle => 'You\'re already Premium!';
+  String get premiumChoosePlanTitle => 'Choose your plan';
+
+  @override
+  String get premiumAnnualPlan => 'Annual';
+
+  @override
+  String get premiumMonthlyPlan => 'Monthly';
+
+  @override
+  String get premiumBestValueBadge => 'Best value';
+
+  @override
+  String get premiumBilledAnnually => 'Billed once a year';
+
+  @override
+  String get premiumBilledMonthly => 'Renews month to month';
+
+  @override
+  String premiumMonthlyEquivalent(String price) {
+    return '$price/mo';
+  }
+
+  @override
+  String get premiumContinueWithPlan => 'Continue';
+
+  @override
+  String get premiumAlreadyActiveTitle => 'Premium is active in your household';
 
   @override
   String get premiumAlreadyActiveBody =>
-      'Thanks for supporting HomeSync development.';
+      'You\'re all set: premium features are now available for this household.';
+
+  @override
+  String get premiumActiveStatusPill => 'Plan active';
+
+  @override
+  String get premiumActiveBenefitsTitle => 'Enabled benefits';
 
   @override
   String get premiumContinueButton => 'Continue';
@@ -3104,45 +3913,207 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumDeveloperModeButton => 'Developer Mode: Activate Premium';
 
   @override
-  String get faqSheetTitle => 'FAQ';
+  String get faqSheetTitle => 'Frequently Asked Questions';
 
   @override
-  String get faqSheetSubtitle => 'Everything you need to know about HomeSync';
+  String get faqSheetSubtitle => 'Help tailored to your home';
 
   @override
-  String get faqHowSharedHome => 'How does the shared home work?';
+  String get faqSearchHint => 'Search for a question...';
 
   @override
-  String get faqHowSharedHomeAnswer =>
-      'HomeSync is designed for couples and people living together. When you join a household with a code, you both share the same task list, expenses, and savings. Everything one person does is reflected for the other.';
+  String get faqSearchEmpty =>
+      'Nothing matched your search. Try another word or tell us via “Send feedback”.';
+
+  @override
+  String faqContextPill(String label) {
+    return 'Help for: $label';
+  }
+
+  @override
+  String get faqCatHousehold => 'Your home';
+
+  @override
+  String get faqCatTasks => 'Tasks';
+
+  @override
+  String get faqCatRewards => 'Points & rewards';
+
+  @override
+  String get faqCatFinances => 'Finances';
+
+  @override
+  String get faqCatApp => 'The app & your account';
+
+  @override
+  String get faqHowSharedHome => 'How does my home work in HomeSync?';
+
+  @override
+  String faqHowSharedHomeAnswer(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'couple':
+            'You and your partner share one digital home: tasks, expenses, the shopping list and savings live in one place and sync instantly. Whatever one adds, the other sees right away.',
+        'family':
+            'The whole family shares one digital home. Every member has a role (father, mother, guardian, teen or kid) and the app adapts what each one sees and can do: adults manage, kids contribute by completing tasks.',
+        'friends':
+            'Everyone living together shares tasks, expenses and shopping in one place, as equals: no hierarchies and no kid-style prizes, just a clear picture of what each person contributes.',
+        'solo':
+            'Your home is your personal space: organize your tasks, expenses and shopping list at your own pace. If you ever live with someone, invite them with a code and you\'re set.',
+        'other':
+            'You share one digital home: tasks, expenses, shopping and savings synced instantly across all members.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get faqInviteMembers => 'How do I invite someone to my home?';
+
+  @override
+  String faqInviteMembersAnswer(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family':
+            'Your home\'s invitation code is in Settings: share it and, once entered in their app, that person joins with everything synced. Then, from the members list, adults assign their role (father, mother, guardian, teen or kid).',
+        'other':
+            'Your home\'s invitation code is in Settings: share it with whoever you want to add and, once entered in their app, they join with tasks, expenses and shopping already synced.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get faqFamilyRoles => 'What do the family roles mean?';
+
+  @override
+  String get faqFamilyRolesAnswer =>
+      'Father, mother and guardians are the adults: they manage the home, approve tasks, handle shared finances and the rewards store. Teens get more autonomy and their own personal finance space. Kids get the simplest, most playful experience: complete tasks, earn coins and redeem rewards.';
+
+  @override
+  String get faqWhoSeesWhat => 'What does each member see?';
+
+  @override
+  String get faqWhoSeesWhatAnswer =>
+      'Each role sees what belongs to them: adults see everything, shared finances included; teens see their personal finances but not the adults\' shared expenses; and kids don\'t see finances at all — their world is tasks, points and rewards.';
+
+  @override
+  String get faqTasksBasics => 'How do tasks work?';
+
+  @override
+  String get faqTasksBasicsAnswer =>
+      'Create one-time or recurring tasks (daily, weekly, monthly), assign them to someone or leave them open for whoever grabs them. Every task pays XP and coins when completed, the calendar shows what\'s coming, and recurring ones reschedule themselves.';
+
+  @override
+  String get faqApprovals => 'How do task approvals work?';
+
+  @override
+  String faqApprovalsAnswer(String role) {
+    String _temp0 = intl.Intl.selectLogic(
+      role,
+      {
+        'parent':
+            'When a kid or teen marks a task as done, it waits for your approval: review it under Approvals and, once you confirm, the XP and coins are credited. Who needs approval is set in the household settings.',
+        'teen':
+            'Depending on how the home is set up, marking a task as done may leave it pending until an adult confirms it. Only then are your XP and coins credited.',
+        'child':
+            'When you mark a task as done, an adult reviews and confirms it. As soon as they approve, your XP and coins arrive!',
+        'other':
+            'Tasks completed by kids and teens may require an adult\'s confirmation before XP and coins are credited, depending on household settings.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get faqHowEarnXp => 'How do I earn XP and level up?';
+
+  @override
+  String get faqHowEarnXpAnswer =>
+      'Every completed task earns XP (harder ones pay more). XP levels you up and unlocks achievements: medals for milestones like completing 50 tasks. All your progress lives in Stats.';
 
   @override
   String get faqWhatCoins => 'What are Coins for?';
 
   @override
-  String get faqWhatCoinsAnswer =>
-      'Coins are the reward for completing tasks. You can use them in the rewards section to redeem vouchers created by your partner, like a romantic dinner or a day of relaxation.';
+  String faqWhatCoinsAnswer(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family':
+            'Coins are the home currency: kids earn them by completing tasks and spend them in the rewards store on prizes the adults created — an outing, screen time, their favorite meal.',
+        'other':
+            'The coins you earn completing tasks are redeemed in Rewards for vouchers your partner creates: a dinner, a massage, a surprise date. The idea is to reward each other for keeping the home running.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get faqWhatWeeklyDuels => 'What are Weekly Duels?';
 
   @override
   String get faqWhatWeeklyDuelsAnswer =>
-      'Each week a new XP duel begins. The member who completes more tasks and earns more experience points will be the winner. It\'s a fun way to motivate each other.';
+      'Every week a new XP duel against your partner starts, with a hidden score: you see your own progress, but the real result is revealed at Sunday\'s close. Whoever earned more takes the crown and a coin bonus.';
 
   @override
-  String get faqHowEarnXp => 'How do I earn XP?';
+  String get faqFamilyRanking => 'How does the family ranking work?';
 
   @override
-  String get faqHowEarnXpAnswer =>
-      'You earn XP every time you complete a task. Harder or more important tasks usually give more XP. Leveling up shows your progress within the household.';
+  String get faqFamilyRankingAnswer =>
+      'Every week the family competes in a healthy way: the ranking shows who earned the most XP completing tasks. At week\'s close there\'s a winner with a crown and bonus, and the weekly summary shows how everyone did.';
+
+  @override
+  String get faqWhatSpecialEvents => 'What is the weekly couple event?';
+
+  @override
+  String get faqWhatSpecialEventsAnswer =>
+      'Every week brings a challenge designed for the two of you: recreate your first date, cook together, a screen-free night. When you complete it, you both receive coins and the event is marked as done for both until the next one arrives.';
+
+  @override
+  String get faqContributionBalance => 'What is the contribution balance?';
+
+  @override
+  String get faqContributionBalanceAnswer =>
+      'It\'s the month\'s neutral snapshot: it combines completed tasks and shared expenses to show how much each person is contributing to the household. No winners or losers — it\'s for talking with data, not competing.';
+
+  @override
+  String get faqRewardsStore => 'How does the rewards store work?';
+
+  @override
+  String faqRewardsStoreAnswer(String role) {
+    String _temp0 = intl.Intl.selectLogic(
+      role,
+      {
+        'parent':
+            'You create the rewards (an outing, game time, their favorite dessert) and set a coin price. Kids redeem them with what they earned completing tasks, and you confirm the redemption.',
+        'other':
+            'The store holds the rewards created by the adults of your home. Earn coins by completing tasks and redeem them when you have enough: the reward stays pending until an adult confirms it.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get faqHowFinancesWork => 'How do finances work?';
 
   @override
-  String get faqHowFinancesWorkAnswer =>
-      'In HomeSync you can record real expenses and also anticipate expenses you haven\'t paid yet. Confirmed expenses are the ones that affect the actual balance between you. Pending ones serve as a reminder and projection, but they don\'t change the debt until they\'re paid.';
+  String faqHowFinancesWorkAnswer(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'friends':
+            'Every shared expense is split the way you configure it (equal parts or percentages). The balance shows who\'s up to date and who owes, and anyone can register a payment to settle up.',
+        'family':
+            'Shared finances are adult territory: household expenses are split among them. Teens get their own personal finance space, separate from the big accounts.',
+        'other':
+            'Record real expenses and also plan ones you haven\'t paid yet. Confirmed expenses affect the real balance between you; pending ones work as reminders and projections, but don\'t change the debt until paid.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get faqHowRecurringCount =>
@@ -3150,21 +4121,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faqHowRecurringCountAnswer =>
-      'A new recurring expense starts from its first valid date. If you create it before or on the due date, it may count this month. If you create it after, it starts on the next cycle. \"Your pending share\" shows only what corresponds to you according to the split, and \"Estimated balance\" uses your current balance minus that pending share.';
+      'A new recurring expense starts from its first valid date. If you create it before or on the due date, it can count this month; if you create it after, it starts next cycle. “Your pending share” shows only what corresponds to you per the split, and “Estimated balance” takes your current balance minus that pending share.';
 
   @override
-  String get faqWhatSpecialEvents => 'What are Special Events?';
+  String get faqWhoCanPay => 'Who can register a payment?';
 
   @override
-  String get faqWhatSpecialEventsAnswer =>
-      'Each week a couple challenge appears in the store. They\'re activities designed to strengthen the relationship. When you complete them, both receive Coins and unlock medals on their achievements profile.';
+  String get faqWhoCanPayAnswer =>
+      'Either side can register a shared payment, even on behalf of the other — handy when one pays and the other logs it. “Paid” and “Pending” always show the household total, so everyone sees the same picture.';
 
   @override
-  String get faqLevelsAndAchievements => 'Levels and achievements?';
+  String get faqSavingsGoals => 'How do savings goals work?';
 
   @override
-  String get faqLevelsAndAchievementsAnswer =>
-      'As you earn XP, you level up. In the statistics section you can see your achievements, which are medals for milestones reached, like completing 50 tasks or beating weekly challenges.';
+  String get faqSavingsGoalsAnswer =>
+      'Create a goal with a target amount (a trip, an emergency fund) and add contributions over time. Progress is crystal clear and, in shared homes, everyone can contribute to the same goal.';
+
+  @override
+  String get faqPremium => 'What\'s included in HomeSync Premium?';
+
+  @override
+  String get faqPremiumAnswer =>
+      'Premium activates for the whole home with a single purchase: animated premium mascots, exclusive theme colors and everything we keep adding. It\'s managed from Settings and only adults can purchase it.';
+
+  @override
+  String get faqCustomization => 'Can I customize the app?';
+
+  @override
+  String get faqCustomizationAnswer =>
+      'Yes: light, dark or system theme, primary color (with Premium), language (Spanish or English) and the currency used to display finances. All under Settings → Appearance.';
+
+  @override
+  String get faqNotifications => 'Which notifications will I get?';
+
+  @override
+  String get faqNotificationsAnswer =>
+      'Updates about your home: tasks assigned to you, expense news and pending approvals. Turn them on or off under Settings → Notifications.';
+
+  @override
+  String get faqAccountSafety => 'How do I keep my account and data safe?';
+
+  @override
+  String get faqAccountSafetyAnswer =>
+      'Your session is personal: sign out anytime from Settings. If you need a fresh start, “Reset data” clears the home\'s content, and “Delete my account” removes it permanently. Your data lives encrypted in the cloud and only your home\'s members see what\'s shared.';
 
   @override
   String get feedbackThanksBug => 'Thanks for reporting it!';
@@ -3257,6 +4256,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get membersRoleChild => 'Child';
+
+  @override
+  String get membersRoleFather => 'Father';
+
+  @override
+  String get membersRoleMother => 'Mother';
+
+  @override
+  String get membersRoleDad => 'Dad';
+
+  @override
+  String get membersRoleMom => 'Mom';
+
+  @override
+  String get membersRoleGuardianMale => 'Guardian';
+
+  @override
+  String get membersRoleGuardianFemale => 'Guardian';
+
+  @override
+  String get membersRoleSon => 'Son';
+
+  @override
+  String get membersRoleDaughter => 'Daughter';
 
   @override
   String get membersRoleParentGuardianDesc =>
@@ -3724,6 +4747,187 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coupleChallengeWeDidIt => 'We did it';
 
   @override
+  String get coupleChallengeDoneThisWeek => 'Completed this week!';
+
+  @override
+  String get coupleChallengeAlreadyDone =>
+      'You two already completed this week\'s challenge 💚';
+
+  @override
+  String tourStepLabel(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get tourWelcomeEyebrow => 'Welcome';
+
+  @override
+  String get tourCtaStart => 'Start';
+
+  @override
+  String get tourCtaNext => 'Next';
+
+  @override
+  String get tourCtaLater => 'Later';
+
+  @override
+  String get tourFinaleTitle => 'All set!';
+
+  @override
+  String get tourFinaleCta => 'Start using';
+
+  @override
+  String get tourCoupleWelcomeTitle => 'Your home, in 30 seconds';
+
+  @override
+  String get tourCoupleWelcomeBody =>
+      'A quick look at the essentials: tasks, coins, the duel and expenses. Short and sweet.';
+
+  @override
+  String tourCoupleWelcomeBodyNamed(String partnerName) {
+    return 'A quick look at the essentials to organize everything with $partnerName: tasks, coins, the duel and expenses.';
+  }
+
+  @override
+  String get tourTasksTitleHas => 'Do tasks, earn points';
+
+  @override
+  String get tourTasksBodyHas =>
+      'Tap ✓ to complete. Every task earns coins and XP just for you.';
+
+  @override
+  String get tourTasksTitleEmpty => 'Today at home is empty';
+
+  @override
+  String get tourTasksBodyEmpty =>
+      'Your daily tasks will live here. Schedule the first one now and watch it appear — or keep the tour going and do it later.';
+
+  @override
+  String get tourTasksCtaCreate => 'Schedule a task';
+
+  @override
+  String get tourBalanceTitle => 'The home\'s pulse';
+
+  @override
+  String tourBalanceBody(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'shared':
+            'You have an integrated economy: no debts between you here. You see what the home spent this month and, below, each one\'s points.',
+        'other':
+            'Here you see what you owe each other in shared expenses and, below, what each one earned. “Settle” squares things up in one tap.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tourBalanceBulletSettle => 'Settle → square up shared expenses';
+
+  @override
+  String get tourBalanceBulletMonth => 'Monthly spend → the home\'s pulse';
+
+  @override
+  String get tourBalanceBulletXp => 'XP → for the weekly duel';
+
+  @override
+  String get tourBalanceBulletCoins => 'Coins → to redeem rewards';
+
+  @override
+  String get tourDuelTitle => 'Weekly duel';
+
+  @override
+  String get tourDuelBody =>
+      'Every week you compete for XP with a hidden score. Sunday reveals the winner. Resets on Mondays.';
+
+  @override
+  String get tourRewardsTitle => 'Redeem your coins';
+
+  @override
+  String get tourRewardsBody =>
+      'Rewards live here: movie night, a massage, a day off. You two build the store and treat each other.';
+
+  @override
+  String tourExpensesTitle(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'shared': 'The home\'s finances',
+        'other': 'Split your expenses',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tourExpensesBody(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'shared':
+            'Record the home\'s expenses here: recurring bills, purchases and savings goals, all in one place.',
+        'other':
+            'Add home expenses and the app calculates who owes whom, using the split you configured.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tourCoupleFinaleBody =>
+      'Enjoy your home. If anything comes up, the FAQ adapts to you both.';
+
+  @override
+  String get tourFamilyWelcomeTitle => 'Your family, organized';
+
+  @override
+  String get tourFamilyWelcomeBody =>
+      'A one-minute look at how to manage the whole family\'s tasks, points and rewards.';
+
+  @override
+  String get tourFamilyTasksTitleHas => 'The family\'s tasks';
+
+  @override
+  String tourFamilyTasksBody(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'approvals':
+            'Assign tasks to everyone. When the kids complete theirs, they come to you for approval — only then do they collect their coins.',
+        'other':
+            'Assign tasks to everyone and follow the whole family\'s progress from here.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tourFamilyFinanceTitle => 'Expenses, adults only';
+
+  @override
+  String get tourFamilyFinanceBody =>
+      'The home\'s shared expenses are managed here, between adults only. Kids never see them.';
+
+  @override
+  String get tourFamilyRankingTitle => 'Weekly ranking';
+
+  @override
+  String get tourFamilyRankingBody =>
+      'Every week, whoever earns the most XP completing tasks takes the crown. Healthy family competition.';
+
+  @override
+  String get tourFamilyRewardsTitle => 'The rewards store';
+
+  @override
+  String get tourFamilyRewardsBody =>
+      'Create rewards (an outing, screen time, their favorite dessert) and the kids redeem them with the coins they earn.';
+
+  @override
+  String get tourFamilyFinaleBody =>
+      'Go organize the troop. The FAQ adapts to your role if you need help.';
+
+  @override
   String get familyRewardsCoinsLabel => 'coins';
 
   @override
@@ -3795,12 +4999,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyWinnerTitle => 'Weekly winner';
 
   @override
-  String get weeklyWinnerSubtitle =>
-      'This is how the weekly duel ended between you.';
+  String weeklyWinnerHeadline(String name) {
+    return '$name won the week';
+  }
+
+  @override
+  String get weeklyWinnerSubtitle => 'This is how the week closed between you.';
 
   @override
   String get weeklyWinnerCardSubtitle =>
-      'Finished ahead in XP and took the weekly close.';
+      'A strong close: more consistency, more points, and more rhythm.';
 
   @override
   String get weeklyWinnerCoinsReward => '+20 coins';
@@ -4096,6 +5304,79 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get householdSocialHubRoleFallback =>
       'Roles and rewards ready to organize the week.';
+
+  @override
+  String get householdSocialHubRoleMember => 'Member';
+
+  @override
+  String get contributionBalanceTitle => 'This month\'s contribution';
+
+  @override
+  String get contributionBalanceSubtitle =>
+      'How things are split across the place.';
+
+  @override
+  String get contributionBalanceEmptyTitle => 'No contributions yet this month';
+
+  @override
+  String get contributionBalanceEmptyBody =>
+      'Once you complete tasks or add shared expenses, you\'ll see how the split looks here.';
+
+  @override
+  String contributionBalanceTasksLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks',
+      one: '$count task',
+      zero: 'No tasks',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get contributionBalanceFootnote =>
+      'No winners here: this is just to check we\'re even.';
+
+  @override
+  String get householdBillsTitle => 'Household bills';
+
+  @override
+  String get householdBillsSubtitle =>
+      'Fixed expenses split between everyone each month.';
+
+  @override
+  String get householdBillsEmptyTitle => 'No fixed bills yet';
+
+  @override
+  String get householdBillsEmptyBody =>
+      'Add rent, electricity or internet and they\'ll split automatically each month.';
+
+  @override
+  String get householdBillsAddButton => 'Add household bill';
+
+  @override
+  String get householdBillsPremiumBody =>
+      'Fixed bills that split automatically every month are part of Premium.';
+
+  @override
+  String get householdBillsPremiumUnlock => 'Unlock with Premium';
+
+  @override
+  String householdBillsPerMonth(String amount) {
+    return '$amount / mo';
+  }
+
+  @override
+  String householdBillsDayOfMonth(int day) {
+    return 'Day $day';
+  }
+
+  @override
+  String get householdSettleUpTitle => 'Settle up';
+
+  @override
+  String get householdSettleUpSubtitle => 'Who owes who, so everyone\'s even.';
 
   @override
   String get householdSocialHubStoreButton => 'Store';
@@ -4424,6 +5705,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get taskTemplatePlanHouseholdTasks => 'Plan household tasks';
 
   @override
+  String get taskTemplateCleanMicrowave => 'Clean the microwave';
+
+  @override
+  String get taskTemplateWashCar => 'Wash the car';
+
+  @override
+  String get taskTemplateCleanTrashBins => 'Clean the trash bins';
+
+  @override
+  String get taskTemplatePackSchoolBag => 'Pack the school bag';
+
+  @override
+  String get taskTemplateGivePetWater => 'Refresh the pet\'s water';
+
+  @override
   String addTaskOptionsAddedSnack(String title) {
     return '\"$title\" added';
   }
@@ -4576,7 +5872,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get expensesNewItemsDetectedTitle => 'New items detected';
+  String get expensesNewItemsDetectedTitle => 'New for your list';
 
   @override
   String get expensesNewItemsDetectedSubtitle =>
@@ -4757,20 +6053,50 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String savingsGoalSavedOf(String amount) {
+    return 'saved of $amount';
+  }
+
+  @override
   String get savingsGoalContributeAction => 'Add funds';
 
   @override
   String get savingsNewGoalTitle => 'New Goal';
 
   @override
-  String get savingsNewGoalSubtitle =>
-      'Define what you want to achieve and how much you need to save to make it happen.';
+  String savingsNewGoalSubtitle(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'solo':
+            'Define what you want to achieve and how much you need to save to make it happen.',
+        'family':
+            'Define what your family wants to achieve and how much you need to save together.',
+        'friends':
+            'Define what you want to achieve and how much you need to save together.',
+        'other':
+            'Define what you want to achieve together and how much you need to save to make it happen.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get savingsSectionDetail => 'DETAILS';
 
   @override
-  String get savingsSectionDetailTitle => 'What you want to reach';
+  String savingsSectionDetailTitle(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'solo': 'What you want to reach',
+        'family': 'What your family wants to reach',
+        'friends': 'What you want to reach',
+        'other': 'What you want to reach',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get savingsSectionPersonalization => 'PERSONALIZATION';
@@ -4798,6 +6124,141 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savingsConfirmContribution => 'Confirm Contribution';
+
+  @override
+  String get savingsTotalLabel => 'Total Saved';
+
+  @override
+  String get savingsStatGoals => 'Goals';
+
+  @override
+  String get savingsStatCompleted => 'Completed';
+
+  @override
+  String get savingsHistoryTitle => 'CONTRIBUTION HISTORY';
+
+  @override
+  String get savingsCompletedGoalsHistoryTitle => 'Completed goals';
+
+  @override
+  String savingsContributionLine(String name, String amount) {
+    return '$name added $amount';
+  }
+
+  @override
+  String savingsSharedContributionLine(String names, String amount) {
+    return '$names added $amount';
+  }
+
+  @override
+  String get savingsContributionSomeone => 'Someone';
+
+  @override
+  String get savingsCompletedBadge => 'Reached!';
+
+  @override
+  String savingsDeadlineChip(String date) {
+    return 'By $date';
+  }
+
+  @override
+  String get savingsEditAction => 'Edit goal';
+
+  @override
+  String get savingsDeleteAction => 'Delete';
+
+  @override
+  String get savingsDeleteConfirmTitle => 'Delete goal?';
+
+  @override
+  String savingsDeleteConfirmBody(String title) {
+    return 'The record for \"$title\" will be lost.';
+  }
+
+  @override
+  String get savingsArchiveAction => 'Archive';
+
+  @override
+  String get savingsArchiveConfirmTitle => 'Archive completed goal?';
+
+  @override
+  String get savingsArchiveConfirmBody =>
+      'The goal will be saved as completed and stop showing in the list.';
+
+  @override
+  String get savingsEditGoalTitle => 'Edit Goal';
+
+  @override
+  String get savingsSaveChangesAction => 'Save changes';
+
+  @override
+  String get savingsContributeSplitTitle => 'HOW TO LOG THIS CONTRIBUTION?';
+
+  @override
+  String get savingsContributeSoloLabel => 'Just me';
+
+  @override
+  String get savingsContributeSoloDesc =>
+      'Comes out of your pocket, like a gift.';
+
+  @override
+  String savingsContributeSharedLabel(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family': 'As a family',
+        'friends': 'Everyone',
+        'solo': 'Everyone',
+        'other': 'As a couple',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String savingsContributeSharedDesc(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family': 'Split among the household adults.',
+        'friends': 'Split among housemates.',
+        'solo': 'Split per the household economy.',
+        'other': 'Split between you and your partner.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savingsNoteLabel => 'Note (optional)';
+
+  @override
+  String get savingsNoteHint => 'What is this contribution for?';
+
+  @override
+  String get savingsTargetDateLabel => 'Target date (optional)';
+
+  @override
+  String get savingsTargetDateClear => 'No deadline';
+
+  @override
+  String savingsSuggesterMessage(String amount, String percent, String goal) {
+    return 'Based on your plan, you could save $amount extra this month. That would advance your \"$goal\" goal by $percent%!';
+  }
+
+  @override
+  String get savingsSuggesterCta => 'Contribute now';
+
+  @override
+  String get savingsCompletedCelebrationTitle => 'Goal reached! 🎉';
+
+  @override
+  String savingsCompletedCelebrationBody(String title) {
+    return 'You saved it all for \"$title\". Congrats!';
+  }
+
+  @override
+  String get savingsCelebrationDismiss => 'Awesome!';
 
   @override
   String get achievementsBadgesSection => 'Your Badges';
@@ -4867,6 +6328,53 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get achievementsDreamArchitectsDesc =>
       'You designed your shared goals list.';
+
+  @override
+  String get achievementsSoloMilestonesSection => 'Your milestones';
+
+  @override
+  String get achievementsSoloFirstStepTitle => 'First step';
+
+  @override
+  String get achievementsSoloFirstStepDesc =>
+      'You completed your first task in your space.';
+
+  @override
+  String get achievementsSoloRoutineTitle => 'Routine in motion';
+
+  @override
+  String get achievementsSoloRoutineDesc => 'You completed 50 personal tasks.';
+
+  @override
+  String get achievementsSoloHomeClearTitle => 'Clearer home';
+
+  @override
+  String get achievementsSoloHomeClearDesc =>
+      'You reached 5000 XP while building your rhythm.';
+
+  @override
+  String get achievementsSoloNextSection => 'Next milestones';
+
+  @override
+  String get achievementsSoloWeekTitle => 'Active week';
+
+  @override
+  String get achievementsSoloWeekDesc =>
+      'You sustained several actions in your home.';
+
+  @override
+  String get achievementsSoloRhythmTitle => 'Own rhythm';
+
+  @override
+  String get achievementsSoloRhythmDesc =>
+      'Your routine is starting to have continuity.';
+
+  @override
+  String get achievementsSoloOwnSpaceTitle => 'Own space';
+
+  @override
+  String get achievementsSoloOwnSpaceDesc =>
+      'Your personal progress already has identity.';
 
   @override
   String get scheduleTitle => 'Schedule task';
@@ -5064,10 +6572,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get avatarPickerCustomName => 'Custom';
 
   @override
+  String get avatarPickerDeleteCustom => 'Delete custom avatar';
+
+  @override
+  String get avatarPickerDeleteCustomTitle => 'Delete avatar?';
+
+  @override
+  String get avatarPickerDeleteCustomBody =>
+      'This custom avatar will be deleted. If you\'re using it, we\'ll switch you back to the basic avatar.';
+
+  @override
+  String get avatarPickerCustomDeleted => 'Custom avatar deleted';
+
+  @override
+  String avatarPickerCustomDeleteError(String error) {
+    return 'Could not delete avatar: $error';
+  }
+
+  @override
   String get avatarPickerCreateCustom => 'Create custom avatar (1 per month)';
 
   @override
   String get avatarPickerUnlockCustom => 'Unlock custom avatar';
+
+  @override
+  String get avatarPickerAiCardTitle => 'Your AI avatar';
+
+  @override
+  String get avatarPickerAiCardBody =>
+      'Turn a photo into an illustrated HomeSync-style avatar. You get 1 creation per month.';
+
+  @override
+  String get avatarPickerAiCreateButton => 'Create my avatar';
+
+  @override
+  String avatarPickerAiUsedThisMonth(String date) {
+    return 'You already created this month\'s avatar. You can create a new one on $date.';
+  }
 
   @override
   String get avatarPickerGooglePhotoTitle => 'Google photo';
@@ -6120,4 +7661,182 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get rewardTemplateSpecialDessertDescription =>
       'Pick a favorite dessert for after dinner.';
+
+  @override
+  String get errorGeneric => 'Something went wrong. Try again in a moment.';
+
+  @override
+  String get errorOffline => 'No connection. Check your network and try again.';
+
+  @override
+  String get errorTooManyRequests =>
+      'Too many requests. Try again in a moment.';
+
+  @override
+  String get errorServerUnreachable =>
+      'We couldn\'t reach the server. Check your network.';
+
+  @override
+  String get errorTimeout => 'The operation took too long. Try again.';
+
+  @override
+  String get errorNetworkCheckConnection =>
+      'Network error: check your connection';
+
+  @override
+  String get errorUnexpected => 'An unexpected error occurred';
+
+  @override
+  String get errorOfflineQueued => 'You\'re offline. Action saved for later.';
+
+  @override
+  String get errorNotAuthenticated => 'Not signed in';
+
+  @override
+  String get errorHouseholdNotFound => 'Household not found';
+
+  @override
+  String get avatarErrorImageTooLarge =>
+      'That image is too large. Try another photo.';
+
+  @override
+  String get avatarErrorSessionExpired =>
+      'Session expired. Please sign in again.';
+
+  @override
+  String get avatarErrorTimeout =>
+      'Generation took too long. Try again in a moment.';
+
+  @override
+  String get avatarErrorMonthlyLimit =>
+      'You already used this month\'s avatar creation. You can create another one next month.';
+
+  @override
+  String get avatarErrorPremiumRequired => 'This feature is for Premium users.';
+
+  @override
+  String get avatarErrorCreateFailed =>
+      'Couldn\'t create the avatar. Try again.';
+
+  @override
+  String get avatarErrorInvalidResult =>
+      'The generator didn\'t return a valid avatar.';
+
+  @override
+  String get avatarErrorDeleteFailed =>
+      'Couldn\'t delete the avatar. Try again.';
+
+  @override
+  String get avatarErrorSaveFailed => 'Couldn\'t save the generated avatar.';
+
+  @override
+  String editTaskDeleteBody(String title) {
+    return '\"$title\" will be deleted and this can\'t be undone.';
+  }
+
+  @override
+  String get notifTaskAssignedTitle => 'New task assigned';
+
+  @override
+  String notifTaskAssignedBody(String actor, String task) {
+    return '$actor assigned you the task: $task';
+  }
+
+  @override
+  String get notifTaskCompletedTitle => 'Task completed';
+
+  @override
+  String notifTaskCompletedBody(String actor, String task) {
+    return '$actor completed: $task';
+  }
+
+  @override
+  String get notifTaskPendingApprovalTitle => 'Task awaiting approval';
+
+  @override
+  String notifTaskPendingApprovalBody(String actor, String task) {
+    return '$actor completed \"$task\"';
+  }
+
+  @override
+  String get notifTaskApprovedTitle => 'Task approved';
+
+  @override
+  String notifTaskApprovedBody(String task, int coins) {
+    return '\"$task\" was approved. You earned $coins coins.';
+  }
+
+  @override
+  String get notifTaskRejectedTitle => 'Task not approved';
+
+  @override
+  String notifTaskRejectedBody(String task) {
+    return 'Your task \"$task\" needs some changes.';
+  }
+
+  @override
+  String get notifExpenseAddedTitle => 'New transaction';
+
+  @override
+  String notifExpenseAddedBody(
+      String actor, String kind, String title, String amount) {
+    String _temp0 = intl.Intl.selectLogic(
+      kind,
+      {
+        'groceries': 'shopped at',
+        'other': 'spent on',
+      },
+    );
+    return '$actor $_temp0 $title ($amount)';
+  }
+
+  @override
+  String get notifSettlementTitle => 'Debt settled!';
+
+  @override
+  String notifSettlementBody(String actor, String amount) {
+    return '$actor settled their debt of $amount';
+  }
+
+  @override
+  String get notifWeeklySummaryTitle => 'Your weekly summary is ready';
+
+  @override
+  String get notifWeeklySummaryBody =>
+      'See how the household\'s week went: completion, MVP and spending.';
+
+  @override
+  String notifPlannedUpcomingTitle(String title) {
+    return 'Upcoming payment: $title';
+  }
+
+  @override
+  String notifPlannedUpcomingBody(String date, String amount) {
+    return 'Due $date - $amount';
+  }
+
+  @override
+  String notifPlannedDueTitle(String title) {
+    return 'Due today: $title';
+  }
+
+  @override
+  String notifPlannedDueBody(String amount) {
+    return 'Log it from Finances once you pay it - $amount';
+  }
+
+  @override
+  String get financeOnlyConfirmTitle => 'Confirm change';
+
+  @override
+  String financeOnlyConfirmBody(String action) {
+    String _temp0 = intl.Intl.selectLogic(
+      action,
+      {
+        'enable': 'enable',
+        'other': 'disable',
+      },
+    );
+    return 'When you $_temp0 \"Finance only\" mode, ALL household members will see only finance features (no tasks, shopping, etc.). This setting applies to the whole household.';
+  }
 }

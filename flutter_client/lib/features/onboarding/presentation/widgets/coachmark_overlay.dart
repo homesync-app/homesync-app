@@ -7,11 +7,16 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
 import 'package:homesync_client/features/onboarding/presentation/widgets/spotlight_painter.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 /// Padding around the target rect when carving the spotlight hole.
 const _kSpotlightPadding = 12.0;
@@ -66,9 +71,10 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
     final tourState = ref.watch(coupleHomeTourControllerProvider);
     if (!tourState.isActive) return const SizedBox.shrink();
 
+    final t = AppLocalizations.of(context);
     final steps = ref
         .read(coupleHomeTourControllerProvider.notifier)
-        .stepsFor(hasTasks: tourState.hasTasks);
+        .stepsFor(t, tourState.context);
 
     if (tourState.currentStep >= steps.length) {
       return const SizedBox.shrink();
@@ -201,6 +207,24 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
     );
   }
 
+  /// Despacha el CTA primario según la acción del paso. [createTask] abre el
+  /// flujo real de creación y, al cerrarse el sheet, la guía avanza sola —
+  /// la tarea recién creada queda visible detrás del siguiente paso.
+  Future<void> _handlePrimary(CoachmarkStep step) async {
+    final t = AppLocalizations.of(context);
+    final controller = ref.read(coupleHomeTourControllerProvider.notifier);
+    switch (step.primaryAction) {
+      case CoachmarkAction.next:
+        controller.next(t);
+      case CoachmarkAction.createTask:
+        AppHaptics.tap();
+        final members = ref.read(householdMembersProvider).value ?? const [];
+        await AddTaskOptionsSheet.show(context, members);
+        if (!mounted) return;
+        controller.next(AppLocalizations.of(context));
+    }
+  }
+
   List<Widget> _buildStepContent(
     BuildContext context,
     CoachmarkStep step,
@@ -208,6 +232,10 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
     int totalSteps,
     int currentStep,
   ) {
+    void onSecondary() => ref
+        .read(coupleHomeTourControllerProvider.notifier)
+        .next(AppLocalizations.of(context));
+
     switch (step.kind) {
       case CoachmarkStepKind.welcomeModal:
       case CoachmarkStepKind.infoModal:
@@ -217,8 +245,7 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
             child: _ModalCard(
               key: ValueKey('modal_$currentStep'),
               step: step,
-              onPrimary: () =>
-                  ref.read(coupleHomeTourControllerProvider.notifier).next(),
+              onPrimary: () => _handlePrimary(step),
               isFinale: step.kind == CoachmarkStepKind.finale,
               isWelcome: step.kind == CoachmarkStepKind.welcomeModal,
             ),
@@ -230,8 +257,8 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
             key: ValueKey('tooltip_$currentStep'),
             step: step,
             targetRect: targetRect,
-            onPrimary: () =>
-                ref.read(coupleHomeTourControllerProvider.notifier).next(),
+            onPrimary: () => _handlePrimary(step),
+            onSecondary: step.secondaryCta != null ? onSecondary : null,
           ),
         ];
     }
@@ -363,7 +390,7 @@ class _ModalIllustration extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.32),
@@ -553,12 +580,14 @@ class _SpotlightTooltip extends StatelessWidget {
   final CoachmarkStep step;
   final Rect? targetRect;
   final VoidCallback onPrimary;
+  final VoidCallback? onSecondary;
 
   const _SpotlightTooltip({
     super.key,
     required this.step,
     required this.targetRect,
     required this.onPrimary,
+    this.onSecondary,
   });
 
   @override
@@ -571,7 +600,11 @@ class _SpotlightTooltip extends StatelessWidget {
     final rect = targetRect;
     final placement = step.placement;
 
-    final tooltip = _TooltipCard(step: step, onPrimary: onPrimary);
+    final tooltip = _TooltipCard(
+      step: step,
+      onPrimary: onPrimary,
+      onSecondary: onSecondary,
+    );
 
     // When target is missing, just center the tooltip.
     if (rect == null) {
@@ -617,7 +650,12 @@ class _SpotlightTooltip extends StatelessWidget {
 class _TooltipCard extends StatelessWidget {
   final CoachmarkStep step;
   final VoidCallback onPrimary;
-  const _TooltipCard({required this.step, required this.onPrimary});
+  final VoidCallback? onSecondary;
+  const _TooltipCard({
+    required this.step,
+    required this.onPrimary,
+    this.onSecondary,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -680,19 +718,44 @@ class _TooltipCard extends StatelessWidget {
                   const SizedBox(height: 14),
                   ...step.bullets.map(
                     (b) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                       child: _BulletRow(bullet: b),
                     ),
                   ),
                 ],
                 const SizedBox(height: 18),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: _PrimaryCta(
-                    label: step.primaryCta,
-                    onTap: onPrimary,
-                    compact: true,
-                  ),
+                // Wrap (not Row) so a long primary label drops to its own line
+                // on narrow screens instead of overflowing the card width.
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  runSpacing: 8,
+                  children: [
+                    if (onSecondary != null && step.secondaryCta != null)
+                      TextButton(
+                        onPressed: onSecondary,
+                        style: TextButton.styleFrom(
+                          foregroundColor: theme.textMuted,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                        ),
+                        child: Text(
+                          step.secondaryCta!,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    _PrimaryCta(
+                      label: step.primaryCta,
+                      onTap: onPrimary,
+                      compact: true,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -788,19 +851,11 @@ class _PrimaryCta extends StatelessWidget {
   Widget build(BuildContext context) {
     final padH = compact ? 22.0 : 28.0;
     final padV = compact ? 13.0 : 16.0;
-    // Compact CTAs live inside a ClipRRect-wrapped tooltip card. Any drop
-    // shadow on the button would be sliced where it meets the card's clip
-    // path. The gradient + frosted card already provide enough elevation,
-    // so we skip shadows in compact mode.
-    final shadows = compact
-        ? const <BoxShadow>[]
-        : <BoxShadow>[
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.42),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ];
+    // Every CTA here lives inside a ClipRRect-wrapped card (both the modal and
+    // the spotlight tooltip). Any drop shadow on the button would be sliced
+    // where it meets the card's clip path, leaving an ugly clipped smudge in
+    // the corners. The gradient + frosted card already provide enough
+    // elevation, so the button carries no shadow of its own.
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -814,7 +869,6 @@ class _PrimaryCta extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(AppRadii.pill),
-            boxShadow: shadows,
           ),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
@@ -888,7 +942,10 @@ class _ProgressDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.32),
         borderRadius: BorderRadius.circular(AppRadii.pill),

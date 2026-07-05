@@ -1,0 +1,39 @@
+name: Edge Functions Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "supabase/functions/**"
+      - ".github/workflows/edge_functions.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "supabase/functions/**"
+      - ".github/workflows/edge_functions.yml"
+  workflow_dispatch:
+
+jobs:
+  deno-test:
+    name: Deno test & lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Test scan-receipt parser
+        run: |
+          cd supabase/functions
+          deno test --no-check=remote scan-receipt/parser.test.ts
+
+      - name: Lint pure modules
+        run: |
+          cd supabase/functions
+          deno lint scan-receipt/parser.ts scan-receipt/parser.test.ts

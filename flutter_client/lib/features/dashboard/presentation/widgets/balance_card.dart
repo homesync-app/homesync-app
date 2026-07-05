@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -50,6 +53,27 @@ class BalanceCard extends ConsumerStatefulWidget {
 }
 
 class _BalanceCardState extends ConsumerState<BalanceCard> {
+  late int _coinsAnimationStart;
+  late int _xpAnimationStart;
+
+  @override
+  void initState() {
+    super.initState();
+    _coinsAnimationStart = widget.coins;
+    _xpAnimationStart = widget.xp;
+  }
+
+  @override
+  void didUpdateWidget(covariant BalanceCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.coins != widget.coins) {
+      _coinsAnimationStart = oldWidget.coins;
+    }
+    if (oldWidget.xp != widget.xp) {
+      _xpAnimationStart = oldWidget.xp;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final balance = widget.userBalance ?? 0.0;
@@ -134,8 +158,11 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
+                        // Integrated economy: the green eyebrow is the label
+                        // ("Gastos del hogar"); the amount stands alone below so
+                        // it doesn't crowd the home badge on the right.
                         integrated
-                            ? t.balanceCardIntegratedTitle
+                            ? t.balanceCardIntegratedSubtitle
                             : (widget.settlementJustCompleted || !isBalanced
                                 ? balanceMessage
                                 : (widget.balancedLabel ??
@@ -163,7 +190,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              _AnimatedDigitCounter(
+                              AnimatedAmount(
                                 value: widget.monthlySpent!,
                                 locale: currency.locale,
                                 style: TextStyle(
@@ -174,27 +201,16 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                                   letterSpacing: 0,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 2),
-                                child: Text(
-                                  t.balanceCardIntegratedSubtitle.toLowerCase(),
-                                  style: TextStyle(
-                                    color: theme.textSecondary
-                                        .withValues(alpha: 0.82),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
                             ],
                           )
                         else
+                          // No spend value yet: show a neutral amount instead
+                          // of repeating the "Gastos del hogar" eyebrow.
                           Text(
-                            t.balanceCardIntegratedSubtitle,
+                            currency.inputPrefix(),
                             style: TextStyle(
                               color: theme.textPrimary.withValues(alpha: 0.94),
-                              fontSize: widget.compact ? 18 : 20,
+                              fontSize: widget.compact ? 29 : 31,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0,
                             ),
@@ -217,7 +233,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
-                            _AnimatedDigitCounter(
+                            AnimatedAmount(
                               value: balance.abs(),
                               locale: currency.locale,
                               style: TextStyle(
@@ -250,7 +266,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                       ),
                       decoration: BoxDecoration(
                         color: theme.surface,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
                         border: Border.all(
                           color: statusColor.withValues(alpha: 0.14),
                           width: 1.1,
@@ -328,6 +344,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                       icon: Icons.star_rounded,
                       label: 'XP',
                       value: widget.xp,
+                      beginValue: _xpAnimationStart,
                       color: const Color(0xFFE8943A),
                       subdued: isBalanced && widget.xp == 0,
                     ),
@@ -344,6 +361,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                       icon: Icons.monetization_on_rounded,
                       label: 'coins',
                       value: widget.coins,
+                      beginValue: _coinsAnimationStart,
                       color: AppColors.sage,
                       subdued: isBalanced && widget.coins == 0,
                     ),
@@ -354,7 +372,10 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
           ],
         ),
       ),
-    ).animateEntrance(delay: 200);
+      // Entrance animation is owned by the caller (home_couple_view wraps the
+      // card in animateEntrance); animating here too produced a doubled,
+      // heavier fade+slide.
+    );
   }
 
   Widget _buildInlineMetric(
@@ -362,38 +383,65 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
     required IconData icon,
     required String label,
     required int value,
+    required int beginValue,
     required Color color,
     bool subdued = false,
   }) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 30,
-          height: 30,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: subdued ? 0.045 : 0.07),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            icon,
-            color: subdued ? color.withValues(alpha: 0.82) : color,
-            size: 14.5,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Flexible(
-          child: TweenAnimationBuilder<double>(
-            tween: Tween<double>(
-              begin: value.toDouble(),
-              end: value.toDouble(),
+    final delta = value - beginValue;
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(
+        begin: beginValue.toDouble(),
+        end: value.toDouble(),
+      ),
+      duration: const Duration(milliseconds: 620),
+      curve: Curves.easeOutCubic,
+      onEnd: () {
+        if (!mounted) return;
+        if (label == 'XP' && _xpAnimationStart != value) {
+          setState(() => _xpAnimationStart = value);
+        }
+        if (label != 'XP' && _coinsAnimationStart != value) {
+          setState(() => _coinsAnimationStart = value);
+        }
+      },
+      builder: (context, animatedValue, child) {
+        // Emphasis swells 0→1→0 while the value is counting so the metric
+        // visibly "lights up" during the change and settles back when done.
+        final progress = delta == 0
+            ? 1.0
+            : ((animatedValue - beginValue) / delta).clamp(0.0, 1.0);
+        final emphasis = delta == 0 ? 0.0 : math.sin(progress * math.pi);
+        final baseNumberColor = subdued
+            ? theme.textPrimary.withValues(alpha: 0.86)
+            : theme.textPrimary;
+        final numberColor =
+            Color.lerp(baseNumberColor, color, emphasis * 0.85)!;
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Transform.scale(
+              scale: 1 + 0.14 * emphasis,
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: color.withValues(
+                    alpha: (subdued ? 0.045 : 0.07) + 0.11 * emphasis,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: subdued ? color.withValues(alpha: 0.82) : color,
+                  size: 14.5,
+                ),
+              ),
             ),
-            duration: const Duration(milliseconds: 520),
-            curve: Curves.easeOutCubic,
-            builder: (context, animatedValue, child) {
-              return RichText(
+            const SizedBox(width: 8),
+            Flexible(
+              child: RichText(
                 text: TextSpan(
                   children: [
                     TextSpan(
@@ -401,12 +449,11 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                         animatedValue.round(),
                       ),
                       style: TextStyle(
-                        color: subdued
-                            ? theme.textPrimary.withValues(alpha: 0.86)
-                            : theme.textPrimary,
+                        color: numberColor,
                         fontSize: 14.5,
                         fontWeight: subdued ? FontWeight.w700 : FontWeight.w800,
                         letterSpacing: 0,
+                        fontFeatures: kTabularFigures,
                       ),
                     ),
                     TextSpan(
@@ -424,11 +471,11 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                     ),
                   ],
                 ),
-              );
-            },
-          ),
-        ),
-      ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -491,33 +538,6 @@ class _IntegratedEconomyBadge extends StatelessWidget {
         color: AppColors.sage,
         size: 22,
       ),
-    );
-  }
-}
-
-class _AnimatedDigitCounter extends StatelessWidget {
-  final double value;
-  final String locale;
-  final TextStyle style;
-
-  const _AnimatedDigitCounter({
-    required this.value,
-    required this.locale,
-    required this.style,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: value),
-      duration: const Duration(milliseconds: 700),
-      curve: Curves.easeOutExpo,
-      builder: (context, val, child) {
-        final formatted = NumberFormat.decimalPattern(locale).format(
-          val.round(),
-        );
-        return Text(formatted, style: style);
-      },
     );
   }
 }

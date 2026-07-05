@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HomeSync · Iconos nanobanana (prueba real)</title>
+<style>
+  :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  body { margin: 0; background: #FFFCF9; color: #4A4443; }
+  header { padding: 24px 28px 8px; }
+  header h1 { margin: 0 0 4px; font-size: 20px; }
+  header p { margin: 0; color: #8E8480; font-size: 14px; }
+  .panel { padding: 20px 28px 36px; }
+  .panel.dark { background: #1B1716; color: #F8FAFC; }
+  .panel.dark .name { color: #B2AAA6; }
+  .panel.dark .card { background: #2F2927; border-color: #342E2B; }
+  .panel.dark .listrow { background: #2F2927; border-color: #342E2B; }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: #8E8480; margin: 0 0 16px; }
+  .twocol { display: flex; gap: 40px; flex-wrap: wrap; }
+  .grid { display: flex; flex-wrap: wrap; gap: 16px; }
+  .card {
+    background: #FFF0EA; border: 1px solid #F7E2D6; border-radius: 24px;
+    padding: 16px; width: 140px; display: flex; flex-direction: column;
+    align-items: center; gap: 12px;
+  }
+  .sizes { display: flex; align-items: flex-end; gap: 12px; height: 64px; }
+  .sizes img { display: block; image-rendering: auto; }
+  .name { font-size: 13px; }
+  /* lista estilo HomeSync */
+  .listrow {
+    display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+    border-radius: 18px; background: #fff; border: 1px solid #F0E4D9;
+    margin-bottom: 10px; max-width: 380px;
+  }
+  .listrow .iconwrap {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: #FFF0EA; display: flex; align-items: center; justify-content: center;
+  }
+  .listrow .iconwrap img { width: 34px; height: 34px; }
+  .listrow .label { font-size: 15px; font-weight: 600; }
+  .listrow .qty { margin-left: auto; color: #B2AAA6; font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Iconos nanobanana — prueba real en la app</h1>
+  <p>PNG generados con gemini-3-pro-image, recortados y normalizados a 192×192. Mismos colores Warm Scandi de HomeSync.</p>
+</header>
+
+<div class="panel">
+  <div class="twocol">
+    <div>
+      <h2>Tamaños (24 · 34 · 48 · 64 px)</h2>
+      <div class="grid" id="grid-light"></div>
+    </div>
+    <div>
+      <h2>Como en la lista de compras</h2>
+      <div id="list-light"></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel dark">
+  <div class="twocol">
+    <div>
+      <h2>Modo oscuro</h2>
+      <div class="grid" id="grid-dark"></div>
+    </div>
+    <div>
+      <h2>Lista (oscuro)</h2>
+      <div id="list-dark"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const icons = [
+    ["png/bread.png", "Pan", "x1"],
+    ["png/milk.png", "Leche", "2 L"],
+    ["png/carrot.png", "Zanahorias", "500 g"],
+    ["png/apple.png", "Manzanas", "1 kg"],
+  ];
+  function card(file, name) {
+    return `<div class="card">
+      <div class="sizes">
+        <img src="${file}" width="24" height="24" alt="">
+        <img src="${file}" width="34" height="34" alt="">
+        <img src="${file}" width="48" height="48" alt="">
+        <img src="${file}" width="64" height="64" alt="">
+      </div>
+      <div class="name">${name}</div>
+    </div>`;
+  }
+  function row(file, name, qty) {
+    return `<div class="listrow">
+      <span class="iconwrap"><img src="${file}" alt=""></span>
+      <span class="label">${name}</span>
+      <span class="qty">${qty}</span>
+    </div>`;
+  }
+  document.getElementById("grid-light").innerHTML = icons.map(i => card(i[0], i[1])).join("");
+  document.getElementById("grid-dark").innerHTML = icons.map(i => card(i[0], i[1])).join("");
+  document.getElementById("list-light").innerHTML = icons.map(i => row(i[0], i[1], i[2])).join("");
+  document.getElementById("list-dark").innerHTML = icons.map(i => row(i[0], i[1], i[2])).join("");
+</script>
+</body>
+</html>

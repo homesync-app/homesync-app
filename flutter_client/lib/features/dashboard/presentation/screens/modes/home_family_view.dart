@@ -1,21 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_activity_feed_item.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/home_editorial_header.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/home_header_avatar.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
+import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
+import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/features/shopping/presentation/widgets/shopping_icon.dart';
+import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_feed_entry_motion.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
-import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 import 'family_finance_section.dart';
 import 'family_tasks_section.dart';
@@ -37,11 +45,77 @@ class HomeFamilyView extends ConsumerStatefulWidget {
 }
 
 class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
+  final GlobalKey _tasksKey = GlobalKey(debugLabel: 'family_tour_tasks');
+  final GlobalKey _financeKey = GlobalKey(debugLabel: 'family_tour_finance');
+  bool _tourTriggered = false;
+  // Cacheado pre-dispose para no tocar ref después del unmount.
+  TourTargetKeysNotifier? _tourKeysNotifier;
+
   MemberModel? get _currentMember {
     final membersAsync = ref.read(householdMembersProvider);
     final currentUserId = ref.read(currentUserIdProvider) ?? '';
     final members = membersAsync.value ?? const <MemberModel>[];
     return members.where((m) => m.userId == currentUserId).firstOrNull;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _registerTourKeys();
+      _maybeStartTour();
+    });
+  }
+
+  void _registerTourKeys() {
+    _tourKeysNotifier = ref.read(tourTargetKeysProvider.notifier);
+    _tourKeysNotifier?.register(TourTarget.tasksSection, _tasksKey);
+    _tourKeysNotifier?.register(TourTarget.balanceCard, _financeKey);
+  }
+
+  /// Dispara la guía de familia — solo para padres/tutores, una vez. Espera
+  /// a que los miembros estén cargados para conocer el rol del usuario.
+  void _maybeStartTour() {
+    if (_tourTriggered) return;
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (prefs.getBool(tourFlagKey) ?? false) return;
+    final tourState = ref.read(coupleHomeTourControllerProvider);
+    if (tourState.isActive) return;
+    _tourTriggered = true;
+    // Dejar asentar las animaciones de entrada y la carga de miembros.
+    Future<void>.delayed(const Duration(milliseconds: 650), () {
+      if (!mounted) return;
+      final stillUnseen =
+          !(ref.read(sharedPreferencesProvider).getBool(tourFlagKey) ?? false);
+      if (!stillUnseen) return;
+      final member = _currentMember;
+      // Sin miembro cargado o no-adulto: la guía no corresponde (los chicos
+      // no administran el hogar). Reintenta en la próxima apertura.
+      if (member == null || !member.isAdult) {
+        _tourTriggered = false;
+        return;
+      }
+      ref
+          .read(coupleHomeTourControllerProvider.notifier)
+          .start(buildHomeTourContext(ref));
+    });
+  }
+
+  @override
+  void dispose() {
+    // Defer el unregister: modificar un provider durante el finalize del
+    // árbol dispara el assert de Riverpod. Capturado localmente.
+    final notifier = _tourKeysNotifier;
+    final tasksKey = _tasksKey;
+    final financeKey = _financeKey;
+    if (notifier != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifier.unregister(TourTarget.tasksSection, tasksKey);
+        notifier.unregister(TourTarget.balanceCard, financeKey);
+      });
+    }
+    super.dispose();
   }
 
   @override
@@ -74,7 +148,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             delayMs: 0,
             child: _buildHeader(theme, caps),
           ),
-          SizedBox(height: isChild ? 20 : 16),
+          SizedBox(height: isChild ? 30 : 16),
           if (memberNotFound)
             _buildStaggeredSection(
               delayMs: 10,
@@ -133,9 +207,12 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             if (hasSharedAdultFinance) ...[
               _buildStaggeredSection(
                 delayMs: 140,
-                child: FamilyFinanceSection(
-                  caps: caps,
-                  currentMember: currentMember,
+                child: KeyedSubtree(
+                  key: _financeKey,
+                  child: FamilyFinanceSection(
+                    caps: caps,
+                    currentMember: currentMember,
+                  ),
                 ),
               ),
               const SizedBox(height: 22),
@@ -144,10 +221,13 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             if (caps.showTasks)
               _buildStaggeredSection(
                 delayMs: 180,
-                child: FamilyTasksSection(
-                  caps: caps,
-                  currentMember: currentMember,
-                  isChild: false,
+                child: KeyedSubtree(
+                  key: _tasksKey,
+                  child: FamilyTasksSection(
+                    caps: caps,
+                    currentMember: currentMember,
+                    isChild: false,
+                  ),
                 ),
               ),
             const SizedBox(height: 26),
@@ -173,16 +253,40 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final currentMember =
         members.where((m) => m.userId == currentUserId).firstOrNull;
     final showDate = currentMember?.isChild ?? false;
-    final showProgress =
-        (currentMember?.isTeen ?? false) || (currentMember?.isChild ?? false);
+    final showProgress = currentMember?.isTeen ?? false;
     final coins =
         balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
     final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
     final t = AppLocalizations.of(context);
     final localeTag = Localizations.localeOf(context).toString();
-    final avatarYOffset = currentMember?.isChild == true ? -10.0 : 0.0;
+    final isChild = currentMember?.isChild ?? false;
+    final isTeen = currentMember?.isTeen ?? false;
+
+    // Adults get the editorial header shared with solo (date eyebrow +
+    // time-of-day greeting + oversized name). Kids keep their playful
+    // greeting and teens their metric chips.
+    if (!isChild && !isTeen) {
+      return HomeEditorialHeader(
+        firstName: _firstName(currentMember?.displayName),
+        trailing: HomeHeaderAvatar(
+          name: currentMember?.displayName,
+          avatarUrl: currentMember?.avatarUrl,
+          onTap: widget.onAvatarTap,
+          premiumRadius: 32,
+          regularRadius: 26,
+          premiumOffset: const Offset(6, 2),
+          regularOffset: Offset.zero,
+          premiumWidth: 96,
+          premiumHeight: 72,
+          premiumMaxWidth: 126,
+          premiumMaxHeight: 126,
+        ),
+      );
+    }
 
     return Row(
+      crossAxisAlignment:
+          isChild ? CrossAxisAlignment.start : CrossAxisAlignment.center,
       children: [
         Expanded(
           child: Column(
@@ -239,26 +343,18 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           ),
         ),
         const SizedBox(width: 12),
-        GestureDetector(
+        HomeHeaderAvatar(
+          name: currentMember?.displayName,
+          avatarUrl: currentMember?.avatarUrl,
           onTap: widget.onAvatarTap,
-          child: Transform.translate(
-            offset: Offset(6, avatarYOffset),
-            child: SizedBox(
-              width: 96,
-              height: 58,
-              child: OverflowBox(
-                alignment: Alignment.topRight,
-                maxWidth: 122,
-                maxHeight: 132,
-                child: CustomUserAvatar(
-                  avatarUrl: currentMember?.avatarUrl,
-                  radius: 26,
-                  showBorder: true,
-                  isAnimated: true,
-                ),
-              ),
-            ),
-          ),
+          premiumRadius: isChild ? 37 : 32,
+          regularRadius: isChild ? 31 : 26,
+          premiumOffset: isChild ? const Offset(8, -8) : const Offset(6, -4),
+          regularOffset: isChild ? const Offset(0, 4) : Offset.zero,
+          premiumWidth: isChild ? 104 : 96,
+          premiumHeight: isChild ? 98 : 72,
+          premiumMaxWidth: isChild ? 146 : 126,
+          premiumMaxHeight: isChild ? 146 : 126,
         ),
       ],
     );
@@ -281,7 +377,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.warning.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         border: Border.all(color: AppColors.warning.withValues(alpha: 0.25)),
       ),
       child: Row(
@@ -309,7 +405,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             },
             style: TextButton.styleFrom(
               foregroundColor: AppColors.warning,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
@@ -330,7 +426,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(color: color.withValues(alpha: 0.12)),
       ),
       child: Row(
@@ -373,27 +469,42 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final firstName =
         currentMember?.displayName ?? t.homeFamilyChildFallbackName;
     final caps = ref.watch(householdCapabilitiesProvider);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
+    final heroGradient = theme.isDarkMode
+        ? const [
+            Color(0xFF332720),
+            Color(0xFF282321),
+            Color(0xFF1F2A27),
+          ]
+        : const [
             Color(0xFFFFF2DF),
             Color(0xFFFFF8F0),
             Color(0xFFEAF7F4),
-          ],
+          ];
+    final heroBorder = theme.isDarkMode
+        ? AppColors.primary.withValues(alpha: 0.18)
+        : const Color(0xFFFFD7B3);
+    final iconWellColor = theme.isDarkMode
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.74);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 15, 16, 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: heroGradient,
         ),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFFFD7B3)),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+        border: Border.all(color: heroBorder),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF08B49).withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            color: theme.isDarkMode
+                ? Colors.black.withValues(alpha: 0.22)
+                : const Color(0xFFF08B49).withValues(alpha: 0.08),
+            blurRadius: theme.isDarkMode ? 18 : 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -403,16 +514,16 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           Row(
             children: [
               Container(
-                width: 46,
-                height: 46,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.74),
-                  borderRadius: BorderRadius.circular(18),
+                  color: iconWellColor,
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
                 ),
                 child: const Icon(
                   Icons.auto_awesome_rounded,
                   color: Color(0xFFF08B49),
-                  size: 24,
+                  size: 21,
                 ),
               ),
               const SizedBox(width: 12),
@@ -423,62 +534,14 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: theme.textPrimary,
-                    fontSize: 21,
+                    fontSize: 20,
                     fontWeight: FontWeight.w900,
                     height: 1.05,
                     letterSpacing: -0.55,
                   ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            t.homeFamilyChildHeroBody(firstName),
-            style: TextStyle(
-              color: theme.textSecondary,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w800,
-              height: 1.25,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _ChildHeroMetric(
-                  icon: Icons.monetization_on_rounded,
-                  label: 'Coins',
-                  value: '$coins',
-                  color: AppColors.sage,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _ChildHeroMetric(
-                  icon: Icons.star_rounded,
-                  label: 'XP',
-                  value: '$xp',
-                  color: const Color(0xFFE8943A),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  t.homeFamilyChildRewardsPrompt,
-                  style: TextStyle(
-                    color: theme.textSecondary,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    height: 1.25,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               TextButton.icon(
                 onPressed: () {
                   final index = indexForMainTab(
@@ -490,8 +553,77 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                     ref.read(bottomNavIndexProvider.notifier).setIndex(index);
                   }
                 },
-                icon: const Icon(Icons.storefront_rounded, size: 18),
+                icon: const Icon(Icons.storefront_rounded, size: 16),
                 label: Text(t.mainTabShoppingChild),
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.primary,
+                  backgroundColor: theme.primary.withValues(alpha: 0.08),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: const StadiumBorder(),
+                  textStyle: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 11),
+          Text(
+            t.homeFamilyChildHeroBody(firstName),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: theme.textSecondary,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              height: 1.25,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _ChildHeroMetric(
+                  icon: Icons.monetization_on_rounded,
+                  label: 'Coins',
+                  value: '$coins',
+                  color: AppColors.sage,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: _ChildHeroMetric(
+                  icon: Icons.star_rounded,
+                  label: 'XP',
+                  value: '$xp',
+                  color: const Color(0xFFE8943A),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(
+                Icons.card_giftcard_rounded,
+                size: 18,
+                color: theme.primary.withValues(alpha: 0.78),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  t.homeFamilyChildRewardsPrompt,
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                  ),
+                ),
               ),
             ],
           ),
@@ -547,7 +679,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     return Container(
       decoration: BoxDecoration(
         color: theme.surfaceContainer.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
       ),
       child: const Column(
         children: [
@@ -666,7 +798,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 Container(
                   decoration: BoxDecoration(
                     color: theme.surfaceContainer.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(AppRadii.xl),
                   ),
                   child: Column(
                     children: [
@@ -676,9 +808,13 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                             : null;
 
                         return ListTile(
-                          leading: Text(
-                            item.emoji,
-                            style: const TextStyle(fontSize: 20),
+                          leading: ShoppingIcon(
+                            productKey: item.nameKey ??
+                                shoppingCatalogKeyForName(item.name),
+                            categoryId: item.category,
+                            fallbackEmoji: item.emoji,
+                            allowProductAsset: true,
+                            size: 26,
                           ),
                           title: Text(
                             item.name,
@@ -736,7 +872,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                                   decoration: BoxDecoration(
                                     color:
                                         theme.primary.withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.sm),
                                   ),
                                   child: Icon(
                                     Icons.more_horiz_rounded,
@@ -856,32 +993,29 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 
   String _activityStableKey(Map<String, dynamic> activity) {
+    final type = activity['type']?.toString() ?? 'unknown';
+    // Prefer the REAL server activity id. Optimistic rows carry it in
+    // data['activity_id'] (the complete-task RPC returns it — see
+    // task_provider.dart) and it equals the real remote row's top-level `id`.
+    // Keying on it makes the optimistic→real swap reuse the SAME widget, so the
+    // feed-entry animation does NOT replay (fixes the "movement re-enters a few
+    // seconds later" glitch). The optimistic/remote merge already suppresses the
+    // optimistic once the real arrives, so the two never coexist → no
+    // duplicate-key risk. Multiple completions of the same task get distinct
+    // activity ids; offline/queued rows (no activity_id yet) fall back to id.
     final data = (activity['data'] as Map<String, dynamic>?) ?? {};
-    final type = activity['type']?.toString();
-    // Prefer a STABLE identity so the optimistic row and the real row that
-    // replaces it (arriving via realtime ~1s later) share the same widget key.
-    // Keying on the volatile top-level `id`/`created_at` made Flutter treat the
-    // real row as a brand-new widget and replay the entry animation — the
-    // "card animates in, then refreshes itself a moment later" glitch.
-    //
-    // Both the optimistic row and the real `household_activities` row carry
-    // `task_id`, so task_id + completion-day is the identity they share. (The
-    // optimistic-only `activity_id` is NOT present on the real row, so it can't
-    // be used as the shared key.) Day-scoping keeps repeated daily completions
-    // visually distinct.
-    final taskId = data['task_id']?.toString();
-    if (type == 'task' && taskId != null && taskId.isNotEmpty) {
-      final day = (activity['created_at']?.toString() ?? '').split('T').first;
-      return 'task-$taskId-$day';
+    final activityId = data['activity_id']?.toString();
+    if (activityId != null && activityId.isNotEmpty) {
+      return '$type-$activityId';
     }
-    final expenseId = data['expense_id']?.toString();
-    if (expenseId != null && expenseId.isNotEmpty) {
-      return 'expense-$expenseId';
+    final id = activity['id']?.toString();
+    if (id != null && id.isNotEmpty) {
+      return '$type-$id';
     }
     return [
-      activity['id'],
-      type,
       activity['created_at'],
+      data['task_id'],
+      data['expense_id'],
     ].whereType<Object>().join('-');
   }
 
@@ -898,7 +1032,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   Widget _buildActivityLoadingCard(AppThemeColors theme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(22),
@@ -1037,6 +1171,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               fontWeight: FontWeight.w900,
             ),
           ),
+          TextSpan(
+            text: t.homeFamilyChildGreetingSuffix,
+            style: TextStyle(color: theme.primary),
+          ),
         ],
       );
     }
@@ -1086,7 +1224,10 @@ class _ShoppingLoadingTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       child: Row(
         children: [
           ShimmerLoading(height: 24, width: 24, borderRadius: 12),
@@ -1118,25 +1259,28 @@ class _ChildHeroMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final fillColor = theme.isDarkMode
+        ? Colors.white.withValues(alpha: 0.055)
+        : Colors.white.withValues(alpha: 0.62);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.74),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.12)),
+        color: Color.alphaBlend(color.withValues(alpha: 0.030), fillColor),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(color: color.withValues(alpha: 0.10)),
       ),
       child: Row(
         children: [
           Container(
-            width: 30,
-            height: 30,
+            width: 27,
+            height: 27,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              color: color.withValues(alpha: 0.085),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
-            child: Icon(icon, color: color, size: 17),
+            child: Icon(icon, color: color.withValues(alpha: 0.88), size: 15),
           ),
-          const SizedBox(width: 9),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1147,19 +1291,19 @@ class _ChildHeroMetric extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: theme.textPrimary,
-                    fontSize: 17,
+                    fontSize: 15,
                     fontWeight: FontWeight.w900,
                     height: 1,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: theme.textSecondary,
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.w700,
                     height: 1,
                   ),

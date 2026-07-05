@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 /// Shared body for the couple/family finance configuration.
@@ -153,7 +154,7 @@ class CoupleFinanceConfigBody extends StatelessWidget {
               max: 1,
               divisions: 20, // 5% increments
               onChanged: (val) {
-                HapticFeedback.lightImpact();
+                AppHaptics.tap();
                 onSplitRatioChanged(val);
               },
             ),
@@ -165,11 +166,15 @@ class CoupleFinanceConfigBody extends StatelessWidget {
 
   Widget _buildInfoCard(AppThemeColors theme, String title, String desc) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.accentTeal.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppRadii.xl),
-        border: Border.all(color: AppColors.accentTeal.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: theme.isDarkMode
+              ? AppColors.accentTeal.withValues(alpha: 0.34)
+              : AppColors.accentTeal.withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,7 +219,7 @@ class CoupleFinanceConfigBody extends StatelessWidget {
   }) {
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selection();
         onTap();
       },
       child: AnimatedContainer(

@@ -34,14 +34,14 @@ final class HouseholdMembersNotifierProvider extends $AsyncNotifierProvider<
 }
 
 String _$householdMembersNotifierHash() =>
-    r'1002599df0930d5c3eba706cad92d0d4cf17a32e';
+    r'abc11bb2edf9a7bf61ed9b44c3e3f7d1bc9edce4';
 
 abstract class _$HouseholdMembersNotifier
     extends $AsyncNotifier<List<MemberModel>> {
   FutureOr<List<MemberModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<List<MemberModel>>, List<MemberModel>>;
     final element = ref.element as $ClassProviderElement<
@@ -49,7 +49,7 @@ abstract class _$HouseholdMembersNotifier
         AsyncValue<List<MemberModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -85,4 +85,4 @@ final class HouseholdProvider extends $FunctionalProvider<
   }
 }
 
-String _$householdHash() => r'aa777f3da76f5e435388ac2a449f4ceefe40e064';
+String _$householdHash() => r'f4735ad5bd56442dd9dab96f15709fca8ed09c9f';

@@ -1,6 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createRemoteJWKSet, jwtVerify } from "https://esm.sh/jose@5";
+import { STYLE_REFERENCE_IMAGES_BASE64 } from "./style_refs.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -80,19 +80,19 @@ async function pruneOldGeneratedAvatars(
   }
 }
 
-const prompt = `Use the uploaded photo as identity and scene reference for a HomeSync premium avatar.
+const prompt = `The first image is a photo. The other images are official characters from the HomeSync avatar set, included ONLY as art-style samples: hand-painted 2D storybook illustration with soft painterly shading, warm cream/peach/honey palette, large friendly eyes with highlights, gently simplified rounded features, rosy cheeks, and a clean cut-out edge where the painted silhouette meets fully transparent alpha directly, with NO outline, NO border and NO halo around it.
 
-Create a transparent-background premium sticker avatar for a warm household/couple/family mobile app. First identify the clearly visible main living subjects in the photo, then draw exactly those subjects. If the photo shows one person and one pet, draw exactly one person and one pet. If the photo shows two people, draw exactly two people. If the photo shows a family, draw the clearly visible family members. Do not infer a partner, child, family member, extra pet, prop, plant, or costume from the app context. Do not add anyone who is not clearly visible in the uploaded photo.
+Redraw the subjects of the photo as the next character in that exact same set. Match the style-sample images precisely: same line quality, same soft painterly shading, same warm palette, same level of facial simplification. IMPORTANT: do NOT draw any white sticker border, die-cut outline, stroke or halo around the character — even if some style-sample images appear to show one, ignore it. The character's painted edge must meet transparent alpha directly.
 
-Preserve the main subjects: approximate ages/species, hair/fur colors, facial vibe, closeness, pose, and the key relationship or moment. If a pet is being held or cuddled, keep that interaction. If clothing has a strong color or pattern, translate it softly instead of replacing it.
+The style-sample characters are OTHER people from the set. Never copy them or any part of them into the result: not their faces, hair, clothing, pets, or props. Everything depicted in the new avatar must come from the photo only.
 
-Translate the photo into the exact HomeSync premium avatar visual family: cute polished 3D storybook illustration, soft watercolor-like shading, warm cheeks, gentle oval eyes with highlights, small noses, detailed soft hair/fur, rounded friendly faces, and subtle closed-mouth or barely-open smiles. Keep the same soft premium face language as the existing HomeSync human and pet avatars, not a portrait caricature. Make adults feel like everyday cozy app characters, not glam/fashion illustrations. Avoid toothy caricature smiles, realistic portrait anatomy, sharp cheekbones, tourist caricature style, emoji/memoji style, flat vector style, anime, photorealism, beauty-ad styling, or overly polished fashion-poster faces.
+Draw only the clearly visible living subjects from the photo, nothing more: one person means exactly one person and zero animals; one person with one pet means that person with that pet; two people means two people. Never invent a partner, child, pet, animal, prop, costume, plant, furniture, or scene that is not in the photo.
 
-Represent the original context enough that the avatar feels derived from the photo: preserve the main pose, closeness, pet interaction, important clothing colors/patterns, and one or two tiny subject-attached cues only if they matter. Do not draw any room, wall, window, landscape, colored panel, rectangle, circle, vignette, halo, glow plate, or background shape behind the subjects. Transparent background means actual alpha pixels around the sticker, not a painted cream/white scene.
+Style fidelity to the reference set matters more than portrait accuracy. Keep only the strongest identity cues from the photo: approximate age or species, hair or fur color and shape, skin tone, glasses or facial hair if visible, clothing color, and how the subjects hold each other or a pet. Ignore the photo's lighting, lens distortion, background, clutter, and detailed facial anatomy.
 
-Keep the colors app-friendly: cream, peach, sage, honey, warm browns, plus any important photo accent color translated softly.
+Composition, exactly like the reference images: bust framing with full head, hair, ears and shoulders visible (plus fur and paws for pets), the character drawn LARGE so it fills nearly the entire square canvas edge to edge, leaving only a thin transparent margin around the character. Outside the character's painted silhouette there is nothing at all, only transparent alpha.
 
-Composition: all and only the main subjects clearly visible and balanced, upper torso/bust or compact cuddle pose as appropriate, centered, full hair/fur/ears/shoulders/paws visible, no cropping, no circle, no frame, no text, no logo. The final sticker should fill most of the square canvas while leaving a small clean transparent margin and no visible background surface.`;
+Avoid: photorealism, realistic portrait anatomy, 3D render look, anime, memoji/emoji style, flat vector art, toothy smiles, glam or beauty-ad styling, heavy shadows, busy scenes, and any white sticker border, die-cut outline, stroke or halo around the silhouette.`;
 
 function decodeBase64(value: string): Uint8Array {
   const binary = atob(value);
@@ -124,7 +124,7 @@ async function verifyFirebaseUser(token: string): Promise<string | null> {
   }
 }
 
-serve(async (req) => {
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -157,7 +157,7 @@ serve(async (req) => {
 
     const { data: userRow, error: userError } = await supabase
       .from("users")
-      .select("id, is_premium, avatar_url")
+      .select("id, is_premium, premium_until, avatar_url")
       .eq("firebase_uid", firebaseUid)
       .limit(1)
       .single();
@@ -170,19 +170,44 @@ serve(async (req) => {
       });
     }
 
-    if (userRow.is_premium !== true) {
+    const { data: memberRows } = await supabase
+      .from("household_members")
+      .select("household_id")
+      .eq("user_id", userRow.id);
+    const householdIds = (memberRows ?? []).map(
+      (row) => row.household_id as string,
+    );
+
+    // Mismo "premium efectivo" que public.get_effective_premium_status():
+    // premium propio vigente, o cualquiera de sus hogares con plan pago vigente.
+    const now = Date.now();
+    const stillValid = (until: string | null) =>
+      until == null || Date.parse(until) > now;
+    let isPremium = userRow.is_premium === true &&
+      stillValid(userRow.premium_until as string | null);
+
+    if (!isPremium && householdIds.length > 0) {
+      const { data: households } = await supabase
+        .from("households")
+        .select("plan_tier, premium_until")
+        .in("id", householdIds);
+      isPremium = (households ?? []).some(
+        (h) =>
+          h.plan_tier !== "free" &&
+          stillValid(h.premium_until as string | null),
+      );
+    }
+
+    if (!isPremium) {
       return new Response(JSON.stringify({ error: "premium_required" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { data: memberRow } = await supabase
-      .from("household_members")
-      .select("household_id")
-      .eq("user_id", userRow.id)
-      .limit(1)
-      .maybeSingle();
+    const memberRow = householdIds.length > 0
+      ? { household_id: householdIds[0] }
+      : null;
 
     const monthStart = new Date();
     monthStart.setUTCDate(1);
@@ -203,12 +228,20 @@ serve(async (req) => {
       usageReserved = false;
     };
 
-    const { error: reserveError } = await supabase
-      .from("custom_avatar_monthly_usage")
-      .insert({
-        user_id: userRow.id,
-        generation_month: generationMonth,
-      });
+    // Kill-switch temporal para QA: con el secret en "true" no se reserva
+    // cupo mensual (y por ende tampoco se bloquea por 23505).
+    const monthlyLimitDisabled =
+      (Deno.env.get("AVATAR_MONTHLY_LIMIT_DISABLED") ?? "")
+        .trim().toLowerCase() === "true";
+
+    const { error: reserveError } = monthlyLimitDisabled
+      ? { error: null }
+      : await supabase
+        .from("custom_avatar_monthly_usage")
+        .insert({
+          user_id: userRow.id,
+          generation_month: generationMonth,
+        });
 
     if (reserveError?.code === "23505") {
       return new Response(
@@ -229,7 +262,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    usageReserved = true;
+    usageReserved = !monthlyLimitDisabled;
 
     const body = await req.json();
     const { imageBase64, mimeType = "image/webp" } = body as {
@@ -287,7 +320,18 @@ serve(async (req) => {
     form.append("quality", imageQuality);
     form.append("background", "transparent");
     form.append("output_format", "png");
-    form.append("image", new Blob([inputBytes], { type: mimeType }), "source.webp");
+    form.append(
+      "image[]",
+      new Blob([inputBytes], { type: mimeType }),
+      "source.webp",
+    );
+    STYLE_REFERENCE_IMAGES_BASE64.forEach((refBase64, index) => {
+      form.append(
+        "image[]",
+        new Blob([decodeBase64(refBase64)], { type: "image/png" }),
+        `style_ref_${index + 1}.png`,
+      );
+    });
 
     const imageResponse = await fetch(OPENAI_IMAGES_URL, {
       method: "POST",

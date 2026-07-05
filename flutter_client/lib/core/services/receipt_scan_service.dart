@@ -1,8 +1,10 @@
-import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart' as fa;
-import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/expenses/domain/models/receipt_scan_result.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,7 +12,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// Servicio de escaneo de tickets.
 ///
 /// Flujo:
-/// [scan] — pick imagen → comprimir → mandar base64 a Edge Function → OCR.
+/// [scan] — pick imagen → comprimir → mandar bytes a Edge Function → OCR.
 ///
 /// La imagen NO toca Supabase Storage. El OCR es efímero y la app persiste
 /// únicamente datos estructurados del gasto.
@@ -19,6 +21,13 @@ class ReceiptScanService {
   final _picker = ImagePicker();
 
   ReceiptScanService(this._supabase);
+
+  /// Límite de imagen comprimida: 5 MB de bytes crudos (igual que el servidor).
+  static const int _maxImageBytes = 5 * 1024 * 1024;
+
+  /// Timeout de extremo a extremo del invoke (la Edge Function ya tiene sus
+  /// propios timeouts internos contra Gemini; esto cubre red móvil colgada).
+  static const Duration _invokeTimeout = Duration(seconds: 60);
 
   /// Escanea un ticket y devuelve el resultado del OCR.
   /// [source] puede ser [ImageSource.camera] o [ImageSource.gallery].
@@ -48,67 +57,92 @@ class ReceiptScanService {
     );
 
     final XFile imageFile = compressed ?? picked;
-    final imageBytes = await imageFile.readAsBytes();
+    final Uint8List imageBytes;
+    try {
+      imageBytes = await imageFile.readAsBytes();
+    } finally {
+      // El WebP temporal ya no se necesita en disco una vez leído; sin esto se
+      // acumulan en el cache dir hasta que el OS decida limpiarlo.
+      if (compressed != null && compressed.path != picked.path) {
+        try {
+          await File(compressed.path).delete();
+        } catch (_) {
+          // Best-effort: si no se pudo borrar, el OS limpia el cache dir.
+        }
+      }
+    }
 
-    debugPrint(
+    log.d(
       '[ReceiptScan] Imagen comprimida: ${(imageBytes.length / 1024).toStringAsFixed(1)} KB',
     );
 
-    // 3. Convertir a base64 para mandar a la Edge Function
-    final base64Image = base64Encode(imageBytes);
-
-    // 4. Guardrail de tamaño: rechazar antes de invocar si el payload es muy grande.
-    //    La Edge Function también valida, pero falla rápido en cliente es mejor UX.
-    //    Base64 de 3.5 MB imagen ≈ ~4.7 MB de string. Rechazamos > 5 MB.
-    const int maxBase64Bytes = 5 * 1024 * 1024;
-    if (base64Image.length > maxBase64Bytes) {
-      throw Exception(
-        'La imagen es demasiado grande (${(imageBytes.length / 1024 / 1024).toStringAsFixed(1)} MB). '
-        'Intentá con otra foto o desde galería.',
+    // 3. Guardrail de tamaño: rechazar antes de invocar si el payload es muy
+    //    grande. La Edge Function también valida (413), pero fallar rápido en
+    //    cliente es mejor UX. Mismo límite que el servidor: 5 MB crudos.
+    if (imageBytes.length > _maxImageBytes) {
+      throw ScanImageTooLargeException(
+        sizeMb: imageBytes.length / 1024 / 1024,
       );
     }
 
-    // 5. Llamar a la Edge Function (OCR, sin tocar Storage)
+    // 4. Llamar a la Edge Function (OCR, sin tocar Storage)
     //
     //    El FunctionsClient del SDK cachea el Authorization header internamente
-    //    y no lo actualiza dinámicamente como sí hace PostgREST. En modo
-    debugPrint('[ReceiptScan] Getting Firebase ID token for Edge Function...');
-    final accessToken =
-        await fa.FirebaseAuth.instance.currentUser?.getIdToken(true);
+    //    y no lo actualiza dinámicamente como sí hace PostgREST, por eso lo
+    //    pasamos explícito. getIdToken() SIN forzar refresh: el SDK de Firebase
+    //    devuelve el token cacheado si sigue válido y solo renueva cuando
+    //    expira — forzarlo agregaba un round-trip (~300-500 ms) a cada scan.
+    final accessToken = await fa.FirebaseAuth.instance.currentUser?.getIdToken();
     if (accessToken == null) {
-      throw Exception('Sesión expirada. Por favor iniciá sesión nuevamente.');
+      throw const ScanAuthException();
     }
 
-    debugPrint('[ReceiptScan] Invocando Edge Function scan-receipt...');
+    // Fecha local del dispositivo: a las 22:00 de Argentina, UTC ya es
+    // "mañana". El servidor la usa como referencia de "hoy" para el prompt y
+    // la validación de fecha del ticket.
+    final now = DateTime.now();
+    final todayLocal = '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+
+    log.d('[ReceiptScan] Invocando Edge Function scan-receipt...');
     late final FunctionResponse response;
     try {
-      response = await _supabase.functions.invoke(
-        'scan-receipt',
-        body: {
-          'imageBase64': base64Image,
-          'mimeType': 'image/webp',
-        },
-        headers: {'Authorization': 'Bearer $accessToken'},
-      );
+      // Bytes crudos (application/octet-stream): evita el 33% de overhead de
+      // base64-en-JSON en el upload desde red móvil.
+      response = await _supabase.functions
+          .invoke(
+            'scan-receipt',
+            body: imageBytes,
+            headers: {
+              'Authorization': 'Bearer $accessToken',
+              'x-mime-type': 'image/webp',
+              'x-today-local': todayLocal,
+            },
+          )
+          .timeout(_invokeTimeout);
     } on FunctionException catch (e) {
       // El SDK lanza FunctionException para respuestas no-2xx antes de que
-      // podamos ver response.status. Convertimos el 429 en ScanLimitException.
+      // podamos ver response.status. El 429 acá es el anti-abuso liviano del
+      // servidor (no un límite por tier: el OCR es gratis para todos).
       if (e.status == 429) {
         final details = e.details;
-        if (details is Map && details['error'] == 'scan_limit_reached') {
-          throw ScanLimitException(
-            used: (details['used'] as num?)?.toInt() ?? 0,
-            limit: (details['limit'] as num?)?.toInt() ?? 10,
-            isPremium: (details['tier'] as String?) == 'premium',
-          );
-        }
+        final retryAfter = details is Map
+            ? (details['retryAfterSeconds'] as num?)?.toInt()
+            : null;
+        throw ScanRateLimitException(retryAfterSeconds: retryAfter ?? 60);
+      }
+      if (e.status == 413) {
+        throw ScanImageTooLargeException(
+          sizeMb: imageBytes.length / 1024 / 1024,
+        );
       }
       rethrow;
+    } on TimeoutException {
+      throw const ScanTimeoutException();
     }
 
-    debugPrint(
-      '[ReceiptScan] Respuesta status=${response.status} data=${response.data}',
-    );
+    log.d('[ReceiptScan] Respuesta status=${response.status}');
 
     if (response.status != 200 || response.data == null) {
       throw Exception(
@@ -124,10 +158,14 @@ class ReceiptScanService {
       );
     }
 
-    debugPrint(
+    log.d(
       '[ReceiptScan] OCR ok merchant=${data['merchant']} amount=${data['amount']}',
     );
-    return ReceiptScanResult.fromJson(data, imageFile.path);
+    return ReceiptScanResult.fromJson(
+      data,
+      imageFile.path,
+      logId: responseData['logId'] as String?,
+    );
   }
 
   /// Genera una URL firmada de corta duración para mostrar el ticket en UI.
@@ -146,30 +184,36 @@ class ReceiptScanService {
       return signedUrl;
     } catch (e) {
       // El archivo puede haber vencido (>60 días) — devolver null es correcto.
-      debugPrint('[ReceiptScan] Ticket no disponible: $e');
+      log.w('[ReceiptScan] Ticket no disponible', error: e);
       return null;
     }
   }
 }
 
-/// Excepción lanzada cuando el household alcanzó su límite mensual de scans.
-class ScanLimitException implements Exception {
-  final int used;
-  final int limit;
-  final bool isPremium;
+/// Excepción lanzada cuando el servidor aplica el anti-abuso de scans.
+///
+/// NO es un límite por plan (el OCR es gratis para todos). Es un freno corto
+/// para evitar que un usuario loopee el endpoint pago de Gemini. El usuario
+/// puede reintentar pasados [retryAfterSeconds].
+class ScanRateLimitException implements Exception {
+  final int retryAfterSeconds;
 
-  const ScanLimitException({
-    required this.used,
-    required this.limit,
-    required this.isPremium,
-  });
+  const ScanRateLimitException({required this.retryAfterSeconds});
+}
 
-  @override
-  String toString() {
-    if (isPremium) {
-      return 'Alcanzaste el límite de $limit escaneos mensuales de tu plan Premium.';
-    }
-    return 'Alcanzaste el límite de $limit escaneos gratuitos este mes. '
-        'Pasate a Premium para obtener hasta 40 escaneos.';
-  }
+/// La imagen comprimida supera el límite de 5 MB (cliente o servidor 413).
+class ScanImageTooLargeException implements Exception {
+  final double sizeMb;
+
+  const ScanImageTooLargeException({required this.sizeMb});
+}
+
+/// No hay sesión de Firebase activa (token null).
+class ScanAuthException implements Exception {
+  const ScanAuthException();
+}
+
+/// El invoke superó el timeout de extremo a extremo (red móvil colgada).
+class ScanTimeoutException implements Exception {
+  const ScanTimeoutException();
 }

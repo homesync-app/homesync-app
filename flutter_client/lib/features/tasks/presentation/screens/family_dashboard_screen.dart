@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/tasks/domain/models/family_member_dashboard.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/family_member_dashboard_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 /// Sprint 2 Modo Padres: dashboard parental.
@@ -42,7 +45,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> {
         appBar: AppBar(title: Text(t.familyDashboardAppBarTitle)),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Text(
               t.familyDashboardLockedNotice,
               textAlign: TextAlign.center,
@@ -118,10 +121,10 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> {
       ),
       body: dashboardAsync.when(
         skipLoadingOnReload: true,
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: AppLoader()),
         error: (e, _) => Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Text(
               'No pudimos cargar el dashboard: $e',
               style: TextStyle(color: theme.textSecondary),
@@ -220,7 +223,7 @@ class _MemberCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _roleLabel(snapshot),
+                      _roleLabel(t, snapshot),
                       style: TextStyle(
                         color: theme.textSecondary,
                         fontSize: 12.5,
@@ -237,7 +240,7 @@ class _MemberCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -260,7 +263,7 @@ class _MemberCard extends StatelessWidget {
           if (hasTasks) ...[
             const SizedBox(height: 13),
             ClipRRect(
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadii.pill),
               child: LinearProgressIndicator(
                 value: rate.clamp(0.0, 1.0),
                 minHeight: 7,
@@ -359,7 +362,7 @@ class _MemberCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
                     child: Text(
                       '${c.category} · ${c.count}',
@@ -417,14 +420,16 @@ class _MemberCard extends StatelessWidget {
     return '${(rate * 100).round()}%';
   }
 
-  String _roleLabel(FamilyMemberSnapshot s) {
-    if (s.displayRole != null && s.displayRole!.isNotEmpty) {
-      return s.displayRole!;
+  String _roleLabel(AppLocalizations t, FamilyMemberSnapshot s) {
+    if (s.isTeen) return t.membersRoleTeen;
+    if (s.isChild) return t.membersRoleChild;
+    if (s.memberType == 'guardian') return t.membersRoleGuardian;
+    if (s.memberType == 'parent' || s.memberType == 'adult') {
+      return t.membersRoleParent;
     }
-    // Note: short fallback labels — backend usually provides displayRole.
-    if (s.isChild) return 'Hijo/a';
-    if (s.isTeen) return 'Adolescente';
-    return 'Adulto';
+    return s.displayRole?.trim().isNotEmpty == true
+        ? s.displayRole!.trim()
+        : t.membersRoleParent;
   }
 }
 
@@ -480,7 +485,7 @@ class _DashboardSummary extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.11),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 child: const Icon(
                   Icons.insights_rounded,
@@ -523,7 +528,7 @@ class _DashboardSummary extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.accentGreen.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
                   ),
                   child: Text(
                     '${(rate * 100).round()}%',
@@ -607,7 +612,7 @@ class _SummaryMetric extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.075),
         borderRadius: BorderRadius.circular(18),
@@ -695,7 +700,7 @@ class _Stat extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -725,7 +730,7 @@ class _EmptyState extends StatelessWidget {
     final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -765,7 +770,7 @@ class _LockedHero extends StatelessWidget {
     final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

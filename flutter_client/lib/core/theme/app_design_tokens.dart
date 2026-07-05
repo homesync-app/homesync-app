@@ -89,9 +89,32 @@ class AppElevation {
       ];
 }
 
+/// Weight hierarchy for HomeSync. When everything is bold, nothing is —
+/// contrast should come from SIZE first, weight second.
+///
+/// - [hero]: screen titles and hero amounts ONLY (one per screen).
+/// - [title]: card and section titles.
+/// - [emphasis]: buttons, chips, selected states, small labels.
+/// - [body]: running text and descriptions.
+class AppTypography {
+  static const FontWeight hero = FontWeight.w900;
+  static const FontWeight title = FontWeight.w700;
+  static const FontWeight emphasis = FontWeight.w600;
+  static const FontWeight body = FontWeight.w500;
+
+  /// Tight tracking is reserved for hero sizes (26+); body text stays at 0.
+  static const double heroLetterSpacing = -0.8;
+}
+
 class AppMotion {
   static const Duration fast = Duration(milliseconds: 160);
   static const Duration normal = Duration(milliseconds: 220);
   static const Duration slow = Duration(milliseconds: 360);
   static const Curve standard = Curves.easeOutCubic;
+
+  static const SpringDescription snappyPageSpring = SpringDescription(
+    mass: 0.5,
+    stiffness: 200,
+    damping: 18,
+  );
 }

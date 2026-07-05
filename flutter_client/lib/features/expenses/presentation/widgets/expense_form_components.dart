@@ -2,8 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:intl/intl.dart';
 
 class ExpenseFormHeader extends StatelessWidget {
   final bool isEditing;
@@ -129,6 +132,7 @@ class ExpenseTypeOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -138,7 +142,7 @@ class ExpenseTypeOption extends StatelessWidget {
           child: AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 200),
             style: TextStyle(
-              color: isSelected ? Colors.white : AppColors.textSecondary,
+              color: isSelected ? Colors.white : theme.textSecondary,
               fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
               fontSize: 16,
               letterSpacing: isSelected ? -0.2 : 0,
@@ -167,17 +171,20 @@ class ExpenseActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.divider.withValues(alpha: 0.85)),
+          color: theme.surface,
+          borderRadius: BorderRadius.circular(AppRadii.lg),
+          border: Border.all(color: theme.border.withValues(alpha: 0.85)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
+              color: theme.shadowBase.withValues(
+                alpha: theme.isDarkMode ? 0.18 : 0.02,
+              ),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -188,8 +195,8 @@ class ExpenseActionTile extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: theme.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -202,8 +209,8 @@ class ExpenseActionTile extends StatelessWidget {
                 Expanded(
                   child: Text(
                     value,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: theme.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -233,7 +240,7 @@ class ExpenseInfoBox extends StatelessWidget {
     final theme = context.theme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.045),
         border: Border.all(color: color.withValues(alpha: 0.12)),
@@ -253,12 +260,14 @@ class ExpenseInfoBox extends StatelessWidget {
   }
 }
 
-class ExpenseAmountField extends StatelessWidget {
+class ExpenseAmountField extends StatefulWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final bool showScanAction;
   final bool isScanningReceipt;
   final bool hasScanResult;
+  final int ocrRevealTrigger;
+  final VoidCallback? onOcrRevealComplete;
   final VoidCallback? onScanReceipt;
 
   const ExpenseAmountField({
@@ -268,8 +277,121 @@ class ExpenseAmountField extends StatelessWidget {
     this.showScanAction = false,
     this.isScanningReceipt = false,
     this.hasScanResult = false,
+    this.ocrRevealTrigger = 0,
+    this.onOcrRevealComplete,
     this.onScanReceipt,
   });
+
+  @override
+  State<ExpenseAmountField> createState() => _ExpenseAmountFieldState();
+}
+
+class _ExpenseAmountFieldState extends State<ExpenseAmountField>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _revealController;
+  double _ocrStartAmount = 0;
+  double _ocrTargetAmount = 0;
+  String _ocrTargetText = '';
+  bool _isAnimatingOcrAmount = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _revealController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 820),
+      value: 1,
+    )
+      ..addListener(_syncAnimatedOcrAmount)
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          if (_isAnimatingOcrAmount && _ocrTargetText.isNotEmpty) {
+            widget.controller.value = TextEditingValue(
+              text: _ocrTargetText,
+              selection: TextSelection.collapsed(offset: _ocrTargetText.length),
+            );
+          }
+          _isAnimatingOcrAmount = false;
+          widget.onOcrRevealComplete?.call();
+        }
+      });
+  }
+
+  @override
+  void didUpdateWidget(covariant ExpenseAmountField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.ocrRevealTrigger != oldWidget.ocrRevealTrigger &&
+        widget.ocrRevealTrigger > 0) {
+      // didUpdateWidget corre DURANTE el build del padre. Mutar el controller
+      // acá dispara el listener del Form ancestro → setState() durante build.
+      // Diferimos el arranque del count-up al post-frame, cuando el árbol ya
+      // está montado y mutar el controller es seguro.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _startOcrAmountCountUp();
+        _revealController.forward(from: 0);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _revealController.removeListener(_syncAnimatedOcrAmount);
+    _revealController.dispose();
+    super.dispose();
+  }
+
+  void _startOcrAmountCountUp() {
+    final targetText = widget.controller.text;
+    final target = _parseAmountText(targetText);
+    if (target <= 0) {
+      _isAnimatingOcrAmount = false;
+      return;
+    }
+
+    final current = _parseAmountText(widget.controller.text);
+    _ocrStartAmount = current > 0 && current != target ? current : 0;
+    _ocrTargetAmount = target;
+    _ocrTargetText = targetText;
+    _isAnimatingOcrAmount = true;
+
+    final initialText = _formatAnimatedAmount(_ocrStartAmount);
+    widget.controller.value = TextEditingValue(
+      text: initialText,
+      selection: TextSelection.collapsed(offset: initialText.length),
+    );
+  }
+
+  void _syncAnimatedOcrAmount() {
+    if (!_isAnimatingOcrAmount || _ocrTargetAmount <= 0) return;
+    final eased = Curves.easeOutCubic.transform(_revealController.value);
+    final value =
+        _ocrStartAmount + (_ocrTargetAmount - _ocrStartAmount) * eased;
+    final formatted = _formatAnimatedAmount(value);
+    if (widget.controller.text == formatted) return;
+    widget.controller.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+
+  double _parseAmountText(String value) {
+    final normalized = value.trim().replaceAll('.', '').replaceAll(',', '.');
+    return double.tryParse(normalized) ?? 0;
+  }
+
+  String _formatAnimatedAmount(double value) {
+    final hasDecimals = _ocrTargetText.contains(',');
+    if (!hasDecimals) {
+      return NumberFormat.decimalPattern('es_ES').format(value.round());
+    }
+
+    final clamped = value.clamp(0, _ocrTargetAmount);
+    final intPart = clamped.truncate();
+    final decPart = ((clamped - intPart) * 100).round().abs();
+    final intFormatted = NumberFormat('#,##0', 'es_ES').format(intPart);
+    return '$intFormatted,${decPart.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +401,7 @@ class ExpenseAmountField extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 14, 24, 14),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.82),
           width: 1,
@@ -289,14 +411,14 @@ class ExpenseAmountField extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          if (showScanAction)
+          if (widget.showScanAction)
             Positioned(
               left: 0,
               top: 34,
               child: _ReceiptScanButton(
-                isScanningReceipt: isScanningReceipt,
-                hasScanResult: hasScanResult,
-                onTap: onScanReceipt,
+                isScanningReceipt: widget.isScanningReceipt,
+                hasScanResult: widget.hasScanResult,
+                onTap: widget.onScanReceipt,
               ),
             ),
           Column(
@@ -314,68 +436,93 @@ class ExpenseAmountField extends StatelessWidget {
                 alignment: Alignment.center,
                 children: [
                   const SizedBox(width: double.infinity, height: 42),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 10, top: 2),
-                        child: Text(
-                          '\$',
-                          style: TextStyle(
-                            color: theme.textMuted,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
-                          ),
+                  AnimatedBuilder(
+                    animation: _revealController,
+                    builder: (context, child) {
+                      final curved = Curves.easeOutCubic.transform(
+                        _revealController.value,
+                      );
+                      return Transform.translate(
+                        offset: Offset(0, (1 - curved) * 4),
+                        child: Transform.scale(
+                          scale: 0.985 + curved * 0.015,
+                          child: child,
                         ),
-                      ),
-                      SizedBox(
-                        width: 150,
-                        child: TextFormField(
-                          autofocus: true,
-                          controller: controller,
-                          onChanged: onChanged,
-                          keyboardType: TextInputType.number,
-                          style: TextStyle(
-                            color: theme.textPrimary,
-                            fontSize: 34,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1.2,
-                          ),
-                          textAlign: TextAlign.start,
-                          decoration: InputDecoration(
-                            hintText: '0',
-                            hintStyle: TextStyle(
+                      );
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 10, top: 2),
+                          child: Text(
+                            '\$',
+                            style: TextStyle(
                               color: theme.textMuted,
+                              fontSize: 26,
                               fontWeight: FontWeight.w700,
                             ),
-                            filled: false,
-                            fillColor: Colors.transparent,
-                            hoverColor: Colors.transparent,
-                            focusColor: Colors.transparent,
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            disabledBorder: InputBorder.none,
-                            errorBorder: InputBorder.none,
-                            focusedErrorBorder: InputBorder.none,
-                            isCollapsed: true,
-                            contentPadding: EdgeInsets.zero,
                           ),
                         ),
-                      ),
-                    ],
+                        SizedBox(
+                          width: 150,
+                          child: TextFormField(
+                            autofocus: true,
+                            controller: widget.controller,
+                            onChanged: widget.onChanged,
+                            keyboardType: TextInputType.number,
+                            style: TextStyle(
+                              color: theme.textPrimary,
+                              fontSize: 34,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1.2,
+                            ),
+                            textAlign: TextAlign.start,
+                            decoration: InputDecoration(
+                              hintText: '0',
+                              hintStyle: TextStyle(
+                                color: theme.textMuted,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              filled: false,
+                              fillColor: Colors.transparent,
+                              hoverColor: Colors.transparent,
+                              focusColor: Colors.transparent,
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              disabledBorder: InputBorder.none,
+                              errorBorder: InputBorder.none,
+                              focusedErrorBorder: InputBorder.none,
+                              isCollapsed: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 2),
-              Container(
-                width: 72,
-                height: 1,
-                decoration: BoxDecoration(
-                  color: theme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                ),
+              AnimatedBuilder(
+                animation: _revealController,
+                builder: (context, _) {
+                  final value = Curves.easeOutCubic.transform(
+                    _revealController.value,
+                  );
+                  return Container(
+                    width: 72 + value * 18,
+                    height: 1,
+                    decoration: BoxDecoration(
+                      color: theme.primary.withValues(
+                        alpha: 0.12 + value * 0.12,
+                      ),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -448,7 +595,7 @@ class _ReceiptScanButtonState extends State<_ReceiptScanButton>
         decoration: BoxDecoration(
           color:
               accent.withValues(alpha: widget.isScanningReceipt ? 0.14 : 0.10),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
           border: Border.all(
             color: accent.withValues(
               alpha: widget.isScanningReceipt ? 0.34 : 0.18,
@@ -661,7 +808,7 @@ class ExpenseTitleField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(color: theme.border.withValues(alpha: 0.82)),
         boxShadow: theme.cardShadow,
       ),
@@ -703,7 +850,8 @@ class ExpenseTitleField extends StatelessWidget {
                 errorBorder: InputBorder.none,
                 focusedErrorBorder: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
               ),
             ),
           ),

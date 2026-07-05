@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fa;
@@ -7,8 +8,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -17,11 +19,12 @@ import 'package:homesync_client/core/providers/riverpod_retry.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/breadcrumb_service.dart';
+import 'package:homesync_client/core/services/concept_icons.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/services/premium_service.dart';
-import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+import 'package:homesync_client/core/theme/app_system_ui.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
 import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
@@ -30,6 +33,7 @@ import 'package:homesync_client/features/dashboard/presentation/screens/main_scr
 // Prefetching Providers
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/shopping/data/shopping_icons_remote.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -44,15 +48,303 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   PerformanceMonitor.mark('app.main.start');
 
-  // Force use of bundled assets for fonts to prevent network errors
-  GoogleFonts.config.allowRuntimeFetching = false;
+  // Edge-to-edge: draw behind the status and gesture bars from frame one.
+  unawaited(AppSystemUi.init());
 
-  final packageInfo = await PerformanceMonitor.measureFuture(
+  // Nada de este grupo depende de Firebase/Supabase: las futures arrancan
+  // ya y se esperan recién donde se usan, solapadas con la cadena de red
+  // de abajo (Firebase → Supabase → RPC).
+  final packageInfoFuture = PerformanceMonitor.measureFuture(
     'startup.package_info',
     PackageInfo.fromPlatform,
     warnAfterMs: 200,
   );
+  final deviceContextFuture = _collectDeviceContext();
+  final dateFormattingFuture = PerformanceMonitor.measureFuture(
+    'startup.date_formatting',
+    () async {
+      await initializeDateFormatting('es', null);
+      await initializeDateFormatting('en_US', null);
+    },
+    warnAfterMs: 300,
+  );
+  final prefsFuture = PerformanceMonitor.measureFuture(
+    'startup.shared_preferences',
+    SharedPreferences.getInstance,
+    warnAfterMs: 300,
+  );
+  // Warm up GoogleSignIn so the first sign-in is fast. Auth itself is
+  // handled by FirebaseAuthService (Firebase Third-Party Auth bridge); we
+  // never touch supabase.auth because the client runs in accessToken mode.
+  // El timeout de 5s queda fuera del camino crítico: corre en paralelo y
+  // solo se espera justo antes de runApp.
+  final googleSignInWarmupFuture = () async {
+    try {
+      await PerformanceMonitor.measureFuture(
+        'startup.google_sign_in_initialize',
+        () => GoogleSignIn.instance
+            .initialize(
+              clientId: kIsWeb ? AppEnvironment.googleWebClientId : null,
+              serverClientId: kIsWeb ? null : AppEnvironment.googleWebClientId,
+            )
+            .timeout(const Duration(seconds: 5)),
+        warnAfterMs: 500,
+      );
+    } catch (e, stack) {
+      log.w(
+        'GoogleSignIn warm-up failed (offline?)',
+        error: e,
+        stackTrace: stack,
+      );
+    }
+  }();
+
+  final packageInfo = await packageInfoFuture;
   breadcrumb.setAppVersion(packageInfo.version, packageInfo.buildNumber);
+  final deviceContext = await deviceContextFuture;
+
+  final locale = WidgetsBinding.instance.platformDispatcher.locale;
+  final appContext = <String, dynamic>{
+    'environment': AppEnvironment.current.name,
+    'app_version': packageInfo.version,
+    'build_number': packageInfo.buildNumber,
+    'platform': kIsWeb ? 'web' : defaultTargetPlatform.name,
+    'locale': '${locale.languageCode}_${locale.countryCode ?? ''}',
+    'timezone': DateTime.now().timeZoneName,
+  };
+  final richContext = <String, dynamic>{
+    ...appContext,
+    ...deviceContext,
+  };
+
+  log.setCustomKey('environment', appContext['environment']);
+  log.setCustomKey('app_version', appContext['app_version']);
+  log.setCustomKey('build_number', appContext['build_number']);
+  log.setCustomKey('platform', appContext['platform']);
+  log.setCustomKey('locale', appContext['locale']);
+  log.setCustomKey('timezone', appContext['timezone']);
+  if (deviceContext['model'] != null) {
+    log.setCustomKey('device_model', deviceContext['model']);
+  }
+  if (deviceContext['device'] != null) {
+    log.setCustomKey('device_type', deviceContext['device']);
+  }
+
+  AppEnvironment.validateRuntimeConfig(isWeb: kIsWeb);
+
+  // 1. Initialize Firebase
+  try {
+    await PerformanceMonitor.measureFuture(
+      'startup.firebase_initialize',
+      () => Firebase.initializeApp(
+        // Android MUST use the native google-services.json (correct API key,
+        // same one shipped in +81). Do NOT force AppEnvironment.firebaseOptions
+        // here — its Dart API key differs from native and breaks prod Auth.
+        options: kIsWeb ? AppEnvironment.firebaseOptions : null,
+      ),
+      warnAfterMs: 700,
+    );
+    // Blindaje: Solo proceder si Firebase se inicializó correctamente
+    if (Firebase.apps.isNotEmpty && !kIsWeb) {
+      FirebaseCrashlytics.instance
+          .setCustomKey('environment', appContext['environment'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('app_version', appContext['app_version'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('build_number', appContext['build_number'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('platform', appContext['platform'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('locale', appContext['locale'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('timezone', appContext['timezone'] as String);
+      if (deviceContext['model'] != null) {
+        FirebaseCrashlytics.instance
+            .setCustomKey('device_model', deviceContext['model'] as String);
+      }
+      if (deviceContext['device'] != null) {
+        FirebaseCrashlytics.instance
+            .setCustomKey('device_type', deviceContext['device'] as String);
+      }
+    }
+  } catch (e) {
+    log.e('Firebase initialization failed', error: e);
+  }
+
+  // Inicialización de Supabase + auth/rpc. Si no hay red la SDK reintenta
+  // internamente; este try/catch protege el arranque para que un fallo de
+  // DNS o handshake no mate la app antes de runApp. La sesión se reanudará
+  // sola cuando vuelva la conectividad.
+  try {
+    await PerformanceMonitor.measureFuture(
+      'startup.supabase_initialize',
+      () => Supabase.initialize(
+        url: AppEnvironment.supabaseUrl,
+        anonKey: AppEnvironment.supabaseAnonKey,
+        // Firebase Third-Party Auth: each Supabase request carries the Firebase JWT.
+        // Supabase validates it against Firebase's JWKS endpoint automatically.
+        // This replaces the manual session sync (_syncSupabaseSession).
+        accessToken: () async {
+          try {
+            // Check if Firebase is actually initialized before accessing Auth
+            if (Firebase.apps.isEmpty) return null;
+            final user = fa.FirebaseAuth.instance.currentUser;
+            if (user == null) return null;
+            return await user.getIdToken(false);
+          } catch (e) {
+            log.w(
+              'Firebase Auth token retrieval failed during Supabase init',
+              error: e,
+            );
+            return null;
+          }
+        },
+      ),
+      warnAfterMs: 700,
+    );
+  } catch (e, stack) {
+    log.w(
+      'Supabase.initialize failed (offline?). App seguirá arrancando.',
+      error: e,
+      stackTrace: stack,
+    );
+  }
+
+  final supabaseClient = Supabase.instance.client;
+  AppIdentityService.instance.configure(client: supabaseClient);
+
+  final rpc = SupabaseRpcService(clientOverride: supabaseClient);
+  try {
+    await PerformanceMonitor.measureFuture(
+      'startup.rpc_service_initialize',
+      rpc.initialize,
+      warnAfterMs: 200,
+    );
+  } catch (e, stack) {
+    log.w(
+      'RPC service init failed (offline?)',
+      error: e,
+      stackTrace: stack,
+    );
+  }
+
+  // Dual error pipeline: Crashlytics (Android/iOS) + Supabase (admin logs).
+  // OJO: usamos recordFlutterError (NO recordFlutterFatalError) — los errores
+  // capturados por el framework de Flutter no son crashes reales; el árbol
+  // sigue ejecutándose. Marcarlos como fatal contamina los "crash-free users".
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+
+    // Advertencias benignas del framework (ej. el aviso de ink splash de
+    // ListTile) no son bugs: se imprimen en consola pero NO van a Crashlytics
+    // ni a application_logs, para no ahogar los errores reales. Eran el 100%
+    // del ruido de `error` en la tabla (56 filas del mismo warning).
+    if (_isBenignFrameworkWarning(details)) return;
+
+    if (!kIsWeb && Firebase.apps.isNotEmpty) {
+      FirebaseCrashlytics.instance.recordFlutterError(details);
+    }
+    final diagnosticLines = <String>[
+      details.exceptionAsString(),
+    ];
+    for (final node
+        in details.informationCollector?.call() ?? <DiagnosticsNode>[]) {
+      diagnosticLines.add(node.toString());
+    }
+    final fullContext = <String, dynamic>{
+      ...richContext,
+      'library': details.library,
+      'context': details.context?.toString(),
+      'summary': details.summary.toString(),
+      'full_diagnostics': diagnosticLines.join('\n'),
+    };
+    if (details.stack != null) {
+      fullContext['stack_frames_head'] =
+          details.stack.toString().split('\n').take(20).join('\n');
+    }
+    rpc.logApplicationError(
+      message: details.exceptionAsString(),
+      stackTrace: details.stack?.toString(),
+      context: fullContext,
+    );
+  };
+
+  // Catch async errors outside of Flutter framework
+  PlatformDispatcher.instance.onError = (error, stack) {
+    // 1. Crashlytics — marks as fatal (mobile only)
+    if (!kIsWeb && Firebase.apps.isNotEmpty) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    }
+    // 2. Supabase admin logs (all platforms)
+    rpc.logApplicationError(
+      message: error.toString(),
+      stackTrace: stack.toString(),
+      level: 'critical',
+      context: {
+        ...richContext,
+        'source': 'platform_dispatcher',
+      },
+    );
+    return true;
+  };
+
+  // Cablear el sink remoto del logger: a partir de acá, todo `log.e`/`log.f`
+  // atrapado en un try/catch llega a application_logs (antes solo iba a
+  // Crashlytics y era invisible en el backend).
+  LoggerService.remoteErrorSink = (
+    message, {
+    Object? error,
+    StackTrace? stackTrace,
+    bool fatal = false,
+  }) {
+    rpc.logApplicationError(
+      message: message,
+      stackTrace: stackTrace?.toString(),
+      level: fatal ? 'fatal' : 'error',
+      context: {
+        ...richContext,
+        'source': 'logger',
+        if (error != null) 'error': error.toString(),
+      },
+    );
+  };
+
+  await Future.wait([dateFormattingFuture, googleSignInWarmupFuture]);
+  final prefs = await prefsFuture;
+
+  runApp(
+    ProviderScope(
+      retry: appRiverpodRetry,
+      overrides: [
+        rpcServiceProvider.overrideWithValue(rpc),
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
+      child: MyApp(
+        appVersion: packageInfo.version,
+        prefs: prefs,
+      ),
+    ),
+  );
+}
+
+/// Advertencias del framework que son advisories de UI, no bugs accionables.
+/// Se filtran del pipeline remoto/Crashlytics para no enterrar errores reales.
+/// Mantener la lista chica y específica: solo strings inequívocamente benignos.
+const _benignFrameworkWarnings = <String>[
+  'ListTile background color or ink splashes may be invisible',
+];
+
+bool _isBenignFrameworkWarning(FlutterErrorDetails details) {
+  final message = details.exceptionAsString();
+  for (final pattern in _benignFrameworkWarnings) {
+    if (message.contains(pattern)) return true;
+  }
+  return false;
+}
+
+/// Contexto del dispositivo para logs/Crashlytics. Falla suave: si un
+/// plugin no responde se devuelve lo que se haya juntado hasta ahí.
+Future<Map<String, dynamic>> _collectDeviceContext() async {
   final deviceInfo = DeviceInfoPlugin();
   final deviceContext = <String, dynamic>{};
   try {
@@ -119,216 +411,7 @@ void main() async {
   } catch (e) {
     log.w('Device info initialization failed', error: e);
   }
-
-  final locale = WidgetsBinding.instance.platformDispatcher.locale;
-  final appContext = <String, dynamic>{
-    'environment': AppEnvironment.current.name,
-    'app_version': packageInfo.version,
-    'build_number': packageInfo.buildNumber,
-    'platform': kIsWeb ? 'web' : defaultTargetPlatform.name,
-    'locale': '${locale.languageCode}_${locale.countryCode ?? ''}',
-    'timezone': DateTime.now().timeZoneName,
-  };
-  final richContext = <String, dynamic>{
-    ...appContext,
-    ...deviceContext,
-  };
-
-  log.setCustomKey('environment', appContext['environment']);
-  log.setCustomKey('app_version', appContext['app_version']);
-  log.setCustomKey('build_number', appContext['build_number']);
-  log.setCustomKey('platform', appContext['platform']);
-  log.setCustomKey('locale', appContext['locale']);
-  log.setCustomKey('timezone', appContext['timezone']);
-  if (deviceContext['model'] != null) {
-    log.setCustomKey('device_model', deviceContext['model']);
-  }
-  if (deviceContext['device'] != null) {
-    log.setCustomKey('device_type', deviceContext['device']);
-  }
-
-  AppEnvironment.validateRuntimeConfig(isWeb: kIsWeb);
-
-  // 1. Initialize Firebase
-  try {
-    await PerformanceMonitor.measureFuture(
-      'startup.firebase_initialize',
-      () => Firebase.initializeApp(
-        options: kIsWeb ? AppEnvironment.firebaseOptions : null,
-      ),
-      warnAfterMs: 700,
-    );
-    // Pass ALL uncaught Flutter errors to Crashlytics (Android/iOS only).
-    // El handler completo (con contexto + Supabase logs) se asigna más abajo,
-    // después de inicializar RPC. Acá sólo seteamos las custom keys.
-    if (!kIsWeb) {
-      FirebaseCrashlytics.instance
-          .setCustomKey('environment', appContext['environment'] as String);
-      FirebaseCrashlytics.instance
-          .setCustomKey('app_version', appContext['app_version'] as String);
-      FirebaseCrashlytics.instance
-          .setCustomKey('build_number', appContext['build_number'] as String);
-      FirebaseCrashlytics.instance
-          .setCustomKey('platform', appContext['platform'] as String);
-      FirebaseCrashlytics.instance
-          .setCustomKey('locale', appContext['locale'] as String);
-      FirebaseCrashlytics.instance
-          .setCustomKey('timezone', appContext['timezone'] as String);
-      if (deviceContext['model'] != null) {
-        FirebaseCrashlytics.instance
-            .setCustomKey('device_model', deviceContext['model'] as String);
-      }
-      if (deviceContext['device'] != null) {
-        FirebaseCrashlytics.instance
-            .setCustomKey('device_type', deviceContext['device'] as String);
-      }
-    }
-  } catch (e) {
-    log.e('Firebase initialization failed', error: e);
-  }
-
-  // Inicialización de Supabase + auth/rpc. Si no hay red la SDK reintenta
-  // internamente; este try/catch protege el arranque para que un fallo de
-  // DNS o handshake no mate la app antes de runApp. La sesión se reanudará
-  // sola cuando vuelva la conectividad.
-  try {
-    await PerformanceMonitor.measureFuture(
-      'startup.supabase_initialize',
-      () => Supabase.initialize(
-        url: AppEnvironment.supabaseUrl,
-        anonKey: AppEnvironment.supabaseAnonKey,
-        // Firebase Third-Party Auth: each Supabase request carries the Firebase JWT.
-        // Supabase validates it against Firebase's JWKS endpoint automatically.
-        // This replaces the manual session sync (_syncSupabaseSession).
-        accessToken: () async {
-          final user = fa.FirebaseAuth.instance.currentUser;
-          if (user == null) return null;
-          return await user.getIdToken(false);
-        },
-      ),
-      warnAfterMs: 700,
-    );
-  } catch (e, stack) {
-    log.w(
-      'Supabase.initialize failed (offline?). App seguirá arrancando.',
-      error: e,
-      stackTrace: stack,
-    );
-  }
-
-  final supabaseClient = Supabase.instance.client;
-  AppIdentityService.instance.configure(client: supabaseClient);
-  final auth = SupabaseAuthService(client: supabaseClient);
-  try {
-    await PerformanceMonitor.measureFuture(
-      'startup.auth_service_initialize',
-      auth.initialize,
-      warnAfterMs: 500,
-    );
-  } catch (e, stack) {
-    log.w(
-      'Auth service init failed (offline?)',
-      error: e,
-      stackTrace: stack,
-    );
-  }
-
-  final rpc = SupabaseRpcService(clientOverride: supabaseClient);
-  try {
-    await PerformanceMonitor.measureFuture(
-      'startup.rpc_service_initialize',
-      rpc.initialize,
-      warnAfterMs: 200,
-    );
-  } catch (e, stack) {
-    log.w(
-      'RPC service init failed (offline?)',
-      error: e,
-      stackTrace: stack,
-    );
-  }
-
-  // Dual error pipeline: Crashlytics (Android/iOS) + Supabase (admin logs).
-  // OJO: usamos recordFlutterError (NO recordFlutterFatalError) — los errores
-  // capturados por el framework de Flutter no son crashes reales; el árbol
-  // sigue ejecutándose. Marcarlos como fatal contamina los "crash-free users".
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-    if (!kIsWeb) {
-      FirebaseCrashlytics.instance.recordFlutterError(details);
-    }
-    final diagnosticLines = <String>[
-      details.exceptionAsString(),
-    ];
-    for (final node
-        in details.informationCollector?.call() ?? <DiagnosticsNode>[]) {
-      diagnosticLines.add(node.toString());
-    }
-    final fullContext = <String, dynamic>{
-      ...richContext,
-      'library': details.library,
-      'context': details.context?.toString(),
-      'summary': details.summary.toString(),
-      'full_diagnostics': diagnosticLines.join('\n'),
-    };
-    if (details.stack != null) {
-      fullContext['stack_frames_head'] =
-          details.stack.toString().split('\n').take(20).join('\n');
-    }
-    rpc.logApplicationError(
-      message: details.exceptionAsString(),
-      stackTrace: details.stack?.toString(),
-      context: fullContext,
-    );
-  };
-
-  // Catch async errors outside of Flutter framework
-  PlatformDispatcher.instance.onError = (error, stack) {
-    // 1. Crashlytics — marks as fatal (mobile only)
-    if (!kIsWeb) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    }
-    // 2. Supabase admin logs (all platforms)
-    rpc.logApplicationError(
-      message: error.toString(),
-      stackTrace: stack.toString(),
-      level: 'critical',
-      context: {
-        ...richContext,
-        'source': 'platform_dispatcher',
-      },
-    );
-    return true;
-  };
-
-  await PerformanceMonitor.measureFuture(
-    'startup.date_formatting',
-    () async {
-      await initializeDateFormatting('es', null);
-      await initializeDateFormatting('en_US', null);
-    },
-    warnAfterMs: 300,
-  );
-  final prefs = await PerformanceMonitor.measureFuture(
-    'startup.shared_preferences',
-    SharedPreferences.getInstance,
-    warnAfterMs: 300,
-  );
-
-  runApp(
-    ProviderScope(
-      retry: appRiverpodRetry,
-      overrides: [
-        authServiceProvider.overrideWithValue(auth),
-        rpcServiceProvider.overrideWithValue(rpc),
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
-      child: MyApp(
-        appVersion: packageInfo.version,
-        prefs: prefs,
-      ),
-    ),
-  );
+  return deviceContext;
 }
 
 class MyApp extends ConsumerStatefulWidget {
@@ -360,9 +443,12 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
-    _analyticsObserver = FirebaseAnalyticsObserver(
-      analytics: FirebaseAnalytics.instance,
-    );
+    // Blindaje: Solo usar Analytics si Firebase está listo
+    if (Firebase.apps.isNotEmpty) {
+      _analyticsObserver = FirebaseAnalyticsObserver(
+        analytics: FirebaseAnalytics.instance,
+      );
+    }
     ref.read(authBootstrapProvider);
     unawaited(_configureAnalytics());
 
@@ -403,6 +489,9 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _configureAnalytics() async {
+    // Blindaje: Solo configurar si Firebase está listo
+    if (Firebase.apps.isEmpty) return;
+
     final analytics = ref.read(analyticsServiceProvider);
     await PerformanceMonitor.measureFuture(
       'startup.analytics_configure',
@@ -426,6 +515,20 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _completeStartupGate() async {
+    // El splash mínimo de branding corre EN PARALELO con el bootstrap (no en
+    // serie): garantiza que el splash se vea al menos ese tiempo sin sumarle
+    // ~800ms al arranque cuando la carga ya tardó más que eso.
+    final minimumSplash = Future<void>.delayed(_minimumSplashDuration);
+    // Precarga de íconos de compras en background apenas abre la app: corre en
+    // paralelo al login/onboarding, así para cuando el usuario llega a la lista
+    // de compras ya están cacheados en disco y nunca ve placeholders ni íconos
+    // viejos. Fire-and-forget — no bloquea el arranque.
+    unawaited(
+      ref.read(shoppingIconManifestProvider.notifier).precacheAllIcons(),
+    );
+    unawaited(
+      ref.read(conceptIconManifestProvider.notifier).precacheAllIcons(),
+    );
     log.i('🚀 StartupGate: waiting for authBootstrap...');
     await PerformanceMonitor.measureFuture(
       'startup.auth_bootstrap_provider',
@@ -451,8 +554,6 @@ class _MyAppState extends ConsumerState<MyApp> {
 
     if (!mounted) return;
 
-    await Future<void>.delayed(_minimumSplashDuration);
-
     if (authState.isAuthenticated && authState.source != 'admin_testing') {
       log.i('StartupGate: preloading home data before entering...');
       await PerformanceMonitor.measureFuture(
@@ -461,6 +562,8 @@ class _MyAppState extends ConsumerState<MyApp> {
         warnAfterMs: 1800,
       );
     }
+
+    await minimumSplash;
 
     if (!mounted) return;
 
@@ -556,7 +659,10 @@ class _MyAppState extends ConsumerState<MyApp> {
       avatarUrls.map((url) async {
         try {
           if (url.startsWith('http')) {
-            await precacheImage(NetworkImage(url), context);
+            // CachedNetworkImageProvider y no NetworkImage: persiste en disco
+            // entre sesiones, así este precache cuesta red solo la primera vez
+            // (medido: ~750ms del gate de arranque re-bajando avatares).
+            await precacheImage(CachedNetworkImageProvider(url), context);
           } else if (url.startsWith('assets/')) {
             await precacheImage(AssetImage(url), context);
           }
@@ -649,13 +755,28 @@ class _MyAppState extends ConsumerState<MyApp> {
       title: 'HomeSync',
       debugShowCheckedModeBanner: false,
       navigatorKey: _navigatorKey,
-      navigatorObservers: [_analyticsObserver, _breadcrumbObserver],
+      navigatorObservers: [
+        if (Firebase.apps.isNotEmpty) _analyticsObserver,
+        _breadcrumbObserver,
+      ],
       theme: AppTheme.lightTheme(customPrimary: customPrimary),
       darkTheme: AppTheme.darkTheme(customPrimary: customPrimary),
       themeMode: themeMode,
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      // Status/nav bar icons follow the active theme on every screen,
+      // including the ones without an AppBar (home tab, splash, login).
+      // Text scaling respects the system setting but clamps at 1.3x: the
+      // editorial layout (bento tiles, chips, headers con fontSize fijo) no
+      // sobrevive escalas mayores sin overflow.
+      builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+        value: AppSystemUi.styleFor(Theme.of(context).brightness),
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.3,
+          child: child ?? const SizedBox.shrink(),
+        ),
+      ),
       routes: {
         '/__login__': (_) => LoginScreen(prefs: widget.prefs),
       },

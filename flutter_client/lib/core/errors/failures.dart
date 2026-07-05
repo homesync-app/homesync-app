@@ -19,19 +19,26 @@ class ValidationFailure extends Failure {
   const ValidationFailure(super.message);
 }
 
+/// Default (Spanish) messages for parameterless failures. Exposed so
+/// `friendlyErrorMessage` can recognize them and swap in the localized
+/// equivalent when an AppLocalizations is available.
+const String kNetworkFailureDefault = 'No se puede conectar al servidor.';
+const String kAuthFailureDefault = 'Usuario no autenticado';
+const String kHouseholdFailureDefault = 'Hogar no encontrado';
+
 /// Failures from connectivity issues
 class NetworkFailure extends Failure {
-  const NetworkFailure([super.message = 'No se puede conectar al servidor.']);
+  const NetworkFailure([super.message = kNetworkFailureDefault]);
 }
 
 /// When the user is not authenticated
 class AuthFailure extends Failure {
-  const AuthFailure([super.message = 'Usuario no autenticado']);
+  const AuthFailure([super.message = kAuthFailureDefault]);
 }
 
 /// When the user does not belong to a household
 class HouseholdFailure extends Failure {
-  const HouseholdFailure([super.message = 'Hogar no encontrado']);
+  const HouseholdFailure([super.message = kHouseholdFailureDefault]);
 }
 
 /// When coins are insufficient for redemption

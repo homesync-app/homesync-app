@@ -4,6 +4,8 @@ import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/admin_testing_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
@@ -149,8 +151,9 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
         builder: (dialogContext, setDialogState) {
           return AlertDialog(
             backgroundColor: context.theme.surface,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadii.xl),
+            ),
             title: const Text(
               'Agregar miembro dummy',
               style: TextStyle(fontWeight: FontWeight.w900),
@@ -309,7 +312,7 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: theme.surface,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppRadii.xl),
                   border:
                       Border.all(color: theme.border.withValues(alpha: 0.5)),
                   boxShadow: theme.cardShadow,
@@ -337,7 +340,7 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                     const SizedBox(height: 18),
                     ...AdminTestingConfig.scenarios.map(
                       (scenario) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                         child: _ScenarioCard(
                           scenario: scenario,
                           isSelected:
@@ -354,7 +357,7 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: theme.surface,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppRadii.xl),
                   border:
                       Border.all(color: theme.border.withValues(alpha: 0.5)),
                 ),
@@ -468,7 +471,8 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                                     decoration: BoxDecoration(
                                       color: AppColors.success
                                           .withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(999),
+                                      borderRadius:
+                                          BorderRadius.circular(AppRadii.pill),
                                     ),
                                     child: Text(
                                       admin.realQaUserLabel ??
@@ -569,7 +573,9 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                               const SizedBox(height: 10),
                               ...members.map(
                                 (member) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
+                                  padding: const EdgeInsets.only(
+                                    bottom: AppSpacing.xs,
+                                  ),
                                   child: Row(
                                     children: [
                                       Text(
@@ -595,7 +601,8 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                           ),
                         ),
                         loading: () => const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
+                          padding:
+                              EdgeInsets.symmetric(vertical: AppSpacing.xs),
                           child: LinearProgressIndicator(minHeight: 3),
                         ),
                         error: (error, _) => Text(
@@ -616,7 +623,7 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: theme.surface,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppRadii.xl),
                   border:
                       Border.all(color: theme.border.withValues(alpha: 0.5)),
                 ),
@@ -674,10 +681,12 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                                 (event) => Padding(
                                   padding: const EdgeInsets.only(bottom: 10),
                                   child: Container(
-                                    padding: const EdgeInsets.all(12),
+                                    padding:
+                                        const EdgeInsets.all(AppSpacing.sm),
                                     decoration: BoxDecoration(
                                       color: theme.scaffoldBackground,
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius:
+                                          BorderRadius.circular(AppRadii.md),
                                       border: Border.all(
                                         color: theme.border
                                             .withValues(alpha: 0.35),
@@ -787,7 +796,7 @@ class _CatalogRequestsSection extends ConsumerWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
       ),
       child: Column(
@@ -848,7 +857,7 @@ class _CatalogRequestsSection extends ConsumerWidget {
                       ? DateTime.tryParse(item['last_seen_at'] as String)
                       : null;
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                     child: Row(
                       children: [
                         Text(emoji, style: const TextStyle(fontSize: 22)),
@@ -885,7 +894,7 @@ class _CatalogRequestsSection extends ConsumerWidget {
                             color: count >= 5
                                 ? AppColors.primary.withValues(alpha: 0.15)
                                 : AppColors.divider.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppRadii.lg),
                           ),
                           child: Text(
                             '$count veces',
@@ -952,14 +961,14 @@ class _ScenarioCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: isSelected
                 ? color.withValues(alpha: 0.10)
                 : theme.scaffoldBackground,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             border: Border.all(
               color: isSelected
                   ? color.withValues(alpha: 0.7)
@@ -1024,7 +1033,8 @@ final _userFeedbackProvider =
   final response = await client
       .from('user_feedback')
       .select(
-          'id, type, title, description, email, app_version, platform, created_at',)
+        'id, type, title, description, email, app_version, platform, created_at',
+      )
       .order('created_at', ascending: false)
       .limit(100);
   return List<Map<String, dynamic>>.from(response as List);
@@ -1051,7 +1061,7 @@ class _UserFeedbackSectionState extends ConsumerState<_UserFeedbackSection> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
       ),
       child: Column(
@@ -1121,7 +1131,7 @@ class _UserFeedbackSectionState extends ConsumerState<_UserFeedbackSection> {
 
               if (filtered.isEmpty) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   child: Center(
                     child: Text(
                       _typeFilter == 'all'
@@ -1159,7 +1169,7 @@ class _UserFeedbackSectionState extends ConsumerState<_UserFeedbackSection> {
   Widget _filterChip(AppThemeColors theme, String value, String label) {
     final selected = _typeFilter == value;
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.only(right: AppSpacing.xs),
       child: FilterChip(
         selected: selected,
         label: Text(
@@ -1202,12 +1212,12 @@ class _FeedbackTileState extends State<_FeedbackTile> {
     final createdAt = item['created_at'] as String?;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
       child: GestureDetector(
         onTap: () => setState(() => _expanded = !_expanded),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.sm),
           decoration: BoxDecoration(
             color: theme.scaffoldBackground,
             borderRadius: BorderRadius.circular(14),
@@ -1283,7 +1293,10 @@ class _FeedbackTileState extends State<_FeedbackTile> {
                       _metaChip(theme, Icons.smartphone_outlined, platform),
                     if (appVersion != null)
                       _metaChip(
-                          theme, Icons.info_outline_rounded, 'v$appVersion',),
+                        theme,
+                        Icons.info_outline_rounded,
+                        'v$appVersion',
+                      ),
                   ],
                 ),
               ],
@@ -1296,18 +1309,23 @@ class _FeedbackTileState extends State<_FeedbackTile> {
 
   Widget _metaChip(AppThemeColors theme, IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
+      ),
       decoration: BoxDecoration(
         color: theme.surfaceContainer,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadii.xs),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 11, color: theme.textMuted),
           const SizedBox(width: 4),
-          Text(label,
-              style: TextStyle(fontSize: 10, color: theme.textSecondary),),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, color: theme.textSecondary),
+          ),
         ],
       ),
     );
@@ -1358,7 +1376,7 @@ class _ErrorLogsSectionState extends ConsumerState<_ErrorLogsSection> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
       ),
       child: Column(
@@ -1432,7 +1450,7 @@ class _ErrorLogsSectionState extends ConsumerState<_ErrorLogsSection> {
                       .toList();
               if (filtered.isEmpty) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   child: Center(
                     child: Text(
                       _levelFilter == 'all'
@@ -1475,7 +1493,7 @@ class _ErrorLogsSectionState extends ConsumerState<_ErrorLogsSection> {
   Widget _levelChip(String value, String label) {
     final selected = _levelFilter == value;
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.only(right: AppSpacing.xs),
       child: FilterChip(
         selected: selected,
         label: Text(
@@ -1526,7 +1544,7 @@ class _ErrorLogTile extends StatelessWidget {
     };
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
@@ -1545,7 +1563,7 @@ class _ErrorLogTile extends StatelessWidget {
             onTap: onToggle,
             borderRadius: BorderRadius.circular(14),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1714,10 +1732,10 @@ class _ErrorLogTile extends StatelessWidget {
         const SizedBox(height: 4),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(AppSpacing.xs),
           decoration: BoxDecoration(
             color: theme.surfaceContainer.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadii.xs),
           ),
           child: SelectableText(
             content,

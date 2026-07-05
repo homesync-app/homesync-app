@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/theme/app_theme_extension.dart';
@@ -168,7 +169,7 @@ class InAppNotificationBannerState extends State<InAppNotificationBanner>
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: SlideTransition(
             position: _slideAnimation,
             child: FadeTransition(

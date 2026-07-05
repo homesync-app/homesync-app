@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/household/presentation/providers/setup_wizard_controller.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
@@ -66,7 +66,7 @@ class SetupWelcomeStep extends ConsumerWidget {
                 SetupPrimaryButton(
                   text: t.setupWelcomeStartButton,
                   onPressed: () {
-                    HapticFeedback.heavyImpact();
+                    AppHaptics.success();
                     ref
                         .read(setupWizardControllerProvider.notifier)
                         .goTo(SetupStep.identity);

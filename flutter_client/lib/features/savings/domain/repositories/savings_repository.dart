@@ -19,6 +19,16 @@ abstract class SavingsRepository {
     required double targetAmount,
     required String color,
     required String icon,
+    DateTime? targetDate,
+  });
+
+  Future<Either<Failure, void>> updateGoal({
+    required String goalId,
+    String? title,
+    double? targetAmount,
+    String? color,
+    String? icon,
+    DateTime? targetDate,
   });
 
   Future<Either<Failure, void>> addContribution({
@@ -26,7 +36,11 @@ abstract class SavingsRepository {
     required String userId,
     required double amount,
     String? note,
+    String splitType = 'personal',
+    List<Map<String, dynamic>> participants = const [],
   });
+
+  Future<Either<Failure, void>> archiveGoal({required String goalId});
 
   Future<Either<Failure, void>> deleteGoal({required String goalId});
 }

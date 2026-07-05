@@ -182,6 +182,8 @@ class SupabaseHouseholdRepository
                   'role': map['role'],
                   'joined_at': map['joined_at'],
                   'display_role': map['display_role'],
+                  'member_type': map['member_type'],
+                  'onboarding_completed': map['onboarding_completed'],
                   'users': {
                     'email': map['email'],
                     'full_name': map['full_name'],
@@ -362,9 +364,15 @@ class SupabaseHouseholdRepository
   ) async {
     return executeWithHandling(
       () async {
-        await _client
-            .from(AppConstants.tableHouseholds)
-            .update({'default_split_ratio': ratio}).eq('id', householdId);
+        // The ratio is the CURRENT user's share, anchored to them so it stays
+        // stable regardless of who later loads/pays an expense. Equal (0.5)
+        // clears the anchor.
+        final anchorId =
+            ratio == 0.5 ? null : AppIdentityService.instance.currentUserId;
+        await _client.from(AppConstants.tableHouseholds).update({
+          'default_split_ratio': ratio,
+          'split_ratio_anchor_id': anchorId,
+        }).eq('id', householdId);
       },
       context: 'SupabaseHouseholdRepository.updateDefaultSplitRatio',
       isOnline: _isOnline,
@@ -379,9 +387,15 @@ class SupabaseHouseholdRepository
   }) async {
     return executeWithHandling(
       () async {
+        // default_split_ratio is the current user's share; anchor it to them so
+        // shared expenses split the same regardless of who pays. 0.5 clears it.
+        final anchorId = defaultSplitRatio == 0.5
+            ? null
+            : AppIdentityService.instance.currentUserId;
         await _client.from(AppConstants.tableHouseholds).update({
           'finance_mode': financeMode,
           'default_split_ratio': defaultSplitRatio,
+          'split_ratio_anchor_id': anchorId,
         }).eq('id', householdId);
       },
       context: 'SupabaseHouseholdRepository.updateFinanceSettings',
@@ -429,11 +443,19 @@ class SupabaseHouseholdRepository
     return executeWithHandling(
       () async {
         final householdMember = await _requireCurrentHouseholdMembership();
-        await _client
+        final updated = await _client
             .from(AppConstants.tableHouseholdMembers)
             .update({'display_role': displayRole})
             .eq('user_id', userId)
-            .eq('household_id', householdMember['household_id']);
+            .eq('household_id', householdMember['household_id'])
+            .select('user_id')
+            .maybeSingle();
+        if (updated == null) {
+          throw const PostgrestException(
+            message: 'Member role was not updated',
+            code: '42501',
+          );
+        }
       },
       context: 'SupabaseHouseholdRepository.updateMemberDisplayRole',
       isOnline: _isOnline,
@@ -443,20 +465,45 @@ class SupabaseHouseholdRepository
   @override
   Future<Either<Failure, void>> updateMemberType(
     String userId,
-    String type,
-  ) async {
+    String type, {
+    String? displayRole,
+  }) async {
     return executeWithHandling(
       () async {
         final householdMember = await _requireCurrentHouseholdMembership();
-        await _client
+        final resolvedDisplayRole =
+            (displayRole != null && displayRole.trim().isNotEmpty)
+                ? displayRole.trim()
+                : _displayRoleForMemberType(type);
+        final updated = await _client
             .from(AppConstants.tableHouseholdMembers)
-            .update({'member_type': type})
+            .update({
+              'member_type': type,
+              'display_role': resolvedDisplayRole,
+            })
             .eq('user_id', userId)
-            .eq('household_id', householdMember['household_id']);
+            .eq('household_id', householdMember['household_id'])
+            .select('user_id')
+            .maybeSingle();
+        if (updated == null) {
+          throw const PostgrestException(
+            message: 'Member type was not updated',
+            code: '42501',
+          );
+        }
       },
       context: 'SupabaseHouseholdRepository.updateMemberType',
       isOnline: _isOnline,
     );
+  }
+
+  String _displayRoleForMemberType(String type) {
+    return switch (type) {
+      'guardian' => 'Tutor/a',
+      'teen' => 'Adolescente',
+      'child' => 'Hijo/a',
+      _ => 'Padre/Madre',
+    };
   }
 
   @override

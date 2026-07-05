@@ -6,9 +6,21 @@ import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
-import 'package:homesync_client/core/widgets/homesync_logo.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:homesync_client/shared/widgets/animated_amount.dart';
+import 'package:homesync_client/shared/widgets/animated_press.dart';
+import 'package:homesync_client/shared/widgets/premium_animated_avatar.dart';
+import 'package:purchases_flutter/purchases_flutter.dart' as rc;
+
+const String _kMascotDir = 'assets/images/premium_3d_avatars';
+const Map<AvatarMotion, String> _kMascotMotions = {
+  AvatarMotion.idle: '$_kMascotDir/animated/premium_orange_cat.webp',
+  AvatarMotion.tada: '$_kMascotDir/animated/premium_orange_cat_tada.webp',
+};
+const String _kMascotFallback = '$_kMascotDir/premium_orange_cat.png';
 
 class PremiumPaywallScreen extends ConsumerStatefulWidget {
   const PremiumPaywallScreen({super.key});
@@ -32,119 +44,113 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     final productsAsync = ref.watch(premiumProductsProvider);
     final isPremium = ref.watch(premiumProvider).value ?? false;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           tooltip: t.premiumPaywallCloseTooltip,
-          icon: const Icon(Icons.close, color: AppColors.textPrimary),
+          icon: Icon(Icons.close, color: theme.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Stack(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.background,
-                  AppColors.primaryLight,
-                  AppColors.surface,
-                ],
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: theme.isDarkMode
+                      ? [
+                          theme.background,
+                          AppColors.primary.withValues(alpha: 0.12),
+                          theme.surface,
+                        ]
+                      : const [
+                          AppColors.background,
+                          AppColors.primaryLight,
+                          AppColors.surface,
+                        ],
+                ),
               ),
             ),
           ),
+          // Soft golden halo behind the hero so the screen opens with warmth.
           Positioned(
-            top: 36,
-            right: 20,
-            child: Icon(
-              Icons.auto_awesome_rounded,
-              color: AppColors.accentGold.withValues(alpha: 0.16),
-              size: 108,
-            ),
-          ),
-          Positioned(
-            top: 128,
-            left: -48,
-            child: Container(
-              width: 148,
-              height: 148,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.sage.withValues(alpha: 0.13),
+            top: -90,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(
+              child: Container(
+                height: 340,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.accentGold.withValues(
+                        alpha: theme.isDarkMode ? 0.16 : 0.14,
+                      ),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
           SafeArea(
             top: false,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              child: Column(
-                children: [
-                  _HeroHeader(isDarkMode: isDarkMode)
-                      .animate()
-                      .fadeIn(duration: 350.ms)
-                      .slideY(begin: 0.06),
-                  const SizedBox(height: 24),
-                  _BenefitCard(
-                    icon: Icons.event_repeat_rounded,
-                    color: AppColors.primary,
-                    title: t.premiumBenefitRecurringPayments,
-                    desc: t.premiumBenefitRecurringPaymentsDesc,
-                  ).animate().fadeIn(delay: 120.ms).slideY(begin: 0.08),
-                  _BenefitCard(
-                    icon: Icons.shopping_cart_checkout_rounded,
-                    color: AppColors.sage,
-                    title: t.premiumBenefitShoppingFinanceSync,
-                    desc: t.premiumBenefitShoppingFinanceSyncDesc,
-                  ).animate().fadeIn(delay: 180.ms).slideY(begin: 0.08),
-                  _BenefitCard(
-                    icon: Icons.insights_rounded,
-                    color: AppColors.accentBlue,
-                    title: t.premiumBenefitAdvancedStats,
-                    desc: t.premiumBenefitAdvancedStatsDesc,
-                  ).animate().fadeIn(delay: 240.ms).slideY(begin: 0.08),
-                  _BenefitCard(
-                    icon: Icons.palette_rounded,
-                    color: AppColors.accentPurple,
-                    title: t.premiumBenefitFullCustomization,
-                    desc: t.premiumBenefitFullCustomizationDesc,
-                  ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.08),
-                  const SizedBox(height: 16),
-                  if (isPremium)
-                    _AlreadyPremiumCard()
-                  else
-                    productsAsync.when(
-                      data: (products) => _ProductList(products: products),
-                      loading: () => const CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
-                      error: (err, _) => _StoreError(error: err.toString()),
-                    ),
-                  const SizedBox(height: 18),
-                  TextButton(
-                    onPressed: () =>
-                        ref.read(restorePremiumPurchasesUseCaseProvider).call(),
-                    child: Text(
-                      t.premiumRestorePurchases,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+                    child: Column(
+                      children: [
+                        if (isPremium)
+                          const _PremiumActiveContent()
+                              .animate()
+                              .fadeIn(duration: 350.ms)
+                              .slideY(begin: 0.04)
+                        else ...[
+                          const _HeroHeader()
+                              .animate()
+                              .fadeIn(duration: 350.ms)
+                              .slideY(begin: 0.06),
+                          const SizedBox(height: 22),
+                          const _BenefitsCard()
+                              .animate()
+                              .fadeIn(delay: 140.ms, duration: 350.ms)
+                              .slideY(begin: 0.06),
+                        ],
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                if (!isPremium)
+                  productsAsync.when(
+                    data: (products) => _PurchasePanel(products: products),
+                    loading: () => const _PanelShell(
+                      child: SizedBox(
+                        height: 160,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    error: (err, _) => _PanelShell(
+                      child: _StoreError(error: err.toString()),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
@@ -154,32 +160,40 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
 }
 
 class _HeroHeader extends StatelessWidget {
-  final bool isDarkMode;
-
-  const _HeroHeader({required this.isDarkMode});
+  const _HeroHeader();
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
 
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.74),
-            borderRadius: BorderRadius.circular(AppRadii.modal),
-            border: Border.all(color: Colors.white),
-            boxShadow: AppElevation.floating(
-              color: AppColors.shadowBase,
-              isDarkMode: isDarkMode,
-            ),
-          ),
-          child: const HomeSyncLogo(size: 82, showShadow: false),
+        // Brand mascot instead of a generic medallion: the hero moment.
+        SizedBox(
+          width: 148,
+          height: 148,
+          child: const PremiumAnimatedAvatar(
+            motionAssets: _kMascotMotions,
+            fallbackAsset: _kMascotFallback,
+            ambientMotion: AvatarMotion.tada,
+            // Deja terminar la transicion de ruta + fade del hero antes del
+            // ta-da, para que el gesto se vea completo y no "cortado".
+            arrivalDelay: Duration(milliseconds: 550),
+            size: 148,
+          )
+              .animate()
+              .scale(
+                begin: const Offset(0.86, 0.86),
+                end: const Offset(1, 1),
+                duration: 500.ms,
+                curve: Curves.easeOutBack,
+              )
+              .fadeIn(duration: 250.ms),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 10),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: AppColors.accentGold.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(AppRadii.pill),
@@ -187,36 +201,51 @@ class _HeroHeader extends StatelessWidget {
               color: AppColors.accentGold.withValues(alpha: 0.32),
             ),
           ),
-          child: Text(
-            t.premiumPaywallEyebrow,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        Text(
-          t.premiumPaywallTitle,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 31,
-            fontWeight: FontWeight.w900,
-            color: AppColors.textPrimary,
-            height: 1.08,
-            letterSpacing: -1,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.workspace_premium_rounded,
+                color: AppColors.accentGold,
+                size: 14,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                t.premiumPaywallEyebrow,
+                style: TextStyle(
+                  color: theme.textPrimary,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
         Text(
-          t.premiumPaywallSubtitle,
+          t.premiumPaywallTitle,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-            height: 1.35,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            color: theme.textPrimary,
+            letterSpacing: -0.7,
+            height: 1.1,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            t.premiumPaywallSubtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              color: theme.textSecondary,
+              height: 1.32,
+            ),
           ),
         ),
       ],
@@ -224,13 +253,81 @@ class _HeroHeader extends StatelessWidget {
   }
 }
 
-class _BenefitCard extends StatelessWidget {
+/// All the benefits grouped in a single soft card, like modern paywalls do,
+/// instead of a stack of setting-like rows.
+class _BenefitsCard extends StatelessWidget {
+  const _BenefitsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+
+    final benefits = [
+      (
+        Icons.event_repeat_rounded,
+        AppColors.primary,
+        t.premiumBenefitRecurringPayments,
+        t.premiumBenefitRecurringPaymentsDesc,
+      ),
+      (
+        Icons.shopping_cart_checkout_rounded,
+        AppColors.sage,
+        t.premiumBenefitShoppingFinanceSync,
+        t.premiumBenefitShoppingFinanceSyncDesc,
+      ),
+      (
+        Icons.insights_rounded,
+        AppColors.accentBlue,
+        t.premiumBenefitAdvancedStats,
+        t.premiumBenefitAdvancedStatsDesc,
+      ),
+      (
+        Icons.palette_rounded,
+        AppColors.accentPurple,
+        t.premiumBenefitFullCustomization,
+        t.premiumBenefitFullCustomizationDesc,
+      ),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.isDarkMode
+            ? theme.surface.withValues(alpha: 0.74)
+            : Colors.white.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+        border: Border.all(color: theme.border.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < benefits.length; i++) ...[
+            _BenefitRow(
+              icon: benefits[i].$1,
+              color: benefits[i].$2,
+              title: benefits[i].$3,
+              desc: benefits[i].$4,
+            ),
+            if (i < benefits.length - 1)
+              Divider(
+                height: 1,
+                thickness: 1,
+                indent: 62,
+                color: theme.border.withValues(alpha: 0.3),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _BenefitRow extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String title;
   final String desc;
 
-  const _BenefitCard({
+  const _BenefitRow({
     required this.icon,
     required this.color,
     required this.title,
@@ -239,83 +336,159 @@ class _BenefitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.82),
-          borderRadius: BorderRadius.circular(AppRadii.xl),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.13),
-                borderRadius: BorderRadius.circular(AppRadii.lg),
-              ),
-              child: Icon(icon, color: color, size: 24),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.13),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
-                      height: 1.18,
-                    ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w800,
+                    color: theme.textPrimary,
+                    height: 1.2,
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    desc,
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                      height: 1.32,
-                    ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  desc,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: theme.textSecondary,
+                    height: 1.3,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _ProductList extends ConsumerWidget {
-  final List<ProductDetails> products;
+/// Surface pinned to the bottom that holds the whole purchase flow so the
+/// plans and the CTA never scroll away.
+class _PanelShell extends StatelessWidget {
+  final Widget child;
 
-  const _ProductList({required this.products});
+  const _PanelShell({required this.child});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final t = AppLocalizations.of(context);
-    if (products.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.86),
-          borderRadius: BorderRadius.circular(AppRadii.xl),
-          border: Border.all(color: AppColors.border),
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+      decoration: BoxDecoration(
+        color: theme.isDarkMode ? theme.surface : Colors.white,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadii.xxl),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(
+              alpha: theme.isDarkMode ? 0.42 : 0.08,
+            ),
+            blurRadius: 30,
+            offset: const Offset(0, -10),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _PurchasePanel extends ConsumerStatefulWidget {
+  final List<rc.Package> products;
+
+  const _PurchasePanel({required this.products});
+
+  @override
+  ConsumerState<_PurchasePanel> createState() => _PurchasePanelState();
+}
+
+class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
+  rc.Package? _selectedPackage;
+
+  bool _isAnnual(rc.Package package) {
+    return package.packageType == rc.PackageType.annual ||
+        package.storeProduct.identifier.contains(':annual');
+  }
+
+  rc.Package _defaultPackage() {
+    return widget.products.firstWhere(
+      _isAnnual,
+      orElse: () => widget.products.first,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _PurchasePanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.products.isEmpty) return;
+    final selectedId = _selectedPackage?.identifier;
+    final stillExists = widget.products.any(
+      (package) => package.identifier == selectedId,
+    );
+    if (!stillExists) _selectedPackage = _defaultPackage();
+  }
+
+  Future<void> _buy(rc.Package package) async {
+    final t = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final isPremium =
+          await ref.read(premiumProvider.notifier).buyProduct(package);
+      if (isPremium && mounted) {
+        AppHaptics.celebrate();
+        Navigator.pop(context);
+      }
+    } catch (_) {
+      // Purchase errors (billing unavailable, DEVELOPER_ERROR on
+      // non-Play builds, region issues, etc.) must never crash the
+      // app — buyProduct already logs them. Show a friendly notice.
+      messenger.showSnackBar(SnackBar(content: Text(t.commonError)));
+    }
+  }
+
+  Future<void> _restore() async {
+    final isPremium =
+        await ref.read(premiumProvider.notifier).restorePurchases();
+    if (isPremium && mounted) Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+
+    if (widget.products.isEmpty) {
+      return _PanelShell(
         child: Column(
           children: [
             Text(
               t.premiumFreeTrialAvailable,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: theme.textPrimary,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -329,18 +502,22 @@ class _ProductList extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(AppRadii.lg),
                 ),
               ),
-              onPressed: () async {
-                await ref.read(premiumProvider.notifier).togglePremiumMock();
-                if (context.mounted) Navigator.pop(context);
-              },
+              onPressed: AppEnvironment.isProduction
+                  ? null
+                  : () async {
+                      await ref
+                          .read(premiumProvider.notifier)
+                          .togglePremiumMock();
+                      if (context.mounted) Navigator.pop(context);
+                    },
               child: Text(t.premiumActivateButton),
             ),
             if (!AppEnvironment.isProduction) ...[
               const SizedBox(height: 8),
               Text(
                 t.premiumTestingModeLabel,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
+                style: TextStyle(
+                  color: theme.textMuted,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -351,134 +528,418 @@ class _ProductList extends ConsumerWidget {
       );
     }
 
-    return Column(
-      children:
-          products.map((product) => _ProductCard(product: product)).toList(),
-    );
-  }
-}
+    final selectedPackage = _selectedPackage ?? _defaultPackage();
+    final sortedProducts = [...widget.products]..sort((a, b) {
+        final aAnnual = _isAnnual(a);
+        final bAnnual = _isAnnual(b);
+        if (aAnnual == bAnnual) return 0;
+        return aAnnual ? -1 : 1;
+      });
 
-class _ProductCard extends ConsumerWidget {
-  final ProductDetails product;
-
-  const _ProductCard({required this.product});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final t = AppLocalizations.of(context);
-    final isYearly = product.id.contains('yearly');
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: isYearly
-            ? AppColors.primaryLight
-            : Colors.white.withValues(alpha: 0.86),
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        border: Border.all(
-          color: isYearly ? AppColors.primary : AppColors.border,
-          width: 2,
-        ),
-      ),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        title: Text(
-          product.title.split('(').first.trim(),
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-        subtitle: Text(
-          product.description,
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              product.price,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w900,
-                fontSize: 20,
-              ),
+    return _PanelShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Extra headroom so the floating badge of the annual card breathes.
+          const SizedBox(height: 8),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < sortedProducts.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 10),
+                  Expanded(
+                    child: _PlanCard(
+                      package: sortedProducts[i],
+                      isAnnual: _isAnnual(sortedProducts[i]),
+                      isSelected: sortedProducts[i].identifier ==
+                          selectedPackage.identifier,
+                      onTap: () {
+                        AppHaptics.selection();
+                        setState(
+                          () => _selectedPackage = sortedProducts[i],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ],
             ),
-            if (isYearly)
-              Text(
-                t.premiumSavePercent,
+          ),
+          const SizedBox(height: 14),
+          AnimatedPress(
+            scale: 0.98,
+            haptic: AppPressHaptic.light,
+            onTap: () => _buy(selectedPackage),
+            child: Container(
+              height: 56,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.primary, AppColors.primaryDark],
+                ),
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.34),
+                    blurRadius: 22,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Text(
+                t.premiumContinueWithPlan,
                 style: const TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.1,
                 ),
               ),
-          ],
-        ),
-        onTap: () => ref.read(buyPremiumProductUseCaseProvider).call(product),
-      ),
-    );
-  }
-}
-
-class _AlreadyPremiumCard extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final t = AppLocalizations.of(context);
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.86),
-        borderRadius: BorderRadius.circular(AppRadii.modal),
-        border: Border.all(color: AppColors.primary, width: 1.5),
-      ),
-      child: Column(
-        children: [
-          const Icon(
-            Icons.stars_rounded,
-            color: AppColors.accentGold,
-            size: 64,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            t.premiumAlreadyActiveTitle,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            t.premiumAlreadyActiveBody,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                t.premiumCancelAnytime,
+                style: TextStyle(
+                  color: theme.textMuted,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                '  ·  ',
+                style: TextStyle(color: theme.textMuted, fontSize: 11.5),
+              ),
+              TextButton(
+                style: TextButton.styleFrom(
+                  minimumSize: Size.zero,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 6,
+                  ),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: _restore,
+                child: Text(
+                  t.premiumRestorePurchases,
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          OutlinedButton(
-            onPressed: () => Navigator.pop(context),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textPrimary,
-              side: const BorderSide(color: AppColors.border),
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.lg),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlanCard extends StatelessWidget {
+  final rc.Package package;
+  final bool isSelected;
+  final bool isAnnual;
+  final VoidCallback onTap;
+
+  const _PlanCard({
+    required this.package,
+    required this.isSelected,
+    required this.isAnnual,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    final product = package.storeProduct;
+    final monthlyEquivalent = isAnnual
+        ? product.pricePerMonthString ?? _formattedMonthlyEquivalent(product)
+        : null;
+    final subtitle = monthlyEquivalent != null
+        ? t.premiumMonthlyEquivalent(monthlyEquivalent)
+        : (isAnnual ? t.premiumBilledAnnually : t.premiumBilledMonthly);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.primary.withValues(
+                      alpha: theme.isDarkMode ? 0.16 : 0.07,
+                    )
+                  : (theme.isDarkMode
+                      ? theme.background.withValues(alpha: 0.5)
+                      : theme.background),
+              borderRadius: BorderRadius.circular(AppRadii.xl),
+              border: Border.all(
+                color: isSelected ? AppColors.primary : theme.border,
+                width: isSelected ? 2 : 1.2,
               ),
             ),
-            child: Text(t.premiumContinueButton),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        isAnnual ? t.premiumAnnualPlan : t.premiumMonthlyPlan,
+                        style: TextStyle(
+                          color: theme.textPrimary,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    AnimatedScale(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOutBack,
+                      scale: isSelected ? 1 : 0,
+                      child: const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppColors.primary,
+                        size: 19,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  product.priceString,
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w900,
+                    fontFeatures: kTabularFigures,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () async {
-              await ref.read(premiumProvider.notifier).togglePremiumMock();
-              if (context.mounted) Navigator.pop(context);
-            },
+          if (isAnnual)
+            Positioned(
+              top: -9,
+              left: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                ),
+                child: Text(
+                  t.premiumSavePercent,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String? _formattedMonthlyEquivalent(rc.StoreProduct product) {
+    if (!isAnnual || product.price <= 0) return null;
+    final monthlyPrice = product.price / 12;
+    return '${product.currencyCode} ${monthlyPrice.toStringAsFixed(2)}';
+  }
+}
+
+class _PremiumActiveContent extends StatelessWidget {
+  const _PremiumActiveContent();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _PremiumActiveHero(),
+        const SizedBox(height: 18),
+        Text(
+          t.premiumActiveBenefitsTitle,
+          style: TextStyle(
+            color: context.theme.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 10),
+        const _BenefitsCard().animate().fadeIn(delay: 90.ms).slideY(
+              begin: 0.06,
+            ),
+        const SizedBox(height: 14),
+        AnimatedPress(
+          scale: 0.98,
+          haptic: AppPressHaptic.light,
+          onTap: () => Navigator.pop(context),
+          child: Container(
+            height: 54,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(AppRadii.pill),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.16),
+              ),
+            ),
             child: Text(
-              t.premiumDeactivateTesting,
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+              t.premiumContinueButton,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PremiumActiveHero extends StatelessWidget {
+  const _PremiumActiveHero();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: theme.isDarkMode
+              ? [
+                  theme.surface,
+                  AppColors.accentGold.withValues(alpha: 0.10),
+                ]
+              : const [
+                  Color(0xFFFFFBF4),
+                  Color(0xFFFFF4DD),
+                  Color(0xFFFFFCF9),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+        border: Border.all(
+          color: AppColors.accentGold.withValues(alpha: 0.36),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accentGold.withValues(alpha: 0.13),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.78),
+                  borderRadius: BorderRadius.circular(AppRadii.xl),
+                  border: Border.all(
+                    color: AppColors.accentGold.withValues(alpha: 0.24),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: AppColors.accentGold,
+                  size: 28,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.sage.withValues(alpha: 0.13),
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppColors.sage,
+                      size: 17,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      t.premiumActiveStatusPill,
+                      style: const TextStyle(
+                        color: AppColors.sage,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(
+            t.premiumAlreadyActiveTitle,
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              height: 1.05,
+              letterSpacing: -0.6,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            t.premiumAlreadyActiveBody,
+            style: TextStyle(
+              color: theme.textSecondary,
+              fontSize: 14.5,
+              fontWeight: FontWeight.w700,
+              height: 1.32,
             ),
           ),
         ],
@@ -493,32 +954,34 @@ class _StoreError extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
     final t = AppLocalizations.of(context);
     return Column(
       children: [
-        const Icon(
+        Icon(
           Icons.cloud_off_rounded,
-          color: AppColors.textSecondary,
+          color: theme.textSecondary,
           size: 48,
         ),
         const SizedBox(height: 16),
         Text(
           t.premiumStoreErrorTitle,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: theme.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
           error,
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
+          style: TextStyle(color: theme.textMuted, fontSize: 10),
         ),
         const SizedBox(height: 24),
-        ElevatedButton(
-          onPressed: () =>
-              ref.read(premiumProvider.notifier).togglePremiumMock(),
-          child: Text(t.premiumDeveloperModeButton),
-        ),
+        if (!AppEnvironment.isProduction)
+          ElevatedButton(
+            onPressed: () =>
+                ref.read(premiumProvider.notifier).togglePremiumMock(),
+            child: Text(t.premiumDeveloperModeButton),
+          ),
       ],
     );
   }

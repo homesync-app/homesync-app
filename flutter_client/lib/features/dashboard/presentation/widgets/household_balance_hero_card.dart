@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
@@ -112,7 +113,7 @@ class HouseholdBalanceHeroCard extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFFAF7),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppRadii.xl),
                 border: Border.all(
                   color: AppColors.border.withValues(alpha: 0.40),
                 ),
@@ -275,7 +276,7 @@ class _MembersHeader extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             color: const Color(0xFFFFF7F3),
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppRadii.pill),
             border: Border.all(
               color: AppColors.border.withValues(alpha: 0.50),
             ),

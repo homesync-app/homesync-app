@@ -22,7 +22,7 @@ final class RewardRepositoryProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'rewardRepositoryProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -49,4 +49,4 @@ final class RewardRepositoryProvider extends $FunctionalProvider<
   }
 }
 
-String _$rewardRepositoryHash() => r'6285a78c94280f2c244a90701ef9768e717a6169';
+String _$rewardRepositoryHash() => r'04030f78a92a58f95fe8742fdafcae692c975a82';

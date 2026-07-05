@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/widgets/app_background.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 
 class MemberOnboardingScreen extends ConsumerStatefulWidget {
   final VoidCallback onComplete;
@@ -96,8 +98,16 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
         log.w('get_available_family_roles returned empty, using safe defaults');
         if (mounted) {
           setState(() {
-            _availableRoles = ['Tutor/a', 'Adolescente', 'Hijo/a'];
-            _selectedDisplayRole = 'Tutor/a';
+            _availableRoles = [
+              'Padre',
+              'Madre',
+              'Tutor',
+              'Tutora',
+              'Adolescente',
+              'Hijo',
+              'Hija',
+            ];
+            _selectedDisplayRole = 'Padre';
             _selectedMemberType = 'parent';
           });
         }
@@ -128,6 +138,8 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
       _selectedMemberType = 'teen';
     } else if (lower.contains('hij')) {
       _selectedMemberType = 'child';
+    } else if (lower.contains('tutor')) {
+      _selectedMemberType = 'guardian';
     } else {
       _selectedMemberType = 'parent';
     }
@@ -140,7 +152,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
   }
 
   void _goToStep(int step) {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     _fadeController.reset();
     setState(() => _step = step);
     _fadeController.forward();
@@ -149,7 +161,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
   Future<void> _completeOnboarding() async {
     final t = AppLocalizations.of(context);
     setState(() => _isSaving = true);
-    HapticFeedback.heavyImpact();
+    AppHaptics.warning();
 
     try {
       final client = ref.read(supabaseClientProvider);
@@ -235,7 +247,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
               height: 88,
               decoration: BoxDecoration(
                 color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(AppRadii.xxl),
               ),
               child: const Icon(
                 Icons.waving_hand_rounded,
@@ -265,7 +277,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
               style: TextStyle(
                 fontSize: 16,
                 height: 1.4,
-                color: AppColors.textSecondary.withValues(alpha: 0.9),
+                color: context.theme.textSecondary.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -287,9 +299,13 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
   static const _roleVisuals = <String, (IconData, Color)>{
     'Padre': (Icons.person_rounded, AppColors.primary),
     'Madre': (Icons.person_rounded, AppColors.primary),
+    'Tutor': (Icons.supervisor_account_rounded, AppColors.primary),
+    'Tutora': (Icons.supervisor_account_rounded, AppColors.primary),
     'Tutor/a': (Icons.supervisor_account_rounded, AppColors.primary),
     'Adulto': (Icons.person_rounded, AppColors.primary),
     'Adolescente': (Icons.emoji_people_rounded, AppColors.accentTeal),
+    'Hijo': (Icons.child_care_rounded, AppColors.accentPurple),
+    'Hija': (Icons.child_care_rounded, AppColors.accentPurple),
     'Hijo/a': (Icons.child_care_rounded, AppColors.accentPurple),
   };
 
@@ -299,12 +315,20 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
         return t.setupFamilyRoleFather;
       case 'Madre':
         return t.setupFamilyRoleMother;
+      case 'Tutor':
+        return t.membersRoleGuardianMale;
+      case 'Tutora':
+        return t.membersRoleGuardianFemale;
       case 'Tutor/a':
         return t.setupFamilyRoleGuardian;
       case 'Adulto':
         return t.settingsParentModeMemberTypeAdult;
       case 'Adolescente':
         return t.setupFamilyRoleTeen;
+      case 'Hijo':
+        return t.membersRoleSon;
+      case 'Hija':
+        return t.membersRoleDaughter;
       case 'Hijo/a':
         return t.settingsParentModeMemberTypeChild;
       default:
@@ -316,11 +340,15 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
     switch (role) {
       case 'Padre':
       case 'Madre':
+      case 'Tutor':
+      case 'Tutora':
       case 'Tutor/a':
       case 'Adulto':
         return t.memberOnboardingRoleDescAdult;
       case 'Adolescente':
         return t.memberOnboardingRoleDescTeen;
+      case 'Hijo':
+      case 'Hija':
       case 'Hijo/a':
         return t.memberOnboardingRoleDescChild;
       default:
@@ -330,7 +358,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
 
   Widget _buildRoleStep(AppThemeColors theme) {
     if (_isLoadingRoles) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: AppLoader());
     }
 
     final t = AppLocalizations.of(context);
@@ -360,7 +388,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
             style: TextStyle(
               fontSize: 15.5,
               height: 1.28,
-              color: AppColors.textSecondary.withValues(alpha: 0.9),
+              color: context.theme.textSecondary.withValues(alpha: 0.9),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -380,7 +408,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
                   isSelected: _selectedDisplayRole == role,
                   tone: visuals.$2,
                   onTap: () {
-                    HapticFeedback.selectionClick();
+                    AppHaptics.selection();
                     setState(() {
                       _selectedDisplayRole = role;
                       _updateMemberTypeFromRole(role);
@@ -391,7 +419,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
             ),
           ),
           if (_isSaving)
-            const Center(child: CircularProgressIndicator())
+            const Center(child: AppLoader())
           else
             _buildPrimaryButton(
               text: t.memberOnboardingFinishButton,
@@ -408,7 +436,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.primaryLight,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
       ),
       child: Text(
         text,
@@ -436,19 +464,19 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
         duration: const Duration(milliseconds: 220),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.94),
-          borderRadius: BorderRadius.circular(28),
+          color: context.theme.surface.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(AppRadii.xxl),
           border: Border.all(
             color: isSelected
                 ? tone.withValues(alpha: 0.5)
-                : AppColors.border.withValues(alpha: 0.8),
+                : context.theme.border.withValues(alpha: 0.8),
             width: isSelected ? 1.8 : 1.2,
           ),
           boxShadow: [
             BoxShadow(
               color: isSelected
                   ? tone.withValues(alpha: 0.08)
-                  : AppColors.shadowBase.withValues(alpha: 0.04),
+                  : context.theme.shadowBase.withValues(alpha: 0.04),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),
@@ -481,7 +509,8 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
                   Text(
                     desc,
                     style: TextStyle(
-                      color: AppColors.textSecondary.withValues(alpha: 0.84),
+                      color:
+                          context.theme.textSecondary.withValues(alpha: 0.84),
                       fontSize: 14,
                       height: 1.35,
                     ),
@@ -499,7 +528,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
                 border: Border.all(
                   color: isSelected
                       ? tone
-                      : AppColors.border.withValues(alpha: 0.9),
+                      : context.theme.border.withValues(alpha: 0.9),
                   width: 1.4,
                 ),
               ),
@@ -530,7 +559,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
           ),
           elevation: 0,
         ),

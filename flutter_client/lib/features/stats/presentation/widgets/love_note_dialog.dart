@@ -29,7 +29,12 @@ Future<void> showLoveNoteDialog({
           ),
           titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
           contentPadding: const EdgeInsets.fromLTRB(24, 18, 24, 8),
-          actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          actionsPadding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.xs,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           shape: RoundedRectangleBorder(borderRadius: AppRadii.hero),
           backgroundColor: theme.surface,
           surfaceTintColor: Colors.transparent,

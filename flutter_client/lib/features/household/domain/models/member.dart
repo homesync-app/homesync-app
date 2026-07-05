@@ -135,7 +135,6 @@ class MemberModel {
   bool needsSubmissionApproval(String? approvalMode) {
     switch (approvalMode) {
       case 'all':
-        return true;
       case 'children_only':
         return isChild || isTeen;
       case 'per_member':
@@ -178,6 +177,24 @@ class MemberModel {
       return displayRole!.trim();
     }
     return localizedTypeLabel(t);
+  }
+
+  /// Etiqueta de rol con genero real (Padre/Madre, Tutor/Tutora, Hijo/Hija).
+  ///
+  /// Usa `display_role` como fuente de verdad del genero (lo elige el miembro
+  /// en el onboarding) y cae a la etiqueta generica por `member_type` cuando no
+  /// hay dato. Con [childView] = true, los adultos se muestran como Papa/Mama
+  /// (mas calido para la vista de un nino/teen).
+  String localizedGenderedRoleLabel(
+    AppLocalizations t, {
+    bool childView = false,
+  }) {
+    return genderedRoleLabel(
+      t,
+      displayRole: displayRole,
+      memberType: type.name,
+      childView: childView,
+    );
   }
 
   String localizedTypeLabel(AppLocalizations t) {
@@ -223,4 +240,48 @@ class MemberModel {
   @override
   String toString() =>
       'MemberModel(userId: $userId, displayName: $displayName, type: $type)';
+}
+
+/// Resuelve la etiqueta de rol con genero a partir de `display_role` + tipo.
+///
+/// Funcion pura para que la usen tanto [MemberModel] como las vistas que solo
+/// tienen un `Map` (ej. el ranking semanal). [displayRole] manda; si no hay
+/// dato cae a la etiqueta generica por [memberType]. Con [childView], padre y
+/// madre se muestran como Papa/Mama.
+String genderedRoleLabel(
+  AppLocalizations t, {
+  required String? displayRole,
+  required String? memberType,
+  bool childView = false,
+}) {
+  final dr = (displayRole ?? '').toLowerCase().trim();
+  final mt = (memberType ?? '').toLowerCase().trim();
+
+  // 1) Genero explicito desde display_role.
+  if (dr == 'padre' || dr == 'papa' || dr == 'papá') {
+    return childView ? t.membersRoleDad : t.membersRoleFather;
+  }
+  if (dr == 'madre' || dr == 'mama' || dr == 'mamá') {
+    return childView ? t.membersRoleMom : t.membersRoleMother;
+  }
+  if (dr == 'tutor') return t.membersRoleGuardianMale;
+  if (dr == 'tutora') return t.membersRoleGuardianFemale;
+  if (dr == 'hijo') return t.membersRoleSon;
+  if (dr == 'hija') return t.membersRoleDaughter;
+  if (dr == 'adolescente' || dr == 'teen') return t.membersRoleTeen;
+
+  // 2) Fallback generico por member_type (sin dato de genero).
+  switch (mt) {
+    case 'parent':
+    case 'adult':
+      return t.membersRoleParent;
+    case 'guardian':
+      return t.membersRoleGuardian;
+    case 'teen':
+      return t.membersRoleTeen;
+    case 'child':
+      return t.membersRoleChild;
+    default:
+      return t.membersRoleParent;
+  }
 }

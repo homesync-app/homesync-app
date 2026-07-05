@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HomeSync · Tanda de validación 2 (15 nuevos)</title>
+<style>
+  :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  body { margin: 0; background: #FFFCF9; color: #4A4443; }
+  header { padding: 24px 28px 8px; }
+  header h1 { margin: 0 0 4px; font-size: 20px; }
+  header p { margin: 0; color: #8E8480; font-size: 14px; }
+  .legend { padding: 0 28px 12px; color:#8E8480; font-size:13px; }
+  .legend b { color:#2E8B57; }
+  section { padding: 8px 28px 28px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 460px; }
+  .tile {
+    background: #FFF0EA; border-radius: 22px; padding: 18px 8px 12px;
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+  }
+  .tile img { width: 64px; height: 64px; object-fit: contain; }
+  .tile .nm { font-size: 13px; font-weight: 600; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:#8E8480; margin: 24px 0 12px; }
+  .sizes { display:flex; flex-wrap:wrap; gap:18px; }
+  .sz { display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .sz .iw { width:40px;height:40px;border-radius:11px;background:#FFF0EA;display:flex;align-items:center;justify-content:center;}
+  .sz .iw img{width:32px;height:32px;object-fit:contain;}
+  .sz .nm{font-size:10px;color:#8E8480;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Tanda de validación 2 — 15 productos NUEVOS</h1>
+  <p>Categorías no probadas antes. Confirma que el prompt generaliza, no que memorizó.</p>
+</header>
+<div class="legend">
+  Estresa: <b>pálidos</b> (queso fresco, manteca, agua), <b>plurales</b> (huevos, salchichas, galletitas),
+  <b>lata</b> (atún), <b>frasco</b> (mermelada, dulce de leche), <b>forma rara</b> (escoba, papel higiénico),
+  <b>bebida</b> (cerveza), <b>café</b>, <b>verdura</b> (morrón), <b>higiene</b> (toallitas).
+</div>
+
+<section>
+  <div class="grid" id="grid"></div>
+  <h2>A tamaño real de lista (34px)</h2>
+  <div class="sizes" id="sizes"></div>
+</section>
+
+<script>
+  const items = [
+    ["freshCheese","Queso fresco"],["eggs","Huevos"],["coffee","Café"],
+    ["tuna","Atún"],["bellPepper","Morrón"],["sausages","Salchichas"],
+    ["sweetCookies","Galletitas"],["toiletPaper","Papel higiénico"],["jam","Mermelada"],
+    ["water","Agua"],["beer","Cerveza"],["broom","Escoba"],
+    ["pads","Toallitas"],["butter","Manteca"],["dulceDeLeche","Dulce de leche"],
+  ];
+  const tile = (k,n) => `<div class="tile"><img src="png/${k}.png"><div class="nm">${n}</div></div>`;
+  const sz = (k,n) => `<div class="sz"><span class="iw"><img src="png/${k}.png"></span><span class="nm">${n}</span></div>`;
+  document.getElementById("grid").innerHTML = items.map(i=>tile(i[0],i[1])).join("");
+  document.getElementById("sizes").innerHTML = items.map(i=>sz(i[0],i[1])).join("");
+</script>
+</body>
+</html>

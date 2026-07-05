@@ -44,6 +44,28 @@ List<Map<String, dynamic>> mergeOptimisticActivities(
       })
       .where((item) => item.taskId != null && item.createdAt != null)
       .toList();
+  final remoteRewardActivities = remote
+      .where((activity) => activity['type'] == 'reward')
+      .map((activity) {
+        final data = activity['data'] as Map<String, dynamic>? ?? {};
+        final createdAt = DateTime.tryParse(
+          activity['created_at']?.toString() ?? '',
+        );
+        return (
+          creatorId: activity['creator_id']?.toString(),
+          title: _normalizeComparable(data['title']),
+          cost: _readInt(data['reward_cost'] ?? data['cost']),
+          createdAt: createdAt,
+        );
+      })
+      .where(
+        (item) =>
+            item.creatorId != null &&
+            item.title.isNotEmpty &&
+            item.cost != null &&
+            item.createdAt != null,
+      )
+      .toList();
 
   final visibleOptimistic = optimistic.where((activity) {
     final data = activity['data'] as Map<String, dynamic>? ?? {};
@@ -51,6 +73,31 @@ List<Map<String, dynamic>> mergeOptimisticActivities(
         data['activity_id']?.toString() ?? activity['id']?.toString();
     if (activityId != null && remoteActivityIds.contains(activityId)) {
       return false;
+    }
+
+    if (activity['type'] == 'reward') {
+      final optimisticCreatedAt = DateTime.tryParse(
+        activity['created_at']?.toString() ?? '',
+      );
+      if (optimisticCreatedAt == null) return true;
+
+      final creatorId = activity['creator_id']?.toString();
+      final title = _normalizeComparable(data['title']);
+      final cost = _readInt(data['reward_cost'] ?? data['cost']);
+      if (creatorId == null || title.isEmpty || cost == null) return true;
+
+      return !remoteRewardActivities.any(
+        (remoteActivity) =>
+            remoteActivity.creatorId == creatorId &&
+            remoteActivity.title == title &&
+            remoteActivity.cost == cost &&
+            !remoteActivity.createdAt!.isBefore(
+              optimisticCreatedAt.subtract(const Duration(seconds: 5)),
+            ) &&
+            !remoteActivity.createdAt!.isAfter(
+              optimisticCreatedAt.add(const Duration(minutes: 2)),
+            ),
+      );
     }
 
     final taskId = data['task_id']?.toString();
@@ -108,8 +155,7 @@ List<Map<String, dynamic>> dedupeRemoteActivities(
         : '${activity['id']}';
 
     final current = unique[key];
-    if (current == null ||
-        _activityScore(activity) > _activityScore(current)) {
+    if (current == null || _activityScore(activity) > _activityScore(current)) {
       unique[key] = activity;
     }
   }
@@ -124,6 +170,18 @@ List<Map<String, dynamic>> dedupeRemoteActivities(
     });
 
   return deduped;
+}
+
+String _normalizeComparable(Object? value) =>
+    (value ?? '').toString().trim().toLowerCase().replaceAll(
+          RegExp(r'\s+'),
+          ' ',
+        );
+
+int? _readInt(Object? raw) {
+  if (raw == null) return null;
+  if (raw is num) return raw.toInt();
+  return int.tryParse(raw.toString());
 }
 
 int _activityScore(Map<String, dynamic> activity) {

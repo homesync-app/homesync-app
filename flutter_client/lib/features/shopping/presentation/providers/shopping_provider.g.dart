@@ -22,7 +22,7 @@ final class ShoppingRepositoryProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'shoppingRepositoryProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -51,7 +51,7 @@ final class ShoppingRepositoryProvider extends $FunctionalProvider<
 }
 
 String _$shoppingRepositoryHash() =>
-    r'b8b5bc49de5c59dd47e7484b8d5ad7142969d4b9';
+    r'9a2700263bf40efadb30bbaf45d1ff555b2fd2cc';
 
 @ProviderFor(getShoppingItemsUseCase)
 final getShoppingItemsUseCaseProvider = GetShoppingItemsUseCaseProvider._();
@@ -353,7 +353,7 @@ abstract class _$ShoppingItems extends $AsyncNotifier<List<ShoppingItemModel>> {
   FutureOr<List<ShoppingItemModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref
         as $Ref<AsyncValue<List<ShoppingItemModel>>, List<ShoppingItemModel>>;
     final element = ref.element as $ClassProviderElement<
@@ -362,6 +362,6 @@ abstract class _$ShoppingItems extends $AsyncNotifier<List<ShoppingItemModel>> {
         AsyncValue<List<ShoppingItemModel>>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

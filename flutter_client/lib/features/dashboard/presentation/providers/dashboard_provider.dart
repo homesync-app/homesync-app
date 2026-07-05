@@ -17,7 +17,10 @@ final recentActivityRealtimeDelayProvider = FutureProvider<bool>((ref) async {
   return true;
 });
 
-@riverpod
+// keepAlive: repos are session-lived singletons that read their Ref after async
+// gaps; auto-dispose risks "Cannot use the Ref ... after it has been disposed"
+// if torn down mid-await (see expense/stats repos).
+@Riverpod(keepAlive: true)
 DashboardRepository dashboardRepository(Ref ref) {
   final client = ref.watch(supabaseClientProvider);
   return SupabaseDashboardRepository(client, ref);
@@ -54,6 +57,28 @@ Stream<List<Map<String, dynamic>>> recentActivityRemote(Ref ref) {
   );
 }
 
+// Firma de contenido de las actividades de GASTO del feed remoto. Cambia solo
+// cuando aparece/desaparece un gasto, no en cada reemision del stream (el poll
+// de respaldo cada 15s reemite la misma lista con los mismos ids). Sirve para
+// refrescar el balance cross-device sin refetchear en cada emision: el widget
+// de balance (expenseBalances/personalFinanceSummary/...) no escucha realtime
+// y antes solo se invalidaba por acciones locales, asi que el balance del otro
+// miembro quedaba viejo hasta recargar aunque "movimientos del hogar" si se
+// actualizaba (ese feed si nace de este stream). El listener vive en HomeScreen.
+@riverpod
+String financeActivitySignature(Ref ref) {
+  final activities = ref.watch(recentActivityRemoteProvider).value ??
+      const <Map<String, dynamic>>[];
+  final ids = <String>[];
+  for (final activity in activities) {
+    if (activity['type'] == 'expense') {
+      ids.add('${activity['id']}');
+    }
+  }
+  ids.sort();
+  return ids.join(',');
+}
+
 // Provider publico: combina el stream remoto con el estado optimista y el
 // filtro de gastos ocultos. Al ser sync (Provider<AsyncValue<...>>), cuando
 // cambia el optimistic solo recomputa la merge -> sin AsyncLoading -> sin
@@ -66,8 +91,12 @@ AsyncValue<List<Map<String, dynamic>>> recentActivity(Ref ref) {
   final bootstrap = ref.watch(homeBootstrapProvider).value;
   final realtimeReady =
       ref.watch(recentActivityRealtimeDelayProvider).value ?? false;
+  final remoteAsync = ref.watch(recentActivityRemoteProvider);
+  final remoteHasPendingApproval =
+      remoteAsync.hasValue && _hasPendingApprovalActivity(remoteAsync.value);
 
   if (!realtimeReady &&
+      !remoteHasPendingApproval &&
       bootstrap != null &&
       bootstrap.householdId == householdId) {
     final visibleBootstrap = _filterHiddenExpenses(
@@ -82,7 +111,6 @@ AsyncValue<List<Map<String, dynamic>>> recentActivity(Ref ref) {
     );
   }
 
-  final remoteAsync = ref.watch(recentActivityRemoteProvider);
   if (remoteAsync.hasError &&
       bootstrap != null &&
       bootstrap.householdId == householdId) {
@@ -104,6 +132,16 @@ AsyncValue<List<Map<String, dynamic>>> recentActivity(Ref ref) {
       return activity['household_id'] == householdId;
     }).toList();
     return mergeOptimisticActivities(scopedOptimistic, visibleRemote);
+  });
+}
+
+bool _hasPendingApprovalActivity(List<Map<String, dynamic>>? activities) {
+  if (activities == null) return false;
+  return activities.any((activity) {
+    final data = activity['data'] as Map<String, dynamic>? ?? const {};
+    return activity['type'] == 'task_pending_approval' ||
+        data['approval_status'] == 'pending_approval' ||
+        data['task_status'] == 'pending_approval';
   });
 }
 
@@ -142,8 +180,13 @@ class OptimisticRecentActivity extends _$OptimisticRecentActivity {
     final activityCreatedAt = completedAt ?? now;
 
     final activity = <String, dynamic>{
-      'id': activityId ??
-          'optimistic-task-${task.id}-${now.microsecondsSinceEpoch}',
+      // Id SIEMPRE sintético, aunque llegue `activityId` del RPC. Esto garantiza
+      // que la widget key del feed (que usa `activity['id']` con prefijo de
+      // tipo) distinga la fila optimista local de la real del server cuando
+      // ambas coexisten brevemente en la lista — la merge de
+      // `mergeOptimisticActivities` igual suprime la optimista vía
+      // `data['activity_id']` cuando el realtime emite la real.
+      'id': 'optimistic-task-${task.id}-${now.microsecondsSinceEpoch}',
       'household_id': householdId,
       'type': 'task',
       'created_at': activityCreatedAt.toIso8601String(),
@@ -158,6 +201,7 @@ class OptimisticRecentActivity extends _$OptimisticRecentActivity {
         'activity_id': activityId,
         'task_id': task.id,
         'category': task.category,
+        'completed_at': activityCreatedAt.toIso8601String(),
         'xp_reward': task.xpReward,
         'coins_reward': task.coinReward,
       },

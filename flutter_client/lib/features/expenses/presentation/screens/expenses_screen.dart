@@ -1,12 +1,18 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_scroll_physics.dart';
+import 'package:homesync_client/core/utils/date_extensions.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
@@ -17,8 +23,10 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
-import 'package:homesync_client/shared/widgets/premium_paywall.dart';
+import 'package:homesync_client/shared/widgets/app_swipe_to_delete.dart';
+import 'package:homesync_client/shared/widgets/edge_fade.dart';
 import 'package:intl/intl.dart';
 
 import '../providers/estimated_income_provider.dart';
@@ -69,6 +77,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           Expanded(
             child: TabBarView(
               controller: _tabController,
+              physics: const AppSnappyPagePhysics(),
               children: [
                 _buildMovimientosTab(),
                 RecurrentesTab(
@@ -108,13 +117,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
         if (_tabController.index == 1) {
           final isPremium = ref.watch(premiumProvider).value ?? false;
+          if (!isPremium) return const SizedBox.shrink();
           label = t.expensesFabNewSubscription;
-          onPressed = isPremium
-              ? () => _showTemplateForm(context)
-              : () => PremiumPaywall.show(context);
+          onPressed = () => _showTemplateForm(context);
         } else if (_tabController.index == 2) {
-          label = t.expensesFabNewGoal;
-          onPressed = () => SavingsTab.showGoalSheet(context, ref);
+          return const SizedBox.shrink();
         }
 
         return AppFloatingActionButton(
@@ -148,193 +155,198 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         ref.invalidate(expenseControllerProvider);
       },
       color: AppColors.primary,
-      child: CustomScrollView(
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
-        slivers: [
-          // 1. SUMMARY WIDGET WITH PROJECTION
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-              child: summaryAsync.when(
-                loading: () => const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-                error: (e, _) => Center(child: Text('Error: $e')),
-                data: (summary) {
-                  final realIncome =
-                      (summary['income'] as num?)?.toDouble() ?? 0.0;
-                  final expense =
-                      (summary['expense'] as num?)?.toDouble() ?? 0.0;
-                  final settlementsReceived =
-                      (summary['settlements_received'] as num?)?.toDouble() ??
-                          0.0;
-                  final settlementsPaid =
-                      (summary['settlements_paid'] as num?)?.toDouble() ?? 0.0;
-                  // balance real del RPC (incluye settlements correctamente)
-                  final rpcBalance =
-                      (summary['balance'] as num?)?.toDouble() ?? 0.0;
-
-                  final estimated = estimatedIncomeAsync.value;
-                  final isIncomeEstimated =
-                      realIncome == 0 && estimated?.isSet == true;
-
-                  // income para mostrar en el tile: ingresos reales o estimado
-                  final displayIncome = realIncome > 0
-                      ? realIncome
-                      : (estimated?.isSet == true ? estimated!.amount : 0.0);
-
-                  // balance para mostrar: si hay ingreso estimado lo usamos,
-                  // si no usamos el balance real del RPC (que ya tiene settlements)
-                  final balance = isIncomeEstimated
-                      ? estimated!.amount +
-                          settlementsReceived -
-                          expense -
-                          settlementsPaid
-                      : rpcBalance;
-
-                  return projectionAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (_, __) => _buildUnifiedSummaryCard(
-                      balance,
-                      displayIncome,
-                      expense,
-                      0,
-                      isIncomeEstimated: isIncomeEstimated,
-                    ),
-                    data: (proj) => _buildUnifiedSummaryCard(
-                      balance,
-                      displayIncome,
-                      expense,
-                      proj.pending,
-                      isIncomeEstimated: isIncomeEstimated,
-                    ),
-                  );
-                },
-              ),
-            ),
+      child: EdgeFade(
+        fadeStart: false,
+        fadeEnd: true,
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
           ),
+          slivers: [
+            // 1. SUMMARY WIDGET WITH PROJECTION
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppInsets.screenHorizontal,
+                  10,
+                  AppInsets.screenHorizontal,
+                  0,
+                ),
+                child: summaryAsync.when(
+                  loading: () => _buildSummaryLoadingCard(),
+                  error: (e, _) => Center(child: Text('Error: $e')),
+                  data: (summary) {
+                    // v2 RPC (posición neta, month-scoped): income/expense son
+                    // del mes y expense ya es MI parte de los compartidos.
+                    // Settlements quedan fuera (saldan deuda ya devengada).
+                    final realIncome =
+                        (summary['income'] as num?)?.toDouble() ?? 0.0;
+                    final expense =
+                        (summary['expense'] as num?)?.toDouble() ?? 0.0;
+                    final rpcBalance =
+                        (summary['balance'] as num?)?.toDouble() ?? 0.0;
 
-          // 2. FEED & FUTURE EXPENSES
-          feedAsync.when(
-            loading: () => const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                    // Ingreso estimado: configuración local (SharedPreferences),
+                    // usada solo cuando no hay ingresos reales este mes. La
+                    // v1 leía un flag `is_income_estimated` que la RPC nunca
+                    // devolvió, así que esta rama estaba muerta.
+                    final estimated = estimatedIncomeAsync.value;
+                    final isIncomeEstimated =
+                        realIncome <= 0 && (estimated?.isSet ?? false);
+                    final displayIncome =
+                        isIncomeEstimated ? estimated!.amount : realIncome;
+
+                    // rpcBalance = ledger + realIncome - expense; si el ingreso
+                    // es estimado, intercambiamos el real por el estimado.
+                    final balance = rpcBalance - realIncome + displayIncome;
+
+                    return projectionAsync.when(
+                      loading: () => _buildSummaryLoadingCard(),
+                      error: (_, __) => _buildUnifiedSummaryCard(
+                        balance,
+                        displayIncome,
+                        expense,
+                        0,
+                        isIncomeEstimated: isIncomeEstimated,
+                      ),
+                      data: (proj) => _buildUnifiedSummaryCard(
+                        balance,
+                        displayIncome,
+                        expense,
+                        proj.pending,
+                        isIncomeEstimated: isIncomeEstimated,
+                        paidThisMonth: proj.spent,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
-            error: (e, _) => SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(child: Text('Error: $e')),
-            ),
-            data: (feedItems) {
-              final filteredItems =
-                  feedItems.where(_shouldShowFeedItem).toList();
-              final sortedItems = List<FeedItemModel>.from(filteredItems)
-                ..sort((a, b) => b.date.compareTo(a.date));
 
-              return SliverMainAxisGroup(
-                slivers: [
-                  if (sortedItems.isNotEmpty)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color:
-                                    theme.textSecondary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.history_rounded,
-                                size: 12,
-                                color: theme.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              AppLocalizations.of(context)
-                                  .expensesActivityRecentEyebrow,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 12,
-                                color:
-                                    theme.textSecondary.withValues(alpha: 0.7),
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  if (sortedItems.isNotEmpty)
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final item = sortedItems[index];
-                          final isFirstOfDate = index == 0 ||
-                              _formatFeedDate(item.date) !=
-                                  _formatFeedDate(sortedItems[index - 1].date);
+            // 2. FEED & FUTURE EXPENSES
+            feedAsync.when(
+              loading: () => _buildFeedLoadingSliver(),
+              error: (e, _) => SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: Text('Error: $e')),
+              ),
+              data: (feedItems) {
+                final filteredItems =
+                    feedItems.where(_shouldShowFeedItem).toList();
+                final sortedItems = List<FeedItemModel>.from(filteredItems)
+                  ..sort((a, b) => b.date.compareTo(a.date));
 
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                final expenses = ref.watch(expenseControllerProvider).value ??
+                    const <ExpenseModel>[];
+                final expenseMap = {for (final e in expenses) e.id: e};
+
+                return SliverMainAxisGroup(
+                  slivers: [
+                    if (sortedItems.isNotEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppInsets.screenHorizontal,
+                            AppSpacing.lg,
+                            AppInsets.screenHorizontal,
+                            AppSpacing.xs,
+                          ),
+                          child: Row(
                             children: [
-                              if (isFirstOfDate)
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(24, 24, 24, 12),
-                                  child: Text(
-                                    _formatFeedDate(item.date),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 13,
-                                      color: theme.textMuted,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: theme.textSecondary
+                                      .withValues(alpha: 0.1),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadii.xs),
                                 ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 6,
+                                child: Icon(
+                                  Icons.history_rounded,
+                                  size: 12,
+                                  color: theme.textSecondary,
                                 ),
-                                child: _buildFeedItemCard(item)
-                                    .animateStaggered(index),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                AppLocalizations.of(context)
+                                    .expensesActivityRecentEyebrow,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 12,
+                                  color: theme.textSecondary
+                                      .withValues(alpha: 0.7),
+                                  letterSpacing: 1.2,
+                                ),
                               ),
                             ],
-                          );
-                        },
-                        childCount: sortedItems.length,
-                      ),
-                    ),
-                  if (sortedItems.isEmpty)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 40),
-                        child: _buildEmptyState(
-                          AppLocalizations.of(context).expensesActivityEmpty,
+                          ),
                         ),
                       ),
-                    ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                ],
-              );
-            },
-          ),
-        ],
+                    if (sortedItems.isNotEmpty)
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final item = sortedItems[index];
+                            final isFirstOfDate = index == 0 ||
+                                _formatFeedDate(item.date) !=
+                                    _formatFeedDate(
+                                      sortedItems[index - 1].date,
+                                    );
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (isFirstOfDate)
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      AppInsets.screenHorizontal,
+                                      AppSpacing.lg,
+                                      AppInsets.screenHorizontal,
+                                      AppSpacing.sm,
+                                    ),
+                                    child: Text(
+                                      _formatFeedDate(item.date),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 13,
+                                        color: theme.textMuted,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppInsets.screenHorizontal,
+                                    vertical: 6,
+                                  ),
+                                  child: _buildFeedItemCard(item, expenseMap)
+                                      .animateStaggered(index),
+                                ),
+                              ],
+                            );
+                          },
+                          childCount: sortedItems.length,
+                        ),
+                      ),
+                    if (sortedItems.isEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.xxl,
+                          ),
+                          child: _buildEmptyState(
+                            AppLocalizations.of(context).expensesActivityEmpty,
+                          ),
+                        ),
+                      ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -414,8 +426,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           (item) =>
               item.isPlanned &&
               item.status == 'pending' &&
-              item.date.month == now.month &&
-              item.date.year == now.year,
+              item.date.isSameMonth(now),
         )
         .toList();
   }
@@ -446,8 +457,18 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   int _householdMemberCount() {
     final members = ref.read(householdMembersProvider).value;
-    if (members != null && members.isNotEmpty) return members.length;
-    return 2;
+    if (members == null || members.isEmpty) return 2;
+    // Rent/bills split between adults only — kids and teens don't share
+    // household expenses (mirrors pay_planned_expense's split-member filter).
+    // Friends/roommates households have no "kids", everyone splits.
+    final householdType =
+        ref.read(currentHouseholdProvider).value?.householdType.toLowerCase();
+    final isFriendsOrRoommates =
+        householdType == 'friends' || householdType == 'roommates';
+    final splitMembers =
+        isFriendsOrRoommates ? members : members.where((m) => m.isAdult);
+    final count = splitMembers.length;
+    return count > 0 ? count : 2;
   }
 
   double _plannedShareAmount(FeedItemModel item, String? userId) {
@@ -472,7 +493,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadii.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -485,8 +506,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            _formatCurrency(amount),
+          AnimatedAmount(
+            value: amount.toDouble(),
+            locale: ref.watch(currencyProvider).locale,
+            prefix: ref.watch(currencyProvider).inputPrefix(),
             style: TextStyle(
               color: isBold ? theme.textPrimary : color,
               fontSize: isBold ? 20 : 17,
@@ -501,18 +524,102 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   // --- Recurrentes Tab (delegated to RecurrentesTab widget) ---
 
+  Widget _buildSummaryLoadingCard() {
+    final theme = context.theme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+        border: Border.all(color: theme.border.withValues(alpha: 0.62)),
+        boxShadow: theme.cardShadow,
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              ShimmerLoading(height: 14, width: 120, borderRadius: 10),
+              Spacer(),
+              ShimmerLoading(height: 36, width: 36, borderRadius: 18),
+            ],
+          ),
+          SizedBox(height: 18),
+          ShimmerLoading(height: 42, width: 180, borderRadius: 14),
+          SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(child: ShimmerLoading(height: 58, borderRadius: 18)),
+              SizedBox(width: 12),
+              Expanded(child: ShimmerLoading(height: 58, borderRadius: 18)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeedLoadingSliver() {
+    final theme = context.theme;
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.lg,
+      ),
+      sliver: SliverList.separated(
+        itemCount: 5,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) => Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: theme.surface,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: theme.border.withValues(alpha: 0.52)),
+            boxShadow: theme.cardShadow,
+          ),
+          child: const Row(
+            children: [
+              ShimmerLoading(height: 42, width: 42, borderRadius: 14),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShimmerLoading(height: 14, width: 160, borderRadius: 10),
+                    SizedBox(height: 8),
+                    ShimmerLoading(height: 12, width: 104, borderRadius: 10),
+                  ],
+                ),
+              ),
+              SizedBox(width: 12),
+              ShimmerLoading(height: 18, width: 72, borderRadius: 10),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildUnifiedSummaryCard(
     num balance,
     num income,
     num expense,
     num projectedPending, {
     bool isIncomeEstimated = false,
+    num? paidThisMonth,
   }) {
     final projectedBalance = balance - projectedPending;
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     final hasIncome = income > 0;
     final hasPending = projectedPending > 0;
+    // In the "previsto del mes" view (no personal income recorded) "Pagado"
+    // must mirror "Pendiente": the household total paid this month, not just
+    // what the current user paid. `paidThisMonth` carries that value.
+    final paid = paidThisMonth ?? expense;
     final mainLabel = hasIncome
         ? t.expensesSummaryMainBalance
         : hasPending
@@ -521,140 +628,276 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final mainAmount = hasIncome
         ? balance
         : hasPending
-            ? expense + projectedPending
-            : expense;
+            ? paid + projectedPending
+            : paid;
 
+    // Month context on every mode: right after a month rollover the card can
+    // legitimately show $0 while last month's movements are still visible
+    // below — without the month name that reads as a bug, not as "July just
+    // started".
+    final localeTag = Localizations.localeOf(context).toString();
+    final rawMonth = DateFormat.MMMM(localeTag).format(DateTime.now());
+    final monthName = rawMonth.isEmpty
+        ? rawMonth
+        : rawMonth[0].toUpperCase() + rawMonth.substring(1);
+    final isSimpleExpenseMode = !hasIncome && !hasPending;
+    final showZeroState = isSimpleExpenseMode && mainAmount == 0;
+    final dailyAvg = isSimpleExpenseMode && mainAmount > 0
+        ? (mainAmount / math.max(DateTime.now().day, 1)).round()
+        : null;
+    final currency = ref.watch(currencyProvider);
+
+    // La otra mitad de la posición neta: la deuda viva entre miembros por los
+    // compartidos ya pagados (mismo dato que el widget de división del
+    // Inicio). Sin esto, el balance neto parece no cerrar con la caja.
+    final isSharedEconomy =
+        ref.watch(currentHouseholdProvider).value?.financeMode == 'shared';
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final myDebtBalance = ref
+        .watch(expenseBalancesProvider)
+        .value
+        ?.where((b) => b.userId == currentUserId)
+        .firstOrNull
+        ?.balance;
+    final showDebtChip =
+        !isSharedEconomy && myDebtBalance != null && myDebtBalance.abs() > 10;
+
+    // Surface base instead of the hero gradient: at this size the full-bleed
+    // cream gradient washed the whole screen into one tone. The white card
+    // lets the colored stat tiles, the month pill and the amount carry the
+    // contrast.
     return Container(
       width: double.infinity,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: theme.border.withValues(alpha: 0.82)),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+        border: Border.all(color: theme.border.withValues(alpha: 0.62)),
         boxShadow: theme.cardShadow,
       ),
-      child: Column(
+      child: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 22, 24, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  mainLabel,
-                  style: TextStyle(
-                    color: theme.textMuted,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    _formatCurrency(mainAmount),
-                    style: TextStyle(
-                      color: theme.textPrimary,
-                      fontSize: 40,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1.8,
+          // Decorative soft orbs — same language as the home bento tiles.
+          Positioned(
+            right: -42,
+            top: -42,
+            child: Container(
+              width: 128,
+              height: 128,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: theme.primary.withValues(alpha: 0.07),
+              ),
+            ),
+          ),
+          Positioned(
+            right: 26,
+            bottom: -56,
+            child: Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: theme.primary.withValues(alpha: 0.045),
+              ),
+            ),
+          ),
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 20, 22, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            mainLabel,
+                            style: TextStyle(
+                              color: theme.textSecondary,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.primary.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(AppRadii.pill),
+                            border: Border.all(
+                              color: theme.primary.withValues(alpha: 0.14),
+                            ),
+                          ),
+                          child: Text(
+                            monthName.toUpperCase(),
+                            style: TextStyle(
+                              color: theme.primary,
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                if (hasIncome || hasPending) ...[
-                  const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildPremiumStatTile(
-                          hasIncome
-                              ? (isIncomeEstimated
-                                  ? t.expensesStatTileEstimatedIncome
-                                  : t.expensesStatTileIncomes)
-                              : t.expensesStatTilePaid,
-                          hasIncome ? income : expense,
-                          hasIncome ? AppColors.success : AppColors.primary,
-                          hasIncome
-                              ? (isIncomeEstimated
-                                  ? Icons.edit_rounded
-                                  : Icons.trending_up_rounded)
-                              : Icons.receipt_long_rounded,
-                          onTap: hasIncome
-                              ? (isIncomeEstimated
-                                  ? () => EstimatedIncomeSheet.show(context)
-                                  : () => _showIncomeBreakdownSheet(income))
-                              : () => _showExpensesBreakdownSheet(expense),
+                    const SizedBox(height: 6),
+                    if (showZeroState)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6, bottom: 4),
+                        child: Text(
+                          AppLocalizations.of(context).homeSoloSpentEmpty,
+                          style: TextStyle(
+                            color: theme.textSecondary,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      )
+                    else
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: AnimatedAmount(
+                          value: mainAmount.abs().toDouble(),
+                          locale: currency.locale,
+                          prefix: mainAmount < 0
+                              ? '- ${currency.inputPrefix()}'
+                              : currency.inputPrefix(),
+                          style: TextStyle(
+                            color: mainAmount < 0
+                                ? AppColors.error
+                                : theme.textPrimary,
+                            fontSize: 38,
+                            fontWeight: AppTypography.hero,
+                            letterSpacing: AppTypography.heroLetterSpacing,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                    if (dailyAvg != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        AppLocalizations.of(context).expensesDailyAvg(
+                          '${currency.inputPrefix()}${NumberFormat.decimalPattern(currency.locale).format(dailyAvg)}',
+                        ),
+                        style: TextStyle(
+                          color: theme.textSecondary,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                    if (showDebtChip) ...[
+                      const SizedBox(height: 10),
+                      _buildDebtChip(myDebtBalance),
+                    ],
+                    if (hasIncome || hasPending) ...[
+                      const SizedBox(height: 18),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildPremiumStatTile(
+                              hasIncome
+                                  ? (isIncomeEstimated
+                                      ? t.expensesStatTileEstimatedIncome
+                                      : t.expensesStatTileIncomes)
+                                  : t.expensesStatTilePaid,
+                              hasIncome ? income : paid,
+                              hasIncome ? AppColors.success : AppColors.primary,
+                              hasIncome
+                                  ? (isIncomeEstimated
+                                      ? Icons.edit_rounded
+                                      : Icons.trending_up_rounded)
+                                  : Icons.receipt_long_rounded,
+                              onTap: hasIncome
+                                  ? (isIncomeEstimated
+                                      ? () => EstimatedIncomeSheet.show(context)
+                                      : () => _showIncomeBreakdownSheet(income))
+                                  : () => _showExpensesBreakdownSheet(paid),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildPremiumStatTile(
+                              hasIncome
+                                  ? t.expensesStatTileExpenses
+                                  : t.expensesStatTilePending,
+                              hasIncome ? expense : projectedPending,
+                              hasIncome
+                                  ? AppColors.primary
+                                  : AppColors.accentTeal,
+                              hasIncome
+                                  ? Icons.trending_down_rounded
+                                  : Icons.event_available_rounded,
+                              onTap: hasIncome
+                                  ? () => _showExpensesBreakdownSheet(expense)
+                                  : () => _showPendingBreakdownSheet(
+                                        projectedPending,
+                                      ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (hasIncome)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.md,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.surfaceVariant.withValues(alpha: 0.38),
+                    border: Border(
+                      top: BorderSide(
+                        color: theme.border.withValues(alpha: 0.55),
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
                       Expanded(
-                        child: _buildPremiumStatTile(
-                          hasIncome
-                              ? t.expensesStatTileExpenses
-                              : t.expensesStatTilePending,
-                          hasIncome ? expense : projectedPending,
-                          hasIncome ? AppColors.primary : AppColors.accentTeal,
-                          hasIncome
-                              ? Icons.trending_down_rounded
-                              : Icons.event_available_rounded,
-                          onTap: hasIncome
-                              ? () => _showExpensesBreakdownSheet(expense)
-                              : () =>
-                                  _showPendingBreakdownSheet(projectedPending),
+                        child: _buildProjectionStat(
+                          t.expensesProjectionPendingShare,
+                          projectedPending,
+                          theme.textSecondary,
+                          onTap: () =>
+                              _showPendingBreakdownSheet(projectedPending),
+                        ),
+                      ),
+                      Container(
+                        height: 28,
+                        width: 1,
+                        margin: const EdgeInsets.symmetric(horizontal: 18),
+                        color: theme.border.withValues(alpha: 0.62),
+                      ),
+                      Expanded(
+                        child: _buildProjectionStat(
+                          t.expensesProjectionEstimated,
+                          projectedBalance,
+                          theme.textPrimary,
+                          isBold: true,
+                          onTap: () => _showProjectionBreakdownSheet(
+                            balance,
+                            projectedPending,
+                            projectedBalance,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ],
-              ],
-            ),
-          ),
-          if (hasIncome)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              decoration: BoxDecoration(
-                color: theme.surfaceVariant.withValues(alpha: 0.38),
-                borderRadius:
-                    const BorderRadius.vertical(bottom: Radius.circular(30)),
-                border: Border(
-                  top: BorderSide(
-                    color: theme.border.withValues(alpha: 0.55),
-                  ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildProjectionStat(
-                      t.expensesProjectionPendingShare,
-                      projectedPending,
-                      theme.textSecondary,
-                      onTap: () => _showPendingBreakdownSheet(projectedPending),
-                    ),
-                  ),
-                  Container(
-                    height: 28,
-                    width: 1,
-                    margin: const EdgeInsets.symmetric(horizontal: 18),
-                    color: theme.border.withValues(alpha: 0.62),
-                  ),
-                  Expanded(
-                    child: _buildProjectionStat(
-                      t.expensesProjectionEstimated,
-                      projectedBalance,
-                      theme.textPrimary,
-                      isBold: true,
-                      onTap: () => _showProjectionBreakdownSheet(
-                        balance,
-                        projectedPending,
-                        projectedBalance,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
+          ),
         ],
       ),
     ).animateEntrance(delay: 100);
@@ -674,14 +917,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         .toList();
     final t = AppLocalizations.of(context);
 
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: BoxDecoration(
           color: theme.background,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -754,7 +998,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(AppRadii.xs),
                           ),
                           child: const Icon(
                             Icons.pending_actions_rounded,
@@ -777,11 +1021,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     const SizedBox(height: 16),
                     ...pendingItems.map(
                       (item) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                         child: Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(AppSpacing.xs),
                               decoration: BoxDecoration(
                                 color:
                                     AppColors.primary.withValues(alpha: 0.05),
@@ -829,7 +1073,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(AppRadii.lg),
                         ),
                         elevation: 0,
                       ),
@@ -879,6 +1123,42 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ),
         ),
       ],
+    );
+  }
+
+  /// Deuda viva entre miembros por compartidos ya pagados: verde sage cuando
+  /// te deben, primary cuando debés. Solo en economía dividida.
+  Widget _buildDebtChip(double debtBalance) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    final owedToMe = debtBalance > 0;
+    final color = owedToMe ? AppColors.sage : theme.primary;
+    final label = owedToMe
+        ? t.expensesYouAreOwed(_formatCurrency(debtBalance.abs()))
+        : t.expensesYouOwe(_formatCurrency(debtBalance.abs()));
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.09),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
+        border: Border.all(color: color.withValues(alpha: 0.16)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.handshake_rounded, size: 13, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -957,8 +1237,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         .where(
           (item) =>
               item.isRealExpense &&
-              item.date.month == now.month &&
-              item.date.year == now.year &&
+              item.date.isSameMonth(now) &&
               ((item.transactionType == 'income' && item.payerId == userId) ||
                   (item.transactionType == 'settlement' &&
                       item.payerId != userId)),
@@ -980,16 +1259,20 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final feed = _effectiveFeedForBreakdowns();
     final userId = ref.read(currentUserIdProvider);
     final now = DateTime.now();
+    // "Pagado" shows real money that left a wallet (see monthlyProjection):
+    //  - shared economy: every household payment this month;
+    //  - divided economy: only what the current user actually paid.
+    final isSharedEconomy =
+        ref.read(currentHouseholdProvider).value?.financeMode == 'shared';
 
     final items = feed
         .where(
           (item) =>
               item.isRealExpense &&
-              item.date.month == now.month &&
-              item.date.year == now.year &&
-              ((item.transactionType == 'expense' && item.payerId == userId) ||
-                  (item.transactionType == 'settlement' &&
-                      item.payerId == userId)),
+              item.date.isSameMonth(now) &&
+              (item.transactionType == 'expense' ||
+                  item.transactionType == 'settlement') &&
+              (isSharedEconomy || item.payerId == userId),
         )
         .map(_expenseFromFeedItem)
         .toList();
@@ -1013,7 +1296,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         .toList();
 
     final t = AppLocalizations.of(context);
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -1058,7 +1341,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     List<ExpenseModel> items,
     Color accentColor,
   ) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -1072,7 +1355,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           children: items.isEmpty
               ? [
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 32),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: AppSpacing.xl),
                     child: Text(
                       AppLocalizations.of(context).expensesBreakdownEmpty,
                       style: const TextStyle(color: AppColors.textMuted),
@@ -1117,7 +1401,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
       child: SafeArea(
         child: SingleChildScrollView(
@@ -1158,10 +1443,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 ),
                 const SizedBox(height: 32),
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(AppRadii.xl),
                     border:
                         Border.all(color: accentColor.withValues(alpha: 0.1)),
                   ),
@@ -1194,7 +1479,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: accentColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadii.xs),
                       ),
                       child: Icon(
                         Icons.list_alt_rounded,
@@ -1227,7 +1512,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
                       ),
                       elevation: 0,
                     ),
@@ -1256,14 +1541,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     required Color color,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             child: Icon(icon, size: 18, color: color),
           ),
@@ -1307,10 +1592,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     );
   }
 
-  Widget _buildFeedItemCard(FeedItemModel item) {
+  Widget _buildFeedItemCard(
+    FeedItemModel item,
+    Map<String, ExpenseModel> expenseMap,
+  ) {
     if (item.isRealExpense) {
-      final expenses = ref.read(expenseControllerProvider).value;
-      final expense = expenses?.where((e) => e.id == item.id).firstOrNull ??
+      final expense = expenseMap[item.id] ??
           ExpenseModel(
             id: item.id,
             title: item.title,
@@ -1356,7 +1643,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       splitType: item.splitType,
     );
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(22),
@@ -1371,7 +1658,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             height: 54,
             decoration: BoxDecoration(
               color: categoryColor.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.md),
             ),
             child: Icon(
               categoryIcon,
@@ -1469,7 +1756,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           result['title'].toString(),
                         ),
                         type: AppSnackBarType.success,
-                        duration: const Duration(milliseconds: 1500),
+                        duration: const Duration(milliseconds: 2200),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -1536,7 +1823,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: badgeColor.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadii.xs),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1593,25 +1880,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       splitType: expense.splitType,
     );
 
-    return Dismissible(
-      key: Key(expense.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 28),
-        decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: const Icon(
-          Icons.delete_sweep_rounded,
-          color: Colors.white,
-          size: 28,
-        ),
-      ),
-      confirmDismiss: (direction) async {
+    return AppSwipeToDelete(
+      dismissibleKey: Key(expense.id),
+      borderRadius: 22,
+      confirm: () async {
         final t = AppLocalizations.of(context);
-        return await showDialog(
+        return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
             title: Text(t.expensesDeleteDialogTitle),
@@ -1630,7 +1904,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ),
         );
       },
-      onDismissed: (_) {
+      onDeleted: () {
         ref.read(expenseControllerProvider.notifier).deleteExpense(expense.id);
         AppSnackBar.show(
           context,
@@ -1774,12 +2048,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   Widget _buildSettlementCard(ExpenseModel expense) {
     final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.accentBlue.withValues(
           alpha: theme.isDarkMode ? 0.12 : 0.04,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(
           color: AppColors.accentBlue.withValues(
             alpha: theme.isDarkMode ? 0.24 : 0.1,
@@ -1789,7 +2063,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
               color: theme.surface,
               shape: BoxShape.circle,
@@ -1907,7 +2181,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ),
           const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 48),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl),
             child: Text(
               subtitle ??
                   AppLocalizations.of(context).expensesEmptyDefaultSubtitle,

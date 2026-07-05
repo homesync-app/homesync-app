@@ -1,6 +1,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// HomeSync — E2E Expense Flow Tests
-// Tests complete expense flow: create → balance → settle
+// HomeSync — Expense flow tests (simplified in-memory simulator)
+//
+// These exercise a hand-rolled MockExpenseRepository whose balance math is a
+// deliberate simplification: each expense credits the payer the full amount and
+// debits a single 'other' bucket by half. It does NOT net multiple counterparts
+// and its settleDebt is a no-op on balances. Treat it as a smoke test of the
+// model helpers, not as authoritative behavioral coverage.
+//
+// Authoritative coverage of the risky paths lives elsewhere:
+//   • optimistic delete + rollback → expense_delete_rollback_test.dart
+//   • settlement idempotency/validation → settle_debt_idempotency_test.dart
+//   • split building → expense_split_builder_test.dart
+//
 // Run with: flutter test test/expense_e2e_test.dart
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter_test/flutter_test.dart';
@@ -57,6 +68,7 @@ class ExpenseFlowSimulator {
       fromUserId: fromUserId,
       toUserId: toUserId,
       amount: amount,
+      requestId: 'e2e-$fromUserId-$toUserId-$amount',
     );
 
     userBalances[fromUserId] = (userBalances[fromUserId] ?? 0) - amount;
@@ -158,6 +170,7 @@ class MockExpenseRepository implements ExpenseRepository {
     required String fromUserId,
     required String toUserId,
     required double amount,
+    required String requestId,
   }) async {
     return const Right(null);
   }
@@ -175,25 +188,30 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(
-      String householdId,) async {
+    String householdId,
+  ) async {
     return const Right([]);
   }
 
   @override
   Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(
-      String householdId,) async {
+    String householdId,
+  ) async {
     return const Right([]);
   }
 
   @override
   Future<Either<Failure, Unit>> saveTemplate(
-      ExpenseTemplateModel template,) async {
+    ExpenseTemplateModel template,
+  ) async {
     return const Right(unit);
   }
 
   @override
   Future<Either<Failure, Unit>> toggleTemplateActivity(
-      String templateId, bool isActive,) async {
+    String templateId,
+    bool isActive,
+  ) async {
     return const Right(unit);
   }
 
@@ -209,7 +227,8 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Either<Failure, Unit>> processRecurringExpenses(
-      String householdId,) async {
+    String householdId,
+  ) async {
     return const Right(unit);
   }
 
@@ -249,18 +268,21 @@ void main() {
       expect(simulator.createdExpenses.length, equals(1));
       expect(simulator.createdExpenses.first.title, equals('Supermercado'));
 
-      // Step 2: Calculate balances - user-1 should be owed $50
+      // Step 2: payer is credited the full $100, counterpart owes half.
       final balances = await simulator.calculateBalances();
+      expect(balances.firstWhere((b) => b.userId == 'user-1').balance, 100.0);
+      expect(balances.firstWhere((b) => b.userId == 'other').balance, -50.0);
 
-      final user1Balance = balances.firstWhere((b) => b.userId == 'user-1');
-      expect(user1Balance.balance, equals(100.0)); // Paid full amount
-
-      // Step 3: User 2 pays back $50 to settle
+      // Step 3: settle. NOTE: this mock records the settlement without
+      // recomputing balances, so the recomputed balances stay put. The real
+      // settlement effect is covered by settle_debt_idempotency_test.dart.
       await simulator.settleDebt('user-2', 'user-1', 50.0);
 
-      // Step 4: Verify settlement
       final finalBalances = await simulator.calculateBalances();
-      expect(finalBalances.any((b) => b.balance > 0), isTrue);
+      expect(
+        finalBalances.firstWhere((b) => b.userId == 'user-1').balance,
+        100.0,
+      );
     });
 
     test('Multiple expenses accumulate correctly', () async {
@@ -287,11 +309,15 @@ void main() {
 
       final balances = await simulator.calculateBalances();
 
-      // Net: user-1 paid $90, user-2 paid $40 → user-1 is owed $25
-      expect(balances.any((b) => b.balance > 0), isTrue);
+      // Mock model: each payer is credited the full amount they paid, and the
+      // 'other' bucket is debited half of every expense.
+      //   user-1 paid 60 + 30 = 90; user-2 paid 40; other = -(30+20+15) = -65.
+      expect(balances.firstWhere((b) => b.userId == 'user-1').balance, 90.0);
+      expect(balances.firstWhere((b) => b.userId == 'user-2').balance, 40.0);
+      expect(balances.firstWhere((b) => b.userId == 'other').balance, -65.0);
     });
 
-    test('Full settlement results in zero balance', () async {
+    test('settleDebt completes without throwing on this mock', () async {
       await simulator.createExpense(
         title: 'Restaurant',
         amount: 80.0,
@@ -299,16 +325,19 @@ void main() {
         otherUserId: 'user-2',
       );
 
-      // Settle the full amount owed ($40)
+      // The mock's settleDebt is a no-op on balances, so we only assert the
+      // call succeeds and the recomputed balance is unchanged. Real settlement
+      // behavior is covered by settle_debt_idempotency_test.dart.
       await simulator.settleDebt('user-2', 'user-1', 40.0);
 
-      // Both users should now be settled
       final balances = await simulator.calculateBalances();
-      // Note: Actual settlement logic may vary, this is a simplified test
-      expect(balances.isNotEmpty, isTrue);
+      expect(balances.firstWhere((b) => b.userId == 'user-1').balance, 80.0);
+      expect(balances.firstWhere((b) => b.userId == 'other').balance, -40.0);
     });
 
-    test('Expense deletion affects balance', () async {
+    test('repository delete removes the expense from the list', () async {
+      // Repo-level delete only. The optimistic delete + rollback in
+      // ExpenseController is covered by expense_delete_rollback_test.dart.
       await simulator.createExpense(
         title: 'Test expense',
         amount: 50.0,
@@ -316,11 +345,10 @@ void main() {
         otherUserId: 'user-2',
       );
 
-      // After deletion, the expense list should be empty
       await repository.deleteExpense('expense-1');
       final result = await repository.getRecentExpenses('household-1');
       final finalExpenses = result.getOrElse((_) => []);
-      expect(finalExpenses.length, equals(0));
+      expect(finalExpenses, isEmpty);
     });
   });
 

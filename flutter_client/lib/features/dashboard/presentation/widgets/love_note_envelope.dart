@@ -2,10 +2,11 @@ import 'dart:math';
 
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/domain/models/love_note_model.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 
@@ -60,7 +61,7 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
 
   void _onTap() {
     if (_isOpen || _isDismissing) return;
-    HapticFeedback.lightImpact();
+    AppHaptics.tap();
     setState(() => _isOpen = true);
     _floatController.stop();
     _openController.forward(from: 0);
@@ -68,7 +69,7 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
   }
 
   Future<void> _onClose() async {
-    HapticFeedback.lightImpact();
+    AppHaptics.tap();
     setState(() => _isDismissing = true);
     await _openController.reverse();
     if (!mounted) return;
@@ -356,7 +357,8 @@ class _LoveEnvelopePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(12));
+    final rrect =
+        RRect.fromRectAndRadius(rect, const Radius.circular(AppRadii.sm));
 
     final shadowPaint = Paint()
       ..color = AppColors.accentOrange.withValues(alpha: 0.11)

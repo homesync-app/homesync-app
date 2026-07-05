@@ -9,6 +9,8 @@ Map<String, dynamic> _activity({
   String? taskId,
   String? expenseId,
   String? approvalStatus,
+  String? creatorId,
+  int? rewardCost,
   String title = 'Una tarea',
   required DateTime createdAt,
 }) {
@@ -16,6 +18,7 @@ Map<String, dynamic> _activity({
     'id': id,
     'type': type,
     if (requestId != null) 'request_id': requestId,
+    if (creatorId != null) 'creator_id': creatorId,
     'created_at': createdAt.toIso8601String(),
     'data': <String, dynamic>{
       'title': title,
@@ -23,6 +26,7 @@ Map<String, dynamic> _activity({
       if (taskId != null) 'task_id': taskId,
       if (expenseId != null) 'expense_id': expenseId,
       if (approvalStatus != null) 'approval_status': approvalStatus,
+      if (rewardCost != null) 'reward_cost': rewardCost,
     },
   };
 }
@@ -32,7 +36,12 @@ void main() {
     test('drops the optimistic row once the matching remote id arrives', () {
       final now = DateTime.now();
       final optimistic = [
-        _activity(id: 'act-1', activityId: 'act-1', taskId: 't1', createdAt: now),
+        _activity(
+          id: 'act-1',
+          activityId: 'act-1',
+          taskId: 't1',
+          createdAt: now,
+        ),
       ];
       final remote = [
         _activity(id: 'act-1', taskId: 't1', createdAt: now),
@@ -71,7 +80,8 @@ void main() {
       expect(merged.single['id'], 'optimistic-x');
     });
 
-    test('keeps a new optimistic completion next to an older remote one '
+    test(
+        'keeps a new optimistic completion next to an older remote one '
         '(repeatable daily task)', () {
       final now = DateTime.now();
       final optimistic = [
@@ -88,6 +98,35 @@ void main() {
       final merged = mergeOptimisticActivities(optimistic, remote);
 
       expect(merged, hasLength(2));
+    });
+
+    test('drops an optimistic reward once the matching remote row arrives', () {
+      final now = DateTime.now();
+      final optimistic = [
+        _activity(
+          id: 'optimistic-reward',
+          type: 'reward',
+          creatorId: 'u1',
+          rewardCost: 15,
+          title: 'Snack sorpresa',
+          createdAt: now,
+        ),
+      ];
+      final remote = [
+        _activity(
+          id: 'remote-reward',
+          type: 'reward',
+          creatorId: 'u1',
+          rewardCost: 15,
+          title: 'Snack sorpresa',
+          createdAt: now.add(const Duration(seconds: 1)),
+        ),
+      ];
+
+      final merged = mergeOptimisticActivities(optimistic, remote);
+
+      expect(merged, hasLength(1));
+      expect(merged.single['id'], 'remote-reward');
     });
   });
 

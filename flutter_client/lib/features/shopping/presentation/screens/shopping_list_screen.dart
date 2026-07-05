@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
-import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_completion_feedback.dart';
+import 'package:homesync_client/shared/widgets/edge_fade.dart';
 
 import '../../data/shopping_predefined.dart';
 import '../../domain/models/shopping_categories.dart';
@@ -65,12 +68,48 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   void _triggerAddSuccessFeedback() {
     if (!mounted) return;
     _addSuccessTimer?.cancel();
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     setState(() => _showAddSuccess = true);
     _addSuccessTimer = Timer(const Duration(milliseconds: 520), () {
       if (!mounted) return;
       setState(() => _showAddSuccess = false);
     });
+  }
+
+  void _keepInputReadyForNextItem() {
+    void requestIfMounted() {
+      if (!mounted) return;
+      _inputFocus.requestFocus();
+      SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => requestIfMounted());
+    Future<void>.delayed(
+      const Duration(milliseconds: 120),
+      requestIfMounted,
+    );
+    Future<void>.delayed(
+      const Duration(milliseconds: 260),
+      requestIfMounted,
+    );
+  }
+
+  double _pendingGridNewRowExtent() {
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final gridWidth = viewportWidth - (AppSpacing.md * 2);
+    final tileWidth = (gridWidth - 20) / 3;
+    return (tileWidth / 0.85) + 10;
+  }
+
+  void _preserveCatalogViewportAfterPendingInsert(int pendingCountBefore) {
+    if (!_scrollController.hasClients || pendingCountBefore <= 0) return;
+
+    final rowsBefore = (pendingCountBefore + 2) ~/ 3;
+    final rowsAfter = (pendingCountBefore + 3) ~/ 3;
+    if (rowsAfter == rowsBefore) return;
+
+    final delta = _pendingGridNewRowExtent();
+    _scrollController.position.correctBy(delta);
   }
 
   void _onSearchChanged() {
@@ -121,7 +160,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   // -- Actions --------------------------------------------------------------
 
   Future<void> _toggleItem(ShoppingItemModel item) async {
-    HapticFeedback.lightImpact();
+    AppHaptics.tap();
     final willBeCompleted = !item.completed;
     ref.read(shoppingItemsProvider.notifier).toggleItem(
           item.id,
@@ -137,7 +176,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   }
 
   Future<void> _deleteItem(ShoppingItemModel item) async {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     ref.read(shoppingItemsProvider.notifier).deleteItem(item.id);
   }
 
@@ -165,16 +204,21 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     String? emoji,
     String? category,
     String? nameKey,
+    bool keepKeyboardReady = false,
+    bool preserveCatalogScroll = false,
   }) async {
-    HapticFeedback.lightImpact();
+    AppHaptics.tap();
     final val = name.trim();
     if (val.isEmpty) return;
 
-    // Borramos el buscador y mantenemos el foco para permitir agregar múltiples productos seguidos fácilmente
+    // Keep the keyboard open only for search-driven additions. Catalog taps
+    // should not open and immediately close the IME.
     _inputController.clear();
     _lastQuery = '';
     _suggestionsVal.value = [];
-    _inputFocus.requestFocus();
+    if (keepKeyboardReady) {
+      _keepInputReadyForNextItem();
+    }
 
     // Find if already exists in pending
     final effectiveNameKey = nameKey ?? shoppingCatalogKeyForName(val);
@@ -190,6 +234,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           (effectiveNameKey != null && i.nameKey == effectiveNameKey);
     }).firstOrNull;
     if (doneMatch != null) {
+      if (preserveCatalogScroll) {
+        _preserveCatalogViewportAfterPendingInsert(pending.length);
+      }
       await _toggleItem(doneMatch);
       _triggerAddSuccessFeedback();
       return;
@@ -212,6 +259,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
       }
     }
 
+    if (preserveCatalogScroll) {
+      _preserveCatalogViewportAfterPendingInsert(pending.length);
+    }
     ref.read(shoppingItemsProvider.notifier).addItem(
           name: val,
           nameKey: effectiveNameKey,
@@ -276,7 +326,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: highlightColor.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadii.sm),
                     ),
                     child: ShoppingIcon(
                       categoryId: categoryId,
@@ -306,7 +356,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: highlightColor.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
                     child: Text(
                       '$count',
@@ -373,7 +423,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
                 ),
                 child: Text(
                   '$count',
@@ -403,7 +453,12 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     final catColor = Color(cat['color'] as int);
 
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.md,
+      ),
       sliver: SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
@@ -434,6 +489,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 emoji: prefItem['emoji'],
                 category: cat['id'],
                 nameKey: nameKey,
+                preserveCatalogScroll: true,
               ),
             );
           },
@@ -450,192 +506,210 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     final t = AppLocalizations.of(context);
     final isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     final maxSuggestionsHeight = isKeyboardOpen ? 320.0 : 420.0;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ValueListenableBuilder<List<Map<String, String>>>(
-          valueListenable: _suggestionsVal,
-          builder: (context, suggestions, child) {
-            if (suggestions.isEmpty) return const SizedBox();
-            return ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: maxSuggestionsHeight),
-              child: Container(
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: context.theme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                    ),
-                  ],
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Scrollbar(
-                  thumbVisibility: suggestions.length > 4,
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    physics: suggestions.length > 4
-                        ? const BouncingScrollPhysics()
-                        : const NeverScrollableScrollPhysics(),
-                    itemCount: suggestions.length,
-                    itemBuilder: (context, index) {
-                      final s = suggestions[index];
-                      final nameKey = s['nameKey'];
-                      return ListTile(
-                        leading: ShoppingIcon(
-                          productKey: nameKey == null || nameKey.isEmpty
-                              ? null
-                              : nameKey,
-                          categoryId: s['category'],
-                          fallbackEmoji: s['emoji'],
-                          allowProductAsset: true,
-                          size: 34,
-                        ),
-                        title: Text(
-                          s['name']!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: context.theme.textPrimary),
-                        ),
-                        trailing: const Icon(
-                          Icons.add_circle_outline,
-                          color: AppColors.accentGreen,
-                        ),
-                        onTap: () => _handleSelection(
-                          s['name']!,
-                          pending,
-                          done,
-                          emoji: s['emoji'],
-                          category: s['category'],
-                          nameKey: nameKey == null || nameKey.isEmpty
-                              ? null
-                              : nameKey,
-                        ),
-                      );
-                    },
+    return TextFieldTapRegion(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ValueListenableBuilder<List<Map<String, String>>>(
+            valueListenable: _suggestionsVal,
+            builder: (context, suggestions, child) {
+              if (suggestions.isEmpty) return const SizedBox();
+              return ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxSuggestionsHeight),
+                child: Container(
+                  margin: const EdgeInsets.all(AppSpacing.xs),
+                  decoration: BoxDecoration(
+                    color: context.theme.surface,
+                    borderRadius: BorderRadius.circular(AppRadii.md),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 10,
+                      ),
+                    ],
                   ),
-                ),
-              ),
-            );
-          },
-        ),
-        Container(
-          padding:
-              const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 16),
-          decoration: BoxDecoration(
-            color: context.theme.surface,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
-          child: SafeArea(
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _inputController,
-                    focusNode: _inputFocus,
-                    style: TextStyle(color: context.theme.textPrimary),
-                    decoration: InputDecoration(
-                      hintText: t.shoppingSearchHint,
-                      hintStyle: TextStyle(color: context.theme.textMuted),
-                      filled: true,
-                      fillColor: context.theme.surfaceVariant.withValues(
-                        alpha: context.theme.isDarkMode ? 0.72 : 1,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.search_outlined,
-                        color: context.theme.textMuted,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 14,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    onSubmitted: (val) => _handleSelection(val, pending, done),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                AnimatedPress(
-                  scale: 0.93,
-                  onTap: () =>
-                      _handleSelection(_inputController.text, pending, done),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOutCubic,
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: _showAddSuccess
-                          ? AppColors.primary
-                          : context.theme.elevatedSurface,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _showAddSuccess
-                            ? AppColors.primary.withValues(alpha: 0.82)
-                            : AppColors.primary.withValues(alpha: 0.20),
-                        width: 1.2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: (_showAddSuccess
-                                  ? AppColors.primary
-                                  : context.theme.shadowBase)
-                              .withValues(
-                            alpha: _showAddSuccess
-                                ? 0.22
-                                : (context.theme.isDarkMode ? 0.18 : 0.06),
+                  clipBehavior: Clip.antiAlias,
+                  child: Scrollbar(
+                    thumbVisibility: suggestions.length > 4,
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      physics: suggestions.length > 4
+                          ? const BouncingScrollPhysics()
+                          : const NeverScrollableScrollPhysics(),
+                      itemCount: suggestions.length,
+                      itemBuilder: (context, index) {
+                        final s = suggestions[index];
+                        final nameKey = s['nameKey'];
+                        return ListTile(
+                          leading: ShoppingIcon(
+                            productKey: nameKey == null || nameKey.isEmpty
+                                ? null
+                                : nameKey,
+                            categoryId: s['category'],
+                            fallbackEmoji: s['emoji'],
+                            allowProductAsset: true,
+                            size: 34,
                           ),
-                          blurRadius: _showAddSuccess ? 18 : 12,
-                          offset: Offset(0, _showAddSuccess ? 6 : 4),
-                        ),
-                      ],
-                    ),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 180),
-                      switchInCurve: Curves.easeOutBack,
-                      switchOutCurve: Curves.easeInCubic,
-                      transitionBuilder: (child, animation) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: ScaleTransition(
-                            scale: animation,
-                            child: child,
+                          title: Text(
+                            s['name']!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: context.theme.textPrimary),
+                          ),
+                          trailing: const Icon(
+                            Icons.add_circle_outline,
+                            color: AppColors.accentGreen,
+                          ),
+                          onTap: () => _handleSelection(
+                            s['name']!,
+                            pending,
+                            done,
+                            emoji: s['emoji'],
+                            category: s['category'],
+                            nameKey: nameKey == null || nameKey.isEmpty
+                                ? null
+                                : nameKey,
+                            keepKeyboardReady: true,
                           ),
                         );
                       },
-                      child: _showAddSuccess
-                          ? const Icon(
-                              Icons.check_rounded,
-                              key: ValueKey('success'),
-                              color: Colors.white,
-                              size: 26,
-                            )
-                          : const Icon(
-                              Icons.add_rounded,
-                              key: ValueKey('idle'),
-                              color: AppColors.primary,
-                              size: 28,
-                            ),
                     ),
                   ),
                 ),
+              );
+            },
+          ),
+          Container(
+            padding: const EdgeInsets.only(
+              left: AppSpacing.md,
+              right: AppSpacing.md,
+              top: AppSpacing.sm,
+              bottom: AppSpacing.md,
+            ),
+            decoration: BoxDecoration(
+              color: context.theme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, -4),
+                ),
               ],
             ),
+            child: SafeArea(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _inputController,
+                      focusNode: _inputFocus,
+                      style: TextStyle(color: context.theme.textPrimary),
+                      onTapOutside: (_) {},
+                      onEditingComplete: () {},
+                      decoration: InputDecoration(
+                        hintText: t.shoppingSearchHint,
+                        hintStyle: TextStyle(color: context.theme.textMuted),
+                        filled: true,
+                        fillColor: context.theme.surfaceVariant.withValues(
+                          alpha: context.theme.isDarkMode ? 0.72 : 1,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search_outlined,
+                          color: context.theme.textMuted,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadii.xl),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onSubmitted: (val) => _handleSelection(
+                        val,
+                        pending,
+                        done,
+                        keepKeyboardReady: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  AnimatedPress(
+                    scale: 0.93,
+                    onTap: () => _handleSelection(
+                      _inputController.text,
+                      pending,
+                      done,
+                      keepKeyboardReady: true,
+                    ),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutCubic,
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: _showAddSuccess
+                            ? AppColors.primary
+                            : context.theme.elevatedSurface,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _showAddSuccess
+                              ? AppColors.primary.withValues(alpha: 0.82)
+                              : AppColors.primary.withValues(alpha: 0.20),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (_showAddSuccess
+                                    ? AppColors.primary
+                                    : context.theme.shadowBase)
+                                .withValues(
+                              alpha: _showAddSuccess
+                                  ? 0.22
+                                  : (context.theme.isDarkMode ? 0.18 : 0.06),
+                            ),
+                            blurRadius: _showAddSuccess ? 18 : 12,
+                            offset: Offset(0, _showAddSuccess ? 6 : 4),
+                          ),
+                        ],
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 180),
+                        switchInCurve: Curves.easeOutBack,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: ScaleTransition(
+                              scale: animation,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: _showAddSuccess
+                            ? const Icon(
+                                Icons.check_rounded,
+                                key: ValueKey('success'),
+                                color: Colors.white,
+                                size: 26,
+                              )
+                            : const Icon(
+                                Icons.add_rounded,
+                                key: ValueKey('idle'),
+                                color: AppColors.primary,
+                                size: 28,
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -674,196 +748,142 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                       ref.invalidate(shoppingItemsProvider);
                     },
                     color: AppColors.primary,
-                    child: CustomScrollView(
-                      controller: _scrollController,
-                      physics: const BouncingScrollPhysics(
-                        parent: AlwaysScrollableScrollPhysics(),
-                      ),
-                      slivers: [
-                        _buildStaticSectionTitle(
-                          t.shoppingListTitle,
-                          count: pending.length,
-                          accentColor: AppColors.primary,
+                    child: EdgeFade(
+                      fadeStart: false,
+                      fadeEnd: true,
+                      child: CustomScrollView(
+                        controller: _scrollController,
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
                         ),
-                        // -- EMPTY STATE / PENDING LIST HEADER ------------------------
-                        if (pending.isEmpty)
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(24, 10, 24, 28),
-                              child: TweenAnimationBuilder<double>(
-                                duration: const Duration(seconds: 1),
-                                tween: Tween(begin: 0.0, end: 1.0),
-                                builder: (context, value, child) => Opacity(
-                                  opacity: value,
-                                  child: Transform.scale(
-                                    scale: 0.94 + (0.06 * value),
-                                    child: child,
+                        slivers: [
+                          _buildStaticSectionTitle(
+                            t.shoppingListTitle,
+                            count: pending.length,
+                            accentColor: AppColors.primary,
+                          ),
+                          // -- EMPTY STATE / PENDING LIST HEADER ------------------------
+                          if (pending.isEmpty)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(24, 10, 24, 28),
+                                child: TweenAnimationBuilder<double>(
+                                  duration: const Duration(seconds: 1),
+                                  tween: Tween(begin: 0.0, end: 1.0),
+                                  builder: (context, value, child) => Opacity(
+                                    opacity: value,
+                                    child: Transform.scale(
+                                      scale: 0.94 + (0.06 * value),
+                                      child: child,
+                                    ),
                                   ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(28),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            AppColors.primary
-                                                .withValues(alpha: 0.14),
-                                            AppColors.accentGreen
-                                                .withValues(alpha: 0.10),
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(28),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              AppColors.primary
+                                                  .withValues(alpha: 0.14),
+                                              AppColors.accentGreen
+                                                  .withValues(alpha: 0.10),
+                                            ],
+                                          ),
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: AppColors.primary
+                                                  .withValues(alpha: 0.10),
+                                              blurRadius: 24,
+                                              offset: const Offset(0, 10),
+                                            ),
                                           ],
                                         ),
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.primary
-                                                .withValues(alpha: 0.10),
-                                            blurRadius: 24,
-                                            offset: const Offset(0, 10),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.shopping_basket_outlined,
-                                        size: 56,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 22),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary
-                                            .withValues(alpha: 0.10),
-                                        borderRadius:
-                                            BorderRadius.circular(999),
-                                      ),
-                                      child: Text(
-                                        done.isEmpty
-                                            ? t.shoppingAllDone
-                                            : t.shoppingListResolved,
-                                        style: const TextStyle(
+                                        child: const Icon(
+                                          Icons.shopping_basket_outlined,
+                                          size: 56,
                                           color: AppColors.primary,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: 0.1,
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      done.isEmpty
-                                          ? t.shoppingEmptyFirstLineDone
-                                          : t.shoppingEmptyFirstLineBought,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: context.theme.textPrimary,
-                                        fontSize: 22,
-                                        height: 1.3,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: -0.5,
+                                      const SizedBox(height: 22),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.10),
+                                          borderRadius: BorderRadius.circular(
+                                            AppRadii.pill,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          done.isEmpty
+                                              ? t.shoppingAllDone
+                                              : t.shoppingListResolved,
+                                          style: const TextStyle(
+                                            color: AppColors.primary,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 0.1,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      t.shoppingEmptyHint,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: context.theme.textSecondary,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        height: 1.45,
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        done.isEmpty
+                                            ? t.shoppingEmptyFirstLineDone
+                                            : t.shoppingEmptyFirstLineBought,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: context.theme.textPrimary,
+                                          fontSize: 22,
+                                          height: 1.3,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: -0.5,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        t.shoppingEmptyHint,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: context.theme.textSecondary,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          height: 1.45,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          )
-                        else ...[
-                          // Mostramos la grilla de pendientes si no esta vacio.
-                          SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                            sliver: SliverGrid(
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                childAspectRatio: 0.85,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
-                              ),
-                              delegate: SliverChildBuilderDelegate(
-                                (ctx, i) {
-                                  final item = pending[i];
-                                  return TweenAnimationBuilder<double>(
-                                    key: ValueKey(item.id),
-                                    duration: const Duration(milliseconds: 300),
-                                    tween: Tween(begin: 0.0, end: 1.0),
-                                    curve: Curves.easeOutCubic,
-                                    builder: (context, value, child) => Opacity(
-                                      opacity: value,
-                                      child: Transform.translate(
-                                        offset: Offset(0, 15 * (1 - value)),
-                                        child: child,
-                                      ),
-                                    ),
-                                    child: _ShoppingItemTile(
-                                      item: item,
-                                      onToggle: () => _toggleItem(item),
-                                      onDelete: () => _deleteItem(item),
-                                    ),
-                                  );
-                                },
-                                childCount: pending.length,
-                              ),
-                            ),
-                          ),
-                        ],
-                        if (_completedThisSession.length >= 3)
-                          SliverToBoxAdapter(
-                            child: _PostShoppingBanner(
-                              completedCount: _completedThisSession.length,
-                              onScanTap: () {
-                                // OCR para pre-rellenar el gasto (monto +
-                                // categoría) es GRATIS para todos. La
-                                // vinculación con la lista de compras ya está
-                                // gated dentro del ExpenseFormSheet.
-                                ExpenseFormSheet.show(
-                                  context,
-                                  triggerScanOnOpen: true,
-                                );
-                              },
-                            ),
-                          ),
-
-                        if (done.isNotEmpty) ...[
-                          _buildSectionHeader(
-                            t.shoppingRecentSection,
-                            'recent',
-                            accentColor: AppColors.accentGreen,
-                            count: done.length,
-                          ),
-                          if (_expandedSections.contains('recent'))
+                            )
+                          else ...[
+                            // Mostramos la grilla de pendientes si no esta vacio.
                             SliverPadding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpacing.md,
+                                AppSpacing.md,
+                                AppSpacing.md,
+                                AppSpacing.lg,
+                              ),
                               sliver: SliverGrid(
                                 gridDelegate:
                                     const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 4,
+                                  crossAxisCount: 3,
                                   childAspectRatio: 0.85,
                                   crossAxisSpacing: 10,
                                   mainAxisSpacing: 10,
                                 ),
                                 delegate: SliverChildBuilderDelegate(
                                   (ctx, i) {
-                                    final item = done[i];
+                                    final item = pending[i];
                                     return TweenAnimationBuilder<double>(
                                       key: ValueKey(item.id),
                                       duration:
@@ -873,53 +893,108 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                       builder: (context, value, child) =>
                                           Opacity(
                                         opacity: value,
-                                        child: child,
+                                        child: Transform.translate(
+                                          offset: Offset(0, 15 * (1 - value)),
+                                          child: child,
+                                        ),
                                       ),
                                       child: _ShoppingItemTile(
                                         item: item,
                                         onToggle: () => _toggleItem(item),
                                         onDelete: () => _deleteItem(item),
-                                        isCompleted: true,
-                                        isFreshlyCompleted:
-                                            _completedThisSession.contains(
-                                          item.id,
-                                        ),
                                       ),
                                     );
                                   },
-                                  childCount: done.length,
+                                  childCount: pending.length,
                                 ),
                               ),
                             ),
-                        ],
-
-                        _buildStaticSectionTitle(
-                          t.shoppingCategoriesSection,
-                        ),
-                        // -- CATEGORIES SECTIONS ---------------------------------
-                        for (final cat in ShoppingCategories.all
-                            .where((cat) => cat['id'] != 'general')) ...[
-                          _buildSectionHeader(
-                            localizedShoppingCategoryName(
-                              context,
-                              cat['id'] as String,
-                              fallback: cat['name'] as String?,
+                          ],
+                          if (done.isNotEmpty) ...[
+                            _buildSectionHeader(
+                              t.shoppingRecentSection,
+                              'recent',
+                              accentColor: AppColors.accentGreen,
+                              count: done.length,
                             ),
-                            cat['id'],
-                            emoji: cat['emoji'],
-                            accentColor: Color(cat['color'] as int),
-                            categoryId: cat['id'] as String,
-                            count: ShoppingPredefined.itemsForCategory(
-                              cat['id'],
-                              context,
-                            ).length,
-                          ),
-                          if (_expandedSections.contains(cat['id']))
-                            _buildPredefinedGrid(cat, pending, done),
-                        ],
+                            if (_expandedSections.contains('recent'))
+                              SliverPadding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  AppSpacing.md,
+                                  AppSpacing.sm,
+                                  AppSpacing.md,
+                                  AppSpacing.md,
+                                ),
+                                sliver: SliverGrid(
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 4,
+                                    childAspectRatio: 0.85,
+                                    crossAxisSpacing: 10,
+                                    mainAxisSpacing: 10,
+                                  ),
+                                  delegate: SliverChildBuilderDelegate(
+                                    (ctx, i) {
+                                      final item = done[i];
+                                      return TweenAnimationBuilder<double>(
+                                        key: ValueKey(item.id),
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        tween: Tween(begin: 0.0, end: 1.0),
+                                        curve: Curves.easeOutCubic,
+                                        builder: (context, value, child) =>
+                                            Opacity(
+                                          opacity: value,
+                                          child: child,
+                                        ),
+                                        child: _ShoppingItemTile(
+                                          item: item,
+                                          onToggle: () => _toggleItem(item),
+                                          onDelete: () => _deleteItem(item),
+                                          isCompleted: true,
+                                          isFreshlyCompleted:
+                                              _completedThisSession.contains(
+                                            item.id,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    childCount: done.length,
+                                  ),
+                                ),
+                              ),
+                          ],
 
-                        const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                      ],
+                          _buildStaticSectionTitle(
+                            t.shoppingCategoriesSection,
+                          ),
+                          // -- CATEGORIES SECTIONS ---------------------------------
+                          for (final cat in ShoppingCategories.all
+                              .where((cat) => cat['id'] != 'general')) ...[
+                            _buildSectionHeader(
+                              localizedShoppingCategoryName(
+                                context,
+                                cat['id'] as String,
+                                fallback: cat['name'] as String?,
+                              ),
+                              cat['id'],
+                              emoji: cat['emoji'],
+                              accentColor: Color(cat['color'] as int),
+                              categoryId: cat['id'] as String,
+                              count: ShoppingPredefined.itemsForCategory(
+                                cat['id'],
+                                context,
+                              ).length,
+                            ),
+                            if (_expandedSections.contains(cat['id']))
+                              _buildPredefinedGrid(cat, pending, done),
+                          ],
+
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: 100),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -935,7 +1010,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   Widget _buildShimmerGrid() {
     return ShimmerLoading(
       child: GridView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
           childAspectRatio: 0.85,
@@ -946,7 +1021,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         itemBuilder: (context, index) => Container(
           decoration: BoxDecoration(
             color: context.theme.surface,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
           ),
         ),
       ),
@@ -979,7 +1054,7 @@ class _PredefinedItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedPress(
       onTap: () {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         onTap.call();
       },
       child: AnimatedContainer(
@@ -1016,7 +1091,7 @@ class _PredefinedItemTile extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
               child: Text(
                 item['name']!,
                 textAlign: TextAlign.center,
@@ -1114,7 +1189,7 @@ class _ShoppingItemTile extends StatelessWidget {
         return AnimatedPress(
           scale: 0.96,
           onTap: () {
-            HapticFeedback.lightImpact();
+            AppHaptics.tap();
             onToggle();
           },
           onLongPress: () {
@@ -1143,7 +1218,9 @@ class _ShoppingItemTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xxs,
+                      ),
                       child: Text(
                         localizedShoppingItemName(context, item),
                         textAlign: TextAlign.center,
@@ -1170,7 +1247,7 @@ class _ShoppingItemTile extends StatelessWidget {
                   child: Transform.scale(
                     scale: 1 + (pulse * 0.18),
                     child: Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(AppSpacing.xxs),
                       decoration: BoxDecoration(
                         color: Color.lerp(
                           AppColors.accentGreen,
@@ -1199,82 +1276,6 @@ class _ShoppingItemTile extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _PostShoppingBanner extends StatelessWidget {
-  final int completedCount;
-  final VoidCallback onScanTap;
-
-  const _PostShoppingBanner({
-    required this.completedCount,
-    required this.onScanTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary.withValues(alpha: 0.12),
-            AppColors.accentBlue.withValues(alpha: 0.08),
-          ],
-        ),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.25),
-        ),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: onScanTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                const Text('🧾', style: TextStyle(fontSize: 24)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '✅ ${t.shoppingProductsBought(completedCount)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        t.shoppingScanReceipt,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(
-                  Icons.camera_alt_outlined,
-                  color: AppColors.primary,
-                  size: 22,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

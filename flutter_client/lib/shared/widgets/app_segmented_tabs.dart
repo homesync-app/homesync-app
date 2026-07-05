@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/shared/widgets/animated_press.dart';
+import 'package:motor/motor.dart';
 
 class AppSegmentedTabs extends StatelessWidget {
   final TabController controller;
@@ -40,38 +43,56 @@ class AppSegmentedTabs extends StatelessWidget {
                   padding: EdgeInsets.only(
                     right: index == labels.length - 1 ? 0 : 6,
                   ),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(20),
+                  child: AnimatedPress(
+                    scale: 0.97,
+                    haptic: AppPressHaptic.selection,
                     onTap: () => controller.animateTo(index),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOutCubic,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.primary.withValues(alpha: 0.12)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.primary.withValues(alpha: 0.18)
-                              : Colors.transparent,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          labels[index],
-                          style: TextStyle(
-                            color: isSelected
-                                ? AppColors.primary
-                                : theme.textSecondary,
-                            fontSize: 14,
-                            fontWeight:
-                                isSelected ? FontWeight.w800 : FontWeight.w700,
-                            letterSpacing: -0.1,
+                    child: SingleMotionBuilder(
+                      motion: const MaterialSpringMotion.standardSpatialFast(),
+                      value: isSelected ? 1.0 : 0.0,
+                      builder: (context, value, child) {
+                        final t = value.clamp(0.0, 1.0).toDouble();
+                        final background = Color.lerp(
+                          AppColors.primary.withValues(alpha: 0),
+                          AppColors.primary.withValues(alpha: 0.12),
+                          t,
+                        )!;
+                        final border = Color.lerp(
+                          AppColors.primary.withValues(alpha: 0),
+                          AppColors.primary.withValues(alpha: 0.18),
+                          t,
+                        )!;
+                        final foreground = Color.lerp(
+                          theme.textSecondary,
+                          AppColors.primary,
+                          t,
+                        )!;
+                        final weight = FontWeight.lerp(
+                          FontWeight.w700,
+                          FontWeight.w800,
+                          t,
+                        )!;
+
+                        return Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: background,
+                            borderRadius: BorderRadius.circular(AppRadii.lg),
+                            border: Border.all(color: border),
                           ),
-                        ),
-                      ),
+                          child: Center(
+                            child: Text(
+                              labels[index],
+                              style: TextStyle(
+                                color: foreground,
+                                fontSize: 14,
+                                fontWeight: weight,
+                                letterSpacing: 0,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),

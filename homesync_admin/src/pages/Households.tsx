@@ -7,8 +7,16 @@ import {
   Calendar,
   Search,
   Activity,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
+
+interface HouseholdMemberLite {
+  name: string;
+  role: string;
+  avatar_url: string | null;
+}
 
 interface Household {
   id: string;
@@ -17,6 +25,7 @@ interface Household {
   created_at: string;
   member_count: number;
   owner_name: string | null;
+  members: HouseholdMemberLite[];
 }
 
 export const Households = () => {
@@ -45,25 +54,35 @@ export const Households = () => {
 
     const { data: members } = await supabase
       .from('household_members')
-      .select('household_id, role, user:users(full_name)')
+      .select('household_id, role, user:users(full_name, avatar_url)')
       .in('household_id', householdIds);
 
-    const memberMap = new Map<string, { count: number; ownerName: string | null }>();
+    const memberMap = new Map<
+      string,
+      { count: number; ownerName: string | null; members: HouseholdMemberLite[] }
+    >();
     for (const m of (members as Record<string, unknown>[]) || []) {
       const hid = m.household_id as string;
       if (!memberMap.has(hid)) {
-        memberMap.set(hid, { count: 0, ownerName: null });
+        memberMap.set(hid, { count: 0, ownerName: null, members: [] });
       }
       const entry = memberMap.get(hid)!;
       entry.count++;
+      const user = m.user as Record<string, unknown> | null;
+      const fullName = (user?.full_name as string) || null;
       if (m.role === 'owner') {
-        const user = m.user as Record<string, unknown> | null;
-        entry.ownerName = (user?.full_name as string) || null;
+        entry.ownerName = fullName;
       }
+      entry.members.push({
+        name: fullName || 'Sin nombre',
+        role: m.role as string,
+        avatar_url: (user?.avatar_url as string) || null,
+      });
     }
 
     const mapped: Household[] = data.map((h: Record<string, unknown>) => {
-      const info = memberMap.get(h.id as string) || { count: 0, ownerName: null };
+      const info =
+        memberMap.get(h.id as string) || { count: 0, ownerName: null, members: [] };
       return {
         id: h.id as string,
         name: h.name as string,
@@ -71,6 +90,7 @@ export const Households = () => {
         created_at: h.created_at as string,
         member_count: info.count,
         owner_name: info.ownerName,
+        members: info.members,
       };
     });
 
@@ -130,7 +150,7 @@ export const Households = () => {
             Hogares
           </h2>
           <p className="text-gray-400 mt-1">
-            Explor\u00e1 cada hogar: miembros, balance de tareas, actividad y salud.
+            Explorá cada hogar: miembros, balance de tareas, actividad y salud.
           </p>
         </div>
 
@@ -139,7 +159,7 @@ export const Households = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
-              placeholder="Buscar por nombre o due\u00f1o..."
+              placeholder="Buscar por nombre o dueño..."
               className="bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -180,7 +200,7 @@ export const Households = () => {
       ) : filtered.length === 0 ? (
         <EmptyState
           title="Sin hogares"
-          description={search ? 'Prob\u00e1 con otra b\u00fasqueda.' : 'Los hogares creados aparecer\u00e1n aqu\u00ed.'}
+          description={search ? 'Probá con otra búsqueda.' : 'Los hogares creados aparecerán aquí.'}
         />
       ) : (
         <div className="space-y-3">
@@ -223,8 +243,45 @@ export const Households = () => {
                   >
                     {h.household_type}
                   </span>
+                  {selectedId === h.id ? (
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-gray-500" />
+                  )}
                 </div>
               </div>
+
+              {selectedId === h.id && (
+                <div className="border-t border-white/5 px-5 py-4 bg-black/20">
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-3">
+                    Miembros ({h.member_count})
+                  </p>
+                  {h.members.length === 0 ? (
+                    <p className="text-xs text-gray-500">Sin miembros registrados.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {h.members.map((m, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full pl-1 pr-3 py-1"
+                        >
+                          <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs overflow-hidden">
+                            {m.avatar_url && m.avatar_url.startsWith('http') ? (
+                              <img src={m.avatar_url} alt="" className="w-full h-full object-cover" />
+                            ) : m.avatar_url ? (
+                              m.avatar_url
+                            ) : (
+                              m.name.charAt(0).toUpperCase()
+                            )}
+                          </span>
+                          <span className="text-xs font-medium text-gray-200">{m.name}</span>
+                          {m.role === 'owner' && <Crown className="w-3 h-3 text-amber-400" />}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </button>
           ))}
         </div>

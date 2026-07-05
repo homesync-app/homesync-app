@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
     show CompletionSparkleBurst, dashboardCategoryAccent, dashboardCategoryIcon;
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -71,7 +73,7 @@ class FamilyTaskCard extends StatelessWidget {
     final accent = isPendingReview
         ? const Color(0xFFE59A2F)
         : dashboardCategoryAccent(context, task.category);
-    final contextLabel = _contextLabel();
+    final contextLabel = _displayContextLabel();
     final urgency = _urgencyLabel();
 
     return AppCompletionFeedback(
@@ -81,27 +83,28 @@ class FamilyTaskCard extends StatelessWidget {
           isPendingReview ? accent.withValues(alpha: 0.08) : theme.surface,
       borderColor: accent.withValues(alpha: isPendingReview ? 0.22 : 0.12),
       boxShadow: theme.cardShadow,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(AppRadii.xl),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       completionSurfaceAlpha: 0.080,
       completionBorderAlpha: 0.36,
       shadowBaseAlpha: isPendingReview ? 0.046 : 0.032,
       shadowPulseAlpha: 0.065,
       shadowPulseBlur: 11,
-      popScale: 0.016,
+      // popScale handled by AppCompletionFeedback now
       builder: (context, progress, pulse, completionColor) {
         return AnimatedPress(
-          scale: 0.985,
+          // Disable scaling during completion to avoid "Double Scale" jank
+          scale: isCompleting ? 1.0 : 0.985,
           onTap: isCompleting
               ? null
               : () {
-                  HapticFeedback.lightImpact();
+                  AppHaptics.tap();
                   onTap?.call();
                 },
           child: Row(
             children: [
               _buildLeading(accent),
-              const SizedBox(width: 14),
+              const SizedBox(width: 18),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,12 +201,17 @@ class FamilyTaskCard extends StatelessWidget {
                         ),
                         shape: BoxShape.circle,
                         border: Border.all(
+                          // Strong outline at rest so the circle reads as the
+                          // action button, not as an already-done state.
                           color: Color.lerp(
                             (isActionEnabled ? accent : theme.textMuted)
-                                .withValues(alpha: 0.12),
+                                .withValues(
+                              alpha: isActionEnabled ? 0.45 : 0.2,
+                            ),
                             Colors.white.withValues(alpha: 0.62),
                             progress,
                           )!,
+                          width: 1.8 - (progress * 0.8),
                         ),
                       ),
                       child: AnimatedSwitcher(
@@ -240,23 +248,55 @@ class FamilyTaskCard extends StatelessWidget {
   }
 
   Widget _buildLeading(Color accent) {
-    final memberForAvatar =
+    final leadingMember =
         task.isPendingApproval ? completedMember : assignedMember;
-
-    if (memberForAvatar != null) {
-      return CustomUserAvatar(
-        name: memberForAvatar.displayName,
-        avatarUrl: memberForAvatar.avatarUrl,
-        radius: 22,
-        showBorder: true,
-        userId: memberForAvatar.userId,
-        forceCircular: true,
-      );
+    if (leadingMember?.isChild == true) {
+      return _buildChildAvatarLeading(leadingMember!, accent);
     }
 
+    return _buildCategoryLeading(accent);
+  }
+
+  Widget _buildChildAvatarLeading(MemberModel member, Color accent) {
+    final isPremiumCharacter =
+        UserAvatar.isPremiumAvatarValue(member.avatarUrl);
+
     return Container(
-      width: 54,
-      height: 54,
+      width: 58,
+      height: 58,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: 0.12),
+            accent.withValues(alpha: 0.04),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accent.withValues(alpha: 0.08)),
+      ),
+      child: Center(
+        child: Transform.translate(
+          offset: isPremiumCharacter ? const Offset(0, -2) : Offset.zero,
+          child: CustomUserAvatar(
+            name: member.displayName,
+            avatarUrl: member.avatarUrl,
+            radius: isPremiumCharacter ? 25 : 20,
+            showBorder: false,
+            userId: member.userId,
+            forceCircular: !isPremiumCharacter,
+            allowMotion: false,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryLeading(Color accent) {
+    return Container(
+      width: 58,
+      height: 58,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -276,7 +316,7 @@ class FamilyTaskCard extends StatelessWidget {
     );
   }
 
-  String? _contextLabel() {
+  String? _displayContextLabel() {
     if (task.isPendingApproval) {
       if (canApprovePending) {
         if (completedMember != null) {
@@ -285,37 +325,34 @@ class FamilyTaskCard extends StatelessWidget {
         return 'Lista para revisar';
       }
       if (isChildView) return 'Esperando aprobación';
-      if (completedMember != null) {
-        return 'Esperando que un adulto la revise';
-      }
-      return 'Esperando revisión de un adulto';
+      return 'Esperando que un adulto la revise';
     }
-    if (task.isOverdue) {
-      if (task.assignedTo == null) {
-        return 'Pendiente de coordinar';
-      }
-      if (!_isAssignedToCurrentUser && assignedMember != null) {
-        final name = assignedMember!.displayName;
-        return name.isNotEmpty
-            ? 'Le quedó pendiente a $name'
-            : 'Le quedó pendiente a otro integrante';
-      }
-      return 'Te quedó pendiente';
+
+    if (task.assignedTo == null) {
+      if (task.isOverdue) return 'Pendiente de coordinar';
+      if (task.isDueToday) return 'A coordinar';
+      return null;
     }
-    if (task.isDueToday) {
-      if (task.assignedTo == null) {
-        return 'A coordinar';
+
+    if (_isAssignedToCurrentUser) {
+      if (isChildView) {
+        return task.isOverdue ? 'Tu misión pendiente' : 'Tu misión';
       }
-      if (!_isAssignedToCurrentUser && assignedMember != null) {
-        final name = assignedMember!.displayName;
-        return name.isNotEmpty
-            ? 'Le toca hoy a $name'
-            : 'Le toca hoy a otro integrante';
-      }
-      return 'Te toca hoy';
+      return task.isOverdue ? 'Te quedó pendiente' : 'Te toca hoy';
     }
-    return null;
+
+    if (assignedMember == null) {
+      return task.isOverdue ? 'Le quedó a otro' : 'Para otro integrante';
+    }
+
+    final name = _firstName(assignedMember!.displayName);
+    if (name.isEmpty) {
+      return task.isOverdue ? 'Le quedó a otro' : 'Para otro integrante';
+    }
+    return task.isOverdue ? 'Le quedó a $name' : 'Para $name';
   }
+
+  String _firstName(String name) => name.trim().split(RegExp(r'\s+')).first;
 
   String? _urgencyLabel() {
     if (task.isPendingApproval) {
@@ -342,10 +379,13 @@ class _FamilyTaskPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

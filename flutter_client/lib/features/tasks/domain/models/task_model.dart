@@ -1,3 +1,4 @@
+import 'package:homesync_client/core/utils/date_extensions.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 enum TaskStatus {
@@ -273,12 +274,12 @@ class TaskModel {
 
   bool get isDueToday {
     if (dueAt == null) return false;
-    final now = DateTime.now();
-    final dueDate = _effectiveDueDate;
-    return dueDate.year == now.year &&
-        dueDate.month == now.month &&
-        dueDate.day == now.day;
+    return _effectiveDueDate.isSameDay(DateTime.now());
   }
+
+  /// Calendar day of the (recurrence-adjusted) due date, or null when the
+  /// task has no schedule. Used to bucket the tasks list by urgency.
+  DateTime? get dueDateOnly => dueAt == null ? null : _effectiveDueDate;
 
   /// Whether the task should surface in the home "today" section based purely
   /// on its own schedule: due today, overdue, or any daily recurring task.

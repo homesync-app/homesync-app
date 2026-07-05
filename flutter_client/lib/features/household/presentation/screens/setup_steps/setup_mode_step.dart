@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/household_design.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/setup_wizard_controller.dart';
@@ -76,7 +76,7 @@ class SetupModeStep extends ConsumerWidget {
                                 id: modeId,
                                 isSelected: wizard.selectedMode == modeId,
                                 onTap: () {
-                                  HapticFeedback.selectionClick();
+                                  AppHaptics.selection();
                                   controller.selectMode(modeId);
                                 },
                               ),

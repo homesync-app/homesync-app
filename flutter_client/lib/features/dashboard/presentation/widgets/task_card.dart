@@ -1,13 +1,16 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
@@ -46,6 +49,16 @@ class DashboardTaskCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final members =
+        ref.watch(householdMembersProvider).value ?? const <MemberModel>[];
+    final currentMember =
+        members.where((member) => member.userId == currentUserId).firstOrNull;
+    // El server garantiza al menos 1 coin por completación para niños
+    // (complete_task_v1); el pill refleja lo que este usuario va a ganar.
+    final displayCoins = (currentMember?.isChild ?? false)
+        ? (task.coinReward < 1 ? 1 : task.coinReward)
+        : task.coinReward;
     final normalizedCategory = CategoryMapping.normaliseCategory(task.category);
     final categoriesAsync = ref.watch(categoriesProvider);
     final categoryData = categoriesAsync.maybeWhen(
@@ -70,15 +83,16 @@ class DashboardTaskCard extends ConsumerWidget {
       surfaceColor: theme.surface,
       borderColor: accent.withValues(alpha: 0.12),
       boxShadow: theme.cardShadow,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(AppRadii.xl),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       builder: (context, progress, pulse, completionColor) {
         return AnimatedPress(
-          scale: 0.985,
+          // Disable scaling during completion to avoid "Double Scale" jank
+          scale: isCompleting ? 1.0 : 0.985,
           onTap: isCompleting
               ? null
               : () {
-                  HapticFeedback.lightImpact();
+                  AppHaptics.tap();
                   onTap?.call();
                 },
           child: Stack(
@@ -116,22 +130,9 @@ class DashboardTaskCard extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _TaskMetricPill(
-                              icon: Icons.star_rounded,
-                              label: '${task.xpReward} XP',
-                              color: const Color(0xFFF0A146),
-                            ),
-                            if (task.coinReward > 0)
-                              _TaskMetricPill(
-                                icon: Icons.monetization_on_rounded,
-                                label: '${task.coinReward}',
-                                color: const Color(0xFF7CB08B),
-                              ),
-                          ],
+                        _TaskRewardPill(
+                          xp: task.xpReward,
+                          coins: displayCoins,
                         ),
                       ],
                     ),
@@ -150,18 +151,22 @@ class DashboardTaskCard extends ConsumerWidget {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
+                            // At rest this must still read as an action button,
+                            // not as a blank status dot. During completion it
+                            // fills and turns into the confirmed check state.
                             color: Color.lerp(
-                              accent.withValues(alpha: 0.09),
+                              theme.surface.withValues(alpha: 0.94),
                               completionColor.withValues(alpha: 0.94),
                               progress,
                             ),
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: Color.lerp(
-                                accent.withValues(alpha: 0.12),
+                                accent.withValues(alpha: 0.28),
                                 Colors.white.withValues(alpha: 0.62),
                                 progress,
                               )!,
+                              width: 1.8 - (progress * 0.8),
                             ),
                           ),
                           child: AnimatedSwitcher(
@@ -180,8 +185,9 @@ class DashboardTaskCard extends ConsumerWidget {
                               Icons.check_rounded,
                               key: ValueKey(isCompleting),
                               size: isCompleting ? 22 : 18,
-                              color:
-                                  isCompleting ? Colors.white : completionColor,
+                              color: isCompleting
+                                  ? Colors.white
+                                  : accent.withValues(alpha: 0.62),
                             ),
                           ),
                         ),
@@ -432,38 +438,66 @@ class _SparkleDot extends StatelessWidget {
   }
 }
 
-class _TaskMetricPill extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
+/// Pill único de recompensa (XP · coins) — mismo lenguaje visual que la card
+/// de la pantalla Tareas para que la recompensa se lea igual en toda la app.
+class _TaskRewardPill extends StatelessWidget {
+  final int xp;
+  final int coins;
 
-  const _TaskMetricPill({
-    required this.icon,
-    required this.label,
-    required this.color,
+  const _TaskRewardPill({
+    required this.xp,
+    required this.coins,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (xp <= 0 && coins <= 0) return const SizedBox.shrink();
+
+    TextStyle style(Color color) => TextStyle(
+          fontWeight: FontWeight.w800,
+          fontSize: 10,
+          color: color,
+          letterSpacing: -0.1,
+        );
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
+      ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
+        color: const Color(0xFFF0A146).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11, color: color),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: color,
+          if (xp > 0) ...[
+            const Icon(Icons.star_rounded, size: 11, color: Color(0xFFF0A146)),
+            const SizedBox(width: 3),
+            Text('$xp XP', style: style(const Color(0xFFF0A146))),
+          ],
+          if (xp > 0 && coins > 0) ...[
+            const SizedBox(width: 6),
+            Container(
+              width: 3,
+              height: 3,
+              decoration: const BoxDecoration(
+                color: AppColors.textMuted,
+                shape: BoxShape.circle,
+              ),
             ),
-          ),
+            const SizedBox(width: 6),
+          ],
+          if (coins > 0) ...[
+            const Icon(
+              Icons.monetization_on_rounded,
+              size: 11,
+              color: Color(0xFF7CB08B),
+            ),
+            const SizedBox(width: 3),
+            Text('$coins', style: style(const Color(0xFF7CB08B))),
+          ],
         ],
       ),
     );

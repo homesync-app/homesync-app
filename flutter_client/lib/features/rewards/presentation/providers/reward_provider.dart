@@ -420,8 +420,12 @@ class Rewards extends _$Rewards {
         // things that actually changed: the coin balance and the activity
         // feed. Genuine reward-row changes still arrive via the realtime
         // channel set up in build().
-        ref.invalidate(recentActivityProvider);
-        ref.invalidate(userBalanceProvider);
+        // Guard `ref`: this notifier is auto-dispose and may be torn down during
+        // the redeem await, which would make these invalidations throw.
+        if (ref.mounted) {
+          ref.invalidate(recentActivityProvider);
+          ref.invalidate(userBalanceProvider);
+        }
         return Right(success);
       },
     );
@@ -574,7 +578,7 @@ class PaginatedRewardsController extends AsyncNotifier<RewardsPageState> {
 
   Future<void> refresh() async {
     state = const AsyncLoading<RewardsPageState>();
-    state = await AsyncValue.guard(() async {
+    final next = await AsyncValue.guard(() async {
       final chunk = await _fetchChunk(offset: 0);
       return RewardsPageState(
         items: chunk.items,
@@ -582,6 +586,8 @@ class PaginatedRewardsController extends AsyncNotifier<RewardsPageState> {
         isLoadingMore: false,
       );
     });
+    if (!ref.mounted) return;
+    state = next;
   }
 
   Future<void> loadMore() async {
@@ -594,6 +600,7 @@ class PaginatedRewardsController extends AsyncNotifier<RewardsPageState> {
 
     try {
       final chunk = await _fetchChunk(offset: current.items.length);
+      if (!ref.mounted) return;
       state = AsyncData(
         current.copyWith(
           items: [...current.items, ...chunk.items],
@@ -602,7 +609,9 @@ class PaginatedRewardsController extends AsyncNotifier<RewardsPageState> {
         ),
       );
     } catch (error, stackTrace) {
-      state = AsyncData(current.copyWith(isLoadingMore: false));
+      if (ref.mounted) {
+        state = AsyncData(current.copyWith(isLoadingMore: false));
+      }
       log.e(
         'Paginated rewards loadMore failed: $error',
         error: error,

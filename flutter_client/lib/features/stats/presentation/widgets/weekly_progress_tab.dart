@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
@@ -39,103 +36,6 @@ class WeeklyProgressTab extends ConsumerWidget {
     this.showHeader = true,
     required this.onRefresh,
   });
-
-  // ignore: unused_element
-  void _showLoveNoteDialog(
-    BuildContext context,
-    WidgetRef ref,
-    AppThemeColors theme,
-  ) {
-    final t = AppLocalizations.of(context);
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        backgroundColor: theme.surface,
-        surfaceTintColor: Colors.transparent,
-        title: Row(
-          children: [
-            const Icon(Icons.favorite, color: Color(0xFFEF4444)),
-            const SizedBox(width: 12),
-            Text(
-              t.loveNoteDialogTitle,
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                color: theme.textPrimary,
-              ),
-            ),
-          ],
-        ),
-        content: TextField(
-          controller: controller,
-          maxLines: 3,
-          style: TextStyle(color: theme.textPrimary),
-          decoration: InputDecoration(
-            hintText: t.loveNoteHint,
-            filled: true,
-            fillColor: const Color(0xFFEF4444).withValues(alpha: 0.05),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              t.commonCancel,
-              style: TextStyle(color: theme.textMuted),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final content = controller.text.trim();
-              if (content.isEmpty) return;
-
-              final currentUserId = ref.read(currentUserIdProvider);
-              final householdId = await ref.read(householdIdProvider.future);
-              final members = ref.read(householdMembersProvider).value ?? [];
-              final partner =
-                  members.where((m) => m.userId != currentUserId).firstOrNull;
-
-              if (currentUserId == null ||
-                  householdId == null ||
-                  partner == null) {
-                return;
-              }
-
-              await ref.read(loveNotesProvider.notifier).sendNote(
-                    content: content,
-                    fromUserId: currentUserId,
-                    toUserId: partner.userId,
-                    householdId: householdId,
-                  );
-
-              if (ctx.mounted) Navigator.pop(ctx);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('💌 ${t.loveNoteSent}'),
-                    backgroundColor: const Color(0xFFEF4444),
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(t.commonSend),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -168,7 +68,7 @@ class WeeklyProgressTab extends ConsumerWidget {
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(32),
+              borderRadius: BorderRadius.circular(AppRadii.modal),
               border: Border.all(color: theme.border.withValues(alpha: 0.45)),
               boxShadow: theme.cardShadow,
             ),
@@ -209,7 +109,7 @@ class WeeklyProgressTab extends ConsumerWidget {
               if (!isPremium) {
                 PremiumPaywall.show(context);
               } else {
-                HapticFeedback.lightImpact();
+                AppHaptics.tap();
                 showLoveNoteDialog(context: context, ref: ref);
               }
             },
@@ -231,7 +131,7 @@ class WeeklyProgressTab extends ConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(AppRadii.modal),
                 border: Border.all(
                   color: isPremium
                       ? (theme.isDarkMode
@@ -245,7 +145,7 @@ class WeeklyProgressTab extends ConsumerWidget {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: isPremium
                           ? (theme.isDarkMode
@@ -358,7 +258,7 @@ class _WeeklyHeaderCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(AppRadii.modal),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.45),
         ),
@@ -395,7 +295,7 @@ class _WeeklyHeaderCard extends StatelessWidget {
               color: theme.isDarkMode
                   ? theme.surfaceVariant.withValues(alpha: 0.72)
                   : Colors.white.withValues(alpha: 0.72),
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadii.pill),
             ),
             child: Text(
               '${t.statsCurrentWeek} · $weekRange',
@@ -427,16 +327,17 @@ class _SummaryMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Column(
       children: [
         Text(icon, style: const TextStyle(fontSize: 18)),
         const SizedBox(height: AppSpacing.xs),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w900,
-            color: AppColors.textPrimary,
+            color: theme.textPrimary,
             letterSpacing: -0.8,
             height: 1,
           ),

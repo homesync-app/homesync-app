@@ -2,26 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/rpc_providers.dart';
-import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/widgets/concept_icon.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../../household/presentation/providers/household_provider.dart';
 import '../../../stats/presentation/widgets/weekly_progress_tab.dart';
-import '../../../tasks/presentation/providers/task_provider.dart';
 import '../../domain/models/couple_challenge.dart';
 import '../../domain/models/reward_model.dart';
+import '../providers/couple_challenge_provider.dart';
+import '../providers/couple_duel_stats_provider.dart';
 import '../providers/reward_provider.dart';
 import '../utils/reward_localization.dart';
 import '../widgets/couple_challenge_card.dart';
+import '../widgets/couple_challenge_completion_mixin.dart';
 
 class CoupleRewardsScreen extends ConsumerStatefulWidget {
   final String householdId;
@@ -38,7 +41,9 @@ class CoupleRewardsScreen extends ConsumerStatefulWidget {
 }
 
 class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
-    with SingleTickerProviderStateMixin {
+    with
+        SingleTickerProviderStateMixin,
+        CoupleChallengeCompletionMixin<CoupleRewardsScreen> {
   late TabController _tabController;
 
   bool _isStatsLoading = true;
@@ -115,7 +120,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     super.dispose();
   }
 
-  Future<void> _loadDuelStats() async {
+  Future<void> _loadDuelStats({bool forceRefresh = false}) async {
     if (mounted) {
       final hasCachedDuelData = _weeklyRanking.isNotEmpty ||
           _memberStats.isNotEmpty ||
@@ -127,51 +132,21 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     }
 
     try {
-      final admin = ref.read(adminProvider);
-      late final List<dynamic> mainResults;
-      late final Future<dynamic> duelHistoryFuture;
-
-      if (admin.isAdminUser) {
-        final client = ref.read(supabaseClientProvider);
-        mainResults = await Future.wait<dynamic>([
-          client.rpc(
-            'qa_admin_get_task_stats_by_category',
-            params: {'p_household_id': widget.householdId},
-          ),
-          client.rpc(
-            'qa_admin_get_member_activity_stats',
-            params: {'p_household_id': widget.householdId},
-          ),
-          client.rpc(
-            'qa_admin_get_weekly_ranking',
-            params: {'p_household_id': widget.householdId},
-          ),
-        ]);
-        duelHistoryFuture = client.rpc(
-          'qa_admin_get_weekly_duel_history',
-          params: {'p_household_id': widget.householdId},
-        );
-      } else {
-        final rpc = ref.read(rpcServiceProvider);
-        mainResults = await Future.wait<dynamic>([
-          rpc.getTaskStatsByCategory(),
-          rpc.getMemberActivityStats(),
-          rpc.getWeeklyRanking(),
-        ]);
-        duelHistoryFuture = rpc.getWeeklyDuelHistory();
+      // Las stats viven en coupleDuelStatsProvider (keepAlive): el primer load
+      // aprovecha la caché calentada en segundo plano desde el Home, así el tab
+      // abre al instante. El pull-to-refresh fuerza datos frescos.
+      if (forceRefresh) {
+        ref.invalidate(coupleDuelStatsProvider);
       }
-
+      final stats = await ref.read(coupleDuelStatsProvider.future);
       if (!mounted) return;
       setState(() {
-        _taskStats = _mapList(mainResults[0]);
-        _memberStats = _mapList(mainResults[1]);
-        _weeklyRanking = _mapList(mainResults[2]);
+        _taskStats = stats.taskStats;
+        _memberStats = stats.memberStats;
+        _weeklyRanking = stats.weeklyRanking;
+        _duelHistory = stats.duelHistory;
         _isStatsLoading = false;
       });
-
-      final duelHistory = await duelHistoryFuture;
-      if (!mounted) return;
-      setState(() => _duelHistory = _mapList(duelHistory));
     } catch (error, stackTrace) {
       log.w(
         'CoupleRewardsScreen failed to load duel stats',
@@ -181,13 +156,6 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       if (!mounted) return;
       setState(() => _isStatsLoading = false);
     }
-  }
-
-  List<Map<String, dynamic>> _mapList(dynamic value) {
-    if (value is List) {
-      return List<Map<String, dynamic>>.from(value);
-    }
-    return const [];
   }
 
   int get _totalTasksCompleted {
@@ -355,7 +323,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       totalXp: _totalXpEarned,
       totalCoins: _totalCoinsEarned,
       showHeader: false,
-      onRefresh: _loadDuelStats,
+      onRefresh: () => _loadDuelStats(forceRefresh: true),
     );
   }
 
@@ -376,7 +344,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             height: 300,
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(32),
+              borderRadius: BorderRadius.circular(AppRadii.modal),
             ),
           ),
         ),
@@ -386,7 +354,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             height: 98,
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(AppRadii.xl),
             ),
           ),
         ),
@@ -396,7 +364,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             height: 98,
             decoration: BoxDecoration(
               color: theme.surface,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(AppRadii.xl),
             ),
           ),
         ),
@@ -411,10 +379,13 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     required Color background,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -439,7 +410,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Text(
         label,
@@ -465,15 +436,30 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             CoupleChallenge.currentWeeklyChallenge(household?.createdAt);
         final challengeIndex =
             CoupleChallenge.currentWeeklyChallengeIndex(household?.createdAt);
+        final weekIndex =
+            CoupleChallenge.currentWeekIndex(household?.createdAt);
         final totalChallenges = CoupleChallenge.allChallenges.length;
+        final isCompleted = ref
+                .watch(
+                  coupleChallengeCompletedProvider(
+                    (householdId: householdId, weekIndex: weekIndex),
+                  ),
+                )
+                .value ??
+            false;
         return CoupleChallengeCard(
           challenge: challenge,
           challengeNumber: challengeIndex + 1,
           totalChallenges: totalChallenges,
-          onComplete: () => _handleChallengeCompletion(challenge, householdId),
+          isCompleted: isCompleted,
+          onComplete: () => handleCoupleChallengeCompletion(
+            challenge,
+            householdId,
+            weekIndex,
+          ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: AppLoader()),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
@@ -543,7 +529,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       children: categories.map((category) {
         final catRewards = grouped[category] ?? const <RewardModel>[];
         return Padding(
-          padding: const EdgeInsets.only(bottom: 24),
+          padding: const EdgeInsets.only(bottom: AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -622,32 +608,26 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       color: Colors.transparent,
       child: InkWell(
         onTap: isMine ? null : () => _showProposalDecisionSheet(reward),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         child: Container(
           decoration: BoxDecoration(
             color: theme.surface,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppRadii.xl),
             border: Border.all(
               color: accent.withValues(alpha: 0.18),
             ),
             boxShadow: theme.cardShadow,
           ),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Icon tile
-              Container(
+              SizedBox(
                 width: 52,
                 height: 52,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  reward.icon,
-                  style: const TextStyle(fontSize: 26),
+                child: Center(
+                  child: ConceptIcon(emoji: reward.icon, size: 46),
                 ),
               ),
               const SizedBox(width: 14),
@@ -746,7 +726,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(18),
@@ -784,14 +767,26 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '$availableCoins coins',
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.25,
-                    height: 1.05,
+                // TweenAnimationBuilder retargets from the currently shown
+                // value whenever the balance changes, so redemptions and
+                // bonuses count up/down instead of jumping.
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(
+                    begin: availableCoins.toDouble(),
+                    end: availableCoins.toDouble(),
+                  ),
+                  duration: const Duration(milliseconds: 620),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, animatedCoins, _) => Text(
+                    '${animatedCoins.round()} coins',
+                    style: TextStyle(
+                      color: theme.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.25,
+                      height: 1.05,
+                      fontFeatures: kTabularFigures,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -810,7 +805,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: AppColors.accentGold.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadii.pill),
             ),
             child: const Text(
               'Saldo',
@@ -874,7 +869,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.55),
         ),
@@ -884,7 +879,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _confirmRedeem(reward, canAfford),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           child: Stack(
             children: [
               Positioned(
@@ -911,17 +906,11 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(height: 12),
-                    Container(
+                    SizedBox(
                       width: 52,
                       height: 52,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.accentGold.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Text(
-                        reward.icon,
-                        style: const TextStyle(fontSize: 29),
+                      child: Center(
+                        child: ConceptIcon(emoji: reward.icon, size: 46),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -945,7 +934,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     const SizedBox(height: 10),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                       decoration: BoxDecoration(
                         color: canAfford
                             ? theme.primary.withValues(alpha: 0.12)
@@ -997,7 +987,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(color: theme.border.withValues(alpha: 0.45)),
       ),
       child: Column(
@@ -1016,7 +1006,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
               foregroundColor: AppColors.primary,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadii.md),
               ),
             ),
             child: const Text(
@@ -1055,7 +1045,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.45),
         ),
@@ -1096,15 +1086,20 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.sage.withValues(alpha: 0.16),
-                foregroundColor: AppColors.textPrimary,
+                backgroundColor: theme.isDarkMode
+                    ? theme.primary
+                    : AppColors.sage.withValues(alpha: 0.16),
+                foregroundColor:
+                    theme.isDarkMode ? Colors.white : AppColors.textPrimary,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 17),
                 side: BorderSide(
-                  color: AppColors.sage.withValues(alpha: 0.22),
+                  color: theme.isDarkMode
+                      ? theme.primary.withValues(alpha: 0.42)
+                      : AppColors.sage.withValues(alpha: 0.22),
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
                 ),
               ),
             ),
@@ -1112,111 +1107,6 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         ],
       ),
     );
-  }
-
-  Future<void> _handleChallengeCompletion(
-    CoupleChallenge challenge,
-    String householdId,
-  ) async {
-    final t = AppLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(t.rewardsChallengeCompletePrompt),
-        content: Text(
-          t.rewardsChallengeCompleteBody(challenge.coinReward),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              t.rewardsNotYet,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(t.rewardsYesWeDid),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await _executeChallengeCompletion(challenge, householdId);
-    }
-  }
-
-  Future<void> _executeChallengeCompletion(
-    CoupleChallenge challenge,
-    String householdId,
-  ) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
-    final t = AppLocalizations.of(context);
-    try {
-      final members = ref.read(householdMembersProvider).value ?? [];
-      final userIds = members.map((m) => m.userId).toList();
-      final currentUserId = ref.read(currentUserIdProvider);
-      if (userIds.isEmpty && currentUserId != null) {
-        userIds.add(currentUserId);
-      }
-
-      final challengeTitle = challenge.localizedTitle(t);
-      final challengeDescription = challenge.localizedDescription(t);
-      final challengeCategory = challenge.localizedCategory(t);
-      final taskRpc = ref.read(taskRpcServiceProvider);
-      final newTaskId = await taskRpc.createTask(
-        title: t.rewardsChallengeTitle(challengeTitle),
-        description: challengeDescription,
-        category: challengeCategory,
-        coinReward: challenge.coinReward,
-        xpReward: 10,
-        type: 'one_time',
-      );
-
-      final rpc = ref.read(rpcServiceProvider);
-      await rpc.completeTaskTransaction(
-        taskId: newTaskId,
-        taskTitle: t.rewardsChallengeTitle(challengeTitle),
-        xpReward: 10,
-        coinReward: challenge.coinReward,
-        householdId: householdId,
-        userIds: userIds,
-      );
-
-      if (!mounted) return;
-      Navigator.pop(context);
-      SuccessCelebration.show(
-        context,
-        title: t.rewardsChallengeCompleted,
-        message: t.rewardsChallengeCompletedBody(challenge.coinReward),
-        icon: '\u2728',
-      );
-      ref.invalidate(userBalanceProvider);
-      ref.invalidate(tasksProvider);
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.rewardsChallengeError(e.toString())),
-          backgroundColor: AppColors.error,
-        ),
-      );
-    }
   }
 
   Future<void> _confirmDeleteReward(RewardModel reward) async {
@@ -1224,7 +1114,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.lg),
+        ),
         title: Text(t.rewardsDeletePrompt),
         content: Text(t.rewardsDeleteBody(reward.title)),
         actions: [
@@ -1241,7 +1133,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
               ),
             ),
             child: Text(t.commonDelete),
@@ -1350,7 +1242,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   }
 
   void _showProposalDecisionSheet(RewardModel reward) {
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
@@ -1363,7 +1255,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
           decoration: BoxDecoration(
             color: theme.background,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(AppRadii.xxl)),
           ),
           child: SafeArea(
             top: false,
@@ -1378,23 +1271,17 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     margin: const EdgeInsets.only(bottom: 18),
                     decoration: BoxDecoration(
                       color: AppColors.divider,
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
                   ),
                 ),
                 Row(
                   children: [
-                    Container(
+                    SizedBox(
                       width: 48,
                       height: 48,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.accentPurple.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        reward.icon,
-                        style: const TextStyle(fontSize: 26),
+                      child: Center(
+                        child: ConceptIcon(emoji: reward.icon, size: 42),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1456,7 +1343,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                           side: const BorderSide(color: AppColors.error),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(AppRadii.md),
                           ),
                         ),
                         child: const Text(
@@ -1480,7 +1367,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(AppRadii.md),
                           ),
                         ),
                         child: const Text(
@@ -1524,310 +1411,336 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     ];
     const categories = ['mimos', 'momentos', 'libertades', 'experiencias'];
 
-    showModalBottomSheet(
+    AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          padding: EdgeInsets.only(
-            left: 28,
-            right: 28,
-            top: 24,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 32,
-          ),
-          decoration: BoxDecoration(
-            color: context.theme.background,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
-          ),
-          child: Form(
-            key: formKey,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 42,
-                      height: 5,
-                      margin: const EdgeInsets.only(bottom: 24),
-                      decoration: BoxDecoration(
-                        color: AppColors.divider,
-                        borderRadius: BorderRadius.circular(999),
+        builder: (context, setModalState) {
+          final theme = context.theme;
+          OutlineInputBorder inputBorder(Color color) => OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadii.lg),
+                borderSide: BorderSide(color: color),
+              );
+
+          return Container(
+            padding: EdgeInsets.only(
+              left: 28,
+              right: 28,
+              top: 24,
+              bottom: MediaQuery.of(context).viewInsets.bottom +
+                  MediaQuery.viewPaddingOf(context).bottom +
+                  32,
+            ),
+            decoration: BoxDecoration(
+              color: theme.background,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(40)),
+            ),
+            child: Form(
+              key: formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 42,
+                        height: 5,
+                        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                        decoration: BoxDecoration(
+                          color: theme.divider,
+                          borderRadius: BorderRadius.circular(AppRadii.pill),
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    isSuggestion
-                        ? 'Proponer un deseo'
-                        : 'Nuevo premio de la casa',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  const Text(
-                    'TITULO',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: titleController,
-                    validator: (value) {
-                      final title = value?.trim() ?? '';
-                      if (title.isEmpty) return 'Escribe el nombre del deseo.';
-                      if (title.length < 3) return 'Usa al menos 3 caracteres.';
-                      return null;
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Ej: Masaje de 20 minutos',
-                      filled: true,
-                      fillColor: context.theme.surface,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
+                    Text(
+                      isSuggestion
+                          ? 'Proponer un deseo'
+                          : 'Nuevo premio de la casa',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
                       ),
-                      contentPadding: const EdgeInsets.all(20),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    isSuggestion ? 'NOTA (OPCIONAL)' : 'DESCRIPCION',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: descriptionController,
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      hintText: isSuggestion
-                          ? 'Agregá un detalle si querés (opcional)'
-                          : 'Un detalle corto para describir el premio',
-                      filled: true,
-                      fillColor: context.theme.surface,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
+                    const SizedBox(height: 28),
+                    Text(
+                      'TITULO',
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
                       ),
-                      contentPadding: const EdgeInsets.all(20),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'COSTO',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: costController,
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      final cost = int.tryParse((value ?? '').trim());
-                      if (cost == null) return 'Ingresa un costo valido.';
-                      if (cost <= 0) return 'Debe costar al menos 1 coin.';
-                      return null;
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Costo en coins',
-                      prefixIcon: const Icon(
-                        Icons.monetization_on_rounded,
-                        color: AppColors.sage,
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: titleController,
+                      validator: (value) {
+                        final title = value?.trim() ?? '';
+                        if (title.isEmpty) {
+                          return 'Escribe el nombre del deseo.';
+                        }
+                        if (title.length < 3) {
+                          return 'Usa al menos 3 caracteres.';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Ej: Masaje de 20 minutos',
+                        filled: true,
+                        fillColor: theme.surface,
+                        border:
+                            inputBorder(theme.border.withValues(alpha: 0.4)),
+                        enabledBorder:
+                            inputBorder(theme.border.withValues(alpha: 0.42)),
+                        focusedBorder:
+                            inputBorder(theme.primary.withValues(alpha: 0.72)),
+                        contentPadding: const EdgeInsets.all(20),
                       ),
-                      filled: true,
-                      fillColor: context.theme.surface,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      isSuggestion ? 'NOTA (OPCIONAL)' : 'DESCRIPCION',
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
                       ),
-                      contentPadding: const EdgeInsets.all(20),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'CATEGORIA',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: descriptionController,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        hintText: isSuggestion
+                            ? 'Agregá un detalle si querés (opcional)'
+                            : 'Un detalle corto para describir el premio',
+                        filled: true,
+                        fillColor: theme.surface,
+                        border:
+                            inputBorder(theme.border.withValues(alpha: 0.4)),
+                        enabledBorder:
+                            inputBorder(theme.border.withValues(alpha: 0.42)),
+                        focusedBorder:
+                            inputBorder(theme.primary.withValues(alpha: 0.72)),
+                        contentPadding: const EdgeInsets.all(20),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: categories.map((category) {
-                      final selected = selectedCategory == category;
-                      return ChoiceChip(
-                        label: Text(
-                          localizedRewardCategoryByKey(
-                            t,
-                            null,
-                            category,
+                    const SizedBox(height: 20),
+                    Text(
+                      'COSTO',
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: costController,
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        final cost = int.tryParse((value ?? '').trim());
+                        if (cost == null) return 'Ingresa un costo valido.';
+                        if (cost <= 0) return 'Debe costar al menos 1 coin.';
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Costo en coins',
+                        prefixIcon: const Icon(
+                          Icons.monetization_on_rounded,
+                          color: AppColors.sage,
+                        ),
+                        filled: true,
+                        fillColor: theme.surface,
+                        border:
+                            inputBorder(theme.border.withValues(alpha: 0.4)),
+                        enabledBorder:
+                            inputBorder(theme.border.withValues(alpha: 0.42)),
+                        focusedBorder:
+                            inputBorder(theme.primary.withValues(alpha: 0.72)),
+                        contentPadding: const EdgeInsets.all(20),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'CATEGORIA',
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: categories.map((category) {
+                        final selected = selectedCategory == category;
+                        return ChoiceChip(
+                          label: Text(
+                            localizedRewardCategoryByKey(
+                              t,
+                              null,
+                              category,
+                            ),
                           ),
-                        ),
-                        selected: selected,
-                        onSelected: isSubmitting
-                            ? null
-                            : (_) => setModalState(
-                                  () => selectedCategory = category,
-                                ),
-                        selectedColor:
-                            AppColors.primary.withValues(alpha: 0.14),
-                        backgroundColor: Theme.of(context).colorScheme.surface,
-                        labelStyle: TextStyle(
-                          color: selected
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        side: BorderSide(
-                          color: selected
-                              ? AppColors.primary.withValues(alpha: 0.4)
-                              : Colors.transparent,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'ICONO',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: icons.map((icon) {
-                        final selected = selectedIcon == icon;
-                        return GestureDetector(
-                          onTap: isSubmitting
+                          selected: selected,
+                          onSelected: isSubmitting
                               ? null
-                              : () => setModalState(() => selectedIcon = icon),
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 12),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? AppColors.primary.withValues(alpha: 0.10)
-                                  : context.theme.surface,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: selected
-                                    ? AppColors.primary
-                                    : Colors.transparent,
-                                width: 2,
-                              ),
-                            ),
-                            child: Text(
-                              icon,
-                              style: const TextStyle(fontSize: 30),
-                            ),
+                              : (_) => setModalState(
+                                    () => selectedCategory = category,
+                                  ),
+                          selectedColor:
+                              AppColors.primary.withValues(alpha: 0.14),
+                          backgroundColor: theme.surface,
+                          labelStyle: TextStyle(
+                            color:
+                                selected ? theme.primary : theme.textSecondary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          side: BorderSide(
+                            color: selected
+                                ? AppColors.primary.withValues(alpha: 0.4)
+                                : Colors.transparent,
                           ),
                         );
                       }).toList(),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  ElevatedButton(
-                    onPressed: isSubmitting
-                        ? null
-                        : () async {
-                            final isValid =
-                                formKey.currentState?.validate() ?? false;
-                            if (!isValid) return;
-
-                            final cost =
-                                int.tryParse(costController.text.trim()) ?? 0;
-
-                            setModalState(() => isSubmitting = true);
-                            final result = await ref
-                                .read(rewardsProvider.notifier)
-                                .suggestReward(
-                                  title: titleController.text.trim(),
-                                  description:
-                                      descriptionController.text.trim().isEmpty
-                                          ? null
-                                          : descriptionController.text.trim(),
-                                  cost: cost,
-                                  icon: selectedIcon,
-                                  category: selectedCategory,
-                                );
-
-                            if (!mounted) return;
-
-                            result.fold(
-                              (failure) {
-                                setModalState(() => isSubmitting = false);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(failure.message),
-                                    backgroundColor: AppColors.error,
-                                  ),
-                                );
-                              },
-                              (_) {
-                                Navigator.pop(context);
-                                _showSentToast(isSuggestion);
-                              },
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textPrimary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(22),
+                    const SizedBox(height: 24),
+                    Text(
+                      'ICONO',
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
                       ),
                     ),
-                    child: isSubmitting
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
+                    const SizedBox(height: 12),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: icons.map((icon) {
+                          final selected = selectedIcon == icon;
+                          return GestureDetector(
+                            onTap: isSubmitting
+                                ? null
+                                : () =>
+                                    setModalState(() => selectedIcon = icon),
+                            child: Container(
+                              margin:
+                                  const EdgeInsets.only(right: AppSpacing.sm),
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: selected
+                                    ? AppColors.primary.withValues(alpha: 0.10)
+                                    : theme.surface,
+                                borderRadius:
+                                    BorderRadius.circular(AppRadii.lg),
+                                border: Border.all(
+                                  color: selected
+                                      ? AppColors.primary
+                                      : Colors.transparent,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Text(
+                                icon,
+                                style: const TextStyle(fontSize: 30),
+                              ),
                             ),
-                          )
-                        : Text(
-                            isSuggestion ? 'Enviar propuesta' : 'Crear premio',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton(
+                      onPressed: isSubmitting
+                          ? null
+                          : () async {
+                              final isValid =
+                                  formKey.currentState?.validate() ?? false;
+                              if (!isValid) return;
+
+                              final cost =
+                                  int.tryParse(costController.text.trim()) ?? 0;
+
+                              setModalState(() => isSubmitting = true);
+                              final result = await ref
+                                  .read(rewardsProvider.notifier)
+                                  .suggestReward(
+                                    title: titleController.text.trim(),
+                                    description: descriptionController.text
+                                            .trim()
+                                            .isEmpty
+                                        ? null
+                                        : descriptionController.text.trim(),
+                                    cost: cost,
+                                    icon: selectedIcon,
+                                    category: selectedCategory,
+                                  );
+
+                              if (!mounted) return;
+
+                              result.fold(
+                                (failure) {
+                                  setModalState(() => isSubmitting = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(failure.message),
+                                      backgroundColor: AppColors.error,
+                                    ),
+                                  );
+                                },
+                                (_) {
+                                  Navigator.pop(context);
+                                  _showSentToast(isSuggestion);
+                                },
+                              );
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                      ),
+                      child: isSubmitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              isSuggestion
+                                  ? 'Enviar propuesta'
+                                  : 'Crear premio',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
-                          ),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -1840,7 +1753,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         ),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.md),
+        ),
       ),
     );
   }

@@ -13,6 +13,7 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -120,6 +121,30 @@ class Tasks extends _$Tasks {
 
     await _setupRealtime(householdId);
 
+    // Seed from the one-shot startup snapshot on first build. The home
+    // bootstrap RPC already fetched this household's tasks in a single
+    // round-trip, so replaying them here avoids a redundant ~second-long
+    // `tasks.initial_page` network call on cold start. After the gate is
+    // consumed once, later rebuilds (realtime refresh, invalidate) fall
+    // through to a fresh fetch.
+    //
+    // A bootstrap failure must never break task loading: it is a best-effort
+    // optimization with the individual fetch below as the fallback, so we
+    // swallow any bootstrap error and continue to the normal query.
+    HomeBootstrapData? bootstrap;
+    try {
+      bootstrap = await ref.watch(homeBootstrapProvider.future);
+    } catch (_) {
+      bootstrap = null;
+    }
+    if (bootstrap?.householdId == householdId &&
+        BootstrapSeedGate.instance.consume(BootstrapSection.tasks)) {
+      final seeded =
+          bootstrap!.tasks.map(TaskModel.fromMap).toList(growable: false);
+      _hasMore = seeded.length >= _pageSize;
+      return seeded;
+    }
+
     final useCase = ref.watch(getTasksUseCaseProvider);
     final result = await PerformanceMonitor.measureFuture(
       'provider.tasks.initial_page',
@@ -165,7 +190,7 @@ class Tasks extends _$Tasks {
               'Realtime task change detected: ${payload.eventType.name}',
             );
             _applyRealtimeTaskPayload(payload);
-            _invalidateRealtimeTaskDependents();
+            _invalidateRealtimeTaskDependents(payload);
             _scheduleRealtimeRefresh();
           },
         )
@@ -196,7 +221,7 @@ class Tasks extends _$Tasks {
     });
   }
 
-  void _invalidateRealtimeTaskDependents() {
+  void _invalidateRealtimeTaskDependents(PostgresChangePayload payload) {
     if (!ref.mounted) return;
     // NOTE: do NOT invalidate recentActivityRemoteProvider/recentActivityProvider
     // here. The activity feed is its own realtime stream (watchRecentActivity)
@@ -207,6 +232,14 @@ class Tasks extends _$Tasks {
     // visible "double refresh" of the household movements cards.
     ref.invalidate(pendingTaskApprovalsProvider);
     ref.invalidate(familyMemberDashboardProvider);
+    if (_isPendingApprovalPayload(payload)) {
+      ref.invalidate(recentActivityRemoteProvider);
+    }
+  }
+
+  bool _isPendingApprovalPayload(PostgresChangePayload payload) {
+    if (payload.eventType == PostgresChangeEvent.delete) return false;
+    return payload.newRecord['status']?.toString() == 'pending_approval';
   }
 
   void _applyRealtimeTaskPayload(PostgresChangePayload payload) {
@@ -411,6 +444,8 @@ class Tasks extends _$Tasks {
           );
           silentRefresh();
           ref.invalidate(userBalanceProvider);
+          ref.invalidate(statsControllerProvider);
+          ref.invalidate(familyMemberDashboardProvider);
         } else if (queued) {
           // Offline: the task is queued, not yet persisted, so there is no
           // server activity_id. Still surface an optimistic feed entry — this
@@ -533,13 +568,21 @@ class Tasks extends _$Tasks {
       if (result.isRight()) {
         final isOnline = ref.read(isOnlineProvider);
         if (isOnline) {
-          _applyRewardBalanceOverride(
-            xpReward: tasks.fold(0, (sum, task) => sum + task.xpReward),
-            coinReward: tasks.fold(0, (sum, task) => sum + task.coinReward),
-            performers: performers,
-          );
+          final data = result.fold((_) => null, (data) => data);
+          final directCount = (data?['direct_count'] as num?)?.toInt();
+          final shouldApplyRewards = directCount == null || directCount > 0;
+          if (shouldApplyRewards) {
+            _applyRewardBalanceOverride(
+              xpReward: tasks.fold(0, (sum, task) => sum + task.xpReward),
+              coinReward: tasks.fold(0, (sum, task) => sum + task.coinReward),
+              performers: performers,
+            );
+          }
           silentRefresh();
           ref.invalidate(userBalanceProvider);
+          ref.invalidate(statsControllerProvider);
+          ref.invalidate(familyMemberDashboardProvider);
+          ref.invalidate(pendingTaskApprovalsProvider);
           // The activity feed (recentActivityRemoteProvider) is a realtime
           // stream that already reacts to the `tasks` table change, and the
           // optimistic entry covers the instant update. Invalidating it here
@@ -778,7 +821,11 @@ class Tasks extends _$Tasks {
   /// Sprint 1 Modo Padres: rechaza con motivo. La RPC vuelve la tarea a
   /// `assigned`, persiste el motivo, notifica al hijo y deja registro en
   /// `task_approvals.rejected`.
-  Future<void> rejectPendingTask(TaskModel task, {String? reason}) async {
+  /// Devuelve `true` solo si la RPC confirmó el rechazo (`success=true`).
+  /// `false` indica un fallo "blando" (RPC respondió success=false, p.ej. otro
+  /// padre ya decidió la tarea, o el llamador no es admin) — la UI debe avisar
+  /// del error en vez de mostrar éxito. Las excepciones se relanzan.
+  Future<bool> rejectPendingTask(TaskModel task, {String? reason}) async {
     final oldState = state.value;
     if (oldState != null) {
       state = AsyncValue.data(
@@ -800,16 +847,19 @@ class Tasks extends _$Tasks {
       final ok = await ref
           .read(taskApprovalActionsProvider)
           .reject(task.id, reason: reason);
-      if (!ref.mounted) return;
       if (!ok) {
-        if (oldState != null) state = AsyncValue.data(oldState);
-        return;
+        if (ref.mounted && oldState != null) {
+          state = AsyncValue.data(oldState);
+        }
+        return false;
       }
+      if (!ref.mounted) return true;
       if (ref.read(isOnlineProvider)) {
         silentRefresh();
         ref.invalidate(recentActivityProvider);
         ref.invalidate(pendingTaskApprovalsProvider);
       }
+      return true;
     } catch (e, stack) {
       log.w('Reject pending task failure: $e', error: e, stackTrace: stack);
       if (ref.mounted && oldState != null) state = AsyncValue.data(oldState);
@@ -1052,6 +1102,50 @@ AsyncValue<List<TaskModel>> todayTasks(Ref ref) {
             .toList();
 
     return result;
+  });
+}
+
+/// Daily progress for the home "today" section: how many of today's tasks the
+/// viewer already closed vs. how many remain. `total` = done + pending, so the
+/// ratio is stable while completions land optimistically.
+@riverpod
+AsyncValue<({int done, int total})> todayTaskProgress(Ref ref) {
+  final tasksAsync = ref.watch(tasksProvider);
+  final remaining = ref.watch(todayTasksProvider).value?.length ?? 0;
+  final currentUserId = ref.watch(currentUserIdProvider);
+  final caps = ref.watch(householdCapabilitiesProvider);
+  final members = ref.watch(householdMembersProvider).value ?? const [];
+  final currentMember =
+      members.where((member) => member.userId == currentUserId).firstOrNull;
+  final isFamilyMode = caps.type == HouseholdType.family;
+  final isFamilyChild = isFamilyMode && (currentMember?.isChild ?? false);
+  final now = DateTime.now();
+  final completedActivityTaskIds = <String>{
+    ..._completedActivityTaskIdsForLocalDate(
+      ref.watch(recentActivityProvider).value ?? const <Map<String, dynamic>>[],
+      now,
+    ),
+    ..._completedActivityTaskIdsForLocalDate(
+      ref.watch(recentActivityRemoteProvider).value ??
+          const <Map<String, dynamic>>[],
+      now,
+    ),
+  };
+
+  bool isAssignedToSomeoneElse(TaskModel task) {
+    final shouldFilterByAssignment = isFamilyMode ? isFamilyChild : true;
+    return shouldFilterByAssignment &&
+        task.assignedTo != null &&
+        task.assignedTo != currentUserId;
+  }
+
+  return tasksAsync.whenData((tasks) {
+    final done = tasks.where((task) {
+      if (isAssignedToSomeoneElse(task)) return false;
+      return isTaskCompletedOnLocalDate(task, now) ||
+          completedActivityTaskIds.contains(task.id);
+    }).length;
+    return (done: done, total: done + remaining);
   });
 }
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/theme_palettes.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -21,7 +23,7 @@ class SettingsLoadingCard extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(color: theme.border.withValues(alpha: 0.45)),
       ),
       alignment: Alignment.center,
@@ -49,7 +51,7 @@ class SettingsSectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -115,7 +117,7 @@ class SettingsAppearanceCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -134,7 +136,7 @@ class SettingsAppearanceCard extends StatelessWidget {
                 padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
                   color: theme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Icon(
                   Icons.palette_rounded,
@@ -268,7 +270,7 @@ class SettingsThemePalettePicker extends StatelessWidget {
               return GestureDetector(
                 onTap: () => isLocked ? onLockedTap() : onPaletteTap(palette),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     width: 40,
@@ -336,7 +338,7 @@ class SettingsLanguageCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -355,7 +357,7 @@ class SettingsLanguageCard extends StatelessWidget {
                 padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
                   color: theme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Icon(
                   Icons.translate_rounded,
@@ -479,7 +481,7 @@ class SettingsCurrencyCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -498,7 +500,7 @@ class SettingsCurrencyCard extends StatelessWidget {
                 padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
                   color: theme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Icon(
                   Icons.payments_rounded,
@@ -652,7 +654,7 @@ class SettingsThemeModeSelector extends StatelessWidget {
                       color: isSelected
                           ? theme.primary.withValues(alpha: 0.12)
                           : theme.surfaceContainer,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadii.sm),
                       border: Border.all(
                         color: isSelected
                             ? theme.primary
@@ -705,7 +707,9 @@ Future<String?> showSettingsRenameProfileDialog(
     context: context,
     builder: (dialogContext) => AlertDialog(
       backgroundColor: theme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+      ),
       title: const Text(
         'Cambiar nombre',
         style: TextStyle(fontWeight: FontWeight.bold),
@@ -715,9 +719,11 @@ Future<String?> showSettingsRenameProfileDialog(
         autofocus: true,
         decoration: InputDecoration(
           labelText: 'Nombre',
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+          ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadii.sm),
             borderSide: BorderSide(color: theme.primary, width: 2),
           ),
         ),
@@ -733,7 +739,7 @@ Future<String?> showSettingsRenameProfileDialog(
             backgroundColor: theme.primary,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
           ),
           child: const Text('Guardar'),
@@ -746,141 +752,184 @@ Future<String?> showSettingsRenameProfileDialog(
 class SettingsPremiumCard extends StatelessWidget {
   final bool isPremium;
   final VoidCallback onTapPlans;
-  final List<String> premiumFeatures;
+  final VoidCallback? onFeedbackTap;
 
   const SettingsPremiumCard({
     super.key,
     required this.isPremium,
     required this.onTapPlans,
-    required this.premiumFeatures,
+    this.onFeedbackTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
+    final goldAccent =
+        theme.isDarkMode ? AppColors.accentGold : const Color(0xFFD97706);
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: onTapPlans,
-        borderRadius: BorderRadius.circular(24),
-        child: Ink(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isPremium
-                  ? [
-                      const Color(0xFFFFF3C4),
-                      const Color(0xFFFFFBEB),
-                    ]
-                  : [
-                      const Color(0xFFFFF7DF),
-                      const Color(0xFFFFFEF8),
-                    ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isPremium
-                  ? const Color(0xFFF5C451).withValues(alpha: 0.55)
-                  : const Color(0xFFF4D58A).withValues(alpha: 0.42),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: (isPremium
-                        ? const Color(0xFFF59E0B)
-                        : const Color(0xFFD8A539))
-                    .withValues(alpha: 0.05),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
+      borderRadius: BorderRadius.circular(AppRadii.xl),
+      child: Ink(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+        decoration: BoxDecoration(
+          color: theme.surface.withValues(alpha: theme.isDarkMode ? 1 : 0.88),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+          border: Border.all(
+            color: theme.border.withValues(alpha: theme.isDarkMode ? 0.42 : 1),
+            width: 1,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(9),
-                    decoration: BoxDecoration(
-                      color: isPremium
-                          ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
-                          : const Color(0xFFF4C64E).withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: theme.isDarkMode
+                  ? Colors.black.withValues(alpha: 0.24)
+                  : AppColors.sage.withValues(alpha: 0.035),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: onTapPlans,
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 1),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: isPremium
+                            ? AppColors.sage.withValues(alpha: 0.10)
+                            : AppColors.accentGold.withValues(alpha: 0.11),
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
+                      ),
+                      child: Icon(
+                        isPremium
+                            ? Icons.auto_awesome_rounded
+                            : Icons.star_outline_rounded,
+                        color: goldAccent,
+                        size: 22,
+                      ),
                     ),
-                    child: Icon(
-                      isPremium
-                          ? Icons.auto_awesome_rounded
-                          : Icons.star_outline_rounded,
-                      color: isPremium
-                          ? const Color(0xFFB45309)
-                          : const Color(0xFFD97706),
-                      size: 19,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.settingsPremiumTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                            color: isPremium
-                                ? const Color(0xFF92400E)
-                                : theme.textPrimary,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.settingsPremiumTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: theme.textPrimary,
+                            ),
                           ),
-                        ),
-                        Text(
-                          isPremium
-                              ? t.settingsPremiumActiveSubtitle
-                              : t.settingsPremiumInactiveSubtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isPremium
-                                ? const Color(0xFFB45309).withValues(alpha: 0.8)
-                                : theme.textSecondary,
-                            fontWeight: FontWeight.w600,
+                          const SizedBox(height: 2),
+                          Text(
+                            isPremium
+                                ? t.settingsPremiumActiveSubtitle
+                                : t.settingsPremiumInactiveSubtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: theme.textSecondary,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: isPremium
-                        ? const Color(0xFFB45309)
-                        : const Color(0xFFD97706),
-                    size: 24,
-                  ),
-                ],
-              ),
-              if (isPremium) ...[
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: premiumFeatures
-                      .take(2)
-                      .map(
-                        (feature) => SettingsPremiumFeatureChip(text: feature),
-                      )
-                      .toList(),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: isPremium ? theme.textMuted : goldAccent,
+                      size: 24,
+                    ),
+                  ],
                 ),
-              ],
+              ),
+            ),
+            if (!isPremium) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(58, 12, 2, 10),
+                child: Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: theme.border.withValues(alpha: 0.72),
+                ),
+              ),
+              _SettingsPremiumFeedbackStrip(onTap: onFeedbackTap),
             ],
-          ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsPremiumFeedbackStrip extends StatelessWidget {
+  final VoidCallback? onTap;
+
+  const _SettingsPremiumFeedbackStrip({this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadii.sm),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(2, 1, 0, 2),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
+              ),
+              child: Icon(
+                Icons.bug_report_outlined,
+                color: theme.isDarkMode
+                    ? AppColors.accentGold.withValues(alpha: 0.82)
+                    : AppColors.primary.withValues(alpha: 0.72),
+                size: 15,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                t.settingsPremiumFeedbackRewardNote,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: theme.textSecondary,
+                  fontSize: 11.8,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.arrow_forward_rounded,
+              color: theme.isDarkMode
+                  ? theme.textMuted
+                  : const Color(0xFFB45309).withValues(alpha: 0.68),
+              size: 16,
+            ),
+          ],
         ),
       ),
     );
@@ -897,22 +946,31 @@ class SettingsPremiumFeatureChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textColor =
+        theme.isDarkMode ? theme.textPrimary : const Color(0xFF92400E);
+    final iconColor =
+        theme.isDarkMode ? AppColors.accentGold : const Color(0xFFB45309);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(999),
+        color: theme.isDarkMode
+            ? AppColors.accentGold.withValues(alpha: 0.10)
+            : Colors.white.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(
-          color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
+          color: AppColors.accentGold.withValues(
+            alpha: theme.isDarkMode ? 0.20 : 0.18,
+          ),
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.check_rounded,
             size: 13,
-            color: Color(0xFFB45309),
+            color: iconColor,
           ),
           const SizedBox(width: 6),
           ConstrainedBox(
@@ -920,10 +978,10 @@ class SettingsPremiumFeatureChip extends StatelessWidget {
             child: Text(
               text,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF92400E),
+                color: textColor,
               ),
             ),
           ),
@@ -943,22 +1001,27 @@ class SettingsPremiumFeatureItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final accent =
+        theme.isDarkMode ? AppColors.accentGold : const Color(0xFFB45309);
+    final textColor =
+        theme.isDarkMode ? theme.textSecondary : const Color(0xFF92400E);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.check_circle_outline_rounded,
             size: 14,
-            color: Color(0xFFB45309),
+            color: accent,
           ),
           const SizedBox(width: 8),
           Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF92400E),
+              color: textColor,
             ),
           ),
         ],
@@ -988,7 +1051,7 @@ class SettingsProfileCard extends StatelessWidget {
     final theme = context.theme;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(22),
@@ -1202,7 +1265,7 @@ class SettingsMinorPremiumCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(
           color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
         ),
@@ -1221,7 +1284,7 @@ class SettingsMinorPremiumCard extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             child: const Icon(
               Icons.star_outline_rounded,

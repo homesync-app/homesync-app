@@ -8,6 +8,7 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/providers/supabase_provider.dart';
 import '../../data/repositories/supabase_expense_repository.dart';
@@ -24,7 +25,14 @@ part 'expense_provider.g.dart';
 
 // --- Providers ---
 
-@riverpod
+// keepAlive: the repository holds onto its [Ref] and reads it after async
+// gaps (online checks, admin-testing flags, analytics, currentUserId — see
+// SupabaseExpenseRepository). As an auto-dispose provider it was torn down
+// the instant a caller's `ref.read` returned and the home view invalidated
+// sibling providers, so an in-flight saveExpense/settleDebt RPC would resume
+// after its await and throw "Cannot use the Ref ... after it has been
+// disposed" — surfacing as a failed settle even though the row was written.
+@Riverpod(keepAlive: true)
 ExpenseRepository expenseRepository(Ref ref) {
   final client = ref.watch(supabaseClientProvider);
   return SupabaseExpenseRepository(client, ref);
@@ -161,7 +169,11 @@ class ExpenseController extends _$ExpenseController {
       throw failure;
     }
 
-    if (ref.read(isOnlineProvider)) {
+    // The write already succeeded above; the cache refresh below is best-effort.
+    // Guard `ref` because this auto-dispose controller can be torn down during
+    // the await (a caller's `ref.read` keeps no listener), and touching a
+    // disposed Ref throws "Cannot use the Ref ... after it has been disposed".
+    if (ref.mounted && ref.read(isOnlineProvider)) {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(combinedFeedControllerProvider);
@@ -202,7 +214,7 @@ class ExpenseController extends _$ExpenseController {
       (_) {},
     );
 
-    if (ref.read(isOnlineProvider)) {
+    if (ref.mounted && ref.read(isOnlineProvider)) {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(combinedFeedControllerProvider);
@@ -214,16 +226,23 @@ class ExpenseController extends _$ExpenseController {
     required String fromUserId,
     required String toUserId,
     required double amount,
+    String? requestId,
   }) async {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return;
 
     final repo = ref.read(expenseRepositoryProvider);
+    // The idempotency key must be minted ONCE per settlement intent and reused
+    // across retries (otherwise a retry after an ambiguous timeout creates a
+    // duplicate settlement). Callers that can retry must pass a stable
+    // [requestId]; we only mint a fresh one as a fallback for one-shot callers.
+    final effectiveRequestId = requestId ?? const Uuid().v4();
     final result = await repo.settleDebt(
       householdId: householdId,
       fromUserId: fromUserId,
       toUserId: toUserId,
       amount: amount,
+      requestId: effectiveRequestId,
     );
 
     result.fold(
@@ -234,7 +253,11 @@ class ExpenseController extends _$ExpenseController {
       (_) {},
     );
 
-    if (ref.read(isOnlineProvider)) {
+    // The settlement row is already written; this cache refresh is best-effort.
+    // `ref.mounted` guards against the controller being auto-disposed during the
+    // RPC await — otherwise the tail throws "Cannot use the Ref ... after it has
+    // been disposed" and the settle surfaces as failed even though it succeeded.
+    if (ref.mounted && ref.read(isOnlineProvider)) {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(combinedFeedControllerProvider);
@@ -298,10 +321,10 @@ class CombinedFeedController extends _$CombinedFeedController {
       await repo.processRecurringExpenses(householdId);
       await prefs.setString(storageKey, now.toIso8601String());
       if (!ref.mounted) return;
-      ref.invalidateSelf();
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(monthlyPendingPlannedExpensesProvider);
       ref.invalidate(recentActivityRemoteProvider);
+      ref.invalidateSelf();
     } catch (e, stack) {
       log.w(
         'CombinedFeed recurring expense processing failed: $e',
@@ -332,12 +355,10 @@ class CombinedFeedController extends _$CombinedFeedController {
       },
       (r) {
         if (ref.read(isOnlineProvider)) {
-          ref.invalidateSelf();
-          ref.invalidate(combinedFeedControllerProvider);
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
-          ref.invalidate(monthlyProjectionProvider);
           ref.invalidate(personalFinanceSummaryProvider);
           ref.invalidate(recentActivityRemoteProvider);
+          ref.invalidateSelf();
         }
         return r;
       },
@@ -354,10 +375,8 @@ class CombinedFeedController extends _$CombinedFeedController {
       },
       (r) {
         if (ref.read(isOnlineProvider)) {
-          ref.invalidateSelf();
-          ref.invalidate(combinedFeedControllerProvider);
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
-          ref.invalidate(monthlyProjectionProvider);
+          ref.invalidateSelf();
         }
       },
     );
@@ -417,11 +436,10 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
           await repo.processRecurringExpenses(householdId);
         }
         if (ref.read(isOnlineProvider)) {
-          ref.invalidateSelf();
           ref.invalidate(combinedFeedControllerProvider);
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
-          ref.invalidate(monthlyProjectionProvider);
           ref.invalidate(personalFinanceSummaryProvider);
+          ref.invalidateSelf();
         }
       },
     );
@@ -438,10 +456,9 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
       },
       (r) {
         if (ref.read(isOnlineProvider)) {
-          ref.invalidateSelf();
           ref.invalidate(combinedFeedControllerProvider);
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
-          ref.invalidate(monthlyProjectionProvider);
+          ref.invalidateSelf();
         }
       },
     );
@@ -515,7 +532,18 @@ Future<MonthlyProjectionData> monthlyProjection(
   double spent = 0.0;
   double pending = 0.0;
   final now = DateTime.now();
-  final memberCount = members.isNotEmpty ? members.length : 2;
+  // Rent/bills split between adults only — kids and teens don't share
+  // household expenses (mirrors pay_planned_expense's split-member filter).
+  // Friends/roommates households have no "kids", everyone splits.
+  final isFriendsOrRoommates = const {'friends', 'roommates'}
+      .contains(household?.householdType.toLowerCase());
+  final splitMembers = isFriendsOrRoommates
+      ? members
+      : members.where((m) => m.isAdult).toList();
+  // Fallback 1 (no 2): si los miembros aún no cargaron, mostrar el monto
+  // completo es menos engañoso que inventar una división por la mitad
+  // (y en solo-mode el único adulto ES el total).
+  final memberCount = splitMembers.isNotEmpty ? splitMembers.length : 1;
   // Integrated/shared economy (couple or family): pending planned expenses count
   // in full toward the household rather than being split per member.
   final isSharedEconomy = household?.financeMode == 'shared';
@@ -525,9 +553,15 @@ Future<MonthlyProjectionData> monthlyProjection(
     if (item.date.month != now.month || item.date.year != now.year) continue;
 
     if (item.isRealExpense) {
-      // For real expenses, we estimate user's cashflow impact.
-      // If the user paid it, it counts as "spent" from their wallet.
-      if (item.payerId == userId) {
+      // "Pagado" shows REAL money that left a wallet, never debts/shares:
+      //  - shared (unified) economy: the whole household's spend — both members
+      //    see the same figure;
+      //  - divided economy: only what the CURRENT user actually paid. When the
+      //    partner pays a shared bill it does NOT move "Pagado"; it surfaces as
+      //    a debt (per the configured split) in the Inicio/division widget.
+      if (isSharedEconomy) {
+        spent += item.amount;
+      } else if (item.payerId == userId) {
         spent += item.amount;
       }
     }

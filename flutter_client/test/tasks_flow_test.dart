@@ -40,6 +40,15 @@ class FakeSupabaseClient extends Fake implements SupabaseClient {
 
   @override
   RealtimeClient get realtime => FakeRealtimeClient();
+
+  @override
+  Future<String> removeChannel(RealtimeChannel channel) async => 'ok';
+
+  @override
+  Future<List<String>> removeAllChannels() async => const [];
+
+  @override
+  List<RealtimeChannel> getChannels() => const [];
 }
 
 class FakeRealtimeClient extends Fake implements RealtimeClient {
@@ -181,7 +190,9 @@ void main() {
 
     // ── Verify the task renders ──
     expect(find.text('Lavar platos'), findsOneWidget);
-    expect(find.text('LIMPIEZA'), findsOneWidget);
+    // Tasks are grouped by urgency; a task without dueAt lands in "Sin fecha"
+    // (the section header renders uppercased).
+    expect(find.text('SIN FECHA'), findsOneWidget);
 
     // ── Tap the task card to expand inline actions ──
     await tester.tap(find.text('Lavar platos'));

@@ -64,7 +64,7 @@ final class TaskStatsByCategoryUseCaseProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'taskStatsByCategoryUseCaseProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -94,7 +94,7 @@ final class TaskStatsByCategoryUseCaseProvider extends $FunctionalProvider<
 }
 
 String _$taskStatsByCategoryUseCaseHash() =>
-    r'5878609b52130b0d306a9ddf53ddda85226e2382';
+    r'042781556cd6227cecb4a09c9545d078e06e0052';
 
 @ProviderFor(xpHistoryUseCase)
 final xpHistoryUseCaseProvider = XpHistoryUseCaseProvider._();
@@ -109,7 +109,7 @@ final class XpHistoryUseCaseProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'xpHistoryUseCaseProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -137,7 +137,7 @@ final class XpHistoryUseCaseProvider extends $FunctionalProvider<
   }
 }
 
-String _$xpHistoryUseCaseHash() => r'2aed77b65547a535e595923b22825090a18c558a';
+String _$xpHistoryUseCaseHash() => r'6720d6396e85a878d4923ac9c55067e527639953';
 
 @ProviderFor(coinHistoryUseCase)
 final coinHistoryUseCaseProvider = CoinHistoryUseCaseProvider._();
@@ -152,7 +152,7 @@ final class CoinHistoryUseCaseProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'coinHistoryUseCaseProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -181,7 +181,7 @@ final class CoinHistoryUseCaseProvider extends $FunctionalProvider<
 }
 
 String _$coinHistoryUseCaseHash() =>
-    r'119f95671b38754be4f2a7a8bc0e1947b3e3da6a';
+    r'ed04d6d54033e1994c88cf6daa89d279cd15373e';
 
 @ProviderFor(expenseStatsByCategoryUseCase)
 final expenseStatsByCategoryUseCaseProvider =
@@ -198,7 +198,7 @@ final class ExpenseStatsByCategoryUseCaseProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'expenseStatsByCategoryUseCaseProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -228,7 +228,7 @@ final class ExpenseStatsByCategoryUseCaseProvider extends $FunctionalProvider<
 }
 
 String _$expenseStatsByCategoryUseCaseHash() =>
-    r'73fd72eb7ccbfd5f61daff312fc158ba029b9404';
+    r'37ab0958af4802fb13072da6b5a719400154919a';
 
 @ProviderFor(memberActivityStatsUseCase)
 final memberActivityStatsUseCaseProvider =
@@ -245,7 +245,7 @@ final class MemberActivityStatsUseCaseProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'memberActivityStatsUseCaseProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -275,7 +275,7 @@ final class MemberActivityStatsUseCaseProvider extends $FunctionalProvider<
 }
 
 String _$memberActivityStatsUseCaseHash() =>
-    r'31f9f0bf48e49f0cab669e17d12139fb439224e3';
+    r'2c8664f96263c85ff33bc9e52071b3a91b5268fb';
 
 @ProviderFor(weeklyRankingUseCase)
 final weeklyRankingUseCaseProvider = WeeklyRankingUseCaseProvider._();
@@ -290,7 +290,7 @@ final class WeeklyRankingUseCaseProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'weeklyRankingUseCaseProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -319,7 +319,7 @@ final class WeeklyRankingUseCaseProvider extends $FunctionalProvider<
 }
 
 String _$weeklyRankingUseCaseHash() =>
-    r'27d59d2e4eec7a64d63b378e914019c2591d3272';
+    r'c69fb4e41d57798cfb51e5547098d14e259b8c64';
 
 @ProviderFor(weeklyDuelHistoryUseCase)
 final weeklyDuelHistoryUseCaseProvider = WeeklyDuelHistoryUseCaseProvider._();
@@ -334,7 +334,7 @@ final class WeeklyDuelHistoryUseCaseProvider extends $FunctionalProvider<
           argument: null,
           retry: null,
           name: r'weeklyDuelHistoryUseCaseProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -363,7 +363,7 @@ final class WeeklyDuelHistoryUseCaseProvider extends $FunctionalProvider<
 }
 
 String _$weeklyDuelHistoryUseCaseHash() =>
-    r'de821aac9175fdcc22103fc0977211b28f848abb';
+    r'bc32af954d02e0e4291b0f9659ee88c992339eb4';
 
 @ProviderFor(weeklyWinnerAwardUseCase)
 final weeklyWinnerAwardUseCaseProvider = WeeklyWinnerAwardUseCaseProvider._();
@@ -484,13 +484,13 @@ abstract class _$StatsController extends $AsyncNotifier<StatsData> {
   FutureOr<StatsData> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<StatsData>, StatsData>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<AsyncValue<StatsData>, StatsData>,
         AsyncValue<StatsData>,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

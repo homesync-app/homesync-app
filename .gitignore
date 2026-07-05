@@ -57,12 +57,17 @@ supabase/.temp/
 
 # ─── bg_removal (toy script, heavy deps) ─────────────────────────────────────
 bg_removal/node_modules/
+# Generated icon output + any local secrets that live next to the scripts.
+bg_removal/icons/out/
+bg_removal/**/.env
+bg_removal/**/.env.local
 
 # ─── Agent brain (local AI context, not needed in repo) ──────────────────────
 .agents/
 .agent/
 .claude/
 .kilo/
+.kiro/
 .antigravity/
 
 # ─── Decompiled/extracted APK artifacts ──────────────────────────────────────
@@ -73,3 +78,31 @@ APK/
 
 # ─── External tool checkout (nested git repo, not part of this repo) ──────────
 tools/open-design/
+
+# ─── Marketing / ad assets & icon experiments (not shipped in the .aab) ───────
+.tmp_icons/
+homesync-video/
+_grilla_*.png
+_grapefruit_*.png
+_quesorallado_*.png
+_terma_*.png
+_yerbamate_*.png
+homesync_admin/check_avatar.mjs
+
+# ─── Python bytecode cache ───────────────────────────────────────────────────
+__pycache__/
+*.pyc
+
+# ─── Tool command-output logs (temp) ─────────────────────────────────────────
+flutter_client/build_runner.txt
+flutter_client/l10n_gen.txt
+flutter_client/analyze*.txt
+
+# ─── Android QA evidence (screenshots, logcat, ui dumps — regenerable) ────────
+artifacts/
+
+# ─── Creative-production artifacts (ad moodboards, review boards — regenerable) ─
+outputs/
+
+# ─── OpenMontage (video production) ───────────────────────────────────────────
+OpenMontage/

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
 class PersonalMetricCard extends StatelessWidget {
@@ -22,12 +23,12 @@ class PersonalMetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
         boxShadow: theme.cardShadow,
-        border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.45)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -35,7 +36,7 @@ class PersonalMetricCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.xs),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
@@ -46,7 +47,7 @@ class PersonalMetricCard extends StatelessWidget {
               Text(
                 label.toUpperCase(),
                 style: TextStyle(
-                  color: AppColors.textPrimary.withValues(alpha: 0.4),
+                  color: theme.textSecondary,
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.5,
@@ -57,8 +58,8 @@ class PersonalMetricCard extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: theme.textPrimary,
               fontSize: 24,
               fontWeight: FontWeight.w900,
               letterSpacing: -0.5,

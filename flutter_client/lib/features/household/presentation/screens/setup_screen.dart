@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +12,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -245,7 +248,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   // -- Step handlers ----------------------------------------------------------
 
   void _onModeSelected() {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     if (_wizardState.selectedMode == 'family' &&
         _familyHouseholdNameController.text.trim().isEmpty) {
       _familyHouseholdNameController.text = _suggestFamilyHouseholdName();
@@ -264,7 +267,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   Future<void> _handleCreateTeam() async {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     setState(() {
       _isGeneratingCode = true;
     });
@@ -397,7 +400,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   Future<void> _handleJoinTeam() async {
-    HapticFeedback.mediumImpact();
+    AppHaptics.success();
     final code = _codeController.text.trim().toUpperCase();
     if (code.length != 6) {
       _wizard.setJoinError('El código debe tener 6 caracteres');
@@ -722,7 +725,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     final t = AppLocalizations.of(context);
     final design = _wizardState.modeDesign;
     final modeKey = _wizardState.selectedMode ?? 'solo';
-    HapticFeedback.mediumImpact();
+    unawaited(AppHaptics.celebrate());
 
     var dismissed = false;
     final dialogFuture = showDialog<void>(
@@ -808,7 +811,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   void _copyCode() {
     if (_myInviteCode == null) return;
     Clipboard.setData(ClipboardData(text: _myInviteCode!));
-    HapticFeedback.selectionClick();
+    AppHaptics.selection();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppLocalizations.of(context).setupSnackCodeCopied),
@@ -821,8 +824,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Future<void> _shareViaWhatsApp() async {
     if (_myInviteCode == null) return;
-    final text =
-        '¡Hola! Únete a nuestro hogar en HomeSync.\n\nDescarga la app e ingresa este código: *$_myInviteCode*\n\n?? Organizemos nuestro hogar juntos.';
+    final t = AppLocalizations.of(context);
+
+    final intro = switch (_wizardState.selectedMode) {
+      'couple' => t.invitationIntroCouple,
+      'family' => t.invitationIntroFamily,
+      'friends' => t.invitationIntroFriends,
+      _ => t.invitationIntroDefault,
+    };
+    final text = t.invitationShareBody(intro, _myInviteCode!);
     final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
 
     try {

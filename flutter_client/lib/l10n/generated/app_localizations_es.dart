@@ -100,7 +100,7 @@ class AppLocalizationsEs extends AppLocalizations {
       {
         'couple': 'Pareja',
         'family': 'Familia',
-        'friends': 'Convivencia',
+        'friends': 'Piso',
         'solo': 'Mi espacio',
         'other': 'Mi espacio',
       },
@@ -128,10 +128,10 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.selectLogic(
       type,
       {
-        'couple': 'Desafios, premios y pequenas recompensas para compartir.',
+        'couple': 'Desafíos, premios y pequeñas recompensas para compartir.',
         'family':
-            'Coordinacion, miembros y acuerdos del hogar para toda la familia.',
-        'friends': 'Organizacion, convivencia y reparto claro para el piso.',
+            'Coordinación, miembros y acuerdos del hogar para toda la familia.',
+        'friends': 'Organización, convivencia y reparto claro para el piso.',
         'solo': 'Todo tu progreso personal en un solo lugar.',
         'other': 'Todo tu progreso personal en un solo lugar.',
       },
@@ -185,7 +185,7 @@ class AppLocalizationsEs extends AppLocalizations {
       {
         'couple': 'Pareja',
         'family': 'Familia',
-        'friends': 'Companeros',
+        'friends': 'Compañeros',
         'solo': 'Yo',
         'other': 'Yo',
       },
@@ -200,7 +200,7 @@ class AppLocalizationsEs extends AppLocalizations {
       {
         'couple': 'con tu pareja',
         'family': 'con la familia',
-        'friends': 'con tus companeros',
+        'friends': 'con tus compañeros',
         'solo': 'conmigo',
         'other': 'conmigo',
       },
@@ -292,10 +292,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsPremiumTitle => 'HomeSync Premium';
 
   @override
-  String get settingsPremiumActiveSubtitle => 'Premium activo';
+  String get settingsPremiumActiveSubtitle => 'Gestionar plan';
 
   @override
   String get settingsPremiumInactiveSubtitle => 'Funciones avanzadas';
+
+  @override
+  String get settingsPremiumFeedbackRewardNote =>
+      'Reportá errores o sugerí mejoras útiles y podés ganar meses Premium gratis.';
 
   @override
   String get settingsPremiumFeatureShoppingFinanceSync =>
@@ -408,6 +412,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsResetDialogConfirm => 'Reiniciar';
 
   @override
+  String get settingsDeleteAccountButton => 'Eliminar mi cuenta';
+
+  @override
+  String get settingsDeleteAccountDialogTitle => '¿Eliminar tu cuenta?';
+
+  @override
+  String get settingsDeleteAccountDialogBody =>
+      'Esto elimina tu cuenta y todos tus datos (tareas, gastos, recompensas y progreso) de forma permanente. No se puede deshacer. Si compartís un hogar, dejarás de formar parte de él.';
+
+  @override
+  String get settingsDeleteAccountConfirm => 'Eliminar definitivamente';
+
+  @override
+  String get settingsDeleteAccountSuccess => 'Cuenta eliminada';
+
+  @override
+  String get settingsDeleteAccountError =>
+      'No se pudo eliminar la cuenta. Intentá de nuevo.';
+
+  @override
+  String get settingsDeleteAccountReauthNeeded =>
+      'Por seguridad, volvé a iniciar sesión y luego eliminá tu cuenta.';
+
+  @override
   String get splashLoadingMessage => 'Preparando tu hogar compartido.';
 
   @override
@@ -518,7 +546,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeWelcomeFeminine => 'Bienvenida';
 
   @override
-  String get homeViewWeekButton => 'Ver Semana';
+  String get homeViewWeekButton => 'Ver semana';
+
+  @override
+  String homeTodayProgressLabel(int done, int total) {
+    return '$done de $total';
+  }
+
+  @override
+  String homeTodayProgressSemantic(int done, int total) {
+    return 'Progreso de hoy: $done de $total tareas completadas';
+  }
 
   @override
   String get homeAllDoneToday => 'Todo listo por hoy';
@@ -601,6 +639,469 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeSoloActivityTitle => 'Tu actividad';
 
   @override
+  String get homeGreetingMorning => 'Buenos días,';
+
+  @override
+  String get homeGreetingAfternoon => 'Buenas tardes,';
+
+  @override
+  String get homeGreetingEvening => 'Buenas noches,';
+
+  @override
+  String get homeSoloSpentEmpty => 'Sin gastos aún ✨';
+
+  @override
+  String homeSoloSpentDailyAvg(String month, String amount) {
+    return '$month · $amount/día';
+  }
+
+  @override
+  String get soloSpaceEyebrow => 'Mi espacio';
+
+  @override
+  String soloSpaceLevel(int level) {
+    return 'Nivel $level';
+  }
+
+  @override
+  String soloSpaceXpToNext(int xp) {
+    return 'Te faltan $xp XP para el próximo nivel.';
+  }
+
+  @override
+  String get soloSpaceStageRecentMove => 'Mudanza reciente';
+
+  @override
+  String get soloSpaceStageRecentMoveSubtitle =>
+      'Tu espacio está empezando a tomar forma. Elegí una acción simple y construí desde ahí.';
+
+  @override
+  String get soloSpaceStageInMotion => 'Hogar en marcha';
+
+  @override
+  String get soloSpaceStageInMotionSubtitle =>
+      'Ya hay movimiento: algunas rutinas, gastos o tareas empiezan a ordenar tus días.';
+
+  @override
+  String get soloSpaceStageSteadyRoutine => 'Rutina estable';
+
+  @override
+  String get soloSpaceStageSteadyRoutineSubtitle =>
+      'Ya tenés una base; ahora se trata de sostenerla sin pensarlo tanto.';
+
+  @override
+  String get soloSpaceStageOrganizedHome => 'Casa organizada';
+
+  @override
+  String get soloSpaceStageOrganizedHomeSubtitle =>
+      'Tus pendientes, gastos y actividad empiezan a leerse como un sistema claro.';
+
+  @override
+  String get soloSpaceStageOwnRhythm => 'Tu espacio, tu ritmo';
+
+  @override
+  String get soloSpaceStageOwnRhythmSubtitle =>
+      'Ya no es solo registrar cosas: estás construyendo una forma propia de vivir tu hogar.';
+
+  @override
+  String get soloSpaceSignalsTitle => 'Señales de la semana';
+
+  @override
+  String get soloSpaceStreakTitle => 'Racha';
+
+  @override
+  String soloSpaceStreakMetric(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days días',
+      one: '1 día',
+      zero: 'Sin racha',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String soloSpaceActiveDays14(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days días activos en 14 días',
+      one: '1 día activo en 14 días',
+      zero: 'Sin días activos recientes',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get soloSpaceWeeklyXpTitle => 'XP semanal';
+
+  @override
+  String get soloSpaceWeeklyTasksTitle => 'Tareas semanales';
+
+  @override
+  String soloSpaceDeltaUp(int value) {
+    return '+$value vs semana anterior';
+  }
+
+  @override
+  String soloSpaceDeltaDown(int value) {
+    return '$value vs semana anterior';
+  }
+
+  @override
+  String get soloSpaceDeltaSame => 'Igual que la semana anterior';
+
+  @override
+  String soloSpaceTopTaskCategory(String category) {
+    return 'Tareas: $category';
+  }
+
+  @override
+  String soloSpaceTopExpenseCategory(String category) {
+    return 'Gastos: $category';
+  }
+
+  @override
+  String get soloSpaceSignalsSyncing =>
+      'Actualizando señales reales de tu hogar.';
+
+  @override
+  String get soloSpaceDimensionsTitle => 'Cómo viene tu hogar';
+
+  @override
+  String get soloSpaceOrderTitle => 'Orden';
+
+  @override
+  String get soloSpaceOrderSubtitle => 'Tareas, pendientes y cierre del día.';
+
+  @override
+  String get soloSpaceClarityTitle => 'Claridad';
+
+  @override
+  String get soloSpaceClaritySubtitle =>
+      'Gastos registrados y lectura del mes.';
+
+  @override
+  String get soloSpaceContinuityTitle => 'Continuidad';
+
+  @override
+  String get soloSpaceContinuitySubtitle =>
+      'Actividad reciente y constancia real.';
+
+  @override
+  String get soloSpaceNextTitle => 'Próximo gesto';
+
+  @override
+  String get soloSpaceNextCreateTask => 'Creá una tarea base';
+
+  @override
+  String get soloSpaceNextCreateTaskSubtitle =>
+      'Una rutina chica alcanza para empezar a darle forma a tu espacio.';
+
+  @override
+  String get soloSpaceNextCompleteTask => 'Cerrá una tarea de hoy';
+
+  @override
+  String get soloSpaceNextCompleteTaskSubtitle =>
+      'Bajar pendientes es la forma más directa de mejorar tu Orden.';
+
+  @override
+  String get soloSpaceNextRegisterExpense => 'Registrá tu primer gasto del mes';
+
+  @override
+  String get soloSpaceNextRegisterExpenseSubtitle =>
+      'Con un movimiento cargado, tu Claridad empieza a tener contexto.';
+
+  @override
+  String get soloSpaceNextReviewShopping => 'Revisá tu lista de compras';
+
+  @override
+  String get soloSpaceNextReviewShoppingSubtitle =>
+      'Una compra ordenada evita ruido y mantiene el mes más liviano.';
+
+  @override
+  String get soloSpaceNextKeepGoing => 'Sumá una acción simple';
+
+  @override
+  String get soloSpaceNextKeepGoingSubtitle =>
+      'Un gesto chico hoy sostiene la continuidad de tu hogar.';
+
+  @override
+  String get soloSpaceMilestonesTitle => 'Hitos personales';
+
+  @override
+  String get soloSpaceMilestoneFirstStep => 'Primer paso';
+
+  @override
+  String get soloSpaceMilestoneFirstStepDesc => 'Completaste tu primera tarea.';
+
+  @override
+  String get soloSpaceMilestoneWeekInMotion => 'Semana en marcha';
+
+  @override
+  String get soloSpaceMilestoneWeekInMotionDesc =>
+      'Tuviste actividad reciente suficiente para marcar ritmo.';
+
+  @override
+  String get soloSpaceMilestoneClearerHome => 'Casa más clara';
+
+  @override
+  String get soloSpaceMilestoneClearerHomeDesc =>
+      'Tus finanzas ya tienen señales útiles este mes.';
+
+  @override
+  String get soloSpaceMilestoneSteadyRoutine => 'Rutina sostenida';
+
+  @override
+  String get soloSpaceMilestoneSteadyRoutineDesc =>
+      'Orden y continuidad empiezan a trabajar juntos.';
+
+  @override
+  String get soloSpaceMilestoneOwnRhythm => 'Ritmo propio';
+
+  @override
+  String get soloSpaceMilestoneOwnRhythmDesc =>
+      'Tu progreso ya muestra una identidad personal.';
+
+  @override
+  String get soloSpaceFutureHint =>
+      'Tu espacio se ajusta con tus tareas, gastos y ritmo semanal.';
+
+  @override
+  String get soloSpaceRitualTitle => 'Cierre semanal';
+
+  @override
+  String soloSpaceRitualProgress(int done, int total) {
+    return '$done de $total gestos';
+  }
+
+  @override
+  String get soloSpaceRitualReviewTasks => 'Revisar pendientes abiertos';
+
+  @override
+  String get soloSpaceRitualCheckSpending => 'Mirar gastos del mes';
+
+  @override
+  String get soloSpaceRitualPlanShopping => 'Ajustar la lista de compras';
+
+  @override
+  String get soloSpaceRitualChooseNextRoutine =>
+      'Elegir una rutina para sostener';
+
+  @override
+  String get soloSpaceInsightsTitle => 'Lectura de la semana';
+
+  @override
+  String get soloSpaceInsightNoActivity => 'Punto de partida';
+
+  @override
+  String get soloSpaceInsightNoActivityDesc =>
+      'Todavía no hay señales fuertes esta semana. Un gesto simple alcanza para arrancar.';
+
+  @override
+  String get soloSpaceInsightStreak => 'Racha en construcción';
+
+  @override
+  String soloSpaceInsightStreakDesc(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days días activos seguidos empiezan a formar ritmo.',
+      one: 'Un día activo ya marca continuidad.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get soloSpaceInsightWeekImproved => 'Semana más fuerte';
+
+  @override
+  String soloSpaceInsightWeekImprovedDesc(int value) {
+    return '+$value XP contra la semana anterior. Hay más movimiento en tu casa.';
+  }
+
+  @override
+  String get soloSpaceInsightWeekSlowed => 'Semana más baja';
+
+  @override
+  String get soloSpaceInsightWeekSlowedDesc =>
+      'Bajó el movimiento. Conviene elegir una acción chica y cerrar el día.';
+
+  @override
+  String get soloSpaceInsightFinanceVisible => 'Finanzas con contexto';
+
+  @override
+  String get soloSpaceInsightFinanceVisibleDesc =>
+      'Ya hay movimientos suficientes para leer el mes con más claridad.';
+
+  @override
+  String get soloSpaceInsightNoFinance => 'Falta lectura financiera';
+
+  @override
+  String get soloSpaceInsightNoFinanceDesc =>
+      'Registrar un gasto real activa mejores señales de Claridad.';
+
+  @override
+  String get soloSpaceInsightTaskCategory => 'Patrón de tareas';
+
+  @override
+  String soloSpaceInsightTaskCategoryDesc(String category) {
+    return '$category aparece como foco fuerte este mes.';
+  }
+
+  @override
+  String get soloSpaceInsightExpenseCategory => 'Patrón de gastos';
+
+  @override
+  String soloSpaceInsightExpenseCategoryDesc(String category) {
+    return '$category concentra más movimiento este mes.';
+  }
+
+  @override
+  String get soloSpaceSuggestionsTitle => 'Herramientas sugeridas';
+
+  @override
+  String get soloSpaceSuggestionRecurringTask => 'Convertir algo en rutina';
+
+  @override
+  String get soloSpaceSuggestionRecurringTaskDesc =>
+      'Una tarea recurrente baja fricción y sostiene Orden.';
+
+  @override
+  String get soloSpaceSuggestionClosePending => 'Cerrar lo pendiente';
+
+  @override
+  String get soloSpaceSuggestionClosePendingDesc =>
+      'Resolver una tarea de hoy libera espacio mental.';
+
+  @override
+  String get soloSpaceSuggestionRegisterExpense => 'Cargar un gasto real';
+
+  @override
+  String get soloSpaceSuggestionRegisterExpenseDesc =>
+      'Con un movimiento, la lectura del mes deja de estar vacía.';
+
+  @override
+  String get soloSpaceSuggestionReviewShopping => 'Revisar compras';
+
+  @override
+  String get soloSpaceSuggestionReviewShoppingDesc =>
+      'Una lista clara evita compras repetidas o de último minuto.';
+
+  @override
+  String get soloSpaceSuggestionProtectStreak => 'Proteger la racha';
+
+  @override
+  String get soloSpaceSuggestionProtectStreakDesc =>
+      'Una acción chica hoy mantiene viva la continuidad.';
+
+  @override
+  String get soloSpaceSuggestionWeeklyReview => 'Hacer cierre semanal';
+
+  @override
+  String get soloSpaceSuggestionWeeklyReviewDesc =>
+      'Marcá los gestos del ritual y dejá la semana ordenada.';
+
+  @override
+  String get soloSpaceUnlocksTitle => 'Desbloqueos suaves';
+
+  @override
+  String get soloSpaceUnlockActive => 'Activo';
+
+  @override
+  String get soloSpaceUnlockNext => 'Luego';
+
+  @override
+  String get soloSpaceUnlockWeeklyReview => 'Vista de cierre';
+
+  @override
+  String get soloSpaceUnlockWeeklyReviewDesc =>
+      'Disponible desde el inicio para ordenar la semana sin presión.';
+
+  @override
+  String get soloSpaceUnlockRecurringTemplates => 'Plantillas recurrentes';
+
+  @override
+  String get soloSpaceUnlockRecurringTemplatesDesc =>
+      'Aparecen cuando ya hay base para repetir rutinas.';
+
+  @override
+  String get soloSpaceUnlockHabitInsights => 'Insights de hábitos';
+
+  @override
+  String get soloSpaceUnlockHabitInsightsDesc =>
+      'Se activan con varios días de actividad real.';
+
+  @override
+  String get soloSpaceUnlockPersonalMedal => 'Medalla personal';
+
+  @override
+  String get soloSpaceUnlockPersonalMedalDesc =>
+      'Reconoce una etapa sostenida sin competir con nadie.';
+
+  @override
+  String get soloSpaceUnlockRhythmRecommendations => 'Recomendaciones de ritmo';
+
+  @override
+  String get soloSpaceUnlockRhythmRecommendationsDesc =>
+      'Cruzan claridad financiera con continuidad semanal.';
+
+  @override
+  String activityCoinsPlus(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count coins',
+      one: '+1 coin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityCoinsMinus(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '-$count coins',
+      one: '-1 coin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeFamilyApprovalsTileLabel => 'Aprobaciones';
+
+  @override
+  String homeFamilyApprovalsPendingLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'pendientes',
+      one: 'pendiente',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeFamilyApprovalsAllClear => 'Al día';
+
+  @override
+  String expensesYouAreOwed(String amount) {
+    return 'Te deben $amount';
+  }
+
+  @override
+  String expensesYouOwe(String amount) {
+    return 'Debés $amount';
+  }
+
+  @override
+  String expensesDailyAvg(String amount) {
+    return '≈ $amount/día';
+  }
+
+  @override
   String get homeCoupleHeadlineSecondary => 'del hogar';
 
   @override
@@ -628,6 +1129,29 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get homeCoupleSettlementErrorNoUser =>
       'No pudimos identificar tu usuario.';
+
+  @override
+  String get homeCoupleSettlementDialogTitle => 'Registrar equilibrio';
+
+  @override
+  String homeCoupleSettlementDialogDirectionPay(String partnerName) {
+    return 'Vos → $partnerName';
+  }
+
+  @override
+  String homeCoupleSettlementDialogDirectionReceive(String partnerName) {
+    return '$partnerName → vos';
+  }
+
+  @override
+  String get homeCoupleSettlementDialogBalanceZero =>
+      'Esto va a dejar el balance del hogar en cero.';
+
+  @override
+  String get homeCoupleSettlementDialogCancel => 'Ahora no';
+
+  @override
+  String get homeCoupleSettlementDialogConfirm => 'Registrar pago';
 
   @override
   String homeCoupleSettlementDialogTitlePay(String partnerName) {
@@ -735,6 +1259,132 @@ class AppLocalizationsEs extends AppLocalizations {
       'Todavía no hubo movimientos compartidos.';
 
   @override
+  String get homeFriendsSettleTitle => 'Saldar cuentas';
+
+  @override
+  String get homeFriendsSettleSubtitle =>
+      'Quién le paga a quién para quedar en cero.';
+
+  @override
+  String get homeFriendsBalancesLoadError =>
+      'No pudimos cargar los saldos. Tocá para reintentar.';
+
+  @override
+  String get homeFriendsTasksLoadError =>
+      'No pudimos cargar las tareas. Tocá para reintentar.';
+
+  @override
+  String get homeFriendsShoppingLoadError =>
+      'No pudimos cargar las compras. Tocá para reintentar.';
+
+  @override
+  String get homeFriendsActivityLoadError =>
+      'No pudimos cargar la actividad. Tocá para reintentar.';
+
+  @override
+  String get balanceCardStatusOwed => 'Te toca acomodar tu saldo';
+
+  @override
+  String get balanceCardStatusFavor => 'Quedó a tu favor';
+
+  @override
+  String get balanceCardStatusShared => 'Balance compartido';
+
+  @override
+  String get balanceCardBadgeSettled => 'Al día';
+
+  @override
+  String get balanceCardBadgeOwes => 'Debes';
+
+  @override
+  String get balanceCardBadgeFavor => 'A favor';
+
+  @override
+  String balanceCardMovements(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count movimientos',
+      one: '1 movimiento',
+      zero: '0 movimientos',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String balanceCardMembers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Integrantes',
+      one: 'Integrante',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String balanceCardOpenBalances(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Saldos abiertos',
+      one: 'Saldo abierto',
+      zero: 'Todo al día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get balanceCardSingleMemberHint =>
+      'Cuando sumes más integrantes, acá vas a ver cómo queda el balance compartido.';
+
+  @override
+  String get balanceCardMemberOwes => 'Debe';
+
+  @override
+  String get balanceCardMemberFavor => 'A favor';
+
+  @override
+  String get balanceCardMemberSettled => 'Al día';
+
+  @override
+  String get settleSectionTitle => 'Saldar deudas';
+
+  @override
+  String get settleSectionOnePayment => '1 pago necesario para equilibrar';
+
+  @override
+  String settleSectionPayments(int count) {
+    return '$count pagos para equilibrar todo';
+  }
+
+  @override
+  String get settleAllSettled => 'Todo equilibrado. Nadie le debe a nadie.';
+
+  @override
+  String settlePaysTo(String name) {
+    return 'le paga a $name';
+  }
+
+  @override
+  String get settleConfirmTitle => 'Confirmar pago';
+
+  @override
+  String settleConfirmBody(String from, String amount, String to) {
+    return '$from le paga $amount a $to.';
+  }
+
+  @override
+  String settleSuccess(String amount) {
+    return 'Pago de $amount registrado.';
+  }
+
+  @override
+  String settleError(String error) {
+    return 'No se pudo registrar el pago: $error';
+  }
+
+  @override
   String get homeFamilyMemberNotFound =>
       'No encontramos tu perfil en este hogar.';
 
@@ -745,7 +1395,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeFamilyAdultFallbackName => 'Familia';
 
   @override
-  String get homeFamilyChildHello => 'Hola, ';
+  String get homeFamilyChildHello => '¡Vamos, ';
+
+  @override
+  String get homeFamilyChildGreetingSuffix => '!';
 
   @override
   String get homeFamilyChildFallbackName => 'campeon';
@@ -1157,7 +1810,7 @@ class AppLocalizationsEs extends AppLocalizations {
       mode,
       {
         'family': 'Familia creada',
-        'friends': 'Familia creada',
+        'friends': 'Convivencia creada',
         'couple': 'Hogar creado',
         'solo': 'Hogar creado',
         'other': 'Hogar creado',
@@ -1172,7 +1825,7 @@ class AppLocalizationsEs extends AppLocalizations {
       mode,
       {
         'family': 'Compartí este código con quienes forman parte del hogar.',
-        'friends': 'Compartí este código con quienes forman parte del hogar.',
+        'friends': 'Compartí este código con tus compañeros de convivencia.',
         'couple': 'Compartí este código para invitar a la otra persona.',
         'solo': 'Compartí este código para invitar a la otra persona.',
         'other': 'Compartí este código para invitar a la otra persona.',
@@ -1579,13 +2232,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Los adultos completan directo; los demás requieren aprobación.';
 
   @override
-  String get settingsParentModeApprovalAllTitle => 'Todos los miembros';
-
-  @override
-  String get settingsParentModeApprovalAllSubtitle =>
-      'Cualquier completion pasa por tu OK antes de pagar coins.';
-
-  @override
   String get settingsParentModeApprovalPerMemberTitle => 'Por miembro';
 
   @override
@@ -1616,6 +2262,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsParentModeWeeklySummary => 'Resumen de la semana';
+
+  @override
+  String get settingsParentModeAllowanceTitle => 'Mesadas';
+
+  @override
+  String get settingsParentModeAllowanceSubtitle =>
+      'Enviá mesadas a adolescentes con finanzas personales.';
+
+  @override
+  String get settingsParentModeAllowanceCta => 'Dar mesada';
 
   @override
   String get settingsParentModePerMemberEmpty =>
@@ -1875,6 +2531,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tasksPillNoDate => 'Sin fecha';
+
+  @override
+  String get tasksSectionOverdue => 'Vencidas';
+
+  @override
+  String get tasksSectionToday => 'Hoy';
+
+  @override
+  String get tasksSectionThisWeek => 'Esta semana';
+
+  @override
+  String get tasksSectionUpcoming => 'Más adelante';
+
+  @override
+  String get tasksSectionNoDate => 'Sin fecha';
 
   @override
   String get tasksPillOverdue => 'Vencida';
@@ -2184,6 +2855,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get completeTaskNoTasksAvailable => 'No hay tareas disponibles';
 
   @override
+  String get completeTaskAddPromptTitle => '¿No encontrás la tarea?';
+
+  @override
+  String get completeTaskAddPromptButton => 'Agregar nueva tarea';
+
+  @override
   String completeTaskRewardVerb(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2271,6 +2948,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get taskDetailReward => 'Recompensa';
+
+  @override
+  String taskDetailCoinsAwarded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count coins',
+      one: '1 coin',
+    );
+    return '+$_temp0';
+  }
 
   @override
   String get taskDetailCompletedBy => 'La completó';
@@ -2498,10 +3186,25 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esta sección es para administradores de hogares familiares.';
 
   @override
+  String pendingApprovalsSubmittedBy(Object name) {
+    return 'Enviada por $name';
+  }
+
+  @override
   String get pendingApprovalsApproveButton => 'Aprobar';
 
   @override
   String get pendingApprovalsRejectButton => 'Rechazar';
+
+  @override
+  String pendingApprovalsLoadError(Object message) {
+    return 'No pudimos cargar las aprobaciones: $message';
+  }
+
+  @override
+  String pendingApprovalsApprovedSnack(Object coins) {
+    return 'Aprobada. Se acreditaron $coins coins.';
+  }
 
   @override
   String get pendingApprovalsApproveErrorRetry =>
@@ -2509,6 +3212,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pendingApprovalsRejectedSnack => 'Tarea rechazada.';
+
+  @override
+  String get pendingApprovalsRejectErrorRetry =>
+      'No pudimos rechazar la tarea. Reintentá.';
 
   @override
   String get pendingApprovalsRejectDialogTitle => 'Motivo del rechazo';
@@ -2712,6 +3419,23 @@ class AppLocalizationsEs extends AppLocalizations {
       'Ticket difícil de leer; revisá los datos antes de guardar';
 
   @override
+  String get expensesFormOcrRateLimited =>
+      'Demasiados escaneos seguidos. Esperá unos segundos y volvé a intentar.';
+
+  @override
+  String expensesFormOcrImageTooLarge(String sizeMb) {
+    return 'La imagen es demasiado grande ($sizeMb MB, máx 5 MB). Probá con otra foto o desde la galería.';
+  }
+
+  @override
+  String get expensesFormOcrSessionExpired =>
+      'Sesión expirada. Iniciá sesión nuevamente para escanear.';
+
+  @override
+  String get expensesFormOcrTimeout =>
+      'El escaneo tardó demasiado. Revisá tu conexión y volvé a intentar.';
+
+  @override
   String get expensesFormValidationAmountRequired => 'Ingresá un monto válido.';
 
   @override
@@ -2725,6 +3449,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get expensesFormUpdatedExpense => 'Gasto actualizado';
+
+  @override
+  String get plannedExpensePaymentConfirmButton => 'Confirmar y registrar';
 
   @override
   String get expensesFormDeleteDialogTitle => '¿Eliminar gasto?';
@@ -2870,6 +3597,49 @@ class AppLocalizationsEs extends AppLocalizations {
   String get expensesFormHeaderNewExpense => 'Nuevo Gasto';
 
   @override
+  String get allowanceEntryTitle => 'Dar mesada';
+
+  @override
+  String get allowanceSheetTitle => 'Dar mesada';
+
+  @override
+  String get allowanceSheetSubtitle =>
+      'Elegí destinatario y monto. Se registra como ingreso personal.';
+
+  @override
+  String get allowanceRecipientLabel => 'Para';
+
+  @override
+  String get allowanceAmountLabel => 'Monto';
+
+  @override
+  String get allowanceNoteHint => 'Nota opcional, ej: Mesada de junio';
+
+  @override
+  String get allowanceSubmitButton => 'Enviar mesada';
+
+  @override
+  String get allowanceNoRecipients =>
+      'No hay adolescentes con finanzas personales en este hogar.';
+
+  @override
+  String get allowanceRecipientRequired => 'Elegí a quién darle la mesada.';
+
+  @override
+  String get allowanceAmountInvalid => 'Ingresá un monto válido.';
+
+  @override
+  String get allowanceSendGenericError => 'No se pudo enviar la mesada.';
+
+  @override
+  String get allowanceSentSnack => 'Mesada enviada.';
+
+  @override
+  String allowanceSendError(String error) {
+    return 'Error al enviar la mesada: $error';
+  }
+
+  @override
   String get expensesFormSelectCategoryTitle => 'Seleccionar categoría';
 
   @override
@@ -2913,6 +3683,9 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get expensesFormShoppingWillMarkBought =>
       'Se marcarán como comprados al guardar';
+
+  @override
+  String get expensesFormShoppingPreparingProducts => 'Preparando productos...';
 
   @override
   String get expensesFormShoppingTapToLink => 'Tocá para vincular artículos';
@@ -3044,12 +3817,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get premiumPaywallCloseTooltip => 'Cerrar';
 
   @override
-  String get premiumPaywallEyebrow =>
-      'Premium para hogares que se organizan en serio';
+  String get premiumPaywallEyebrow => 'HomeSync Premium';
 
   @override
-  String get premiumPaywallTitle =>
-      'Automatizá tu hogar sin cargar todo dos veces';
+  String get premiumPaywallTitle => 'Automatizá tu hogar sin cargar dos veces';
 
   @override
   String get premiumPaywallSubtitle =>
@@ -3088,6 +3859,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get premiumRestorePurchases => 'Restaurar compras';
 
   @override
+  String get premiumCancelAnytime => 'Cancelá cuando quieras';
+
+  @override
   String get premiumFreeTrialAvailable => 'Prueba Gratis Disponible';
 
   @override
@@ -3100,11 +3874,43 @@ class AppLocalizationsEs extends AppLocalizations {
   String get premiumSavePercent => 'Ahorrá 20%';
 
   @override
-  String get premiumAlreadyActiveTitle => '¡Ya sos Premium!';
+  String get premiumChoosePlanTitle => 'Elegí tu plan';
+
+  @override
+  String get premiumAnnualPlan => 'Anual';
+
+  @override
+  String get premiumMonthlyPlan => 'Mensual';
+
+  @override
+  String get premiumBestValueBadge => 'Mejor valor';
+
+  @override
+  String get premiumBilledAnnually => 'Facturado una vez al año';
+
+  @override
+  String get premiumBilledMonthly => 'Se renueva mes a mes';
+
+  @override
+  String premiumMonthlyEquivalent(String price) {
+    return '$price/mes';
+  }
+
+  @override
+  String get premiumContinueWithPlan => 'Continuar';
+
+  @override
+  String get premiumAlreadyActiveTitle => 'Premium activo en tu hogar';
 
   @override
   String get premiumAlreadyActiveBody =>
-      'Gracias por apoyar el desarrollo de HomeSync.';
+      'Todo listo: las funciones premium ya están disponibles para este hogar.';
+
+  @override
+  String get premiumActiveStatusPill => 'Plan activo';
+
+  @override
+  String get premiumActiveBenefitsTitle => 'Beneficios habilitados';
 
   @override
   String get premiumContinueButton => 'Continuar';
@@ -3123,64 +3929,254 @@ class AppLocalizationsEs extends AppLocalizations {
   String get faqSheetTitle => 'Preguntas Frecuentes';
 
   @override
-  String get faqSheetSubtitle => 'Todo lo que necesitás saber sobre HomeSync';
+  String get faqSheetSubtitle => 'Ayuda pensada para tu hogar';
 
   @override
-  String get faqHowSharedHome => '¿Cómo funciona el hogar compartido?';
+  String get faqSearchHint => 'Buscá una pregunta...';
 
   @override
-  String get faqHowSharedHomeAnswer =>
-      'HomeSync está pensado para parejas y personas que conviven. Cuando te unís a un hogar con un código, ambos comparten la misma lista de tareas, gastos y ahorros. Todo lo que hace uno se refleja para el otro.';
+  String get faqSearchEmpty =>
+      'No encontramos nada con esa búsqueda. Probá con otra palabra o contanos desde “Enviar feedback”.';
+
+  @override
+  String faqContextPill(String label) {
+    return 'Ayuda para: $label';
+  }
+
+  @override
+  String get faqCatHousehold => 'Tu hogar';
+
+  @override
+  String get faqCatTasks => 'Tareas';
+
+  @override
+  String get faqCatRewards => 'Puntos y premios';
+
+  @override
+  String get faqCatFinances => 'Finanzas';
+
+  @override
+  String get faqCatApp => 'La app y tu cuenta';
+
+  @override
+  String get faqHowSharedHome => '¿Cómo funciona mi hogar en HomeSync?';
+
+  @override
+  String faqHowSharedHomeAnswer(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'couple':
+            'Vos y tu pareja comparten un mismo hogar digital: tareas, gastos, lista de compras y ahorros viven en un solo lugar y se sincronizan al instante. Lo que carga uno, el otro lo ve al toque.',
+        'family':
+            'Toda la familia comparte un mismo hogar digital. Cada miembro tiene su rol (padre, madre, tutor/a, adolescente o hijo/a) y la app adapta lo que cada uno ve y puede hacer: los adultos administran, los chicos suman completando tareas.',
+        'friends':
+            'Quienes conviven comparten tareas, gastos y compras en un solo lugar, entre pares: sin jerarquías ni premios infantiles, solo un reparto claro de lo que cada uno aporta.',
+        'solo':
+            'Tu hogar es tu espacio personal: organizás tus tareas, tus gastos y tu lista de compras a tu ritmo. Si más adelante convivís con alguien, lo invitás con un código y listo.',
+        'other':
+            'Comparten un mismo hogar digital: tareas, gastos, compras y ahorros sincronizados al instante entre todos los miembros.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get faqInviteMembers => '¿Cómo invito a alguien a mi hogar?';
+
+  @override
+  String faqInviteMembersAnswer(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family':
+            'En Configuración está el código de invitación de tu hogar: compartilo y, al ingresarlo en su app, esa persona entra con todo sincronizado. Después, desde la lista de miembros, los adultos le asignan su rol (padre, madre, tutor/a, adolescente o hijo/a).',
+        'other':
+            'En Configuración está el código de invitación de tu hogar: compartilo con quien quieras sumar y, al ingresarlo en su app, entra directo con tareas, gastos y compras sincronizados.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get faqFamilyRoles => '¿Qué significan los roles de la familia?';
+
+  @override
+  String get faqFamilyRolesAnswer =>
+      'Padre, madre y tutor/a son los adultos: administran el hogar, aprueban tareas, manejan las finanzas compartidas y la tienda de premios. Los adolescentes tienen más autonomía y su propio espacio de finanzas personales. Los hijos e hijas viven la experiencia más simple y divertida: completan tareas, juntan coins y canjean premios.';
+
+  @override
+  String get faqWhoSeesWhat => '¿Qué ve cada miembro del hogar?';
+
+  @override
+  String get faqWhoSeesWhatAnswer =>
+      'Cada rol ve lo que le corresponde: los adultos ven todo, incluidas las finanzas compartidas; los adolescentes ven sus finanzas personales pero no los gastos de los adultos; y los hijos/as no ven finanzas — su mundo son las tareas, los puntos y los premios.';
+
+  @override
+  String get faqTasksBasics => '¿Cómo funcionan las tareas?';
+
+  @override
+  String get faqTasksBasicsAnswer =>
+      'Creá tareas puntuales o recurrentes (diarias, semanales, mensuales), asignalas a alguien o dejalas libres para quien las agarre. Cada tarea da XP y coins al completarse, el calendario muestra lo que viene, y las recurrentes se reprograman solas.';
+
+  @override
+  String get faqApprovals => '¿Cómo funcionan las aprobaciones de tareas?';
+
+  @override
+  String faqApprovalsAnswer(String role) {
+    String _temp0 = intl.Intl.selectLogic(
+      role,
+      {
+        'parent':
+            'Cuando un hijo/a o adolescente marca una tarea como hecha, queda pendiente de tu aprobación: la revisás desde Aprobaciones y, al confirmarla, recién ahí se acreditan los XP y coins. Quién necesita aprobación se ajusta en la configuración del hogar.',
+        'teen':
+            'Según cómo esté configurado el hogar, al marcar una tarea como hecha puede quedar pendiente hasta que un adulto la confirme. Recién ahí se te acreditan los XP y coins.',
+        'child':
+            'Cuando marcás una tarea como hecha, un adulto la revisa y la confirma. ¡Apenas la apruebe te llegan los XP y los coins!',
+        'other':
+            'Las tareas de hijos/as y adolescentes pueden requerir la confirmación de un adulto antes de acreditar XP y coins, según la configuración del hogar.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get faqHowEarnXp => '¿Cómo gano XP y subo de nivel?';
+
+  @override
+  String get faqHowEarnXpAnswer =>
+      'Cada tarea completada suma XP (las más difíciles dan más). Con el XP subís de nivel y desbloqueás logros: medallas por hitos como completar 50 tareas. Todo tu progreso se ve en Estadísticas.';
 
   @override
   String get faqWhatCoins => '¿Para qué sirven los Coins?';
 
   @override
-  String get faqWhatCoinsAnswer =>
-      'Los Coins son la recompensa por completar tareas. Podés usarlos en la sección de premios para canjear vouchers creados por tu pareja, como una cena romántica o un día de descanso.';
+  String faqWhatCoinsAnswer(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family':
+            'Los coins son la moneda del hogar: los chicos los ganan completando tareas y los canjean en la tienda de premios por las recompensas que crearon los adultos — una salida, tiempo de pantalla, su comida favorita.',
+        'other':
+            'Los coins que ganás completando tareas se canjean en Premios por los vouchers que crea tu pareja: una cena, un masaje, una salida sorpresa. La idea es premiarse mutuamente por bancar el hogar.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get faqWhatWeeklyDuels => '¿Qué son los Duelos Semanales?';
 
   @override
   String get faqWhatWeeklyDuelsAnswer =>
-      'Cada semana empieza un duelo de XP nuevo. El miembro que complete más tareas y gane más puntos de experiencia será el ganador. Es una forma divertida de motivarse mutuamente.';
+      'Cada semana arranca un duelo de XP contra tu pareja con marcador oculto: ves tu propio avance, pero el resultado real se descubre recién al cierre del domingo. Quien más sumó se lleva la corona y un bonus de coins.';
 
   @override
-  String get faqHowEarnXp => '¿Cómo gano XP?';
+  String get faqFamilyRanking => '¿Cómo funciona el ranking familiar?';
 
   @override
-  String get faqHowEarnXpAnswer =>
-      'Ganás XP cada vez que completás una tarea. Las tareas más difíciles o importantes suelen dar más XP. Subir de nivel muestra tu progreso dentro del hogar.';
+  String get faqFamilyRankingAnswer =>
+      'Cada semana la familia compite sano: el ranking muestra quién sumó más XP completando tareas. Al cierre hay un ganador con corona y bonus, y el resumen semanal les cuenta cómo le fue a cada uno.';
+
+  @override
+  String get faqWhatSpecialEvents => '¿Qué es el evento semanal de pareja?';
+
+  @override
+  String get faqWhatSpecialEventsAnswer =>
+      'Cada semana aparece un desafío pensado para los dos: recrear la primera cita, cocinar juntos, una noche sin pantallas. Al completarlo, ambos reciben coins y el evento queda marcado como logrado para los dos hasta que llegue el siguiente.';
+
+  @override
+  String get faqContributionBalance => '¿Qué es el equilibrio de aporte?';
+
+  @override
+  String get faqContributionBalanceAnswer =>
+      'Es la foto neutral del mes: combina tareas hechas y gastos compartidos para mostrar cuánto viene aportando cada uno a la convivencia. Sin ganadores ni perdedores — sirve para charlar con datos, no para competir.';
+
+  @override
+  String get faqRewardsStore => '¿Cómo funciona la tienda de premios?';
+
+  @override
+  String faqRewardsStoreAnswer(String role) {
+    String _temp0 = intl.Intl.selectLogic(
+      role,
+      {
+        'parent':
+            'Vos creás los premios (una salida, tiempo de juego, su postre favorito) y les ponés un precio en coins. Los chicos los canjean con lo que ganaron completando tareas, y vos confirmás el canje.',
+        'other':
+            'En la tienda están los premios que crearon los adultos del hogar. Juntá coins completando tareas y canjealos cuando te alcance: el premio queda pendiente hasta que un adulto lo confirme.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get faqHowFinancesWork => '¿Cómo funcionan las finanzas?';
 
   @override
-  String get faqHowFinancesWorkAnswer =>
-      'En HomeSync podés registrar gastos reales y también anticipar gastos que aún no pagaste. Los gastos confirmados son los que afectan el balance real entre ustedes. Los pendientes sirven como recordatorio y proyección, pero no cambian la deuda hasta que se paguen.';
+  String faqHowFinancesWorkAnswer(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'friends':
+            'Cada gasto compartido se divide según lo que configuren (partes iguales o porcentajes). El balance muestra quién está al día y quién debe, y cualquiera puede registrar un pago para saldar cuentas.',
+        'family':
+            'Las finanzas compartidas son territorio de los adultos: los gastos del hogar se dividen entre ellos. Los adolescentes tienen su espacio personal de finanzas, separado de las cuentas grandes.',
+        'other':
+            'Registrás gastos reales y también anticipás gastos que todavía no pagaste. Los confirmados afectan el balance real entre ustedes; los pendientes sirven de recordatorio y proyección, pero no cambian la deuda hasta que se paguen.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get faqHowRecurringCount =>
-      '¿Cómo cuentan los gastos recurrentes y el balance estimado?';
+      '¿Cómo cuentan los recurrentes y el balance estimado?';
 
   @override
   String get faqHowRecurringCountAnswer =>
-      'Un gasto recurrente nuevo arranca desde su primera fecha válida. Si lo creás antes o en la fecha de vencimiento, puede contar este mes. Si lo creás después, arranca en el próximo ciclo. \"Tu parte pendiente\" muestra solo lo que te corresponde según la división, y \"Balance estimado\" usa tu balance actual menos esa parte pendiente.';
+      'Un gasto recurrente nuevo arranca desde su primera fecha válida. Si lo creás antes o en la fecha de vencimiento, puede contar este mes; si lo creás después, arranca en el próximo ciclo. “Tu parte pendiente” muestra solo lo que te corresponde según la división, y “Balance estimado” usa tu balance actual menos esa parte pendiente.';
 
   @override
-  String get faqWhatSpecialEvents => '¿Qué son los Eventos Especiales?';
+  String get faqWhoCanPay => '¿Quién puede registrar un pago?';
 
   @override
-  String get faqWhatSpecialEventsAnswer =>
-      'Cada semana aparece un desafío de pareja en la tienda. Son actividades diseñadas para fortalecer la relación. Cuando los completan, ambos reciben Coins y desbloquean medallas en su perfil de logros.';
+  String get faqWhoCanPayAnswer =>
+      'Cualquiera de los dos lados puede registrar un pago compartido, incluso en nombre del otro — útil cuando uno paga y el otro lo carga. “Pagado” y “Pendiente” muestran siempre el total del hogar, así todos ven la misma foto.';
 
   @override
-  String get faqLevelsAndAchievements => '¿Niveles y logros?';
+  String get faqSavingsGoals => '¿Cómo funcionan las metas de ahorro?';
 
   @override
-  String get faqLevelsAndAchievementsAnswer =>
-      'A medida que ganás XP, subís de nivel. En la sección de estadísticas podés ver tus logros, que son medallas por hitos alcanzados, como completar 50 tareas o ganar desafíos semanales.';
+  String get faqSavingsGoalsAnswer =>
+      'Creás una meta con su monto objetivo (un viaje, un fondo de emergencia) y vas registrando aportes. El progreso se ve clarito y, en hogares compartidos, todos pueden aportar a la misma meta.';
+
+  @override
+  String get faqPremium => '¿Qué incluye HomeSync Premium?';
+
+  @override
+  String get faqPremiumAnswer =>
+      'Premium se activa para todo el hogar con una sola compra: mascotas premium animadas, colores de tema exclusivos y todo lo que vayamos sumando. Se gestiona desde Configuración y solo los adultos pueden comprarlo.';
+
+  @override
+  String get faqCustomization => '¿Puedo personalizar la app?';
+
+  @override
+  String get faqCustomizationAnswer =>
+      'Sí: tema claro, oscuro o automático según el sistema, color principal (con Premium), idioma (español o inglés) y la moneda en que se muestran las finanzas. Todo desde Configuración → Apariencia.';
+
+  @override
+  String get faqNotifications => '¿Qué notificaciones llegan?';
+
+  @override
+  String get faqNotificationsAnswer =>
+      'Avisos de lo que pasa en tu hogar: tareas que te asignan, novedades de gastos y aprobaciones pendientes. Podés activarlas o silenciarlas desde Configuración → Notificaciones.';
+
+  @override
+  String get faqAccountSafety => '¿Cómo cuido mi cuenta y mis datos?';
+
+  @override
+  String get faqAccountSafetyAnswer =>
+      'Tu sesión es personal: cerrala cuando quieras desde Configuración. Si necesitás empezar de cero, “Reiniciar datos” borra el contenido del hogar, y “Eliminar mi cuenta” la elimina definitivamente. Tus datos viven cifrados en la nube y solo los miembros de tu hogar ven lo que comparten.';
 
   @override
   String get feedbackThanksBug => '¡Gracias por reportarlo!';
@@ -3273,6 +4269,30 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get membersRoleChild => 'Chico/a';
+
+  @override
+  String get membersRoleFather => 'Padre';
+
+  @override
+  String get membersRoleMother => 'Madre';
+
+  @override
+  String get membersRoleDad => 'Papá';
+
+  @override
+  String get membersRoleMom => 'Mamá';
+
+  @override
+  String get membersRoleGuardianMale => 'Tutor';
+
+  @override
+  String get membersRoleGuardianFemale => 'Tutora';
+
+  @override
+  String get membersRoleSon => 'Hijo';
+
+  @override
+  String get membersRoleDaughter => 'Hija';
 
   @override
   String get membersRoleParentGuardianDesc =>
@@ -3743,6 +4763,188 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallengeWeDidIt => 'Lo hicimos';
 
   @override
+  String get coupleChallengeDoneThisWeek => '¡Completado esta semana!';
+
+  @override
+  String get coupleChallengeAlreadyDone =>
+      'Ya completaron el desafío de esta semana 💚';
+
+  @override
+  String tourStepLabel(int current, int total) {
+    return 'Paso $current de $total';
+  }
+
+  @override
+  String get tourWelcomeEyebrow => 'Bienvenidos';
+
+  @override
+  String get tourCtaStart => 'Empezar';
+
+  @override
+  String get tourCtaNext => 'Siguiente';
+
+  @override
+  String get tourCtaLater => 'Después';
+
+  @override
+  String get tourFinaleTitle => '¡Listo!';
+
+  @override
+  String get tourFinaleCta => 'Empezar a usar';
+
+  @override
+  String get tourCoupleWelcomeTitle => 'Su hogar, en 30 segundos';
+
+  @override
+  String get tourCoupleWelcomeBody =>
+      'Les muestro lo esencial: tareas, monedas, duelo y gastos. Corto y al punto.';
+
+  @override
+  String tourCoupleWelcomeBodyNamed(String partnerName) {
+    return 'Te muestro lo esencial para organizar todo con $partnerName: tareas, monedas, duelo y gastos.';
+  }
+
+  @override
+  String get tourTasksTitleHas => 'Hacé tareas, ganá puntos';
+
+  @override
+  String get tourTasksBodyHas =>
+      'Tocá ✓ para completar. Cada tarea suma monedas y XP solo para vos.';
+
+  @override
+  String get tourTasksTitleEmpty => 'Hoy en casa está vacío';
+
+  @override
+  String get tourTasksBodyEmpty =>
+      'Acá van a vivir las tareas del día. Programá la primera ahora y vela aparecer — o seguí el recorrido y lo hacés después.';
+
+  @override
+  String get tourTasksCtaCreate => 'Programar una tarea';
+
+  @override
+  String get tourBalanceTitle => 'El pulso del hogar';
+
+  @override
+  String tourBalanceBody(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'shared':
+            'Tienen economía integrada: acá no hay deudas entre ustedes. Ven cuánto gastó el hogar este mes y, abajo, los puntos de cada uno.',
+        'other':
+            'Acá ven cuánto se deben en gastos compartidos y, abajo, lo que ganó cada uno. Con “Equilibrar” saldan cuentas en un toque.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tourBalanceBulletSettle =>
+      'Equilibrar → saldar gastos compartidos';
+
+  @override
+  String get tourBalanceBulletMonth => 'Gasto del mes → el pulso de la casa';
+
+  @override
+  String get tourBalanceBulletXp => 'XP → para el duelo semanal';
+
+  @override
+  String get tourBalanceBulletCoins => 'Monedas → para canjear recompensas';
+
+  @override
+  String get tourDuelTitle => 'Duelo semanal';
+
+  @override
+  String get tourDuelBody =>
+      'Cada semana compiten por XP con marcador oculto. El domingo se revela quién ganó. Se reinicia los lunes.';
+
+  @override
+  String get tourRewardsTitle => 'Canjeá las monedas';
+
+  @override
+  String get tourRewardsBody =>
+      'Acá viven las recompensas: peli, masaje, día libre. Ustedes arman la tienda y se premian mutuamente.';
+
+  @override
+  String tourExpensesTitle(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'shared': 'Las finanzas del hogar',
+        'other': 'Dividan los gastos',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tourExpensesBody(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'shared':
+            'Registren acá los gastos del hogar: recurrentes, compras y metas de ahorro, todo en un solo lugar.',
+        'other':
+            'Sumen gastos del hogar y la app calcula quién le debe a quién, según la división que configuraron.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tourCoupleFinaleBody =>
+      'A disfrutar su hogar. Cualquier duda, las Preguntas Frecuentes se adaptan a ustedes.';
+
+  @override
+  String get tourFamilyWelcomeTitle => 'Tu familia, organizada';
+
+  @override
+  String get tourFamilyWelcomeBody =>
+      'Te muestro cómo manejar tareas, puntos y premios de toda la familia — en un minuto.';
+
+  @override
+  String get tourFamilyTasksTitleHas => 'Las tareas de la familia';
+
+  @override
+  String tourFamilyTasksBody(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'approvals':
+            'Asigná tareas a cada uno. Cuando los chicos las completen, te llegan para aprobar — recién ahí cobran sus monedas.',
+        'other':
+            'Asigná tareas a cada uno y seguí el progreso de todos desde acá.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tourFamilyFinanceTitle => 'Los gastos, entre adultos';
+
+  @override
+  String get tourFamilyFinanceBody =>
+      'Los gastos compartidos del hogar se manejan acá, solo entre adultos. Los chicos no los ven.';
+
+  @override
+  String get tourFamilyRankingTitle => 'Ranking semanal';
+
+  @override
+  String get tourFamilyRankingBody =>
+      'Cada semana, quien más XP suma completando tareas se lleva la corona. Sana competencia familiar.';
+
+  @override
+  String get tourFamilyRewardsTitle => 'La tienda de premios';
+
+  @override
+  String get tourFamilyRewardsBody =>
+      'Creá premios (una salida, tiempo de pantalla, su postre favorito) y los chicos los canjean con las monedas que ganan.';
+
+  @override
+  String get tourFamilyFinaleBody =>
+      'A organizar la tropa. Las Preguntas Frecuentes se adaptan a tu rol si necesitás ayuda.';
+
+  @override
   String get familyRewardsCoinsLabel => 'monedas';
 
   @override
@@ -3814,12 +5016,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get weeklyWinnerTitle => 'Ganador semanal';
 
   @override
-  String get weeklyWinnerSubtitle =>
-      'Así terminó el duelo semanal entre ustedes.';
+  String weeklyWinnerHeadline(String name) {
+    return '$name ganó la semana';
+  }
+
+  @override
+  String get weeklyWinnerSubtitle => 'Así cerró la semana entre ustedes.';
 
   @override
   String get weeklyWinnerCardSubtitle =>
-      'Terminó adelante en XP y se llevó el cierre semanal.';
+      'Buen cierre: más constancia, más puntos y más ritmo.';
 
   @override
   String get weeklyWinnerCoinsReward => '+20 coins';
@@ -4115,6 +5321,80 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get householdSocialHubRoleFallback =>
       'Roles y premios listos para organizar la semana.';
+
+  @override
+  String get householdSocialHubRoleMember => 'Integrante';
+
+  @override
+  String get contributionBalanceTitle => 'Aporte del mes';
+
+  @override
+  String get contributionBalanceSubtitle =>
+      'Cómo venimos repartidos en el piso.';
+
+  @override
+  String get contributionBalanceEmptyTitle => 'Todavía no hay aportes este mes';
+
+  @override
+  String get contributionBalanceEmptyBody =>
+      'Cuando completen tareas o carguen gastos compartidos, acá van a ver cómo queda el reparto.';
+
+  @override
+  String contributionBalanceTasksLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tareas',
+      one: '$count tarea',
+      zero: 'Sin tareas',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get contributionBalanceFootnote =>
+      'Sin ganadores: esto es solo para ver que estemos parejos.';
+
+  @override
+  String get householdBillsTitle => 'Cuentas del piso';
+
+  @override
+  String get householdBillsSubtitle =>
+      'Gastos fijos que se reparten entre todos cada mes.';
+
+  @override
+  String get householdBillsEmptyTitle => 'Todavía no hay cuentas fijas';
+
+  @override
+  String get householdBillsEmptyBody =>
+      'Cargá el alquiler, la luz o internet y se van a dividir solas cada mes.';
+
+  @override
+  String get householdBillsAddButton => 'Agregar cuenta del piso';
+
+  @override
+  String get householdBillsPremiumBody =>
+      'Las cuentas fijas que se dividen solas cada mes son parte de Premium.';
+
+  @override
+  String get householdBillsPremiumUnlock => 'Desbloquear con Premium';
+
+  @override
+  String householdBillsPerMonth(String amount) {
+    return '$amount / mes';
+  }
+
+  @override
+  String householdBillsDayOfMonth(int day) {
+    return 'Día $day';
+  }
+
+  @override
+  String get householdSettleUpTitle => 'Saldar cuentas';
+
+  @override
+  String get householdSettleUpSubtitle =>
+      'Quién le debe a quién para quedar a mano.';
 
   @override
   String get householdSocialHubStoreButton => 'Tienda';
@@ -4446,6 +5726,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get taskTemplatePlanHouseholdTasks => 'Planificar tareas del hogar';
 
   @override
+  String get taskTemplateCleanMicrowave => 'Limpiar microondas';
+
+  @override
+  String get taskTemplateWashCar => 'Lavar el auto';
+
+  @override
+  String get taskTemplateCleanTrashBins => 'Lavar tachos de basura';
+
+  @override
+  String get taskTemplatePackSchoolBag => 'Preparar mochila del colegio';
+
+  @override
+  String get taskTemplateGivePetWater => 'Cambiar agua de la mascota';
+
+  @override
   String addTaskOptionsAddedSnack(String title) {
     return '\"$title\" añadida';
   }
@@ -4598,7 +5893,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get expensesNewItemsDetectedTitle => 'Productos nuevos detectados';
+  String get expensesNewItemsDetectedTitle => 'Nuevos para tu lista';
 
   @override
   String get expensesNewItemsDetectedSubtitle =>
@@ -4780,20 +6075,50 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String savingsGoalSavedOf(String amount) {
+    return 'ahorrados de $amount';
+  }
+
+  @override
   String get savingsGoalContributeAction => 'Aportar';
 
   @override
   String get savingsNewGoalTitle => 'Nueva Meta';
 
   @override
-  String get savingsNewGoalSubtitle =>
-      'Definí qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.';
+  String savingsNewGoalSubtitle(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'solo':
+            'Definí qué querés lograr y cuánto necesitás juntar para hacerlo realidad.',
+        'family':
+            'Definí qué quiere lograr la familia y cuánto necesitan juntar para hacerlo realidad.',
+        'friends':
+            'Definan qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.',
+        'other':
+            'Definí qué quieren lograr en pareja y cuánto necesitan juntar para hacerlo realidad.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get savingsSectionDetail => 'DETALLE';
 
   @override
-  String get savingsSectionDetailTitle => 'Qué quieren alcanzar';
+  String savingsSectionDetailTitle(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'solo': 'Qué querés alcanzar',
+        'family': 'Qué quiere alcanzar la familia',
+        'friends': 'Qué quieren alcanzar',
+        'other': 'Qué quieren alcanzar',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get savingsSectionPersonalization => 'PERSONALIZACIÓN';
@@ -4821,6 +6146,141 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get savingsConfirmContribution => 'Confirmar Aporte';
+
+  @override
+  String get savingsTotalLabel => 'Ahorro Total';
+
+  @override
+  String get savingsStatGoals => 'Metas';
+
+  @override
+  String get savingsStatCompleted => 'Cumplidas';
+
+  @override
+  String get savingsHistoryTitle => 'HISTORIAL DE APORTES';
+
+  @override
+  String get savingsCompletedGoalsHistoryTitle => 'Historial de metas';
+
+  @override
+  String savingsContributionLine(String name, String amount) {
+    return '$name sumó $amount';
+  }
+
+  @override
+  String savingsSharedContributionLine(String names, String amount) {
+    return '$names sumaron $amount';
+  }
+
+  @override
+  String get savingsContributionSomeone => 'Alguien';
+
+  @override
+  String get savingsCompletedBadge => '¡Cumplida!';
+
+  @override
+  String savingsDeadlineChip(String date) {
+    return 'Para el $date';
+  }
+
+  @override
+  String get savingsEditAction => 'Editar meta';
+
+  @override
+  String get savingsDeleteAction => 'Eliminar';
+
+  @override
+  String get savingsDeleteConfirmTitle => '¿Eliminar meta?';
+
+  @override
+  String savingsDeleteConfirmBody(String title) {
+    return 'Se perderá el registro de \"$title\".';
+  }
+
+  @override
+  String get savingsArchiveAction => 'Archivar';
+
+  @override
+  String get savingsArchiveConfirmTitle => '¿Archivar meta cumplida?';
+
+  @override
+  String get savingsArchiveConfirmBody =>
+      'La meta se guardará como cumplida y dejará de aparecer en la lista.';
+
+  @override
+  String get savingsEditGoalTitle => 'Editar Meta';
+
+  @override
+  String get savingsSaveChangesAction => 'Guardar cambios';
+
+  @override
+  String get savingsContributeSplitTitle => '¿CÓMO REGISTRAR EL APORTE?';
+
+  @override
+  String get savingsContributeSoloLabel => 'Solo yo';
+
+  @override
+  String get savingsContributeSoloDesc =>
+      'Sale de tu bolsillo, como un regalo.';
+
+  @override
+  String savingsContributeSharedLabel(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family': 'En familia',
+        'friends': 'Entre todos',
+        'solo': 'Entre todos',
+        'other': 'En pareja',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String savingsContributeSharedDesc(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family': 'Se reparte entre los adultos del hogar.',
+        'friends': 'Se reparte entre quienes conviven.',
+        'solo': 'Se reparte según la economía del hogar.',
+        'other': 'Se reparte entre vos y tu pareja.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savingsNoteLabel => 'Nota (opcional)';
+
+  @override
+  String get savingsNoteHint => '¿Para qué es este aporte?';
+
+  @override
+  String get savingsTargetDateLabel => 'Fecha objetivo (opcional)';
+
+  @override
+  String get savingsTargetDateClear => 'Sin fecha límite';
+
+  @override
+  String savingsSuggesterMessage(String amount, String percent, String goal) {
+    return 'Según tu plan, podrías ahorrar $amount extra este mes. ¡Adelantarías un $percent% tu meta \"$goal\"!';
+  }
+
+  @override
+  String get savingsSuggesterCta => 'Aportar ahora';
+
+  @override
+  String get savingsCompletedCelebrationTitle => '¡Meta cumplida! 🎉';
+
+  @override
+  String savingsCompletedCelebrationBody(String title) {
+    return 'Juntaron todo para \"$title\". ¡Felicitaciones!';
+  }
+
+  @override
+  String get savingsCelebrationDismiss => '¡Genial!';
 
   @override
   String get achievementsBadgesSection => 'Tus Medallas';
@@ -4891,6 +6351,53 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get achievementsDreamArchitectsDesc =>
       'Diseñaron su lista de metas compartidas.';
+
+  @override
+  String get achievementsSoloMilestonesSection => 'Tus hitos';
+
+  @override
+  String get achievementsSoloFirstStepTitle => 'Primer paso';
+
+  @override
+  String get achievementsSoloFirstStepDesc =>
+      'Completaste tu primera tarea en tu espacio.';
+
+  @override
+  String get achievementsSoloRoutineTitle => 'Rutina en marcha';
+
+  @override
+  String get achievementsSoloRoutineDesc => 'Completaste 50 tareas personales.';
+
+  @override
+  String get achievementsSoloHomeClearTitle => 'Casa más clara';
+
+  @override
+  String get achievementsSoloHomeClearDesc =>
+      'Llegaste a 5000 XP construyendo tu ritmo.';
+
+  @override
+  String get achievementsSoloNextSection => 'Próximos hitos';
+
+  @override
+  String get achievementsSoloWeekTitle => 'Semana activa';
+
+  @override
+  String get achievementsSoloWeekDesc =>
+      'Sostuviste varias acciones en tu hogar.';
+
+  @override
+  String get achievementsSoloRhythmTitle => 'Ritmo propio';
+
+  @override
+  String get achievementsSoloRhythmDesc =>
+      'Tu rutina ya empieza a tener continuidad.';
+
+  @override
+  String get achievementsSoloOwnSpaceTitle => 'Espacio propio';
+
+  @override
+  String get achievementsSoloOwnSpaceDesc =>
+      'Tu progreso personal ya tiene identidad.';
 
   @override
   String get scheduleTitle => 'Programar tarea';
@@ -5088,11 +6595,44 @@ class AppLocalizationsEs extends AppLocalizations {
   String get avatarPickerCustomName => 'Personalizado';
 
   @override
+  String get avatarPickerDeleteCustom => 'Eliminar avatar personalizado';
+
+  @override
+  String get avatarPickerDeleteCustomTitle => '¿Eliminar avatar?';
+
+  @override
+  String get avatarPickerDeleteCustomBody =>
+      'Vas a eliminar este avatar personalizado. Si lo estás usando, volvemos al avatar básico.';
+
+  @override
+  String get avatarPickerCustomDeleted => 'Avatar personalizado eliminado';
+
+  @override
+  String avatarPickerCustomDeleteError(String error) {
+    return 'No se pudo eliminar el avatar: $error';
+  }
+
+  @override
   String get avatarPickerCreateCustom =>
       'Crear avatar personalizado (1 por mes)';
 
   @override
   String get avatarPickerUnlockCustom => 'Desbloquear avatar personalizado';
+
+  @override
+  String get avatarPickerAiCardTitle => 'Tu avatar con IA';
+
+  @override
+  String get avatarPickerAiCardBody =>
+      'Convertí una foto en un avatar ilustrado al estilo HomeSync. Tenés 1 creación por mes.';
+
+  @override
+  String get avatarPickerAiCreateButton => 'Crear mi avatar';
+
+  @override
+  String avatarPickerAiUsedThisMonth(String date) {
+    return 'Ya creaste tu avatar de este mes. Vas a poder crear otro el $date.';
+  }
 
   @override
   String get avatarPickerGooglePhotoTitle => 'Foto de Google';
@@ -6147,4 +7687,183 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get rewardTemplateSpecialDessertDescription =>
       'Elegir un postre favorito para después de cenar.';
+
+  @override
+  String get errorGeneric => 'Algo salió mal. Probá de nuevo en un momento.';
+
+  @override
+  String get errorOffline =>
+      'Sin conexión. Verificá tu red e intentá de nuevo.';
+
+  @override
+  String get errorTooManyRequests =>
+      'Demasiadas solicitudes. Reintentá en un momento.';
+
+  @override
+  String get errorServerUnreachable =>
+      'No pudimos conectar con el servidor. Verificá tu red.';
+
+  @override
+  String get errorTimeout => 'La operación tardó demasiado. Probá de nuevo.';
+
+  @override
+  String get errorNetworkCheckConnection => 'Error de red: revisá tu conexión';
+
+  @override
+  String get errorUnexpected => 'Ha ocurrido un error inesperado';
+
+  @override
+  String get errorOfflineQueued => 'Estás offline. Acción guardada para luego.';
+
+  @override
+  String get errorNotAuthenticated => 'Usuario no autenticado';
+
+  @override
+  String get errorHouseholdNotFound => 'Hogar no encontrado';
+
+  @override
+  String get avatarErrorImageTooLarge =>
+      'La imagen es demasiado grande. Probá con otra foto.';
+
+  @override
+  String get avatarErrorSessionExpired =>
+      'Sesión expirada. Iniciá sesión nuevamente.';
+
+  @override
+  String get avatarErrorTimeout =>
+      'La generación tardó demasiado. Probá de nuevo en un momento.';
+
+  @override
+  String get avatarErrorMonthlyLimit =>
+      'Ya usaste tu creación de avatar de este mes. Vas a poder crear otro el mes que viene.';
+
+  @override
+  String get avatarErrorPremiumRequired =>
+      'Esta función es para usuarios Premium.';
+
+  @override
+  String get avatarErrorCreateFailed =>
+      'No se pudo crear el avatar. Probá de nuevo.';
+
+  @override
+  String get avatarErrorInvalidResult =>
+      'El generador no devolvió un avatar válido.';
+
+  @override
+  String get avatarErrorDeleteFailed =>
+      'No se pudo eliminar el avatar. Probá de nuevo.';
+
+  @override
+  String get avatarErrorSaveFailed => 'No se pudo guardar el avatar generado.';
+
+  @override
+  String editTaskDeleteBody(String title) {
+    return 'Se va a eliminar \"$title\" y no se puede deshacer.';
+  }
+
+  @override
+  String get notifTaskAssignedTitle => 'Nueva tarea asignada';
+
+  @override
+  String notifTaskAssignedBody(String actor, String task) {
+    return '$actor te asignó la tarea: $task';
+  }
+
+  @override
+  String get notifTaskCompletedTitle => 'Tarea completada';
+
+  @override
+  String notifTaskCompletedBody(String actor, String task) {
+    return '$actor completó: $task';
+  }
+
+  @override
+  String get notifTaskPendingApprovalTitle => 'Tarea pendiente de aprobación';
+
+  @override
+  String notifTaskPendingApprovalBody(String actor, String task) {
+    return '$actor completó \"$task\"';
+  }
+
+  @override
+  String get notifTaskApprovedTitle => 'Tarea aprobada';
+
+  @override
+  String notifTaskApprovedBody(String task, int coins) {
+    return '\"$task\" fue aprobada. Ganaste $coins coins.';
+  }
+
+  @override
+  String get notifTaskRejectedTitle => 'Tarea no aprobada';
+
+  @override
+  String notifTaskRejectedBody(String task) {
+    return 'Tu tarea \"$task\" necesita ajustes.';
+  }
+
+  @override
+  String get notifExpenseAddedTitle => 'Nuevo movimiento';
+
+  @override
+  String notifExpenseAddedBody(
+      String actor, String kind, String title, String amount) {
+    String _temp0 = intl.Intl.selectLogic(
+      kind,
+      {
+        'groceries': 'compró en',
+        'other': 'gastó en',
+      },
+    );
+    return '$actor $_temp0 $title ($amount)';
+  }
+
+  @override
+  String get notifSettlementTitle => '¡Deuda saldada!';
+
+  @override
+  String notifSettlementBody(String actor, String amount) {
+    return '$actor saldó su deuda de $amount';
+  }
+
+  @override
+  String get notifWeeklySummaryTitle => 'Tu resumen semanal está listo';
+
+  @override
+  String get notifWeeklySummaryBody =>
+      'Mirá cómo cerró la semana del hogar: cumplimiento, MVP y gastos.';
+
+  @override
+  String notifPlannedUpcomingTitle(String title) {
+    return 'Pago próximo: $title';
+  }
+
+  @override
+  String notifPlannedUpcomingBody(String date, String amount) {
+    return 'Vence el $date - $amount';
+  }
+
+  @override
+  String notifPlannedDueTitle(String title) {
+    return 'Vence hoy: $title';
+  }
+
+  @override
+  String notifPlannedDueBody(String amount) {
+    return 'Registralo desde Finanzas cuando lo pagues - $amount';
+  }
+
+  @override
+  String get financeOnlyConfirmTitle => 'Confirmar cambio';
+
+  @override
+  String financeOnlyConfirmBody(String action) {
+    String _temp0 = intl.Intl.selectLogic(
+      action,
+      {
+        'enable': 'activar',
+        'other': 'desactivar',
+      },
+    );
+    return 'Al $_temp0 el modo \"Solo finanzas\", TODOS los miembros del hogar verán solo funcionalidades financieras (sin tareas, compras, etc.). Esta configuración se aplica a todo el hogar.';
+  }
 }

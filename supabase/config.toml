@@ -354,6 +354,18 @@ authorization_url_path = "/oauth/consent"
 # Allow dynamic client registration
 allow_dynamic_registration = false
 
+# Functions that authenticate with Firebase ID tokens verified inside the
+# function itself — the Supabase gateway must NOT enforce its own JWT check,
+# or every request dies with UNAUTHORIZED_ASYMMETRIC_JWT before reaching it.
+[functions.generate-custom-avatar]
+verify_jwt = false
+
+[functions.delete-custom-avatar]
+verify_jwt = false
+
+[functions.scan-receipt]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

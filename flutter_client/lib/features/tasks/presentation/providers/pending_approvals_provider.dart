@@ -35,12 +35,16 @@ final pendingTaskApprovalsProvider =
         )
         .toList();
   } catch (e, stack) {
+    // No silenciamos el error como lista vacía: eso hacía que la bandeja
+    // mostrara "no hay pendientes" cuando en realidad la RPC falló. Relanzamos
+    // para que el provider entre en estado de error y la pantalla muestre su
+    // branch de error real (con opción de reintentar).
     log.e(
       'get_pending_approvals failed',
       error: e,
       stackTrace: stack,
     );
-    return const [];
+    rethrow;
   }
 });
 

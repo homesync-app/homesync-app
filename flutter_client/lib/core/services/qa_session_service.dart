@@ -1,17 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/admin_providers.dart';
-import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
+import 'package:homesync_client/core/services/firebase_auth_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/core/services/supabase_auth_service.dart';
+import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 
 class QaSessionService {
   QaSessionService(this._ref);
 
   final Ref _ref;
 
-  SupabaseAuthService get _auth => _ref.read(authServiceProvider);
+  FirebaseAuthService get _auth => _ref.read(firebaseAuthServiceProvider);
 
   Future<void> signInAsQaUser(
     AdminTestingScenario scenario,
@@ -20,7 +20,7 @@ class QaSessionService {
     final adminNotifier = _ref.read(adminProvider.notifier);
 
     await _auth.signOut();
-    await _auth.signIn(email: qaUser.email, password: qaUser.password);
+    await _auth.signInWithEmail(email: qaUser.email, password: qaUser.password);
     await AppIdentityService.instance.refresh();
 
     adminNotifier.beginRealQaSession(
@@ -42,7 +42,7 @@ class QaSessionService {
     final adminNotifier = _ref.read(adminProvider.notifier);
 
     await _auth.signOut();
-    await _auth.signIn(email: email, password: password);
+    await _auth.signInWithEmail(email: email, password: password);
     await AppIdentityService.instance.refresh();
 
     adminNotifier.activateAutoQaSession(

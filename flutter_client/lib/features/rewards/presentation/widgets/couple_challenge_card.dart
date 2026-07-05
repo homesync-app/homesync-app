@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme_extension.dart';
+import '../../../../core/widgets/concept_icon.dart';
 import '../../domain/models/couple_challenge.dart';
 
 class CoupleChallengeCard extends StatefulWidget {
@@ -11,12 +13,17 @@ class CoupleChallengeCard extends StatefulWidget {
   final int totalChallenges;
   final VoidCallback onComplete;
 
+  /// El hogar ya registró este desafío esta semana: se muestra el estado
+  /// completado y no se puede volver a completar.
+  final bool isCompleted;
+
   const CoupleChallengeCard({
     super.key,
     required this.challenge,
     required this.challengeNumber,
     required this.totalChallenges,
     required this.onComplete,
+    this.isCompleted = false,
   });
 
   @override
@@ -44,10 +51,17 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.surface,
+        color: widget.isCompleted
+            ? Color.alphaBlend(
+                AppColors.sage.withValues(alpha: 0.035),
+                theme.surface,
+              )
+            : theme.surface,
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: theme.border.withValues(alpha: 0.75),
+          color: widget.isCompleted
+              ? AppColors.sage.withValues(alpha: 0.22)
+              : theme.border.withValues(alpha: 0.75),
         ),
         boxShadow: theme.cardShadow,
       ),
@@ -97,17 +111,14 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
+                    SizedBox(
                       width: 74,
                       height: 74,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: highlight.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: Text(
-                        widget.challenge.icon,
-                        style: const TextStyle(fontSize: 36),
+                      child: Center(
+                        child: ConceptIcon(
+                          emoji: widget.challenge.icon,
+                          size: 62,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -143,17 +154,14 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
+                SizedBox(
                   width: 64,
                   height: 64,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: highlight.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: Text(
-                    widget.challenge.icon,
-                    style: const TextStyle(fontSize: 30),
+                  child: Center(
+                    child: ConceptIcon(
+                      emoji: widget.challenge.icon,
+                      size: 54,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -220,10 +228,14 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: AppColors.background,
+                color: theme.isDarkMode
+                    ? theme.surfaceContainer.withValues(alpha: 0.78)
+                    : AppColors.background,
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: highlight.withValues(alpha: 0.08),
+                  color: theme.isDarkMode
+                      ? theme.border.withValues(alpha: 0.55)
+                      : highlight.withValues(alpha: 0.08),
                 ),
               ),
               child: Column(
@@ -270,71 +282,37 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
           ],
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: theme.surfaceVariant.withValues(
-                alpha: theme.isDarkMode ? 0.52 : 0.5,
-              ),
-              borderRadius: BorderRadius.circular(20),
+              color: widget.isCompleted
+                  ? AppColors.sage
+                      .withValues(alpha: theme.isDarkMode ? 0.16 : 0.09)
+                  : theme.surfaceVariant.withValues(
+                      alpha: theme.isDarkMode ? 0.52 : 0.5,
+                    ),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               border: Border.all(
-                color: theme.border.withValues(alpha: 0.6),
+                color: widget.isCompleted
+                    ? AppColors.sage.withValues(alpha: 0.22)
+                    : theme.border.withValues(alpha: 0.6),
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
+            child: widget.isCompleted
+                ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        t.coupleChallengeSharedReward,
-                        style: TextStyle(
-                          color: theme.textSecondary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        t.coupleChallengeSharedRewardBody(
-                          widget.challenge.coinReward,
-                        ),
-                        style: TextStyle(
-                          color: theme.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          height: 1.3,
-                        ),
-                      ),
+                      _rewardText(theme, t),
+                      const SizedBox(height: 12),
+                      _completedState(theme, t),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(child: _rewardText(theme, t)),
+                      const SizedBox(width: 12),
+                      _completeButton(t),
                     ],
                   ),
-                ),
-                const SizedBox(width: 12),
-                FilledButton(
-                  onPressed: widget.onComplete,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.94),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 13,
-                    ),
-                    minimumSize: const Size(0, 44),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  child: Text(
-                    t.coupleChallengeWeDidIt,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 12.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ],
       ),
@@ -357,6 +335,98 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
     return paragraphs.first;
   }
 
+  Widget _rewardText(AppThemeColors theme, AppLocalizations t) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          t.coupleChallengeSharedReward,
+          style: TextStyle(
+            color: theme.textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          t.coupleChallengeSharedRewardBody(widget.challenge.coinReward),
+          style: TextStyle(
+            color: theme.textPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            height: 1.3,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _completedState(AppThemeColors theme, AppLocalizations t) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.surface.withValues(alpha: theme.isDarkMode ? 0.46 : 0.68),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.sage.withValues(alpha: 0.24)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: AppColors.sage.withValues(alpha: 0.14),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.check_rounded,
+              size: 17,
+              color: AppColors.sage,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              t.coupleChallengeDoneThisWeek,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.sage,
+                fontWeight: FontWeight.w900,
+                fontSize: 13,
+                height: 1.15,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _completeButton(AppLocalizations t) {
+    return FilledButton(
+      onPressed: widget.onComplete,
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.primary.withValues(alpha: 0.94),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        minimumSize: const Size(0, 44),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+      ),
+      child: Text(
+        t.coupleChallengeWeDidIt,
+        style: const TextStyle(
+          fontWeight: FontWeight.w900,
+          fontSize: 12.5,
+        ),
+      ),
+    );
+  }
+
   Widget _softPill({
     required IconData icon,
     required String label,
@@ -367,7 +437,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

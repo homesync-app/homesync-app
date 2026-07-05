@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
@@ -12,6 +15,8 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
+
+import 'task_creation_result.dart';
 
 class CreateTaskDialog extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>>? members;
@@ -250,10 +255,14 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       });
 
       if (!mounted) return;
-      HapticFeedback.mediumImpact();
+      AppHaptics.success();
       setState(() => _showSuccessState = true);
       await Future<void>.delayed(const Duration(milliseconds: 220));
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        Navigator.of(context).pop(
+          TaskCreationResult(title: title, category: _selectedCategory!),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -275,6 +284,15 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final media = MediaQuery.of(context);
+    final keyboardInset = media.viewInsets.bottom;
+    final availableHeight = media.size.height -
+        media.padding.top -
+        media.padding.bottom -
+        keyboardInset -
+        48;
+    final maxDialogHeight = availableHeight.clamp(320.0, 640.0);
     final categoriesAsync = ref.watch(categoriesProvider);
     final categories = categoriesAsync.maybeWhen(
       data: (list) => list,
@@ -285,416 +303,463 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         _selectedCategory ?? (categories.isNotEmpty ? categories.first.id : '');
 
     return Dialog(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 420, maxHeight: 640),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.16),
+      backgroundColor: theme.surface,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.modal),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: theme.surfaceContainer,
+            labelStyle: TextStyle(color: theme.textSecondary),
+            hintStyle: TextStyle(color: theme.textMuted),
+            prefixIconColor: theme.textSecondary,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide(color: theme.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: const BorderSide(color: AppColors.primary),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide(color: theme.border),
+            ),
+          ),
+        ),
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: 420,
+            maxHeight: maxDialogHeight,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 18),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(AppRadii.md),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.16),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.add_task_rounded,
+                          color: AppColors.primary,
                         ),
                       ),
-                      child: const Icon(
-                        Icons.add_task_rounded,
-                        color: AppColors.primary,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)
+                                  .createTaskHeaderTitle,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            AppLocalizations.of(context).createTaskHeaderTitle,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
+                          _buildSectionHeader(
+                            AppLocalizations.of(context)
+                                .createTaskSectionDetailEyebrow,
+                            AppLocalizations.of(context)
+                                .createTaskSectionDetailTitle,
+                            AppLocalizations.of(context)
+                                .createTaskSectionDetailSubtitle,
+                          ),
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            controller: _titleController,
+                            decoration: InputDecoration(
+                              labelText: AppLocalizations.of(context)
+                                  .createTaskFieldTitleLabel,
+                              prefixIcon: const Icon(Icons.edit_note_rounded),
+                            ),
+                            validator: (value) {
+                              final title = value?.trim() ?? '';
+                              if (title.isEmpty) {
+                                return AppLocalizations.of(context)
+                                    .createTaskValidationTitleRequired;
+                              }
+                              if (title.length < 3) {
+                                return 'Usa al menos 3 caracteres';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _descriptionController,
+                            maxLines: 2,
+                            decoration: InputDecoration(
+                              labelText: AppLocalizations.of(context)
+                                  .createTaskFieldNotesLabel,
+                              hintText:
+                                  'ej: "usar el limpiapisos azul", "revisar el filtro tambien"',
+                              prefixIcon: const Padding(
+                                padding: EdgeInsets.only(bottom: AppSpacing.lg),
+                                child: Icon(Icons.notes_rounded),
+                              ),
+                              alignLabelWithHint: true,
                             ),
                           ),
+                          const SizedBox(height: 18),
+                          _buildSectionHeader(
+                            AppLocalizations.of(context)
+                                .createTaskSectionCategoryEyebrow,
+                            AppLocalizations.of(context)
+                                .createTaskSectionCategoryTitle,
+                            AppLocalizations.of(context)
+                                .createTaskSectionCategorySubtitle,
+                          ),
+                          const SizedBox(height: 10),
+                          categoriesAsync.when(
+                            data: (_) => SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppSpacing.xs,
+                              ),
+                              child: Row(
+                                children: categories.map((category) {
+                                  final isSelected =
+                                      currentCategoryId == category.id;
+                                  final color =
+                                      AppColors.fromHex(category.color);
+                                  return GestureDetector(
+                                    onTap: () => setState(
+                                      () => _selectedCategory = category.id,
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: AppSpacing.md,
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            width: 56,
+                                            height: 56,
+                                            decoration: BoxDecoration(
+                                              color: isSelected
+                                                  ? color.withValues(
+                                                      alpha: 0.15,
+                                                    )
+                                                  : theme.surfaceContainer,
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: isSelected
+                                                    ? color
+                                                    : theme.border,
+                                                width: isSelected ? 2.5 : 1.5,
+                                              ),
+                                              boxShadow: isSelected
+                                                  ? [
+                                                      BoxShadow(
+                                                        color: color.withValues(
+                                                          alpha: 0.2,
+                                                        ),
+                                                        blurRadius: 10,
+                                                        offset: const Offset(
+                                                          0,
+                                                          4,
+                                                        ),
+                                                      ),
+                                                    ]
+                                                  : [],
+                                            ),
+                                            child: Center(
+                                              child: Icon(
+                                                CategoryMapping
+                                                    .getCategoryMaterialIcon(
+                                                  category.id,
+                                                ),
+                                                color: isSelected
+                                                    ? color
+                                                    : color.withValues(
+                                                        alpha: 0.8,
+                                                      ),
+                                                size: 24,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            localizedTaskCategoryName(
+                                              AppLocalizations.of(context),
+                                              category,
+                                            ),
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: isSelected
+                                                  ? FontWeight.w800
+                                                  : FontWeight.w600,
+                                              color: isSelected
+                                                  ? color
+                                                  : theme.textSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                            loading: () => const Padding(
+                              padding:
+                                  EdgeInsets.symmetric(vertical: AppSpacing.md),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                            error: (_, __) => const SizedBox(),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildSectionHeader(
+                            AppLocalizations.of(context)
+                                .createTaskSectionFrequencyEyebrow,
+                            AppLocalizations.of(context)
+                                .createTaskSectionFrequencyTitle,
+                            AppLocalizations.of(context)
+                                .createTaskSectionFrequencySubtitle,
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _buildFrequencyChip(
+                                AppLocalizations.of(context)
+                                    .createTaskRecurrenceNone,
+                                null,
+                              ),
+                              ..._recurrenceOptions.map(
+                                (recurrence) => _buildFrequencyChip(
+                                  _recurrenceName(
+                                    AppLocalizations.of(context),
+                                    recurrence['id']!,
+                                  ),
+                                  recurrence['id'],
+                                ),
+                              ),
+                              _buildFrequencyChip(
+                                AppLocalizations.of(context)
+                                    .createTaskRecurrenceCustom,
+                                'custom',
+                              ),
+                            ],
+                          ),
+                          if (_selectedRecurrence == 'custom') ...[
+                            const SizedBox(height: 16),
+                            _buildCustomRecurrenceMenu(),
+                          ],
+                          const SizedBox(height: 20),
+                          _buildSectionHeader(
+                            AppLocalizations.of(context)
+                                .createTaskSectionAssigneeEyebrow,
+                            AppLocalizations.of(context)
+                                .createTaskSectionAssigneeTitle,
+                            AppLocalizations.of(context)
+                                .createTaskSectionAssigneeSubtitle,
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _buildAssigneeChip(
+                                AppLocalizations.of(context)
+                                    .createTaskAssigneeAnyone,
+                                null,
+                                'C',
+                              ),
+                              ..._members.map((member) {
+                                final user =
+                                    member['users'] as Map<String, dynamic>?;
+                                final name = user?['full_name'] ??
+                                    user?['email'] ??
+                                    AppLocalizations.of(context)
+                                        .settingsHouseholdMemberFallbackName;
+                                final safeName = name.toString().trim();
+                                final initial = safeName.isNotEmpty
+                                    ? safeName.substring(0, 1).toUpperCase()
+                                    : '?';
+                                return _buildAssigneeChip(
+                                  name,
+                                  member['user_id'] as String,
+                                  initial,
+                                );
+                              }),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          _buildRotationSection(),
+                          _buildSectionHeader(
+                            AppLocalizations.of(context)
+                                .createTaskSectionValueEyebrow,
+                            AppLocalizations.of(context)
+                                .createTaskSectionValueTitle,
+                            AppLocalizations.of(context)
+                                .createTaskSectionValueSubtitle,
+                          ),
+                          const SizedBox(height: 10),
+                          _buildDifficultySection(),
+                          const SizedBox(height: 16),
+                          _buildRewardsSection(),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSectionHeader(
-                          AppLocalizations.of(context)
-                              .createTaskSectionDetailEyebrow,
-                          AppLocalizations.of(context)
-                              .createTaskSectionDetailTitle,
-                          AppLocalizations.of(context)
-                              .createTaskSectionDetailSubtitle,
-                        ),
-                        const SizedBox(height: 14),
-                        TextFormField(
-                          controller: _titleController,
-                          decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)
-                                .createTaskFieldTitleLabel,
-                            prefixIcon: const Icon(Icons.edit_note_rounded),
-                          ),
-                          validator: (value) {
-                            final title = value?.trim() ?? '';
-                            if (title.isEmpty) {
-                              return AppLocalizations.of(context)
-                                  .createTaskValidationTitleRequired;
-                            }
-                            if (title.length < 3) {
-                              return 'Usa al menos 3 caracteres';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _descriptionController,
-                          maxLines: 2,
-                          decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)
-                                .createTaskFieldNotesLabel,
-                            hintText:
-                                'ej: "usar el limpiapisos azul", "revisar el filtro tambien"',
-                            prefixIcon: const Padding(
-                              padding: EdgeInsets.only(bottom: 24),
-                              child: Icon(Icons.notes_rounded),
-                            ),
-                            alignLabelWithHint: true,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        _buildSectionHeader(
-                          AppLocalizations.of(context)
-                              .createTaskSectionCategoryEyebrow,
-                          AppLocalizations.of(context)
-                              .createTaskSectionCategoryTitle,
-                          AppLocalizations.of(context)
-                              .createTaskSectionCategorySubtitle,
-                        ),
-                        const SizedBox(height: 10),
-                        categoriesAsync.when(
-                          data: (_) => SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Row(
-                              children: categories.map((category) {
-                                final isSelected =
-                                    currentCategoryId == category.id;
-                                final color = AppColors.fromHex(category.color);
-                                return GestureDetector(
-                                  onTap: () => setState(
-                                    () => _selectedCategory = category.id,
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 16),
-                                    child: Column(
-                                      children: [
-                                        Container(
-                                          width: 56,
-                                          height: 56,
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? color.withValues(alpha: 0.15)
-                                                : const Color(0xFFF8FAFC),
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: isSelected
-                                                  ? color
-                                                  : const Color(0xFFF1F5F9),
-                                              width: isSelected ? 2.5 : 1.5,
-                                            ),
-                                            boxShadow: isSelected
-                                                ? [
-                                                    BoxShadow(
-                                                      color: color.withValues(
-                                                        alpha: 0.2,
-                                                      ),
-                                                      blurRadius: 10,
-                                                      offset:
-                                                          const Offset(0, 4),
-                                                    ),
-                                                  ]
-                                                : [],
-                                          ),
-                                          child: Center(
-                                            child: Icon(
-                                              CategoryMapping
-                                                  .getCategoryMaterialIcon(
-                                                category.id,
-                                              ),
-                                              color: isSelected
-                                                  ? color
-                                                  : color.withValues(
-                                                      alpha: 0.8,
-                                                    ),
-                                              size: 24,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          localizedTaskCategoryName(
-                                            AppLocalizations.of(context),
-                                            category,
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: isSelected
-                                                ? FontWeight.w800
-                                                : FontWeight.w600,
-                                            color: isSelected
-                                                ? color
-                                                : AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                          loading: () => const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                color: AppColors.primary,
-                                strokeWidth: 2,
-                              ),
-                            ),
-                          ),
-                          error: (_, __) => const SizedBox(),
-                        ),
-                        const SizedBox(height: 20),
-                        _buildSectionHeader(
-                          AppLocalizations.of(context)
-                              .createTaskSectionFrequencyEyebrow,
-                          AppLocalizations.of(context)
-                              .createTaskSectionFrequencyTitle,
-                          AppLocalizations.of(context)
-                              .createTaskSectionFrequencySubtitle,
-                        ),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _buildFrequencyChip(
-                              AppLocalizations.of(context)
-                                  .createTaskRecurrenceNone,
-                              null,
-                            ),
-                            ..._recurrenceOptions.map(
-                              (recurrence) => _buildFrequencyChip(
-                                _recurrenceName(
-                                  AppLocalizations.of(context),
-                                  recurrence['id']!,
-                                ),
-                                recurrence['id'],
-                              ),
-                            ),
-                            _buildFrequencyChip(
-                              AppLocalizations.of(context)
-                                  .createTaskRecurrenceCustom,
-                              'custom',
-                            ),
-                          ],
-                        ),
-                        if (_selectedRecurrence == 'custom') ...[
-                          const SizedBox(height: 16),
-                          _buildCustomRecurrenceMenu(),
-                        ],
-                        const SizedBox(height: 20),
-                        _buildSectionHeader(
-                          AppLocalizations.of(context)
-                              .createTaskSectionAssigneeEyebrow,
-                          AppLocalizations.of(context)
-                              .createTaskSectionAssigneeTitle,
-                          AppLocalizations.of(context)
-                              .createTaskSectionAssigneeSubtitle,
-                        ),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _buildAssigneeChip(
-                              AppLocalizations.of(context)
-                                  .createTaskAssigneeAnyone,
-                              null,
-                              'C',
-                            ),
-                            ..._members.map((member) {
-                              final user =
-                                  member['users'] as Map<String, dynamic>?;
-                              final name = user?['full_name'] ??
-                                  user?['email'] ??
-                                  AppLocalizations.of(context)
-                                      .settingsHouseholdMemberFallbackName;
-                              final safeName = name.toString().trim();
-                              final initial = safeName.isNotEmpty
-                                  ? safeName.substring(0, 1).toUpperCase()
-                                  : '?';
-                              return _buildAssigneeChip(
-                                name,
-                                member['user_id'] as String,
-                                initial,
-                              );
-                            }),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        _buildRotationSection(),
-                        _buildSectionHeader(
-                          AppLocalizations.of(context)
-                              .createTaskSectionValueEyebrow,
-                          AppLocalizations.of(context)
-                              .createTaskSectionValueTitle,
-                          AppLocalizations.of(context)
-                              .createTaskSectionValueSubtitle,
-                        ),
-                        const SizedBox(height: 10),
-                        _buildDifficultySection(),
-                        const SizedBox(height: 16),
-                        _buildRewardsSection(),
-                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed:
-                            _isLoading ? null : () => Navigator.pop(context),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed:
+                              _isLoading ? null : () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.md,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadii.lg),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          AppLocalizations.of(context).commonCancel,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w700,
+                          child: Text(
+                            AppLocalizations.of(context).commonCancel,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.14),
-                              blurRadius: 18,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: AnimatedPress(
-                          scale: _isLoading ? 1 : 0.97,
-                          onTap: _isLoading ? null : _handleSubmit,
-                          child: ElevatedButton(
-                            onPressed: null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.textPrimary,
-                              disabledBackgroundColor: AppColors.textPrimary,
-                              disabledForegroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(AppRadii.lg),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.14),
+                                blurRadius: 18,
+                                offset: const Offset(0, 8),
                               ),
-                              elevation: 0,
-                            ),
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 220),
-                              switchInCurve: Curves.easeOutBack,
-                              switchOutCurve: Curves.easeInCubic,
-                              transitionBuilder: (child, animation) {
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: ScaleTransition(
-                                    scale: animation,
-                                    child: child,
-                                  ),
-                                );
-                              },
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      key: ValueKey('loading'),
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : _showSuccessState
-                                      ? Row(
-                                          key: const ValueKey('success'),
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(
-                                              Icons.check_circle_rounded,
-                                              color: Colors.white,
-                                              size: 20,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              AppLocalizations.of(context)
-                                                  .createTaskSnackCreated,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w800,
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      : Text(
-                                          key: const ValueKey('idle'),
-                                          AppLocalizations.of(context)
-                                              .createTaskCreateButton,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                          ),
+                            ],
+                          ),
+                          child: AnimatedPress(
+                            scale: _isLoading ? 1 : 0.97,
+                            onTap: _isLoading ? null : _handleSubmit,
+                            child: ElevatedButton(
+                              onPressed: null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.textPrimary,
+                                disabledBackgroundColor: AppColors.textPrimary,
+                                disabledForegroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.md,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadii.lg),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 220),
+                                switchInCurve: Curves.easeOutBack,
+                                switchOutCurve: Curves.easeInCubic,
+                                transitionBuilder: (child, animation) {
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: ScaleTransition(
+                                      scale: animation,
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        key: ValueKey('loading'),
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
                                         ),
+                                      )
+                                    : _showSuccessState
+                                        ? Row(
+                                            key: const ValueKey('success'),
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.check_circle_rounded,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                AppLocalizations.of(context)
+                                                    .createTaskSnackCreated,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        : Text(
+                                            key: const ValueKey('idle'),
+                                            AppLocalizations.of(context)
+                                                .createTaskCreateButton,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -703,6 +768,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   }
 
   Widget _buildSectionHeader(String eyebrow, String title, String subtitle) {
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -718,10 +784,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         const SizedBox(height: 6),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w900,
-            color: AppColors.textPrimary,
+            color: theme.textPrimary,
           ),
         ),
       ],
@@ -729,6 +795,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   }
 
   Widget _buildFrequencyChip(String label, String? value) {
+    final theme = context.theme;
     final isSelected = _selectedRecurrence == value;
     return GestureDetector(
       onTap: () => setState(() {
@@ -741,12 +808,15 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       }),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
+        ),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.accentGold.withValues(alpha: 0.15)
-              : AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(20),
+              : theme.surfaceContainer,
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           border: Border.all(
             color: isSelected ? AppColors.accentGold : Colors.transparent,
             width: 1.5,
@@ -756,7 +826,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           label,
           style: TextStyle(
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            color: isSelected ? AppColors.accentGold : AppColors.textSecondary,
+            color: isSelected ? AppColors.accentGold : theme.textSecondary,
           ),
         ),
       ),
@@ -764,12 +834,13 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   }
 
   Widget _buildCustomRecurrenceMenu() {
+    final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        color: theme.surfaceContainer.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(color: theme.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -836,6 +907,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
 
   Widget _buildWeekdaySelector() {
     final t = AppLocalizations.of(context);
+    final theme = context.theme;
     final days = [
       t.createTaskWeekdayMonday,
       t.createTaskWeekdayTuesday,
@@ -867,10 +939,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primary : Colors.white,
+              color: isSelected ? AppColors.primary : theme.surfaceContainer,
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? AppColors.primary : AppColors.border,
+                color: isSelected ? AppColors.primary : theme.border,
                 width: 1,
               ),
               boxShadow: isSelected
@@ -888,7 +960,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
               days[index],
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : AppColors.textSecondary,
+                color: isSelected ? Colors.white : theme.textSecondary,
               ),
             ),
           ),
@@ -899,30 +971,31 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
 
   Widget _buildIntervalSelector() {
     final t = AppLocalizations.of(context);
+    final theme = context.theme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
           t.createTaskCustomRepeatEvery,
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: theme.textSecondary),
         ),
         const SizedBox(width: 12),
         Container(
           height: 40,
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
+            color: theme.surfaceContainer,
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+            border: Border.all(color: theme.border),
           ),
           child: Row(
             children: [
               IconButton(
                 tooltip: t.createTaskCustomDecreaseTooltip,
                 padding: EdgeInsets.zero,
-                icon: const Icon(
+                icon: Icon(
                   Icons.remove,
                   size: 20,
-                  color: AppColors.textSecondary,
+                  color: theme.textSecondary,
                 ),
                 onPressed: () {
                   if (_recurrenceInterval > 1) {
@@ -935,7 +1008,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                 width: 30,
                 child: Text(
                   _recurrenceInterval.toString(),
-                  style: const TextStyle(
+                  style: TextStyle(
+                    color: theme.textPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -944,10 +1018,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
               IconButton(
                 tooltip: t.createTaskCustomIncreaseTooltip,
                 padding: EdgeInsets.zero,
-                icon: const Icon(
+                icon: Icon(
                   Icons.add,
                   size: 20,
-                  color: AppColors.textSecondary,
+                  color: theme.textSecondary,
                 ),
                 onPressed: () {
                   if (_recurrenceInterval < 365) {
@@ -959,9 +1033,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           ),
         ),
         const SizedBox(width: 12),
-        const Text(
+        Text(
           'dias',
-          style: TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: theme.textSecondary),
         ),
       ],
     );
@@ -969,11 +1043,12 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
 
   Widget _buildMonthDaySelector() {
     final t = AppLocalizations.of(context);
+    final theme = context.theme;
     return Column(
       children: [
         Text(
           t.createTaskCustomMonthDaysHelp,
-          style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+          style: TextStyle(fontSize: 12, color: theme.textMuted),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -998,11 +1073,12 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.accentGreen : Colors.white,
-                  borderRadius: BorderRadius.circular(8),
+                  color: isSelected
+                      ? AppColors.accentGreen
+                      : theme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(AppRadii.xs),
                   border: Border.all(
-                    color:
-                        isSelected ? AppColors.accentGreen : AppColors.border,
+                    color: isSelected ? AppColors.accentGreen : theme.border,
                   ),
                 ),
                 alignment: Alignment.center,
@@ -1011,7 +1087,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                    color: isSelected ? Colors.white : theme.textSecondary,
                   ),
                 ),
               ),
@@ -1028,6 +1104,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   /// SizedBox.shrink y la seccion no ocupa lugar.
   Widget _buildRotationSection() {
     if (_selectedRecurrence == null) return const SizedBox.shrink();
+    final theme = context.theme;
     final available = ref.watch(parentModeAvailableProvider);
     if (!available) return const SizedBox.shrink();
     if (_members.length < 2) return const SizedBox.shrink();
@@ -1065,17 +1142,17 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                 }
               }),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
                 decoration: BoxDecoration(
                   color: selected
                       ? AppColors.accentBlue.withValues(alpha: 0.12)
-                      : const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(32),
+                      : theme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(AppRadii.modal),
                   border: Border.all(
-                    color: selected
-                        ? AppColors.accentBlue
-                        : const Color(0xFFF1F5F9),
+                    color: selected ? AppColors.accentBlue : theme.border,
                     width: 1.5,
                   ),
                 ),
@@ -1102,7 +1179,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                       style: TextStyle(
                         color: selected
                             ? AppColors.accentBlue
-                            : AppColors.textSecondary,
+                            : theme.textSecondary,
                         fontWeight: FontWeight.w700,
                         fontSize: 12.5,
                       ),
@@ -1115,7 +1192,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         ),
         if (_rotationPool.length == 1)
           const Padding(
-            padding: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.only(top: AppSpacing.xs),
             child: Text(
               'Necesitas al menos 2 personas en el pool.',
               style: TextStyle(
@@ -1131,20 +1208,24 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   }
 
   Widget _buildAssigneeChip(String name, String? id, String initial) {
+    final theme = context.theme;
     final isSelected = _selectedMemberId == id;
     return GestureDetector(
       onTap: () => setState(() => _selectedMemberId = id),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.12)
-              : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(32),
+              : theme.surfaceContainer,
+          borderRadius: BorderRadius.circular(AppRadii.modal),
           border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFF1F5F9),
+            color: isSelected ? AppColors.primary : theme.border,
             width: 1.5,
           ),
           boxShadow: isSelected
@@ -1179,7 +1260,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                color: isSelected ? AppColors.primary : theme.textPrimary,
               ),
             ),
           ],
@@ -1189,6 +1270,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   }
 
   Widget _buildDifficultySection() {
+    final theme = context.theme;
     return Row(
       children: _difficulties.map((difficulty) {
         final isSelected = _selectedDifficulty == difficulty['id'];
@@ -1206,12 +1288,12 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
               margin: EdgeInsets.only(
                 right: difficulty != _difficulties.last ? 8 : 0,
               ),
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
               decoration: BoxDecoration(
                 color: isSelected
                     ? AppColors.primary.withValues(alpha: 0.1)
-                    : AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(12),
+                    : theme.surfaceContainer,
+                borderRadius: BorderRadius.circular(AppRadii.sm),
                 border: Border.all(
                   color: isSelected ? AppColors.primary : Colors.transparent,
                   width: 2,
@@ -1227,9 +1309,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                     style: TextStyle(
                       fontWeight:
                           isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.textPrimary,
+                      color: isSelected ? AppColors.primary : theme.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -1240,9 +1320,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         '${difficulty['xp']} XP / ${difficulty['coins']}',
                         style: TextStyle(
                           fontSize: 11,
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.textMuted,
+                          color:
+                              isSelected ? AppColors.primary : theme.textMuted,
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -1263,11 +1342,13 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   }
 
   Widget _buildRewardsSection() {
+    final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(16),
+        color: theme.surfaceContainer,
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(color: theme.border),
       ),
       child: Column(
         children: [
@@ -1276,7 +1357,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
             children: [
               Text(
                 AppLocalizations.of(context).createTaskRewardsTitle,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: theme.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               GestureDetector(
                 onTap: () => setState(() {
@@ -1292,9 +1376,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                           ? Icons.check_box
                           : Icons.check_box_outline_blank,
                       size: 18,
-                      color: _customRewards
-                          ? AppColors.primary
-                          : AppColors.textMuted,
+                      color:
+                          _customRewards ? AppColors.primary : theme.textMuted,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -1303,7 +1386,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         fontSize: 12,
                         color: _customRewards
                             ? AppColors.primary
-                            : AppColors.textMuted,
+                            : theme.textMuted,
                       ),
                     ),
                   ],
@@ -1326,13 +1409,13 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                       color: AppColors.accent,
                       size: 20,
                     ),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.sm,
+                    ),
                   ),
                   style: TextStyle(
-                    color: _customRewards
-                        ? AppColors.textPrimary
-                        : AppColors.textMuted,
+                    color: _customRewards ? theme.textPrimary : theme.textMuted,
                   ),
                   validator: (value) {
                     if (!_customRewards) return null;
@@ -1361,14 +1444,12 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                       size: 20,
                     ),
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.sm,
                     ),
                   ),
                   style: TextStyle(
-                    color: _customRewards
-                        ? AppColors.textPrimary
-                        : AppColors.textMuted,
+                    color: _customRewards ? theme.textPrimary : theme.textMuted,
                   ),
                   validator: (value) {
                     if (!_customRewards) return null;

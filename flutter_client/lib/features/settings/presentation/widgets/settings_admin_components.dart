@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 
@@ -32,7 +33,7 @@ class SettingsAdminTestingCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(
           color: AppColors.primary.withValues(alpha: 0.22),
           width: 1.5,
@@ -56,7 +57,7 @@ class SettingsAdminTestingCard extends StatelessWidget {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                   child: const Icon(
                     Icons.admin_panel_settings_rounded,
@@ -262,7 +263,9 @@ Future<Map<String, String?>?> showSettingsAdminAddDummyMemberDialog(
     builder: (dialogContext) => StatefulBuilder(
       builder: (dialogContext, setDialogState) => AlertDialog(
         backgroundColor: context.theme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+        ),
         title: const Text(
           'Agregar miembro dummy',
           style: TextStyle(fontWeight: FontWeight.w900),
@@ -293,7 +296,7 @@ Future<Map<String, String?>?> showSettingsAdminAddDummyMemberDialog(
                 controller: avatarCtrl,
                 decoration: const InputDecoration(
                   labelText: 'Avatar emoji opcional',
-                  hintText: 'Ej: ðŸ˜„',
+                  hintText: 'Ej: 😄',
                 ),
               ),
               const SizedBox(height: 16),

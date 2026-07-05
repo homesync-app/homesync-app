@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 
 typedef AppCompletionFeedbackBuilder = Widget Function(
   BuildContext context,
@@ -9,7 +10,9 @@ typedef AppCompletionFeedbackBuilder = Widget Function(
   Color completionColor,
 );
 
-class AppCompletionFeedback extends StatelessWidget {
+/// A physics-based feedback wrapper for task completions.
+/// Uses a SpringSimulation to provide a tactile, premium feel (2026 standard).
+class AppCompletionFeedback extends StatefulWidget {
   final bool isCompleting;
   final Color accentColor;
   final Color surfaceColor;
@@ -40,7 +43,7 @@ class AppCompletionFeedback extends StatelessWidget {
     this.margin,
     this.padding,
     this.borderWidth = 1,
-    this.popScale = 0.018,
+    this.popScale = 0.022, // Slightly increased for physics impact
     this.completionSurfaceAlpha = 0.085,
     this.completionBorderAlpha = 0.38,
     this.shadowBaseAlpha = 0.035,
@@ -48,16 +51,6 @@ class AppCompletionFeedback extends StatelessWidget {
     this.shadowBaseBlur = 18,
     this.shadowPulseBlur = 12,
   });
-
-  static Duration duration(BuildContext context, bool isCompleting) {
-    final media = MediaQuery.maybeOf(context);
-    if (media?.accessibleNavigation ?? false) return Duration.zero;
-    return Duration(milliseconds: isCompleting ? 520 : 220);
-  }
-
-  static Curve curve(bool isCompleting) {
-    return isCompleting ? Curves.easeOutCubic : Curves.easeInOutCubic;
-  }
 
   static Color completionColor(Color accentColor) {
     return Color.alphaBlend(
@@ -67,51 +60,107 @@ class AppCompletionFeedback extends StatelessWidget {
   }
 
   @override
+  State<AppCompletionFeedback> createState() => _AppCompletionFeedbackState();
+}
+
+class _AppCompletionFeedbackState extends State<AppCompletionFeedback>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    if (widget.isCompleting) {
+      _runSpring(true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(AppCompletionFeedback oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isCompleting != oldWidget.isCompleting) {
+      _runSpring(widget.isCompleting);
+    }
+  }
+
+  void _runSpring(bool forward) {
+    // Spring physics: 2026 standard for high-end micro-interactions
+    const spring = SpringDescription(
+      mass: 0.8,
+      stiffness: 160,
+      damping: 14,
+    );
+
+    final simulation = SpringSimulation(
+      spring,
+      _controller.value,
+      forward ? 1.0 : 0.0,
+      0,
+    );
+
+    _controller.animateWith(simulation);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: isCompleting ? 1 : 0),
-      duration: duration(context, isCompleting),
-      curve: curve(isCompleting),
-      builder: (context, progress, child) {
+    final color = AppCompletionFeedback.completionColor(widget.accentColor);
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final progress = _controller.value;
+        // Pulse is derived from the spring's overshoot potential
+        // We use a sine of progress to create a subtle expansion-contraction
         final pulse = math.sin(progress * math.pi);
-        final color = completionColor(accentColor);
 
         return Transform.scale(
-          scale: 1 + (pulse * popScale),
+          scale: 1 + (pulse * widget.popScale),
           child: Container(
-            margin: margin,
-            padding: padding,
+            margin: widget.margin,
+            padding: widget.padding,
             decoration: BoxDecoration(
               color: Color.lerp(
-                surfaceColor,
+                widget.surfaceColor,
                 Color.alphaBlend(
-                  color.withValues(alpha: completionSurfaceAlpha),
-                  surfaceColor,
+                  color.withValues(alpha: widget.completionSurfaceAlpha),
+                  widget.surfaceColor,
                 ),
                 progress,
               ),
-              borderRadius: borderRadius,
+              borderRadius: widget.borderRadius,
               border: Border.all(
                 color: Color.lerp(
-                  borderColor,
-                  color.withValues(alpha: completionBorderAlpha),
+                  widget.borderColor,
+                  color.withValues(alpha: widget.completionBorderAlpha),
                   progress,
                 )!,
-                width: borderWidth,
+                width: widget.borderWidth,
               ),
               boxShadow: [
-                ...boxShadow,
-                if (progress > 0)
+                ...widget.boxShadow,
+                if (progress > 0.01)
                   BoxShadow(
                     color: color.withValues(
-                      alpha: shadowBaseAlpha + (pulse * shadowPulseAlpha),
+                      alpha: widget.shadowBaseAlpha +
+                          (pulse * widget.shadowPulseAlpha),
                     ),
-                    blurRadius: shadowBaseBlur + (pulse * shadowPulseBlur),
-                    offset: Offset(0, 8 + (pulse * 3)),
+                    blurRadius:
+                        widget.shadowBaseBlur + (pulse * widget.shadowPulseBlur),
+                    offset: Offset(0, 4 + (pulse * 4)),
                   ),
               ],
             ),
-            child: builder(context, progress, pulse, color),
+            child: widget.builder(context, progress, pulse, color),
           ),
         );
       },

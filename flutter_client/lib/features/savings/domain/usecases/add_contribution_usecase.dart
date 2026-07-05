@@ -12,6 +12,8 @@ class AddContributionUseCase {
     required String userId,
     required double amount,
     String? note,
+    String splitType = 'personal',
+    List<Map<String, dynamic>> participants = const [],
   }) {
     if (goalId.isEmpty) {
       return Future.value(const Left(ValidationFailure('goalId is required')));
@@ -30,6 +32,8 @@ class AddContributionUseCase {
       userId: userId,
       amount: amount,
       note: note,
+      splitType: splitType,
+      participants: participants,
     );
   }
 }

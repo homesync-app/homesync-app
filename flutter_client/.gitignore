@@ -53,3 +53,15 @@ app.*.map.json
 *.keystore
 *.jks
 *.old
+
+# Local analyzer/run output dumps — never commit
+analysis*.txt
+analysis*.log
+analyze.log
+flutter_[0-9]*.log
+flutter_web*.log
+flutter_web*.err.log
+build_error.log
+l10n_out.txt
+untranslated_messages.txt
+nul

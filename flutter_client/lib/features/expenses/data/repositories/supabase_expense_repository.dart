@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/errors/rpc_envelope.dart';
 import 'package:homesync_client/core/offline/offline_action.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -371,27 +372,24 @@ class SupabaseExpenseRepository
     required String fromUserId,
     required String toUserId,
     required double amount,
+    required String requestId,
   }) async {
+    final params = <String, dynamic>{
+      'p_request_id': requestId,
+      'p_household_id': householdId,
+      'p_from_user_id': fromUserId,
+      'p_to_user_id': toUserId,
+      'p_amount': amount,
+    };
     return executeWithHandling(
       () async {
-        await _client.rpc(
-          'save_expense_v4',
-          params: {
-            'p_id': null,
-            'p_household_id': householdId,
-            'p_title': 'Liquidación de balance',
-            'p_amount': amount,
-            'p_category': 'other',
-            'p_paid_by': fromUserId,
-            'p_paid_at': DateTime.now().toIso8601String(),
-            'p_description': 'Saldar balance acumulado',
-            'p_split_type': 'fixed',
-            'p_is_shared': true,
-            'p_type': 'settlement',
-            'p_splits': [
-              {'user_id': toUserId, 'amount': amount},
-            ],
-          },
+        final response = await _client.rpc('settle_debt_v1', params: params);
+        // settle_debt_v1 returns a jsonb envelope instead of raising on logical
+        // errors (e.g. "amount must be greater than 0"). Without this check a
+        // rejected settlement would be reported to the UI as success.
+        assertRpcEnvelopeSuccess(
+          response,
+          fallbackMessage: 'No se pudo registrar el equilibrio.',
         );
       },
       context: 'SupabaseExpenseRepository.settleDebt',
@@ -400,23 +398,8 @@ class SupabaseExpenseRepository
         await _queueAction(
           OfflineAction(
             type: OfflineActionType.rpc,
-            target: 'save_expense_v4',
-            params: {
-              'p_id': null,
-              'p_household_id': householdId,
-              'p_title': 'Liquidación de balance',
-              'p_amount': amount,
-              'p_category': 'other',
-              'p_paid_by': fromUserId,
-              'p_paid_at': DateTime.now().toIso8601String(),
-              'p_description': 'Saldar balance acumulado',
-              'p_split_type': 'fixed',
-              'p_is_shared': true,
-              'p_type': 'settlement',
-              'p_splits': [
-                {'user_id': toUserId, 'amount': amount},
-              ],
-            },
+            target: 'settle_debt_v1',
+            params: params,
           ),
         );
       },
@@ -429,11 +412,18 @@ class SupabaseExpenseRepository
     String householdId,
   ) async {
     final sw = Stopwatch()..start();
+    // Month bounds travel from the client so "this month" matches the user's
+    // local calendar (the server would otherwise cut at UTC midnight).
+    final now = DateTime.now();
+    final monthStart = DateTime(now.year, now.month);
+    final monthEnd = DateTime(now.year, now.month + 1);
     final response = await _client.rpc(
       'get_personal_finance_summary',
       params: {
         'p_user_id': userId,
         'p_household_id': householdId,
+        'p_month_start': monthStart.toUtc().toIso8601String(),
+        'p_month_end': monthEnd.toUtc().toIso8601String(),
       },
     );
     final summary = Map<String, dynamic>.from(response);

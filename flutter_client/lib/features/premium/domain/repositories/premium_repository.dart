@@ -1,9 +1,9 @@
-import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 abstract class PremiumRepository {
   Future<bool> getPremiumStatus();
-  Future<List<ProductDetails>> getProducts();
-  Future<void> buyProduct(ProductDetails product);
-  Future<void> restorePurchases();
+  Future<List<Package>> getProducts({required String offeringId});
+  Future<bool> buyProduct(Package package);
+  Future<bool> restorePurchases();
   Future<void> togglePremiumMock();
 }

@@ -1,23 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
 import '../../../household/data/repositories/supabase_household_repository.dart';
 import '../../data/repositories/supabase_task_repository.dart';
+import 'add_task_options_sheet.dart';
+import 'task_creation_result.dart';
 
 class CompleteTaskSheet extends ConsumerStatefulWidget {
   final VoidCallback onTasksCompleted;
@@ -31,7 +39,7 @@ class CompleteTaskSheet extends ConsumerStatefulWidget {
     BuildContext context, {
     VoidCallback? onTasksCompleted,
   }) {
-    return showModalBottomSheet(
+    return AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -51,6 +59,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   final Set<String> _selectedCategories = {};
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _taskItemKeys = {};
 
   bool _isLoading = true;
   List<TaskModel> _allTasks = [];
@@ -72,6 +82,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -142,7 +153,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       return;
     }
 
-    if (!_isRightNow && _customDate.isAfter(DateTime.now())) {
+    if (!_isRightNow && _customDateDay().isAfter(_today())) {
       AppSnackBar.show(
         context,
         message: t.completeTaskSnackFutureDate,
@@ -217,7 +228,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       }
 
       if (mounted) {
-        HapticFeedback.mediumImpact();
+        AppHaptics.success();
         Navigator.pop(context);
 
         final approvalCount = selectedMembersRequiringApproval.length;
@@ -273,14 +284,15 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       firstDate: DateTime.now().subtract(const Duration(days: 30)),
       lastDate: DateTime.now(),
       builder: (context, child) {
+        final theme = context.theme;
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.textPrimary,
-            ),
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+                  primary: AppColors.primary,
+                  onPrimary: Colors.white,
+                  surface: theme.surface,
+                  onSurface: theme.textPrimary,
+                ),
           ),
           child: child!,
         );
@@ -288,35 +300,98 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     );
 
     if (picked != null) {
-      if (!mounted) return;
-      final timePicked = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_customDate),
-        builder: (context, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: const ColorScheme.light(
-                primary: AppColors.primary,
-              ),
-            ),
-            child: child!,
-          );
-        },
-      );
+      setState(() {
+        _customDate = DateTime.utc(picked.year, picked.month, picked.day, 12);
+        _isRightNow = false;
+      });
+    }
+  }
 
-      if (timePicked != null) {
-        setState(() {
-          _customDate = DateTime(
-            picked.year,
-            picked.month,
-            picked.day,
-            timePicked.hour,
-            timePicked.minute,
-          );
-          _isRightNow = false;
-        });
+  DateTime _customDateDay() {
+    final local = _customDate.toLocal();
+    return DateTime(local.year, local.month, local.day);
+  }
+
+  DateTime _today() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  Future<void> _showAddTaskOptions() async {
+    AppHaptics.tap();
+    final existingTaskIds = _allTasks.map((task) => task.id).toSet();
+    final addedTasks = <TaskCreationResult>[];
+    final members = _members.map(MemberModel.fromMap).toList();
+    final result = await AddTaskOptionsSheet.show(
+      context,
+      members,
+      onTaskAdded: addedTasks.add,
+    );
+    if (result == true && mounted) {
+      _selectedTaskIds.clear();
+      await _loadData();
+      if (!mounted) return;
+      final addedTaskIds = _findAddedTaskIds(existingTaskIds, addedTasks);
+      if (addedTaskIds.isNotEmpty) {
+        setState(() => _selectedTaskIds.addAll(addedTaskIds));
+        _scrollToTask(addedTaskIds.first);
       }
     }
+  }
+
+  void _scrollToTask(String taskId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final keyContext = _taskItemKeys[taskId]?.currentContext;
+      if (keyContext != null) {
+        Scrollable.ensureVisible(
+          keyContext,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
+          alignment: 0.32,
+        );
+        return;
+      }
+
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
+
+  Set<String> _findAddedTaskIds(
+    Set<String> previousTaskIds,
+    List<TaskCreationResult> addedTasks,
+  ) {
+    if (addedTasks.isEmpty) return {};
+
+    final matchedIds = <String>{};
+    for (final addedTask in addedTasks) {
+      final title = addedTask.title.toLowerCase().trim();
+      final category = CategoryMapping.normaliseCategory(addedTask.category);
+
+      final matches = _allTasks.where((task) {
+        if (previousTaskIds.contains(task.id) || matchedIds.contains(task.id)) {
+          return false;
+        }
+        final sameTitle = task.title.toLowerCase().trim() == title;
+        final sameCategory =
+            CategoryMapping.normaliseCategory(task.category) == category;
+        return task.isActive && sameTitle && sameCategory;
+      }).toList();
+
+      if (matches.isNotEmpty) {
+        matches.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        matchedIds.add(matches.first.id);
+      }
+    }
+
+    return matchedIds;
   }
 
   @override
@@ -347,9 +422,16 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       children: [
         Align(
           alignment: Alignment.bottomCenter,
-          child: FractionallySizedBox(
-            heightFactor: 0.86,
-            child: _buildBody(tasksToShow, categories),
+          child: AnimatedPadding(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: FractionallySizedBox(
+              heightFactor: 0.86,
+              child: _buildBody(tasksToShow, categories),
+            ),
           ),
         ),
       ],
@@ -357,9 +439,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   }
 
   Widget _buildBody(List<TaskModel> tasks, List<CategoryModel> categories) {
+    final theme = context.theme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
         boxShadow: [
           BoxShadow(
@@ -371,7 +454,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       ),
       child: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+              child: AppLoader(),
             )
           : Column(
               children: [
@@ -380,13 +463,14 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                   width: 48,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
+                    color: theme.divider,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
                 const SizedBox(height: 22),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                   child: Column(
                     children: [
                       Row(
@@ -400,11 +484,11 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                           Text(
                             AppLocalizations.of(context)
                                 .completeTaskHeaderTitle,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w900,
                               letterSpacing: -0.5,
-                              color: Color(0xFF0F172A),
+                              color: theme.textPrimary,
                             ),
                           ),
                         ],
@@ -415,10 +499,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                         child: Text(
                           AppLocalizations.of(context)
                               .completeTaskHeaderSubtitle,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF64748B),
+                            color: theme.textSecondary,
                             height: 1.35,
                           ),
                         ),
@@ -429,8 +513,13 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 const SizedBox(height: 24),
                 Expanded(
                   child: ListView(
+                    controller: _scrollController,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: EdgeInsets.only(
-                      bottom: _selectedTaskIds.isEmpty || _isLoading ? 24 : 12,
+                      bottom: _selectedTaskIds.isEmpty || _isLoading
+                          ? AppSpacing.xxl
+                          : AppSpacing.sm,
                     ),
                     children: [
                       if (ref.watch(parentModeAvailableProvider)) ...[
@@ -457,9 +546,15 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                       _buildCategoryAndSearch(categories),
                       const SizedBox(height: 16),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
                         child: Column(
-                          children: _buildGroupedTasksInFull(tasks, categories),
+                          children: [
+                            ..._buildGroupedTasksInFull(tasks, categories),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildAddTaskPrompt(),
+                          ],
                         ),
                       ),
                     ],
@@ -468,7 +563,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 if (_selectedTaskIds.isNotEmpty && !_isLoading)
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.98),
+                      color: theme.surface.withValues(alpha: 0.98),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.05),
@@ -477,58 +572,60 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                         ),
                       ],
                     ),
-                    padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
-                    child: SafeArea(
-                      top: false,
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ||
-                                  _selectedTaskIds.isEmpty ||
-                                  _selectedMemberIds.isEmpty
-                              ? null
-                              : _submitCompletedTasks,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.textPrimary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            elevation: 0,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(22),
-                            ),
+                    padding: EdgeInsets.fromLTRB(
+                      24,
+                      18,
+                      24,
+                      20 + MediaQuery.viewPaddingOf(context).bottom,
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ||
+                                _selectedTaskIds.isEmpty ||
+                                _selectedMemberIds.isEmpty
+                            ? null
+                            : _submitCompletedTasks,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          elevation: 0,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(22),
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(
-                                      Icons.check_circle_rounded,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      _selectedTaskIds.length == 1
-                                          ? 'Completar 1 tarea'
-                                          : 'Completar ${_selectedTaskIds.length} tareas',
-                                      style: const TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: -0.4,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
                         ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.check_circle_rounded,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _selectedTaskIds.length == 1
+                                        ? 'Completar 1 tarea'
+                                        : 'Completar ${_selectedTaskIds.length} tareas',
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.4,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
                       ),
                     ),
                   ),
@@ -591,7 +688,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
           return GestureDetector(
             onTap: () {
-              HapticFeedback.selectionClick();
+              AppHaptics.selection();
               setState(() {
                 if (isSelected) {
                   _selectedMemberIds.remove(userId);
@@ -659,7 +756,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
   Widget _buildDateSelection() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xs,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -674,7 +774,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           Expanded(
             child: _buildDateOptionCard(
               title: !_isRightNow
-                  ? DateFormat('d/M HH:mm').format(_customDate)
+                  ? DateFormat('d/M').format(_customDate)
                   : AppLocalizations.of(context).completeTaskTimeBefore,
               icon: Icons.calendar_today_rounded,
               isSelected: !_isRightNow,
@@ -692,19 +792,23 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
+    final theme = context.theme;
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selection();
         onTap();
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.sm,
+          horizontal: AppSpacing.md,
+        ),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: isSelected ? AppColors.primary : theme.surface,
+          borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFEAEFF5),
+            color: isSelected ? AppColors.primary : theme.border,
             width: 1.5,
           ),
           boxShadow: isSelected
@@ -722,7 +826,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+              color: isSelected ? Colors.white : theme.textMuted,
               size: 18,
             ),
             const SizedBox(width: 10),
@@ -734,7 +838,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 style: TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 14,
-                  color: isSelected ? Colors.white : const Color(0xFF64748B),
+                  color: isSelected ? Colors.white : theme.textSecondary,
                 ),
               ),
             ),
@@ -745,19 +849,22 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   }
 
   Widget _buildCategoryAndSearch(List<CategoryModel> categories) {
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+              color: theme.surface,
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+              border: Border.all(color: theme.border, width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
+                  color: theme.shadowBase.withValues(
+                    alpha: theme.isDarkMode ? 0.18 : 0.02,
+                  ),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -766,16 +873,20 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
             child: TextField(
               controller: _searchController,
               onChanged: (val) => setState(() => _searchQuery = val),
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: theme.textPrimary,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
               decoration: InputDecoration(
                 hintText: AppLocalizations.of(context).completeTaskSearchHint,
                 hintStyle: TextStyle(
-                  color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
+                  color: theme.textMuted.withValues(alpha: 0.8),
                 ),
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.search_rounded,
                   size: 22,
-                  color: Color(0xFF64748B),
+                  color: theme.textSecondary,
                 ),
                 border: InputBorder.none,
                 contentPadding:
@@ -801,7 +912,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
               return ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 children: [
                   _buildCategoryChip(
                     null,
@@ -835,7 +946,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
     return GestureDetector(
       onTap: () {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         setState(() {
           if (normId == null) {
             _selectedCategories.clear();
@@ -892,7 +1003,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       return [
         Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Text(
               AppLocalizations.of(context).completeTaskNoTasksAvailable,
             ),
@@ -952,13 +1063,59 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     return widgets;
   }
 
+  Widget _buildAddTaskPrompt() {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Column(
+        children: [
+          Text(
+            t.completeTaskAddPromptTitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: theme.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _showAddTaskOptions,
+              icon: const Icon(Icons.playlist_add_rounded, size: 20),
+              label: Text(t.completeTaskAddPromptButton),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                side: BorderSide(
+                  color: AppColors.primary.withValues(alpha: 0.22),
+                  width: 1.4,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCategoryDivider({
     required IconData icon,
     required String title,
     required Color color,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 12),
+      padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.sm),
       child: Row(
         children: [
           Icon(icon, size: 16, color: color),
@@ -982,57 +1139,62 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   }
 
   Widget _buildTaskSelectionItem(TaskModel task, Color catColor) {
+    final theme = context.theme;
     final isSelected = _selectedTaskIds.contains(task.id);
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        _toggleTask(task);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.05)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFF1F5F9),
-            width: 1.5,
+    final itemKey = _taskItemKeys.putIfAbsent(task.id, GlobalKey.new);
+
+    return KeyedSubtree(
+      key: itemKey,
+      child: GestureDetector(
+        onTap: () {
+          AppHaptics.tap();
+          _toggleTask(task);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.05)
+                : theme.surface,
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : theme.border,
+              width: 1.5,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              isSelected
-                  ? Icons.check_circle_rounded
-                  : Icons.radio_button_unchecked_rounded,
-              color: isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                localizedTaskTitle(AppLocalizations.of(context), task),
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color:
-                      isSelected ? AppColors.primary : const Color(0xFF1E293B),
+          child: Row(
+            children: [
+              Icon(
+                isSelected
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                color: isSelected ? AppColors.primary : theme.textMuted,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  localizedTaskTitle(AppLocalizations.of(context), task),
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    color: isSelected ? AppColors.primary : theme.textPrimary,
+                  ),
                 ),
               ),
-            ),
-            if (task.xpReward > 0)
-              Text(
-                '${task.xpReward} XP',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textMuted,
+              if (task.xpReward > 0)
+                Text(
+                  '${task.xpReward} XP',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: theme.textMuted,
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

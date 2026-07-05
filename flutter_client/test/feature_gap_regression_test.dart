@@ -29,6 +29,9 @@ class FakeSettingsRepository implements SettingsRepository {
   Future<Map<String, dynamic>> resetUserAccount() async => {'success': true};
 
   @override
+  Future<Map<String, dynamic>> deleteAccount() async => {'success': true};
+
+  @override
   Future<void> updateAvatar(String avatarUrl) async {
     lastAvatarUrl = avatarUrl;
   }
@@ -118,6 +121,8 @@ class FakeSavingsRepository implements SavingsRepository {
     required String userId,
     required double amount,
     String? note,
+    String splitType = 'personal',
+    List<Map<String, dynamic>> participants = const [],
   }) async =>
       const Right(null);
 
@@ -128,7 +133,23 @@ class FakeSavingsRepository implements SavingsRepository {
     required double targetAmount,
     required String color,
     required String icon,
+    DateTime? targetDate,
   }) async =>
+      const Right(null);
+
+  @override
+  Future<Either<Failure, void>> updateGoal({
+    required String goalId,
+    String? title,
+    double? targetAmount,
+    String? color,
+    String? icon,
+    DateTime? targetDate,
+  }) async =>
+      const Right(null);
+
+  @override
+  Future<Either<Failure, void>> archiveGoal({required String goalId}) async =>
       const Right(null);
 
   @override
@@ -250,8 +271,9 @@ class FakeHouseholdRepository implements HouseholdRepository {
   @override
   Future<Either<Failure, void>> updateMemberType(
     String userId,
-    String type,
-  ) async =>
+    String type, {
+    String? displayRole,
+  }) async =>
       const Right(null);
 
   @override

@@ -35,15 +35,23 @@ class ShoppingIcon extends ConsumerWidget {
     Widget child;
     final key = productKey;
     if (key != null && key.isNotEmpty && manifest.containsKey(key)) {
-      // Ícono remoto (Supabase Storage), cacheado local tras la 1ª carga.
-      child = CachedNetworkImage(
-        imageUrl: shoppingIconUrl(key, manifest[key]!),
+      // Usamos `Image` (no `CachedNetworkImage`) con `CachedNetworkImageProvider`
+      // a propósito: si el ícono ya está en el ImageCache (memoria) — porque lo
+      // precargamos en el arranque/onboarding — se dibuja SINCRÓNICAMENTE en el
+      // primer frame (`wasSynchronouslyLoaded`), sin placeholder ni swap. Si por
+      // alguna razón aún no está, el frameBuilder muestra el emoji (la base) sólo
+      // mientras carga, en vez del flash de un ícono viejo.
+      child = Image(
+        image: CachedNetworkImageProvider(shoppingIconUrl(key, manifest[key]!)),
         width: size,
         height: size,
         fit: BoxFit.contain,
-        fadeInDuration: const Duration(milliseconds: 150),
-        placeholder: (_, __) => fallback,
-        errorWidget: (_, __, ___) => fallback,
+        gaplessPlayback: true,
+        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+          if (wasSynchronouslyLoaded || frame != null) return child;
+          return fallback;
+        },
+        errorBuilder: (_, __, ___) => fallback,
       );
     } else {
       child = fallback;
@@ -56,25 +64,20 @@ class ShoppingIcon extends ConsumerWidget {
   /// Fallback cuando no hay ícono remoto (o falla / offline en 1ª carga):
   /// asset bundled (si está permitido) -> ícono de categoría -> emoji.
   Widget _buildFallback(BuildContext context) {
-    final productVisual =
-        allowProductAsset ? ShoppingVisuals.product(productKey) : null;
+    // The bundled per-product PNGs (ShoppingVisuals.product) were the OLD
+    // flat-plate style, since replaced by the emoji-look remote icons in
+    // Storage. We intentionally no longer show them: on a fresh install the
+    // remote icons aren't cached yet, and using a stale bundled PNG as the
+    // placeholder caused the visible "old icon -> new icon" swap. The emoji is
+    // the base (and the remote icons imitate it), so the transient/offline
+    // visual is the emoji and the swap to the real icon is barely noticeable.
     final categoryIcon =
         allowCategoryFallback ? _categoryIcon(categoryId) : null;
-    final visual = productVisual ??
-        (categoryIcon == null && allowCategoryFallback
-            ? ShoppingVisuals.category(categoryId)
-            : null);
+    final visual = (categoryIcon == null && allowCategoryFallback)
+        ? ShoppingVisuals.category(categoryId)
+        : null;
     final emoji = fallbackEmoji ?? visual?.fallbackEmoji ?? '\u{1F6D2}';
 
-    if (productVisual != null) {
-      return Image.asset(
-        productVisual.assetPath,
-        width: size,
-        height: size,
-        fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => _EmojiFallback(emoji: emoji, size: size),
-      );
-    }
     if (categoryIcon != null) {
       return SizedBox.square(
         dimension: size,

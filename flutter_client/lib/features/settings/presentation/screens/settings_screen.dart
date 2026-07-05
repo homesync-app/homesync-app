@@ -1,43 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
-import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/locale_provider.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
-import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/theme_palettes.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/admin_testing_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
-import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
+import 'package:homesync_client/features/settings/domain/usecases/delete_account_usecase.dart';
 import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
+import 'package:homesync_client/features/settings/presentation/screens/household_settings_screen.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/feedback_sheet.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_account_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_admin_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_components.dart';
-import 'package:homesync_client/features/settings/presentation/widgets/settings_household_components.dart';
-import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
+import 'package:homesync_client/features/settings/presentation/widgets/settings_nav_components.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/admin_panel.dart';
+import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -55,20 +53,8 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  bool _isLoading = true;
-  bool _hasLoadedOnce = false;
-  String? _householdId;
-  String? _invitationCode;
-  List<Map<String, dynamic>> _members = [];
-  String? _householdName;
-  String? _householdType;
-  bool _tasksEnabled = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
+  // Flag transitorio para los overlays de operaciones admin / reset / borrado.
+  bool _isLoading = false;
 
   Future<void> _refreshAdminScenarioState() async {
     ref.invalidate(householdIdProvider);
@@ -83,219 +69,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ref.invalidate(recentActivityProvider);
     ref.invalidate(qaAdminRecentEventsProvider);
     await ref.read(householdMembersProvider.notifier).refresh();
-  }
-
-  Future<void> _loadData() async {
-    if (mounted) {
-      setState(() => _isLoading = true);
-    }
-
-    try {
-      final userId = ref.read(currentUserIdProvider);
-      if (userId == null || userId.isEmpty) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _hasLoadedOnce = true;
-          });
-        }
-        return;
-      }
-
-      final hId = await ref.read(householdIdProvider.future);
-      if (hId == null || hId.isEmpty) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _hasLoadedOnce = true;
-          });
-        }
-        return;
-      }
-      _householdId = hId;
-
-      final supabaseClient = ref.read(supabaseClientProvider);
-      final householdFuture = supabaseClient
-          .from('households')
-          .select('name, household_type, tasks_enabled')
-          .eq('id', hId)
-          .maybeSingle();
-      final invitationFuture = supabaseClient
-          .from('household_invitations')
-          .select('code')
-          .eq('household_id', hId)
-          .isFilter('used_at', null)
-          .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
-      final membersFuture =
-          ref.read(householdRepositoryProvider).getHouseholdMembersRaw();
-
-      final householdResult = await Future.wait<dynamic>([
-        householdFuture,
-        invitationFuture,
-        membersFuture,
-      ]);
-      final household = householdResult[0] as Map<String, dynamic>?;
-      final invitation = householdResult[1] as Map<String, dynamic>?;
-      final membersResult =
-          householdResult[2] as Either<Failure, List<Map<String, dynamic>>>;
-      final membersList = membersResult.match(
-        (failure) {
-          log.e('Error loading members: ${failure.message}');
-          return <Map<String, dynamic>>[];
-        },
-        (members) => members,
-      );
-
-      if (mounted) {
-        setState(() {
-          _householdName = household?['name'];
-          _householdType = household?['household_type'];
-          _tasksEnabled = household?['tasks_enabled'] as bool? ?? true;
-          _invitationCode = invitation?['code'];
-          _members = List<Map<String, dynamic>>.from(membersList);
-          _isLoading = false;
-          _hasLoadedOnce = true;
-        });
-      }
-    } catch (e) {
-      log.e('Error loading settings: $e', error: e);
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _hasLoadedOnce = true;
-        });
-      }
-    }
-  }
-
-  Future<void> _generateNewCode() async {
-    try {
-      final result =
-          await ref.read(householdRepositoryProvider).generateInvitationCode();
-
-      if (mounted) {
-        result.fold(
-          (failure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Error: ${failure.message}'),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          },
-          (code) {
-            setState(() => _invitationCode = code);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Codigo generado'),
-                backgroundColor: AppColors.success,
-              ),
-            );
-          },
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Error: ${e.toString().replaceFirst("Exception: ", "")}',
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
-
-  void _copyCode() {
-    final code = _invitationCode;
-    if (code == null) return;
-    Clipboard.setData(ClipboardData(text: code));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Codigo copiado al portapapeles'),
-        backgroundColor: AppColors.success,
-      ),
-    );
-  }
-
-  Future<void> _shareViaWhatsApp() async {
-    if (_invitationCode == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Genera un codigo primero')),
-      );
-      return;
-    }
-    String intro = '¡Hola! Te invito a unirte a nuestro hogar en HomeSync.';
-    if (_householdType == 'couple') {
-      intro =
-          '¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.';
-    } else if (_householdType == 'family') {
-      intro = '¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.';
-    } else if (_householdType == 'friends') {
-      intro =
-          '¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.';
-    }
-
-    final text =
-        '$intro\n\nDescarga la app e ingresa este código: *$_invitationCode*\n\n¡Organicemos nuestro hogar juntos!';
-    final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
-
-    try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url);
-      } else {
-        final webUrl =
-            Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
-        if (await canLaunchUrl(webUrl)) {
-          await launchUrl(webUrl, mode: LaunchMode.externalApplication);
-        } else {
-          _copyCode();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('No se pudo abrir WhatsApp. Codigo copiado.'),
-              ),
-            );
-          }
-        }
-      }
-    } catch (e) {
-      _copyCode();
-    }
-  }
-
-  void _showJoinDialog() {
-    showSettingsJoinHouseholdDialog(
-      context,
-      onJoin: (code) async {
-        try {
-          final result =
-              await ref.read(householdRepositoryProvider).joinHousehold(code);
-
-          return await result.fold(
-            (failure) async => failure.message,
-            (_) async {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Te uniste al hogar exitosamente'),
-                    backgroundColor: AppColors.success,
-                  ),
-                );
-                await _loadData();
-              }
-              return null;
-            },
-          );
-        } catch (e) {
-          return e.toString().replaceFirst('Exception: ', '');
-        }
-      },
-    );
   }
 
   @override
@@ -322,7 +95,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         body: Stack(
           children: [
             RefreshIndicator(
-              onRefresh: _loadData,
+              onRefresh: () async {
+                ref.invalidate(currentHouseholdProvider);
+                ref.invalidate(householdMembersProvider);
+              },
               color: theme.primary,
               backgroundColor: theme.surface,
               child: CustomScrollView(
@@ -339,80 +115,171 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildSectionLabel(
-                            eyebrow: t.settingsSectionProfileEyebrow,
-                            title: t.settingsSectionProfileTitle,
-                            subtitle: t.settingsSectionProfileSubtitle,
-                          ),
-                          const SizedBox(height: 14),
+                          // Perfil: card "hero" con avatar y nombre.
+                          _anchorLabel(t.settingsSectionProfileTitle),
                           _buildProfileCard(),
-                          const SizedBox(height: 28),
-                          _buildSectionLabel(
-                            eyebrow: t.settingsSectionHouseholdEyebrow,
-                            title: t.settingsSectionHouseholdTitle,
-                            subtitle: t.settingsSectionHouseholdSubtitle,
-                          ),
-                          const SizedBox(height: 14),
-                          if (_householdId != null) ...[
-                            _buildCombinedHouseholdCard(),
-                          ] else if (!_hasLoadedOnce && _isLoading) ...[
-                            _buildLoadingCard(height: 220),
-                          ] else ...[
-                            _buildNoHouseholdCard(),
-                          ],
-                          const SizedBox(height: 28),
-                          _buildSectionLabel(
-                            eyebrow: t.settingsSectionAppEyebrow,
-                            title: t.settingsSectionAppTitle,
-                            subtitle: t.settingsSectionAppSubtitle,
-                          ),
-                          const SizedBox(height: 14),
-                          // Menores no pueden comprar premium — solo ven una
-                          // tarjeta informativa que los redirige a sus padres.
-                          if (isMinor)
-                            SettingsMinorPremiumCard(isChild: isChild)
-                          else
-                            _buildPremiumCard(),
-                          const SizedBox(height: 24),
-                          _buildAppearanceCard(isMinor: isMinor),
-                          const SizedBox(height: 16),
-                          _buildLanguageCard(),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.lg),
+
                           if (!isMinor) ...[
-                            _buildCurrencyCard(),
-                            const SizedBox(height: 24),
-                          ] else
-                            const SizedBox(height: 8),
-                          _buildNotificationsCard(),
-                          const SizedBox(height: 16),
+                            _buildPremiumCard(),
+                            const SizedBox(height: AppSpacing.lg),
+                          ],
+
+                          // Hogar: fila que abre su propia pantalla de detalle
+                          // (miembros, roles, modo de tareas, invitación).
+                          if (!isMinor) ...[
+                            SettingsNavGroup(
+                              children: [
+                                SettingsNavRow(
+                                  icon: Icons.home_rounded,
+                                  iconColor: AppColors.primary,
+                                  title: t.settingsSectionHouseholdTitle,
+                                  subtitle: t.settingsSectionHouseholdSubtitle,
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          const HouseholdSettingsScreen(),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SettingsNavGap(),
+                          ],
+
+                          // Preferencias: filas compactas que abren un sheet.
+                          SettingsNavGroup(
+                            label: t.settingsSectionAppTitle,
+                            children: [
+                              SettingsNavRow(
+                                icon: Icons.palette_outlined,
+                                iconColor: AppColors.accentTeal,
+                                title: t.settingsAppearanceTitle,
+                                value: _themeModeLabel(
+                                  ref.watch(themeModeProvider),
+                                  t,
+                                ),
+                                onTap: () => _openPreferenceSheet(
+                                  t.settingsAppearanceTitle,
+                                  (sheetRef) => _buildAppearanceCard(
+                                    sheetRef,
+                                    isMinor: isMinor,
+                                  ),
+                                ),
+                              ),
+                              SettingsNavRow(
+                                icon: Icons.translate_rounded,
+                                iconColor: AppColors.accentBlue,
+                                title: t.settingsLanguageTitle,
+                                value:
+                                    _languageLabel(ref.watch(localeProvider)),
+                                onTap: () => _openPreferenceSheet(
+                                  t.settingsLanguageTitle,
+                                  (sheetRef) => _buildLanguageCard(sheetRef),
+                                ),
+                              ),
+                              if (!isMinor)
+                                SettingsNavRow(
+                                  icon: Icons.payments_outlined,
+                                  iconColor: AppColors.accentGold,
+                                  title: t.settingsCurrencyTitle,
+                                  value: ref.watch(currencyProvider).code,
+                                  onTap: () => _openPreferenceSheet(
+                                    t.settingsCurrencyTitle,
+                                    (sheetRef) => _buildCurrencyCard(sheetRef),
+                                  ),
+                                ),
+                              SettingsNavRow(
+                                icon: Icons.notifications_outlined,
+                                iconColor: AppColors.accentRed,
+                                title: t.settingsNotificationsTitle,
+                                trailing: Switch.adaptive(
+                                  value: ref.watch(notificationEnabledProvider),
+                                  onChanged: _toggleNotifications,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SettingsNavGap(),
+
+                          // Ayuda: FAQ, feedback y tour (abren sus sheets).
+                          SettingsNavGroup(
+                            children: [
+                              SettingsNavRow(
+                                icon: Icons.help_outline_rounded,
+                                iconColor: AppColors.primary,
+                                title: t.settingsFaqTitle,
+                                onTap: () {
+                                  AppHaptics.tap();
+                                  FAQSheet.show(context);
+                                },
+                              ),
+                              SettingsNavRow(
+                                icon: Icons.chat_bubble_outline_rounded,
+                                iconColor: const Color(0xFF6366F1),
+                                title: t.settingsFeedbackTitle,
+                                onTap: () {
+                                  AppHaptics.tap();
+                                  FeedbackSheet.show(
+                                    context,
+                                    screen: 'settings',
+                                  );
+                                },
+                              ),
+                              SettingsNavRow(
+                                icon: Icons.auto_awesome_rounded,
+                                iconColor: AppColors.accentGold,
+                                title: t.settingsReplayTourTitle,
+                                onTap: _replayTour,
+                              ),
+                            ],
+                          ),
+                          const SettingsNavGap(),
+
                           if (AppEnvironment.enableAdminTesting) ...[
                             _buildAdminTestingCard(),
-                            const SizedBox(height: 16),
+                            const SettingsNavGap(),
                           ],
-                          _buildFAQButton(),
-                          const SizedBox(height: 16),
-                          _buildFeedbackCard(),
-                          const SizedBox(height: 14),
-                          _buildReplayTourButton(),
-                          const SizedBox(height: 48),
-                          _buildSectionLabel(
-                            eyebrow: t.settingsSectionAccountEyebrow,
-                            title: t.settingsSectionAccountTitle,
-                            subtitle: t.settingsSectionAccountSubtitle,
+
+                          // Cuenta: cerrar sesión + zona de peligro.
+                          SettingsNavGroup(
+                            label: t.settingsSectionAccountTitle,
+                            children: [
+                              SettingsNavRow(
+                                icon: Icons.logout_rounded,
+                                title: t.settingsLogoutButton,
+                                destructive: true,
+                                onTap: _doLogout,
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 14),
-                          _buildLogoutButton(),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 12),
                           _buildResetAccountButton(),
-                          const SizedBox(height: 48),
-                          _buildSectionLabel(
-                            eyebrow: t.settingsSectionLegalEyebrow,
-                            title: t.settingsSectionLegalTitle,
-                            subtitle: t.settingsSectionLegalSubtitle,
+                          const SettingsNavGap(),
+
+                          // Legal
+                          SettingsNavGroup(
+                            label: t.settingsSectionLegalTitle,
+                            children: [
+                              SettingsNavRow(
+                                icon: Icons.privacy_tip_outlined,
+                                iconColor: AppColors.textSecondary,
+                                title: t.settingsLegalPrivacyPolicy,
+                                onTap: () => _openUrl(
+                                  'https://homesync-app.github.io/homesync-privacy/',
+                                ),
+                              ),
+                              SettingsNavRow(
+                                icon: Icons.description_outlined,
+                                iconColor: AppColors.textSecondary,
+                                title: t.settingsLegalTermsOfUse,
+                                onTap: () => _openUrl(
+                                  'https://homesync-app.github.io/homesync-privacy/',
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 14),
-                          _buildLegalCard(),
-                          const SizedBox(height: 48),
+                          const SizedBox(height: 40),
                           SettingsVersionFooter(
                             isAdminEnabled: AppEnvironment.enableAdminTesting &&
                                 ref.watch(adminProvider).isAdminUser,
@@ -425,17 +292,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ],
               ),
             ),
-            if (_isLoading && !_hasLoadedOnce)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Container(
-                    color: theme.scaffoldBackground.withValues(alpha: 0.001),
-                    alignment: Alignment.center,
-                    child: CircularProgressIndicator(
-                      color: theme.primary,
-                      strokeWidth: 3,
-                    ),
-                  ),
+            // Overlay durante operaciones largas (reset/borrado de cuenta, QA).
+            if (_isLoading)
+              const Positioned.fill(
+                child: ColoredBox(
+                  color: Color(0x66000000),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
               ),
           ],
@@ -449,25 +311,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Navigator.pop(context);
   }
 
-  Widget _buildLoadingCard({double height = 180}) {
-    return SettingsLoadingCard(height: height);
-  }
-
   // Profile Card
 
   // Profile Card
-
-  Widget _buildSectionLabel({
-    required String eyebrow,
-    required String title,
-    required String subtitle,
-  }) {
-    return SettingsSectionLabel(
-      eyebrow: eyebrow,
-      title: title,
-      subtitle: subtitle,
-    );
-  }
 
   Widget _buildProfileCard() {
     final profileAsync = ref.watch(userProfileProvider);
@@ -484,549 +330,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildCombinedHouseholdCard() {
-    final typeLabels = {
-      'couple': '💑 Pareja',
-      'family': '👨‍👩‍👧‍👦 Familia',
-      'friends': '🏠 Convivencia',
-      'roommates': '🏠 Compañeros',
-      'solo': '👤 Solo',
-    };
-    final memberCount = _members.length;
-    final currentUserId = ref.read(currentUserIdProvider);
-    final isOwner = _members.any(
-      (member) =>
-          member['user_id'] == currentUserId && member['role'] == 'owner',
-    );
-    final isAdminQaUser = ref.watch(adminProvider).isAdminUser;
-
-    // Determinar si mostrar el toggle según tipo de hogar
-    // Family NO puede ocultar tareas, los demás SÍ pueden
-    final householdType = HouseholdType.fromString(_householdType);
-    final showTasksToggle = householdType != HouseholdType.family;
-
-    final members = buildSettingsHouseholdMemberData(
-      context: context,
-      members: _members,
-      currentUserId: currentUserId,
-      isAdminQaUser: isAdminQaUser,
-      roleLabelBuilder: _getMemberRoleLabel,
-      onEditRole: _updateMemberRole,
-      onRemoveMember: _confirmRemoveMember,
-      onDeleteDummyMember: _confirmDeleteDummyMember,
-      isOwner: isOwner,
-    );
-
-    return buildSettingsCombinedHouseholdCard(
-      context,
-      householdName: _householdName ?? 'Mi hogar',
-      householdTypeLabel: typeLabels[_householdType] ?? 'Hogar',
-      onEdit: _showEditHouseholdMenu,
-      memberCount: memberCount,
-      members: members,
-      tasksEnabled: _tasksEnabled,
-      showTasksToggle: showTasksToggle,
-      onTasksEnabledChanged: (showTasksToggle && (isOwner || isAdminQaUser))
-          ? _onTasksToggled
-          : null,
-    );
-  }
-
-  void _onTasksToggled(bool enabled) {
-    _confirmAndUpdateTasksEnabled(enabled);
-  }
-
-  Future<void> _confirmAndUpdateTasksEnabled(bool enabled) async {
-    final action = enabled ? 'activar' : 'desactivar';
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirmar cambio'),
-        content: Text(
-          'Al $action el modo "Solo finanzas", TODOS los miembros del hogar '
-          'verán solo funcionalidades financieras (sin tareas, compras, etc.). '
-          'Esta configuración se aplica a todo el hogar.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await _updateTasksEnabled(enabled);
-    }
-  }
-
-  Future<void> _updateTasksEnabled(bool enabled) async {
-    final householdId = _householdId;
-    if (householdId == null || _tasksEnabled == enabled) return;
-
-    setState(() => _isLoading = true);
-    try {
-      final result = await ref
-          .read(householdRepositoryProvider)
-          .updateTasksEnabled(householdId, enabled);
-      result.fold((failure) => throw failure, (_) {});
-
-      ref.invalidate(currentHouseholdProvider);
-      ref.invalidate(householdCapabilitiesProvider);
-      ref.invalidate(todayTasksProvider);
-      ref.invalidate(tasksProvider);
-      ref.invalidate(statsControllerProvider);
-      ref.invalidate(recentActivityProvider);
-
-      if (!enabled) {
-        ref.read(bottomNavIndexProvider.notifier).setIndex(0);
-      }
-
-      if (mounted) {
-        setState(() => _tasksEnabled = enabled);
-      }
-      await _loadData();
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            enabled
-                ? '✅ Tareas del hogar activadas'
-                : '✅ Modo finanzas y compras activado',
-          ),
-          backgroundColor: AppColors.success,
-        ),
-      );
-    } catch (error, stackTrace) {
-      log.e(
-        'Error updating household tasks visibility',
-        error: error,
-        stackTrace: stackTrace,
-      );
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No se pudo actualizar la configuracion: $error'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  Future<void> _confirmRemoveMember(String userId, String name) async {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: theme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          t.settingsRemoveMemberTitle,
-          style: const TextStyle(fontWeight: FontWeight.w900),
-        ),
-        content: Text(t.settingsRemoveMemberBody(name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(t.commonCancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              minimumSize: const Size(100, 48), // Prevents infinite width error
-            ),
-            child: Text(t.settingsRemoveMemberAction),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      setState(() => _isLoading = true);
-      try {
-        await ref.read(householdRepositoryProvider).removeMember(userId);
-        await _loadData();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(t.settingsMemberRemoved(name)),
-              backgroundColor: theme.success,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(t.commonErrorWithDetails('$e')),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  Future<void> _confirmDeleteDummyMember(String userId, String name) async {
-    final theme = context.theme;
-    final householdId = _householdId;
-    if (householdId == null) return;
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: theme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text(
-          '¿Eliminar dummy QA?',
-          style: TextStyle(fontWeight: FontWeight.w900),
-        ),
-        content: Text(
-          'Esto eliminará a $name como usuario dummy QA. Si no pertenece a otro hogar QA, también se borrará su identidad técnica.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              minimumSize: const Size(128, 48),
-            ),
-            child: const Text('Eliminar dummy'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    setState(() => _isLoading = true);
-    try {
-      final result =
-          await ref.read(householdRepositoryProvider).qaDeleteDummyMember(
-                householdId: householdId,
-                userId: userId,
-              );
-
-      result.fold(
-        (failure) => throw failure,
-        (_) {},
-      );
-
-      ref.invalidate(householdMembersProvider);
-      await _loadData();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Dummy QA eliminado: $name'),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No pudimos eliminar el dummy: $e'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _showRenameHouseholdDialog() async {
-    final ctrl = TextEditingController(text: _householdName);
-    final theme = context.theme;
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: theme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Nombre del hogar',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: InputDecoration(
-            labelText: 'Tu nombre',
-            filled: true,
-            fillColor: theme.primary.withValues(alpha: 0.05),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primary,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(100, 48), // Prevents infinite width error
-            ),
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
-    );
-
-    if (newName == null || newName.isEmpty || newName == _householdName) return;
-
-    try {
-      final hId = _householdId;
-      if (hId == null) return;
-
-      await ref
-          .read(supabaseClientProvider)
-          .from('households')
-          .update({'name': newName}).eq('id', hId);
-
-      if (mounted) {
-        setState(() => _householdName = newName);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Hogar renombrado'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
-
-  String _getMemberRoleLabel(Map<String, dynamic> member, String? role) {
-    final displayRole = member['display_role'] as String?;
-    if (displayRole != null && displayRole.isNotEmpty) {
-      return displayRole;
-    }
-    if (role == 'owner') return 'Propietario';
-    switch (_householdType) {
-      case 'couple':
-        return 'Pareja';
-      case 'family':
-        return 'Integrante';
-      case 'friends':
-        return 'Compañero';
-      default:
-        return 'Miembro';
-    }
-  }
-
-  Future<void> _updateMemberRole(Map<String, dynamic> member) async {
-    final theme = context.theme;
-    final userId = member['user_id'];
-    final currentLabel = member['display_role'] ?? '';
-    final suggestions = <String>[];
-    if (_householdType == 'family') {
-      suggestions.addAll([
-        'Padre',
-        'Madre',
-        'Tutor/a',
-        'Adolescente',
-        'Hijo/a',
-        'Abuelo/a',
-      ]);
-    } else if (_householdType == 'couple') {
-      suggestions.addAll(['Pareja', 'Novio', 'Novia', 'Esposo', 'Esposa']);
-    } else if (_householdType == 'friends') {
-      suggestions.addAll(['Compañero', 'Roommate', 'Invitado', 'Responsable']);
-    }
-
-    final ctrl = TextEditingController(text: currentLabel);
-
-    final String? newRole = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Asignar Rol / Apodo',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: ctrl,
-              autofocus: true,
-              textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(
-                labelText: _householdType == 'family'
-                    ? 'Nombre del rol (ej: Madre)'
-                    : _householdType == 'friends'
-                        ? 'Nombre del rol (ej: Compañero)'
-                        : 'Nombre del rol (ej: Padre)',
-                filled: true,
-                fillColor: theme.primary.withValues(alpha: 0.05),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            if (suggestions.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              const Text(
-                'Sugerencias:',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: suggestions
-                    .map(
-                      (s) => ActionChip(
-                        label: Text(s, style: const TextStyle(fontSize: 12)),
-                        onPressed: () => ctrl.text = s,
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
-    );
-
-    if (newRole == null || newRole == currentLabel) return;
-
-    try {
-      setState(() => _isLoading = true);
-      final repo = ref.read(householdRepositoryProvider);
-      final result = await repo.updateMemberDisplayRole(userId, newRole);
-
-      result.fold(
-        (l) => throw l,
-        (r) {
-          if (mounted) {
-            setState(() {
-              member['display_role'] = newRole;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('✅ Rol actualizado'),
-                backgroundColor: AppColors.success,
-              ),
-            );
-          }
-        },
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  void _showEditHouseholdMenu() {
-    showSettingsEditHouseholdMenu(
-      context,
-      householdName: _householdName ?? 'Mi hogar',
-      invitationCode: _invitationCode,
-      householdType: _householdType,
-      onEditName: _showRenameHouseholdDialog,
-      onInvitationCode: _showInvitationCodeSheet,
-      onCoupleSplit: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const CoupleSplitStrategyScreen(),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showInvitationCodeSheet() {
-    showSettingsInvitationCodeSheet(
-      context,
-      invitationCode: _invitationCode,
-      onShareWhatsApp: _shareViaWhatsApp,
-      onCopyCode: _copyCode,
-      onGenerateCode: (refreshSheet) async {
-        refreshSheet();
-        await _generateNewCode();
-        refreshSheet();
-      },
-    );
-  }
-
-  Widget _buildLanguageCard() {
+  Widget _buildLanguageCard(WidgetRef ref) {
     return SettingsLanguageCard(
       currentLocale: ref.watch(localeProvider),
       onLocaleChanged: (locale) {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         ref.read(localeProvider.notifier).setLocale(locale);
       },
     );
   }
 
-  Widget _buildCurrencyCard() {
+  Widget _buildCurrencyCard(WidgetRef ref) {
     return SettingsCurrencyCard(
       currentCurrency: ref.watch(currencyProvider),
       onCurrencyChanged: (currency) {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         ref.read(currencyProvider.notifier).setCurrency(currency);
       },
     );
   }
 
-  Widget _buildAppearanceCard({bool isMinor = false}) {
+  Widget _buildAppearanceCard(WidgetRef ref, {bool isMinor = false}) {
     final isPremium = ref.watch(premiumProvider).value ?? false;
     final currentColor = ref.watch(primaryColorProvider);
     final defaultPalette = ThemePalette.all.firstWhere(
@@ -1047,7 +371,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       isPremium: isPremium,
       currentThemeMode: ref.watch(themeModeProvider),
       onThemeModeChanged: (mode) {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         ref.read(themeModeProvider.notifier).setMode(mode);
       },
       // Menores ven el candado pero no se redirigen al paywall — se les indica
@@ -1056,7 +380,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ? _showMinorPremiumSnackbar
           : () => PremiumPaywall.show(context),
       onPaletteTap: (palette) {
-        HapticFeedback.lightImpact();
+        AppHaptics.tap();
         ref.read(primaryColorProvider.notifier).setColor(palette.primary);
       },
     );
@@ -1076,23 +400,165 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  // ── Selectores de preferencias como sheets (list-detail) ──────────────────
+  // Cada fila del home abre el card existente en un sheet. El Consumer da un
+  // ref válido para los ref.watch internos del card.
+  void _openPreferenceSheet(String title, Widget Function(WidgetRef ref) body) {
+    final theme = context.theme;
+    AppSheet.show(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackground,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppRadii.modal),
+          ),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          12,
+          20,
+          20 + MediaQuery.of(context).viewPadding.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.textMuted.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+                color: theme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Consumer(builder: (_, ref, __) => body(ref)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _themeModeLabel(ThemeMode mode, AppLocalizations t) {
+    return switch (mode) {
+      ThemeMode.light => t.settingsThemeModeLight,
+      ThemeMode.dark => t.settingsThemeModeDark,
+      ThemeMode.system => t.settingsThemeModeSystem,
+    };
+  }
+
+  String? _languageLabel(Locale? locale) {
+    if (locale == null) return null; // sigue el sistema → sin valor en la fila
+    return switch (locale.languageCode) {
+      'es' => 'Español',
+      'en' => 'English',
+      _ => locale.languageCode.toUpperCase(),
+    };
+  }
+
+  Future<void> _replayTour() async {
+    AppHaptics.tap();
+    final controller = ref.read(coupleHomeTourControllerProvider.notifier);
+    await controller.reset();
+    ref.invalidate(coupleHomeTourSeenProvider);
+    if (!mounted) return;
+    controller.start(buildHomeTourContext(ref));
+    Navigator.of(context).pop();
+  }
+
+  Future<void> _doLogout() async {
+    AppHaptics.success();
+    final confirm = await showSettingsLogoutDialog(context);
+    if (confirm != true) return;
+    await ref.read(authControllerProvider.notifier).signOut();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    widget.onLogout();
+  }
+
+  Future<void> _openUrl(String url) async {
+    AppHaptics.tap();
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _toggleNotifications(bool value) {
+    AppHaptics.tap();
+    ref.read(notificationEnabledProvider.notifier).toggle(value);
+    final t = AppLocalizations.of(context);
+    final theme = context.theme;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          value
+              ? t.settingsNotificationsEnabled
+              : t.settingsNotificationsDisabled,
+        ),
+        duration: const Duration(seconds: 2),
+        backgroundColor: value ? theme.success : theme.textMuted,
+      ),
+    );
+  }
+
+  /// Label tenue arriba de las cards "hero" (Perfil, Hogar). Sentence case.
+  Widget _anchorLabel(String text) {
+    final theme = context.theme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.1,
+          color: theme.textMuted,
+        ),
+      ),
+    );
+  }
+
   Widget _buildPremiumCard() {
     final isPremium = ref.watch(premiumProvider).value ?? false;
-    final t = AppLocalizations.of(context);
 
-    return SettingsPremiumCard(
-      isPremium: isPremium,
-      onTapPlans: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
-        );
-      },
-      premiumFeatures: [
-        t.settingsPremiumFeatureShoppingFinanceSync,
-        t.settingsPremiumFeatureRecurringPayments,
-        t.premiumBenefitAdvancedStats,
-        t.premiumBenefitFullCustomization,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SettingsPremiumCard(
+          isPremium: isPremium,
+          onTapPlans: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
+            );
+          },
+          onFeedbackTap: isPremium
+              ? null
+              : () {
+                  AppHaptics.tap();
+                  FeedbackSheet.show(
+                    context,
+                    type: FeedbackType.bug,
+                    screen: 'settings',
+                  );
+                },
+        ),
       ],
     );
   }
@@ -1122,7 +588,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         final messenger = ScaffoldMessenger.of(context);
         final t = AppLocalizations.of(context);
-        await _loadData();
         if (mounted) {
           messenger.showSnackBar(
             SnackBar(
@@ -1142,31 +607,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         );
       }
     }
-  }
-
-  Widget _buildNotificationsCard() {
-    final isEnabled = ref.watch(notificationEnabledProvider);
-    final theme = context.theme;
-
-    return SettingsNotificationsCard(
-      isEnabled: isEnabled,
-      onChanged: (value) {
-        HapticFeedback.lightImpact();
-        ref.read(notificationEnabledProvider.notifier).toggle(value);
-        final t = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              value
-                  ? t.settingsNotificationsEnabled
-                  : t.settingsNotificationsDisabled,
-            ),
-            duration: const Duration(seconds: 2),
-            backgroundColor: value ? theme.success : theme.textMuted,
-          ),
-        );
-      },
-    );
   }
 
   Widget _buildAdminTestingCard() {
@@ -1191,50 +631,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       onSelectScenario: (scenario) async {
         ref.read(adminProvider.notifier).setAdminScenario(scenario);
         await _refreshAdminScenarioState();
-        await _loadData();
       },
     );
   }
 
-  Future<void> _resetAdminScenario(AdminTestingScenario scenario) async {
-    setState(() => _isLoading = true);
-    try {
-      final result =
-          await ref.read(householdRepositoryProvider).qaResetScenario(
-                scenario.householdId,
-              );
-
-      result.fold(
-        (failure) => throw failure,
-        (_) {},
-      );
-
-      ref.read(adminProvider.notifier).setAdminScenario(scenario);
-      await _refreshAdminScenarioState();
-      await _loadData();
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${scenario.title} volvió a su seed QA'),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No pudimos resetear el escenario: $e'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
+  // QA-only: agrega un miembro dummy al escenario. Vive acá (no en la pantalla
+  // de hogar) porque lo dispara la admin testing card de esta pantalla.
   Future<void> _showAdminAddDummyMemberDialog(
     AdminTestingScenario scenario,
   ) async {
@@ -1264,7 +666,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ref.invalidate(currentHouseholdProvider);
       ref.invalidate(householdMembersProvider);
       ref.invalidate(qaAdminRecentEventsProvider);
-      await _loadData();
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1288,233 +689,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Widget _buildNoHouseholdCard() {
-    return SettingsNoHouseholdCard(
-      onJoin: _showJoinDialog,
-    );
-  }
+  Future<void> _resetAdminScenario(AdminTestingScenario scenario) async {
+    setState(() => _isLoading = true);
+    try {
+      final result =
+          await ref.read(householdRepositoryProvider).qaResetScenario(
+                scenario.householdId,
+              );
 
-  Widget _buildFAQButton() {
-    return SettingsFaqCard(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        FAQSheet.show(context);
-      },
-    );
-  }
+      result.fold(
+        (failure) => throw failure,
+        (_) {},
+      );
 
-  Widget _buildFeedbackCard() {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.surfaceContainer,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            FeedbackSheet.show(context, screen: 'settings');
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6366F1).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.chat_bubble_outline_rounded,
-                    color: Color(0xFF6366F1),
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        t.settingsFeedbackTitle,
-                        style: TextStyle(
-                          color: theme.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        t.settingsFeedbackSubtitle,
-                        style: TextStyle(
-                          color: theme.textMuted,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: theme.textMuted,
-                  size: 20,
-                ),
-              ],
-            ),
-          ),
+      ref.read(adminProvider.notifier).setAdminScenario(scenario);
+      await _refreshAdminScenarioState();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${scenario.title} volvió a su seed QA'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
         ),
-      ),
-    );
-  }
-
-  Widget _buildReplayTourButton() {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadow.withValues(alpha: 0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppColors.accentGold.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(
-            Icons.auto_awesome_rounded,
-            color: AppColors.accentGold,
-            size: 22,
-          ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No pudimos resetear el escenario: $e'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
         ),
-        title: Text(
-          t.settingsReplayTourTitle,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: theme.textPrimary,
-          ),
-        ),
-        subtitle: Text(
-          t.settingsReplayTourSubtitle,
-          style: TextStyle(color: theme.textSecondary, fontSize: 12),
-        ),
-        trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
-        onTap: () async {
-          HapticFeedback.lightImpact();
-          final controller =
-              ref.read(coupleHomeTourControllerProvider.notifier);
-          await controller.reset();
-          ref.invalidate(coupleHomeTourSeenProvider);
-          if (!mounted) return;
-          final tasks = ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
-          controller.start(hasTasks: tasks?.isNotEmpty ?? false);
-          Navigator.of(context).pop();
-        },
-      ),
-    );
-  }
-
-  Widget _buildLogoutButton() {
-    return SettingsLogoutButton(
-      onPressed: () async {
-        HapticFeedback.mediumImpact();
-        final confirm = await showSettingsLogoutDialog(context);
-
-        if (confirm == true) {
-          await ref.read(authControllerProvider.notifier).signOut();
-          if (!mounted) return;
-          // Pop ALL routes to root so the auth state change can drive
-          // MyApp to show LoginScreen cleanly, without stale routes on stack.
-          Navigator.of(context).popUntil((route) => route.isFirst);
-          widget.onLogout();
-        }
-      },
-    );
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Widget _buildResetAccountButton() {
     return SettingsDangerZone(
       onResetPressed: () {
-        HapticFeedback.vibrate();
+        AppHaptics.error();
         _resetAccount();
       },
-    );
-  }
-
-  Widget _buildLegalCard() {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-
-    Future<void> openUrl(String url) async {
-      HapticFeedback.lightImpact();
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.surfaceContainer,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          ListTile(
-            leading:
-                Icon(Icons.privacy_tip_outlined, color: theme.textSecondary),
-            title: Text(
-              t.settingsLegalPrivacyPolicy,
-              style: TextStyle(color: theme.textPrimary, fontSize: 15),
-            ),
-            trailing: Icon(
-              Icons.open_in_new_rounded,
-              color: theme.textMuted,
-              size: 18,
-            ),
-            onTap: () =>
-                openUrl('https://homesync-app.github.io/homesync-privacy/'),
-          ),
-          Divider(
-            height: 1,
-            color: theme.divider.withValues(alpha: 0.1),
-            indent: 16,
-            endIndent: 16,
-          ),
-          ListTile(
-            leading:
-                Icon(Icons.description_outlined, color: theme.textSecondary),
-            title: Text(
-              t.settingsLegalTermsOfUse,
-              style: TextStyle(color: theme.textPrimary, fontSize: 15),
-            ),
-            trailing: Icon(
-              Icons.open_in_new_rounded,
-              color: theme.textMuted,
-              size: 18,
-            ),
-            onTap: () =>
-                openUrl('https://homesync-app.github.io/homesync-privacy/'),
-          ),
-        ],
-      ),
+      onDeletePressed: () {
+        AppHaptics.error();
+        _deleteAccount();
+      },
     );
   }
 
@@ -1574,6 +796,66 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _deleteAccount() async {
+    final theme = context.theme;
+    final confirm = await showSettingsDeleteAccountDialog(context);
+    if (confirm != true) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final result = await ref.read(deleteAccountUseCaseProvider).execute();
+
+      if (!mounted) return;
+      final t = AppLocalizations.of(context);
+
+      switch (result.status) {
+        case DeleteAccountStatus.backendFailed:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message ?? t.settingsDeleteAccountError),
+              backgroundColor: theme.error,
+            ),
+          );
+          return;
+        case DeleteAccountStatus.requiresRecentLogin:
+          // Data is already purged; Firebase needs a fresh login to drop the
+          // credential. Sign out so the user re-authenticates, then can retry.
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(t.settingsDeleteAccountReauthNeeded),
+              backgroundColor: theme.error,
+            ),
+          );
+          await ref.read(authControllerProvider.notifier).signOut();
+          if (mounted) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+          return;
+        case DeleteAccountStatus.success:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(t.settingsDeleteAccountSuccess),
+              backgroundColor: theme.success,
+            ),
+          );
+          // Ensure local session is fully cleared and route back to auth.
+          await ref.read(authControllerProvider.notifier).signOut();
+          if (mounted) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+          return;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: theme.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   // Premium Card
 }
 
@@ -1616,7 +898,7 @@ class _SettingsHeader extends StatelessWidget {
               ),
               const SizedBox(height: 18),
               Padding(
-                padding: const EdgeInsets.only(left: 12),
+                padding: const EdgeInsets.only(left: AppSpacing.sm),
                 child: Text(
                   t.settingsAppBarTitle,
                   style: TextStyle(

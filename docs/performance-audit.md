@@ -67,12 +67,38 @@ Capture three runs for each flow and keep the median:
 - Repeated identical `[Perf]` entries during a single screen view: inspect
   provider invalidation or widget rebuild/watch scope.
 
+## Measured baseline — 2026-06-11 (Galaxy S25 Ultra, profile, cold start)
+
+Before/after of the startup optimization pass (see commits of that date):
+
+| Metric | Before | After | What changed |
+|---|---|---|---|
+| `startup.google_sign_in_initialize` | serial, up to 5 s timeout | 4 ms, off critical path | warm-up runs in parallel, awaited just before `runApp` |
+| `startup.auth_bootstrap_provider` | 835 ms | ~350 ms | network variance; unchanged code |
+| `startup.precache_images` | 751 ms | ~210 ms | `CachedNetworkImageProvider` (disk cache) instead of `NetworkImage` |
+| `startup.warm_critical_providers` | 1165 ms | ~490 ms | precache fix above |
+| Minimum splash (800 ms) | added serially | runs in parallel | `_completeStartupGate` awaits it alongside the bootstrap chain |
+| `startup.home_screen.first_content_frame` | 3266 ms | **1791 ms** | all of the above + lazy `FadeIndexedStack` tabs |
+
+Notes for future runs:
+
+- `flutter run` attaches its log reader late and misses early `[Perf]` lines.
+  To capture a real cold start: `adb logcat -c`, `adb shell am force-stop
+  com.blas.homesync`, launch via `adb shell monkey -p com.blas.homesync 1`,
+  then read `adb logcat -d | grep "\[Perf\]"`.
+- `dumpsys gfxinfo` does NOT see Flutter frames (single Skia/Impeller
+  surface). For scroll jank, watch logcat for `Choreographer: Skipped N
+  frames` from the app pid, or use DevTools timeline.
+- The bottom-nav `BackdropFilter` (sigma 18) showed zero jank on the S25
+  Ultra. Re-test on a mid-range device before touching it.
+
 ## Next optimization candidates
 
 - Move non-essential startup work behind first paint if
   `startup.warm_critical_providers` dominates.
-- Avoid blocking startup on avatar precache if `startup.precache_images` is
-  consistently slow.
 - Collapse repeated Supabase calls or add DB indexes if a provider query is
   consistently slow.
 - Check Riverpod invalidations when providers rerun after simple UI actions.
+- Bundle only the `idle` motion per premium mascot and download event motions
+  (victory/versus/celebrate) on demand if APK size becomes a priority
+  (~6-7 MB; download infra already exists in `premium_avatar_motion_cache`).

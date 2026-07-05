@@ -242,7 +242,6 @@ class FirebaseAuthService {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
-
       if (!kIsWeb) {
         try {
           await GoogleSignIn.instance.signOut();
@@ -266,6 +265,31 @@ class FirebaseAuthService {
     } catch (e, stack) {
       log.e('Error signing out: $e', error: e, stackTrace: stack);
     }
+  }
+
+  /// Deletes the current Firebase Auth credential (the real "account" from the
+  /// user's perspective). Throws [fa.FirebaseAuthException] with code
+  /// 'requires-recent-login' when Firebase needs a fresh sign-in first — the
+  /// caller (DeleteAccountUseCase) handles that case.
+  Future<void> deleteCurrentUser() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      log.w('deleteCurrentUser called with no signed-in Firebase user');
+      return;
+    }
+    await user.delete();
+    if (!kIsWeb) {
+      try {
+        await GoogleSignIn.instance.signOut();
+      } catch (e, stack) {
+        log.w('Google sign-out after delete failed', error: e, stackTrace: stack);
+      }
+      try {
+        await FirebaseCrashlytics.instance.setUserIdentifier('');
+      } catch (_) {}
+    }
+    await AppIdentityService.instance.refresh();
+    log.i('Firebase user credential deleted');
   }
 
   Future<void> ensureUserProfile() async {

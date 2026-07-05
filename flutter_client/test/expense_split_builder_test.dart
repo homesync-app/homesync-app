@@ -90,6 +90,7 @@ void main() {
         fixedAmounts: {},
         defaultRatio: 0.7,
         currentUserId: memberA.userId,
+        splitRatioAnchorId: memberA.userId,
       );
 
       expect(result.hasValidationError, isFalse);

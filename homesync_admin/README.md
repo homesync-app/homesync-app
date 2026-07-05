@@ -1,73 +1,56 @@
-# React + TypeScript + Vite
+# HomeSync · Admin
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Panel de administración interno de HomeSync. Es una SPA (React + Vite + TypeScript + Tailwind)
+que lee directamente de Supabase con la `anon key` y la sesión del admin autenticado.
 
-Currently, two official plugins are available:
+> Uso interno. El `index.html` incluye `noindex, nofollow` y no debe exponerse públicamente sin auth.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Stack
 
-## React Compiler
+- React 19 + Vite 7 + TypeScript
+- Tailwind v4
+- react-router-dom 7
+- @supabase/supabase-js
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Secciones
 
-## Expanding the ESLint configuration
+| Ruta              | Página           | Qué muestra |
+|-------------------|------------------|-------------|
+| `/`               | Overview         | Métricas globales y actividad reciente |
+| `/households`     | Hogares          | Lista de hogares con miembros (expandible) |
+| `/users`          | Usuarios         | Miembros por hogar y su rol |
+| `/activity`       | Actividad        | Cohortes y adopción (post-launch) |
+| `/economy`        | Economía         | Flujo de XP y monedas |
+| `/content`        | Contenido        | Plantillas de tareas y premios (CRUD) |
+| `/inbox`          | Bandeja          | Issues, feedback, crashes y logs |
+| `/ocr-insights`   | OCR Insights     | Pipeline del OCR de tickets |
+| `/shopping-icons` | Íconos Compras   | Cobertura de íconos vs. uso real |
+| `/settings`       | Configuración    | Cuenta, seguridad y logout |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Desarrollo
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev        # http://localhost:5173
+npm run lint       # eslint
+npm run build      # tsc -b && vite build → dist/
+npm run preview    # sirve dist/ localmente
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Variables de entorno (`.env.local`)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+VITE_SKIP_AUTH=true   # solo dev: saltea el login. Se ignora en cualquier build de producción.
+```
+
+> `VITE_SKIP_AUTH` solo tiene efecto cuando `import.meta.env.DEV` es `true`. Un build
+> productivo (`npm run build`) siempre exige login, aunque la variable quede en `true`.
+> No commitees `.env.local` ni la `service_role key`.
+
+## Auth
+
+Login vía Supabase Auth (email + password). El acceso a las tablas está sujeto a las RLS
+policies del proyecto, así que el admin necesita una cuenta con permisos de lectura sobre
+las vistas/tablas que consume el panel.

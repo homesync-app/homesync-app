@@ -2,9 +2,11 @@ import 'dart:math';
 
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 
+export 'package:homesync_client/shared/widgets/animated_amount.dart';
 export 'package:homesync_client/shared/widgets/animated_press.dart';
 export 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 export 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -106,7 +108,7 @@ extension AppAnimationsExtension on Widget {
   }
 
   Widget animateStaggered(int index) {
-    return animateEntrance(delay: index * 40);
+    return animateEntrance(delay: (index % 8) * 40);
   }
 
   Widget animateScaleIn({int delay = 0}) {
@@ -141,7 +143,7 @@ class FadeIndexedStack extends StatefulWidget {
     super.key,
     required this.index,
     required this.children,
-    this.duration = const Duration(milliseconds: 220),
+    this.duration = const Duration(milliseconds: 300),
   });
 
   @override
@@ -153,10 +155,18 @@ class _FadeIndexedStackState extends State<FadeIndexedStack>
   late AnimationController _controller;
   late int _currentIndex;
 
+  /// Montaje perezoso: cada tab se construye recién la primera vez que se
+  /// visita y después queda vivo (conserva scroll y estado). Evita pagar el
+  /// build de todos los tabs en el primer frame del MainScreen.
+  late Set<int> _visitedIndices;
+  late int _childCount;
+
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.index;
+    _visitedIndices = {widget.index};
+    _childCount = widget.children.length;
     _controller = AnimationController(
       vsync: this,
       duration: widget.duration,
@@ -167,6 +177,13 @@ class _FadeIndexedStackState extends State<FadeIndexedStack>
   @override
   void didUpdateWidget(FadeIndexedStack oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Si cambia la cantidad de tabs (cambio de modo/rol del hogar) los
+    // índices dejan de significar lo mismo: resetear lo visitado.
+    if (widget.children.length != _childCount) {
+      _childCount = widget.children.length;
+      _visitedIndices = {widget.index};
+    }
+    _visitedIndices.add(widget.index);
     if (oldWidget.index != widget.index) {
       _controller.forward(from: 0.0);
       setState(() {
@@ -191,23 +208,34 @@ class _FadeIndexedStackState extends State<FadeIndexedStack>
     return IndexedStack(
       index: _currentIndex,
       children: List.generate(widget.children.length, (i) {
-        // Only animate the currently active child; the rest stay alive but hidden.
-        if (i == _currentIndex) {
-          return FadeTransition(
-            opacity: curve,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.018),
-                end: Offset.zero,
-              ).animate(curve),
-              child: ScaleTransition(
-                scale: Tween<double>(begin: 0.992, end: 1).animate(curve),
+        if (!_visitedIndices.contains(i)) {
+          return const SizedBox.shrink();
+        }
+        // Todos los hijos visitados comparten la MISMA estructura de
+        // wrappers: si el árbol cambiara de forma al activarse/ocultarse
+        // (p.ej. sacar el FadeTransition), el Element se remontaría y el
+        // tab perdería scroll y estado en cada cambio. Solo se conmuta la
+        // animación (los ocultos quedan clavados en el frame final) y
+        // TickerMode, para que un tab oculto no siga consumiendo frames.
+        final bool isActive = i == _currentIndex;
+        final Animation<double> drive =
+            isActive ? curve : const AlwaysStoppedAnimation(1.0);
+        return FadeTransition(
+          opacity: drive,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.035),
+              end: Offset.zero,
+            ).animate(drive),
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.985, end: 1).animate(drive),
+              child: TickerMode(
+                enabled: isActive,
                 child: widget.children[i],
               ),
             ),
-          );
-        }
-        return widget.children[i];
+          ),
+        );
       }),
     );
   }
@@ -261,7 +289,7 @@ class SuccessCelebration {
     required String message,
     String? icon,
   }) {
-    HapticFeedback.mediumImpact();
+    AppHaptics.celebrate();
 
     showDialog(
       context: context,
@@ -294,14 +322,16 @@ class _CelebrationDialog extends StatelessWidget {
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 28),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+      ),
       elevation: 0,
       backgroundColor: Colors.transparent,
       child: Container(
         padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(AppRadii.xxl),
           border: Border.all(
             color: colorScheme.outlineVariant.withValues(alpha: 0.45),
           ),

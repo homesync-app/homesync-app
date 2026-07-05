@@ -2,19 +2,17 @@ import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/animated_amount.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 import 'category_widgets.dart';
@@ -43,101 +41,6 @@ class WeeklyTab extends ConsumerWidget {
     required this.totalCoins,
     required this.onRefresh,
   });
-
-  // ignore: unused_element
-  void _showLoveNoteDialog(
-    BuildContext context,
-    WidgetRef ref,
-    AppThemeColors theme,
-  ) {
-    final t = AppLocalizations.of(context);
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        backgroundColor: theme.surface,
-        surfaceTintColor: Colors.transparent,
-        title: Row(
-          children: [
-            const Icon(Icons.favorite, color: Colors.red),
-            const SizedBox(width: 12),
-            Text(
-              t.loveNoteDialogTitle,
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                color: theme.textPrimary,
-              ),
-            ),
-          ],
-        ),
-        content: TextField(
-          controller: controller,
-          maxLines: 3,
-          style: TextStyle(color: theme.textPrimary),
-          decoration: InputDecoration(
-            hintText: t.loveNoteHint,
-            filled: true,
-            fillColor: Colors.red.withValues(alpha: 0.05),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child:
-                Text(t.commonCancel, style: TextStyle(color: theme.textMuted)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final content = controller.text.trim();
-              if (content.isEmpty) return;
-
-              final currentUserId = ref.read(currentUserIdProvider);
-              final householdId = await ref.read(householdIdProvider.future);
-              final members = ref.read(householdMembersProvider).value ?? [];
-              final partner =
-                  members.where((m) => m.userId != currentUserId).firstOrNull;
-
-              if (currentUserId == null ||
-                  householdId == null ||
-                  partner == null) {
-                return;
-              }
-
-              await ref.read(loveNotesProvider.notifier).sendNote(
-                    content: content,
-                    fromUserId: currentUserId,
-                    toUserId: partner.userId,
-                    householdId: householdId,
-                  );
-
-              if (ctx.mounted) Navigator.pop(ctx);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('💌 ${t.loveNoteSent}'),
-                    backgroundColor: const Color(0xFFEF4444),
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(t.commonSend),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -179,7 +82,7 @@ class WeeklyTab extends ConsumerWidget {
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(32),
+              borderRadius: BorderRadius.circular(AppRadii.modal),
               border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
               boxShadow: theme.cardShadow,
             ),
@@ -229,7 +132,7 @@ class WeeklyTab extends ConsumerWidget {
               if (!isPremium) {
                 PremiumPaywall.show(context);
               } else {
-                HapticFeedback.lightImpact();
+                AppHaptics.tap();
                 showLoveNoteDialog(context: context, ref: ref);
               }
             },
@@ -243,7 +146,7 @@ class WeeklyTab extends ConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(AppRadii.modal),
                 border: Border.all(
                   color: isPremium
                       ? const Color(0xFFFCA5A5).withValues(alpha: 0.5)
@@ -254,7 +157,7 @@ class WeeklyTab extends ConsumerWidget {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: isPremium
                           ? const Color(0xFFFECACA)
@@ -464,10 +367,10 @@ class _ProgressTabState extends State<ProgressTab> {
               AppSpacing.md,
             ),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(32),
+              color: theme.surface,
+              borderRadius: BorderRadius.circular(AppRadii.modal),
               boxShadow: theme.cardShadow,
-              border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
+              border: Border.all(color: theme.border.withValues(alpha: 0.45)),
             ),
             child: spots.length < 2 || spots.every((s) => s.y == 0)
                 ? Center(
@@ -488,82 +391,95 @@ class _ProgressTabState extends State<ProgressTab> {
                       ],
                     ),
                   )
-                : LineChart(
-                    LineChartData(
-                      minY: 0,
-                      maxY: maxY,
-                      lineTouchData: LineTouchData(
-                        touchTooltipData: LineTouchTooltipData(
-                          getTooltipColor: (_) => AppColors.textPrimary,
-                          tooltipBorderRadius: BorderRadius.circular(12),
-                          getTooltipItems: (touchedSpots) {
-                            return touchedSpots.map((s) {
-                              return LineTooltipItem(
-                                '${s.y.toInt()} ${_showXp ? t.statsXP : t.statsCoins}',
-                                const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 12,
-                                ),
-                              );
-                            }).toList();
-                          },
-                        ),
-                      ),
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                        getDrawingHorizontalLine: (value) => FlLine(
-                          color: Colors.black.withValues(alpha: 0.03),
-                          strokeWidth: 1,
-                        ),
-                      ),
-                      titlesData: const FlTitlesData(
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: spots,
-                          isCurved: true,
-                          curveSmoothness: 0.35,
-                          color: color,
-                          barWidth: 5,
-                          isStrokeCapRound: true,
-                          dotData: FlDotData(
-                            show: true,
-                            getDotPainter: (spot, percent, barData, index) =>
-                                FlDotCirclePainter(
-                              radius: 4,
-                              color: Colors.white,
-                              strokeWidth: 3,
-                              strokeColor: color,
-                            ),
-                          ),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            gradient: LinearGradient(
-                              colors: [
-                                color.withValues(alpha: 0.15),
-                                color.withValues(alpha: 0.0),
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
+                : TweenAnimationBuilder<double>(
+                    // Draw-in: the line grows up from the baseline on entry
+                    // and whenever the XP/coins toggle swaps the dataset.
+                    key: ValueKey(_showXp),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 700),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, reveal, _) => LineChart(
+                      duration: AppMotion.slow,
+                      curve: AppMotion.standard,
+                      LineChartData(
+                        minY: 0,
+                        maxY: maxY,
+                        lineTouchData: LineTouchData(
+                          touchTooltipData: LineTouchTooltipData(
+                            getTooltipColor: (_) => theme.textPrimary,
+                            tooltipBorderRadius: BorderRadius.circular(14),
+                            getTooltipItems: (touchedSpots) {
+                              return touchedSpots.map((s) {
+                                return LineTooltipItem(
+                                  '${s.y.toInt()} ${_showXp ? t.statsXP : t.statsCoins}',
+                                  TextStyle(
+                                    color: theme.surface,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12,
+                                    fontFeatures: kTabularFigures,
+                                  ),
+                                );
+                              }).toList();
+                            },
                           ),
                         ),
-                      ],
+                        gridData: FlGridData(
+                          show: true,
+                          drawVerticalLine: false,
+                          getDrawingHorizontalLine: (value) => FlLine(
+                            color: theme.textPrimary.withValues(alpha: 0.04),
+                            strokeWidth: 1,
+                          ),
+                        ),
+                        titlesData: const FlTitlesData(
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          rightTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          topTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                        ),
+                        borderData: FlBorderData(show: false),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: spots
+                                .map((s) => FlSpot(s.x, s.y * reveal))
+                                .toList(),
+                            isCurved: true,
+                            curveSmoothness: 0.35,
+                            color: color,
+                            barWidth: 5,
+                            isStrokeCapRound: true,
+                            dotData: FlDotData(
+                              show: true,
+                              getDotPainter: (spot, percent, barData, index) =>
+                                  FlDotCirclePainter(
+                                radius: 4,
+                                color: theme.surface,
+                                strokeWidth: 3,
+                                strokeColor: color,
+                              ),
+                            ),
+                            belowBarData: BarAreaData(
+                              show: true,
+                              gradient: LinearGradient(
+                                colors: [
+                                  color.withValues(alpha: 0.18 * reveal),
+                                  color.withValues(alpha: 0.0),
+                                ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
           ),
@@ -625,7 +541,7 @@ class CategoriesTab extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
@@ -682,7 +598,7 @@ class CategoriesTab extends StatelessWidget {
                   vertical: AppSpacing.sm,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
               ),
               child: Text(t.commonRefresh),
@@ -726,7 +642,7 @@ class CategoriesTab extends StatelessWidget {
                   AppColors.primary.withValues(alpha: 0.02),
                 ],
               ),
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(AppRadii.xxl),
               border:
                   Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
             ),

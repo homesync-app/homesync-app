@@ -76,6 +76,7 @@ enum BootstrapSection {
   userBalance,
   household,
   members,
+  tasks,
   expenseBalances,
   combinedFeed,
 }

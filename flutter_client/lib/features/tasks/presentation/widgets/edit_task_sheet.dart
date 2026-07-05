@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -133,7 +135,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                     height: 48,
                     decoration: BoxDecoration(
                       color: AppColors.accentRed.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
                     ),
                     child: const Icon(
                       Icons.delete_outline_rounded,
@@ -157,7 +159,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
               ),
               const SizedBox(height: 18),
               Text(
-                'Se va a eliminar "${widget.task.title}" y no se puede deshacer.',
+                AppLocalizations.of(context).editTaskDeleteBody(
+                  widget.task.title,
+                ),
                 style: TextStyle(
                   fontSize: 15,
                   height: 1.4,
@@ -172,7 +176,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                     child: TextButton(
                       onPressed: () => Navigator.pop(dialogContext, false),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: AppSpacing.md),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),
@@ -197,9 +202,10 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                             AppColors.accentRed.withValues(alpha: 0.86),
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: AppSpacing.md),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(AppRadii.lg),
                         ),
                       ),
                       child: Text(
@@ -341,7 +347,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
               height: 6,
               decoration: BoxDecoration(
                 color: theme.border.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadii.pill),
               ),
             ),
             Expanded(
@@ -424,7 +430,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                                 color: isSelected
                                     ? color.withValues(alpha: 0.10)
                                     : theme.surface,
-                                borderRadius: BorderRadius.circular(24),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadii.xl),
                                 border: Border.all(
                                   color: isSelected
                                       ? color.withValues(alpha: 0.22)
@@ -589,7 +596,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 17),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(AppRadii.lg),
                         ),
                       ),
                       child: Text(
@@ -607,7 +614,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                     flex: 2,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
                         boxShadow: [
                           BoxShadow(
                             color: theme.primary.withValues(alpha: 0.13),
@@ -624,7 +631,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 17),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppRadii.lg),
                           ),
                         ),
                         child: _isLoading
@@ -721,7 +728,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     backgroundColor: AppColors.primary.withValues(alpha: 0.08),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
                       side: BorderSide(
                         color: AppColors.primary.withValues(alpha: 0.16),
                       ),
@@ -756,7 +763,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   backgroundColor: AppColors.accentRed.withValues(alpha: 0.08),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                     side: BorderSide(
                       color: AppColors.accentRed.withValues(alpha: 0.16),
                     ),

@@ -73,13 +73,13 @@ abstract class _$SetupWizardController extends $Notifier<SetupWizardState> {
   SetupWizardState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<SetupWizardState, SetupWizardState>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<SetupWizardState, SetupWizardState>,
         SetupWizardState,
         Object?,
         Object?>;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

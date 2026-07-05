@@ -9,10 +9,8 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 
 /// Sprint 0 Modo Padres: estado de premium a nivel hogar.
 ///
-/// Este provider lee `get_household_premium_status` y reemplaza progresivamente
-/// al `premiumProvider` (por usuario). Mientras dura la migracion convive con
-/// el flag legacy: `effectivePremiumProvider` devuelve true si cualquiera de
-/// los dos lo es, asi ningun feature ya monetizado se rompe.
+/// Este provider lee `get_household_premium_status`, la fuente de verdad del
+/// premium (siempre a nivel hogar). `effectivePremiumProvider` deriva de aca.
 class HouseholdPremiumStatus {
   final bool isPremium;
   final String planTier;
@@ -53,8 +51,8 @@ class HouseholdPremiumStatus {
 final householdPremiumStatusProvider =
     FutureProvider<HouseholdPremiumStatus>((ref) async {
   // Keep the household-scoped premium cache synchronized with the user-facing
-  // premium refresh/toggle flow. Family features read this provider, while
-  // avatar/paywall UI reads premiumProvider directly.
+  // premium refresh/toggle flow. Parent Mode reads household premium; shared
+  // premium surfaces such as avatars/paywalls may still read premiumProvider.
   ref.watch(premiumProvider);
 
   final householdId = await ref.watch(householdIdProvider.future);
@@ -89,22 +87,27 @@ final householdPremiumStatusProvider =
   }
 });
 
-/// Premium efectivo: hogar premium O usuario premium (legacy).
+/// Premium efectivo del hogar.
 ///
-/// Durante la migracion, los hogares con plan_tier seteado y los usuarios con
-/// is_premium=true (no migrados aun) deben seguir viendo features pagas. Una
-/// vez completada la migracion, podemos colapsar esto al valor del hogar.
+/// El premium es SIEMPRE a nivel hogar: si alguien paga, todo el hogar es
+/// premium. Lo que cambia entre miembros es QUE features premium ve cada uno
+/// segun su rol (los adultos ven Modo Padres; las features compartidas como
+/// avatares premium las ven todos) — ese split por rol lo resuelven los
+/// providers de abajo, no este flag.
+///
+/// A proposito ya NO se mezcla el flag legacy por-usuario (`premiumProvider`):
+/// eso causaba que la UI habilitara Modo Padres mientras el backend
+/// (`should_require_task_approval` -> `is_household_premium`, que solo mira el
+/// hogar) lo negaba, completando tareas en vez de mandarlas a aprobacion.
 final effectivePremiumProvider = Provider<bool>((ref) {
-  final household = ref.watch(householdPremiumStatusProvider).value;
-  if (household != null && household.isPremium) return true;
-  return ref.watch(premiumProvider).value ?? false;
+  return ref.watch(householdPremiumStatusProvider).value?.isPremium ?? false;
 });
 
 /// Habilita el bundle "Modo Padres".
 ///
 /// Reglas:
 ///  - Solo en hogares de tipo `family`.
-///  - El miembro actual debe ser adulto.
+///  - El miembro actual debe poder gestionar el hogar (adulto owner/admin).
 ///  - El hogar debe tener premium activo.
 ///
 /// Las features de control parental (aprobacion de tareas, dashboard parental,
@@ -113,8 +116,6 @@ final parentModeAvailableProvider = Provider<bool>((ref) {
   final caps = ref.watch(householdCapabilitiesProvider);
   if (caps.type != HouseholdType.family) return false;
 
-  // Usa la verdad efectiva del producto: hogar premium o usuario premium
-  // legacy durante la migracion.
   final isPremium = ref.watch(effectivePremiumProvider);
   if (!isPremium) return false;
 
@@ -123,7 +124,7 @@ final parentModeAvailableProvider = Provider<bool>((ref) {
   if (currentUserId == null || members == null) return false;
 
   final me = members.where((m) => m.userId == currentUserId).firstOrNull;
-  return me?.isAdult ?? false;
+  return me?.canManageHousehold ?? false;
 });
 
 /// Whether task approvals are actually enabled for the current household.
@@ -144,9 +145,32 @@ final taskApprovalEnabledProvider = Provider<bool>((ref) {
   return mode != null && mode != 'off';
 });
 
+/// Whether the allowance ("mesada", adult→teen transfer) feature is active.
+///
+/// Premium Parent Mode feature, OFF by default. Active only when the household
+/// is family, premium is active, AND the `allowance_enabled` toggle is on.
+/// Mirrors [taskApprovalEnabledProvider] — same single source of truth so the
+/// "Mesada" UI never shows where the feature isn't actually enabled.
+final allowanceEnabledProvider = Provider<bool>((ref) {
+  final caps = ref.watch(householdCapabilitiesProvider);
+  if (caps.type != HouseholdType.family) return false;
+
+  final isPremium = ref.watch(effectivePremiumProvider);
+  if (!isPremium) return false;
+
+  final currentUserId = ref.watch(currentUserIdProvider);
+  final members = ref.watch(householdMembersProvider).value;
+  if (currentUserId == null || members == null) return false;
+
+  final me = members.where((m) => m.userId == currentUserId).firstOrNull;
+  if (me?.canManageHousehold != true) return false;
+
+  return ref.watch(currentHouseholdProvider).value?.allowanceEnabled ?? false;
+});
+
 /// Misma logica que [parentModeAvailableProvider] pero sin exigir premium.
-/// Sirve para mostrar la entrada al paywall: si el usuario es adulto de una
-/// familia y todavia no compro, ahi mostramos el CTA.
+/// Sirve para mostrar la entrada al paywall: si el usuario puede gestionar un
+/// hogar familiar y todavia no compro, ahi mostramos el CTA.
 final parentModeEligibleProvider = Provider<bool>((ref) {
   final caps = ref.watch(householdCapabilitiesProvider);
   if (caps.type != HouseholdType.family) return false;
@@ -156,7 +180,7 @@ final parentModeEligibleProvider = Provider<bool>((ref) {
   if (currentUserId == null || members == null) return false;
 
   final me = members.where((m) => m.userId == currentUserId).firstOrNull;
-  return me?.isAdult ?? false;
+  return me?.canManageHousehold ?? false;
 });
 
 /// [MemberModel] del usuario en sesion dentro del hogar activo.
