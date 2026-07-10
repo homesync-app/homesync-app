@@ -39,6 +39,7 @@ abstract class ExpenseRepository {
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
     String? receiptPath,
+    String? poolId,
   });
 
   Future<Either<Failure, void>> deleteExpense(String id);
@@ -49,6 +50,7 @@ abstract class ExpenseRepository {
     required String toUserId,
     required double amount,
     required String requestId,
+    String? poolId,
   });
 
   Future<Map<String, dynamic>> getPersonalFinanceSummary(

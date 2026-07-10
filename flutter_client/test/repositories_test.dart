@@ -82,6 +82,7 @@ class MockExpenseRepository implements ExpenseRepository {
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
     String? receiptPath,
+    String? poolId,
   }) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     final expense = ExpenseModel(
@@ -115,6 +116,7 @@ class MockExpenseRepository implements ExpenseRepository {
     required String toUserId,
     required double amount,
     required String requestId,
+    String? poolId,
   }) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);

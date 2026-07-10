@@ -5733,6 +5733,150 @@ abstract class AppLocalizations {
   /// **'QUIÉN PUSO'**
   String get recapPayersTitle;
 
+  /// No description provided for @poolsSectionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'FONDOS'**
+  String get poolsSectionTitle;
+
+  /// No description provided for @poolsNewAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevo'**
+  String get poolsNewAction;
+
+  /// No description provided for @poolsEmptyCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear un fondo (asado, viaje, regalo…)'**
+  String get poolsEmptyCta;
+
+  /// No description provided for @poolsCardSettled.
+  ///
+  /// In es, this message translates to:
+  /// **'Saldado ✓'**
+  String get poolsCardSettled;
+
+  /// No description provided for @poolsCardExpenseCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} movimientos'**
+  String poolsCardExpenseCount(int count);
+
+  /// No description provided for @poolsCreateTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevo fondo'**
+  String get poolsCreateTitle;
+
+  /// No description provided for @poolsCreateSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Agrupá los gastos de un evento y saldalo aparte del día a día del piso.'**
+  String get poolsCreateSubtitle;
+
+  /// No description provided for @poolsCreateNameHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Asado del sábado, Viaje a Córdoba…'**
+  String get poolsCreateNameHint;
+
+  /// No description provided for @poolsCreateCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear fondo'**
+  String get poolsCreateCta;
+
+  /// No description provided for @poolsDetailNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'Este fondo ya no existe'**
+  String get poolsDetailNotFound;
+
+  /// No description provided for @poolsDetailTotalLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'TOTAL DEL FONDO'**
+  String get poolsDetailTotalLabel;
+
+  /// No description provided for @poolsDetailSettleTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'PARA SALDAR ESTE FONDO'**
+  String get poolsDetailSettleTitle;
+
+  /// No description provided for @poolsDetailAllSettled.
+  ///
+  /// In es, this message translates to:
+  /// **'Fondo saldado — nadie debe nada acá.'**
+  String get poolsDetailAllSettled;
+
+  /// No description provided for @poolsDetailDebtRow.
+  ///
+  /// In es, this message translates to:
+  /// **'{from} le pasa {amount} a {to}'**
+  String poolsDetailDebtRow(String from, String amount, String to);
+
+  /// No description provided for @poolsDetailSettleCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrar'**
+  String get poolsDetailSettleCta;
+
+  /// No description provided for @poolsCloseCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar fondo'**
+  String get poolsCloseCta;
+
+  /// No description provided for @poolsCloseConfirmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cerrar este fondo?'**
+  String get poolsCloseConfirmTitle;
+
+  /// No description provided for @poolsCloseConfirmBodySettled.
+  ///
+  /// In es, this message translates to:
+  /// **'El fondo se archiva y deja de aparecer. Sus movimientos quedan en el historial.'**
+  String get poolsCloseConfirmBodySettled;
+
+  /// No description provided for @poolsCloseConfirmBodyPending.
+  ///
+  /// In es, this message translates to:
+  /// **'Quedan cuentas sin saldar: siguen vivas en el balance general del hogar. El fondo se archiva igual.'**
+  String get poolsCloseConfirmBodyPending;
+
+  /// No description provided for @poolsClosedSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'\"{name}\" cerrado'**
+  String poolsClosedSnack(String name);
+
+  /// No description provided for @expensesFormSectionPoolEyebrow.
+  ///
+  /// In es, this message translates to:
+  /// **'FONDO'**
+  String get expensesFormSectionPoolEyebrow;
+
+  /// No description provided for @expensesFormSectionPoolTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Es de un fondo?'**
+  String get expensesFormSectionPoolTitle;
+
+  /// No description provided for @expensesFormSectionPoolSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Sumalo a un evento para verlo agrupado y saldarlo aparte.'**
+  String get expensesFormSectionPoolSubtitle;
+
+  /// No description provided for @expensesFormPoolNone.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin fondo'**
+  String get expensesFormPoolNone;
+
   /// No description provided for @recapSavingsRow.
   ///
   /// In es, this message translates to:

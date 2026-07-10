@@ -30,6 +30,7 @@ class _SpyExpenseRepository implements ExpenseRepository {
     required String toUserId,
     required double amount,
     required String requestId,
+    String? poolId,
   }) async {
     callCount++;
     calls.add((

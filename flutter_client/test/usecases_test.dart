@@ -129,6 +129,7 @@ class MockExpenseRepository implements ExpenseRepository {
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
     String? receiptPath,
+    String? poolId,
   }) async {
     saveExpenseCalled = true;
     return const Right(null);
@@ -162,6 +163,7 @@ class MockExpenseRepository implements ExpenseRepository {
     required String toUserId,
     required double amount,
     required String requestId,
+    String? poolId,
   }) async =>
       throw UnimplementedError();
 

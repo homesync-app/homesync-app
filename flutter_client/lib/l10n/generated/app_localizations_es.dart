@@ -3571,6 +3571,88 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recapPayersTitle => 'QUIÉN PUSO';
 
   @override
+  String get poolsSectionTitle => 'FONDOS';
+
+  @override
+  String get poolsNewAction => 'Nuevo';
+
+  @override
+  String get poolsEmptyCta => 'Crear un fondo (asado, viaje, regalo…)';
+
+  @override
+  String get poolsCardSettled => 'Saldado ✓';
+
+  @override
+  String poolsCardExpenseCount(int count) {
+    return '$count movimientos';
+  }
+
+  @override
+  String get poolsCreateTitle => 'Nuevo fondo';
+
+  @override
+  String get poolsCreateSubtitle =>
+      'Agrupá los gastos de un evento y saldalo aparte del día a día del piso.';
+
+  @override
+  String get poolsCreateNameHint => 'Asado del sábado, Viaje a Córdoba…';
+
+  @override
+  String get poolsCreateCta => 'Crear fondo';
+
+  @override
+  String get poolsDetailNotFound => 'Este fondo ya no existe';
+
+  @override
+  String get poolsDetailTotalLabel => 'TOTAL DEL FONDO';
+
+  @override
+  String get poolsDetailSettleTitle => 'PARA SALDAR ESTE FONDO';
+
+  @override
+  String get poolsDetailAllSettled => 'Fondo saldado — nadie debe nada acá.';
+
+  @override
+  String poolsDetailDebtRow(String from, String amount, String to) {
+    return '$from le pasa $amount a $to';
+  }
+
+  @override
+  String get poolsDetailSettleCta => 'Registrar';
+
+  @override
+  String get poolsCloseCta => 'Cerrar fondo';
+
+  @override
+  String get poolsCloseConfirmTitle => '¿Cerrar este fondo?';
+
+  @override
+  String get poolsCloseConfirmBodySettled =>
+      'El fondo se archiva y deja de aparecer. Sus movimientos quedan en el historial.';
+
+  @override
+  String get poolsCloseConfirmBodyPending =>
+      'Quedan cuentas sin saldar: siguen vivas en el balance general del hogar. El fondo se archiva igual.';
+
+  @override
+  String poolsClosedSnack(String name) {
+    return '\"$name\" cerrado';
+  }
+
+  @override
+  String get expensesFormSectionPoolEyebrow => 'FONDO';
+
+  @override
+  String get expensesFormSectionPoolTitle => '¿Es de un fondo?';
+
+  @override
+  String get expensesFormSectionPoolSubtitle =>
+      'Sumalo a un evento para verlo agrupado y saldarlo aparte.';
+
+  @override
+  String get expensesFormPoolNone => 'Sin fondo';
+
+  @override
   String recapSavingsRow(String type, String amount) {
     String _temp0 = intl.Intl.selectLogic(
       type,

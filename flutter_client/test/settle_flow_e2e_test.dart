@@ -40,6 +40,7 @@ class _SettleFakeRepository implements ExpenseRepository {
     required String toUserId,
     required double amount,
     required String requestId,
+    String? poolId,
   }) async {
     settleCallCount++;
     // New intent → settle once. A repeated request_id is a no-op (idempotent).

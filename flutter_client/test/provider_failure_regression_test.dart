@@ -54,6 +54,7 @@ class _FailingExpenseRepository implements ExpenseRepository {
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
     String? receiptPath,
+    String? poolId,
   }) async =>
       throw UnimplementedError();
 
@@ -68,6 +69,7 @@ class _FailingExpenseRepository implements ExpenseRepository {
     required String toUserId,
     required double amount,
     required String requestId,
+    String? poolId,
   }) async =>
       throw UnimplementedError();
 

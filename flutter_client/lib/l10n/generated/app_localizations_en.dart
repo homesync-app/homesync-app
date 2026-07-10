@@ -3559,6 +3559,89 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recapPayersTitle => 'WHO PAID';
 
   @override
+  String get poolsSectionTitle => 'POOLS';
+
+  @override
+  String get poolsNewAction => 'New';
+
+  @override
+  String get poolsEmptyCta => 'Create a pool (BBQ, trip, gift…)';
+
+  @override
+  String get poolsCardSettled => 'Settled ✓';
+
+  @override
+  String poolsCardExpenseCount(int count) {
+    return '$count entries';
+  }
+
+  @override
+  String get poolsCreateTitle => 'New pool';
+
+  @override
+  String get poolsCreateSubtitle =>
+      'Group an event\'s expenses and settle it apart from day-to-day spending.';
+
+  @override
+  String get poolsCreateNameHint => 'Saturday BBQ, Córdoba trip…';
+
+  @override
+  String get poolsCreateCta => 'Create pool';
+
+  @override
+  String get poolsDetailNotFound => 'This pool no longer exists';
+
+  @override
+  String get poolsDetailTotalLabel => 'POOL TOTAL';
+
+  @override
+  String get poolsDetailSettleTitle => 'TO SETTLE THIS POOL';
+
+  @override
+  String get poolsDetailAllSettled =>
+      'Pool settled — nobody owes anything here.';
+
+  @override
+  String poolsDetailDebtRow(String from, String amount, String to) {
+    return '$from pays $amount to $to';
+  }
+
+  @override
+  String get poolsDetailSettleCta => 'Record';
+
+  @override
+  String get poolsCloseCta => 'Close pool';
+
+  @override
+  String get poolsCloseConfirmTitle => 'Close this pool?';
+
+  @override
+  String get poolsCloseConfirmBodySettled =>
+      'The pool gets archived and stops showing. Its entries stay in the history.';
+
+  @override
+  String get poolsCloseConfirmBodyPending =>
+      'There are unsettled debts: they stay alive in the household balance. The pool gets archived anyway.';
+
+  @override
+  String poolsClosedSnack(String name) {
+    return '\"$name\" closed';
+  }
+
+  @override
+  String get expensesFormSectionPoolEyebrow => 'POOL';
+
+  @override
+  String get expensesFormSectionPoolTitle => 'Part of a pool?';
+
+  @override
+  String get expensesFormSectionPoolSubtitle =>
+      'Add it to an event to see it grouped and settle it apart.';
+
+  @override
+  String get expensesFormPoolNone => 'No pool';
+
+  @override
   String recapSavingsRow(String type, String amount) {
     String _temp0 = intl.Intl.selectLogic(
       type,

@@ -141,6 +141,7 @@ class MockExpenseRepository implements ExpenseRepository {
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
     String? receiptPath,
+    String? poolId,
   }) async {
     _expenses.add(
       ExpenseModel(
@@ -171,6 +172,7 @@ class MockExpenseRepository implements ExpenseRepository {
     required String toUserId,
     required double amount,
     required String requestId,
+    String? poolId,
   }) async {
     return const Right(null);
   }

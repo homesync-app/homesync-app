@@ -273,6 +273,7 @@ class SupabaseExpenseRepository
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
     String? receiptPath,
+    String? poolId,
   }) async {
     return executeWithHandling(
       () async {
@@ -301,6 +302,8 @@ class SupabaseExpenseRepository
             'p_type': type,
             'p_splits': splits,
             'p_receipt_path': receiptPath,
+            // El QA admin bridge no conoce fondos; solo la RPC real.
+            if (!_isAdminTestingActive) 'p_pool_id': poolId,
             if (_isAdminTestingActive) 'p_actor_user_id': userId,
           },
         );
@@ -336,6 +339,7 @@ class SupabaseExpenseRepository
               'p_type': type,
               'p_splits': splits,
               'p_receipt_path': receiptPath,
+              'p_pool_id': poolId,
             },
           ),
         );
@@ -373,6 +377,7 @@ class SupabaseExpenseRepository
     required String toUserId,
     required double amount,
     required String requestId,
+    String? poolId,
   }) async {
     final params = <String, dynamic>{
       'p_request_id': requestId,
@@ -380,6 +385,8 @@ class SupabaseExpenseRepository
       'p_from_user_id': fromUserId,
       'p_to_user_id': toUserId,
       'p_amount': amount,
+      // Con pool, la liquidación también pone en cero ese fondo.
+      'p_pool_id': poolId,
     };
     return executeWithHandling(
       () async {

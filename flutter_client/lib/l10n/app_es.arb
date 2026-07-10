@@ -2304,6 +2304,57 @@
   },
   "recapCategoriesTitle": "EN QUÉ SE FUE",
   "recapPayersTitle": "QUIÉN PUSO",
+  "poolsSectionTitle": "FONDOS",
+  "poolsNewAction": "Nuevo",
+  "poolsEmptyCta": "Crear un fondo (asado, viaje, regalo…)",
+  "poolsCardSettled": "Saldado ✓",
+  "poolsCardExpenseCount": "{count} movimientos",
+  "@poolsCardExpenseCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "poolsCreateTitle": "Nuevo fondo",
+  "poolsCreateSubtitle": "Agrupá los gastos de un evento y saldalo aparte del día a día del piso.",
+  "poolsCreateNameHint": "Asado del sábado, Viaje a Córdoba…",
+  "poolsCreateCta": "Crear fondo",
+  "poolsDetailNotFound": "Este fondo ya no existe",
+  "poolsDetailTotalLabel": "TOTAL DEL FONDO",
+  "poolsDetailSettleTitle": "PARA SALDAR ESTE FONDO",
+  "poolsDetailAllSettled": "Fondo saldado — nadie debe nada acá.",
+  "poolsDetailDebtRow": "{from} le pasa {amount} a {to}",
+  "@poolsDetailDebtRow": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "poolsDetailSettleCta": "Registrar",
+  "poolsCloseCta": "Cerrar fondo",
+  "poolsCloseConfirmTitle": "¿Cerrar este fondo?",
+  "poolsCloseConfirmBodySettled": "El fondo se archiva y deja de aparecer. Sus movimientos quedan en el historial.",
+  "poolsCloseConfirmBodyPending": "Quedan cuentas sin saldar: siguen vivas en el balance general del hogar. El fondo se archiva igual.",
+  "poolsClosedSnack": "\"{name}\" cerrado",
+  "@poolsClosedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesFormSectionPoolEyebrow": "FONDO",
+  "expensesFormSectionPoolTitle": "¿Es de un fondo?",
+  "expensesFormSectionPoolSubtitle": "Sumalo a un evento para verlo agrupado y saldarlo aparte.",
+  "expensesFormPoolNone": "Sin fondo",
   "recapSavingsRow": "{type, select, solo{Sumaste {amount} a tus metas de ahorro.} other{Sumaron {amount} a las metas de ahorro.}}",
   "@recapSavingsRow": {
     "placeholders": {

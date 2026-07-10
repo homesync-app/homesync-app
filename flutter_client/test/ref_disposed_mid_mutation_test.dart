@@ -45,6 +45,7 @@ class _GatedExpenseRepository implements ExpenseRepository {
     required String toUserId,
     required double amount,
     required String requestId,
+    String? poolId,
   }) async {
     settleCalls++;
     onSettleEntered?.complete();
@@ -91,6 +92,7 @@ class _GatedExpenseRepository implements ExpenseRepository {
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
     String? receiptPath,
+    String? poolId,
   }) =>
       throw UnimplementedError();
   @override

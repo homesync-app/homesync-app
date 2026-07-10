@@ -144,6 +144,7 @@ class ExpenseController extends _$ExpenseController {
     required SplitType splitType,
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
+    String? poolId,
   }) async {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return;
@@ -161,6 +162,7 @@ class ExpenseController extends _$ExpenseController {
       splitType: splitType,
       type: type,
       splits: splits,
+      poolId: poolId,
     );
 
     if (result.isLeft()) {
@@ -227,6 +229,7 @@ class ExpenseController extends _$ExpenseController {
     required String toUserId,
     required double amount,
     String? requestId,
+    String? poolId,
   }) async {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return;
@@ -243,6 +246,7 @@ class ExpenseController extends _$ExpenseController {
       toUserId: toUserId,
       amount: amount,
       requestId: effectiveRequestId,
+      poolId: poolId,
     );
 
     result.fold(

@@ -2269,6 +2269,57 @@
   },
   "recapCategoriesTitle": "WHERE IT WENT",
   "recapPayersTitle": "WHO PAID",
+  "poolsSectionTitle": "POOLS",
+  "poolsNewAction": "New",
+  "poolsEmptyCta": "Create a pool (BBQ, trip, gift…)",
+  "poolsCardSettled": "Settled ✓",
+  "poolsCardExpenseCount": "{count} entries",
+  "@poolsCardExpenseCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "poolsCreateTitle": "New pool",
+  "poolsCreateSubtitle": "Group an event's expenses and settle it apart from day-to-day spending.",
+  "poolsCreateNameHint": "Saturday BBQ, Córdoba trip…",
+  "poolsCreateCta": "Create pool",
+  "poolsDetailNotFound": "This pool no longer exists",
+  "poolsDetailTotalLabel": "POOL TOTAL",
+  "poolsDetailSettleTitle": "TO SETTLE THIS POOL",
+  "poolsDetailAllSettled": "Pool settled — nobody owes anything here.",
+  "poolsDetailDebtRow": "{from} pays {amount} to {to}",
+  "@poolsDetailDebtRow": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "poolsDetailSettleCta": "Record",
+  "poolsCloseCta": "Close pool",
+  "poolsCloseConfirmTitle": "Close this pool?",
+  "poolsCloseConfirmBodySettled": "The pool gets archived and stops showing. Its entries stay in the history.",
+  "poolsCloseConfirmBodyPending": "There are unsettled debts: they stay alive in the household balance. The pool gets archived anyway.",
+  "poolsClosedSnack": "\"{name}\" closed",
+  "@poolsClosedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesFormSectionPoolEyebrow": "POOL",
+  "expensesFormSectionPoolTitle": "Part of a pool?",
+  "expensesFormSectionPoolSubtitle": "Add it to an event to see it grouped and settle it apart.",
+  "expensesFormPoolNone": "No pool",
   "recapSavingsRow": "{type, select, solo{You added {amount} to your savings goals.} other{You added {amount} to the savings goals.}}",
   "@recapSavingsRow": {
     "placeholders": {

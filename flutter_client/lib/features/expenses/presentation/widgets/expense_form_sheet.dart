@@ -25,6 +25,7 @@ import 'package:homesync_client/features/expenses/domain/models/expense_model.da
 import 'package:homesync_client/features/expenses/domain/models/receipt_scan_result.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/pool_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/new_items_suggestion_banner.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -128,6 +129,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   // Form fields
   DateTime _selectedDate = DateTime.now();
   String _paidByUserId = '';
+
+  /// Fondo de gasto seleccionado (modo convivencia); null = sin fondo.
+  String? _selectedPoolId;
   final _amountController = TextEditingController();
   final _titleController = TextEditingController();
 
@@ -254,6 +258,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     }
     _selectedDate = exp.paidAt;
     _paidByUserId = exp.paidBy;
+    _selectedPoolId = exp.poolId;
 
     if (exp.splitType != null) {
       _splitMode = SplitType.values.firstWhere(
@@ -641,6 +646,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         type: _isIncome ? 'income' : 'expense',
         splits: splits,
         receiptPath: receiptPath,
+        poolId: _isIncome ? null : _selectedPoolId,
       );
       saveResult.fold(
         (failure) => throw failure,
@@ -901,6 +907,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                               const SizedBox(height: 14),
                               _buildCategorySelector(context),
                               const SizedBox(height: 28),
+                              _buildPoolSelector(context),
                               if (showSplit) ...[
                                 _buildSectionIntro(
                                   eyebrow: t.expensesFormSectionSplitEyebrow,
@@ -1267,6 +1274,94 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           });
         },
       ),
+    );
+  }
+
+  /// Selector de fondo (modo convivencia): chips "Sin fondo" + fondos
+  /// activos. Solo gastos — un ingreso no pertenece a un fondo.
+  Widget _buildPoolSelector(BuildContext context) {
+    final caps = ref.watch(householdCapabilitiesProvider);
+    if (caps.type != HouseholdType.friends || _isIncome) {
+      return const SizedBox.shrink();
+    }
+
+    final pools = ref.watch(activePoolsProvider).value ?? const [];
+    // El gasto puede estar en un fondo ya cerrado (edición): lo mostramos
+    // igual para no "perderlo" silenciosamente al guardar.
+    final hasSelectionOutsideActives = _selectedPoolId != null &&
+        !pools.any((pool) => pool.id == _selectedPoolId);
+    if (pools.isEmpty && !hasSelectionOutsideActives) {
+      return const SizedBox.shrink();
+    }
+
+    final t = AppLocalizations.of(context);
+    final theme = context.theme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionIntro(
+          eyebrow: t.expensesFormSectionPoolEyebrow,
+          title: t.expensesFormSectionPoolTitle,
+          subtitle: t.expensesFormSectionPoolSubtitle,
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            ChoiceChip(
+              selected: _selectedPoolId == null,
+              onSelected: (_) => setState(() => _selectedPoolId = null),
+              showCheckmark: false,
+              label: Text(t.expensesFormPoolNone),
+              labelStyle: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: _selectedPoolId == null
+                    ? Colors.white
+                    : theme.textPrimary,
+              ),
+              selectedColor: theme.primary,
+              backgroundColor: theme.surface,
+              side: BorderSide(
+                color: _selectedPoolId == null
+                    ? theme.primary
+                    : theme.border.withValues(alpha: 0.6),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+              ),
+            ),
+            for (final pool in pools)
+              ChoiceChip(
+                selected: _selectedPoolId == pool.id,
+                onSelected: (_) =>
+                    setState(() => _selectedPoolId = pool.id),
+                showCheckmark: false,
+                label: Text('${pool.emoji} ${pool.name}'),
+                labelStyle: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: _selectedPoolId == pool.id
+                      ? Colors.white
+                      : theme.textPrimary,
+                ),
+                selectedColor: theme.primary,
+                backgroundColor: theme.surface,
+                side: BorderSide(
+                  color: _selectedPoolId == pool.id
+                      ? theme.primary
+                      : theme.border.withValues(alpha: 0.6),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 28),
+      ],
     );
   }
 
