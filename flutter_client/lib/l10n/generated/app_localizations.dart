@@ -5499,6 +5499,114 @@ abstract class AppLocalizations {
   /// **'{spent} de {limit}'**
   String budgetsSpentOf(String spent, String limit);
 
+  /// No description provided for @trendTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'TENDENCIA · 6 MESES'**
+  String get trendTitle;
+
+  /// No description provided for @trendDeltaDown.
+  ///
+  /// In es, this message translates to:
+  /// **'{pct}% menos que en {month}'**
+  String trendDeltaDown(int pct, String month);
+
+  /// No description provided for @trendDeltaUp.
+  ///
+  /// In es, this message translates to:
+  /// **'{pct}% más que en {month}'**
+  String trendDeltaUp(int pct, String month);
+
+  /// No description provided for @trendDeltaFlat.
+  ///
+  /// In es, this message translates to:
+  /// **'Parecido a {month}'**
+  String trendDeltaFlat(String month);
+
+  /// No description provided for @trendCurrentMonthLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Gasto de este mes'**
+  String get trendCurrentMonthLabel;
+
+  /// No description provided for @exportCsvTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Exportar mes (CSV)'**
+  String get exportCsvTooltip;
+
+  /// No description provided for @exportCsvEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay movimientos este mes para exportar'**
+  String get exportCsvEmpty;
+
+  /// No description provided for @exportCsvShareSubject.
+  ///
+  /// In es, this message translates to:
+  /// **'Finanzas de {month} — HomeSync'**
+  String exportCsvShareSubject(String month);
+
+  /// No description provided for @csvHeaderDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha'**
+  String get csvHeaderDate;
+
+  /// No description provided for @csvHeaderType.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo'**
+  String get csvHeaderType;
+
+  /// No description provided for @csvHeaderTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Detalle'**
+  String get csvHeaderTitle;
+
+  /// No description provided for @csvHeaderCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría'**
+  String get csvHeaderCategory;
+
+  /// No description provided for @csvHeaderAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Monto'**
+  String get csvHeaderAmount;
+
+  /// No description provided for @csvHeaderPayer.
+  ///
+  /// In es, this message translates to:
+  /// **'Pagó'**
+  String get csvHeaderPayer;
+
+  /// No description provided for @csvHeaderSplit.
+  ///
+  /// In es, this message translates to:
+  /// **'División'**
+  String get csvHeaderSplit;
+
+  /// No description provided for @csvTypeExpense.
+  ///
+  /// In es, this message translates to:
+  /// **'Gasto'**
+  String get csvTypeExpense;
+
+  /// No description provided for @csvTypeIncome.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingreso'**
+  String get csvTypeIncome;
+
+  /// No description provided for @csvTypeSettlement.
+  ///
+  /// In es, this message translates to:
+  /// **'Liquidación'**
+  String get csvTypeSettlement;
+
   /// No description provided for @expensesPlannedSkip.
   ///
   /// In es, this message translates to:

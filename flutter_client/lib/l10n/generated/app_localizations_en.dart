@@ -3419,6 +3419,68 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get trendTitle => 'TREND · 6 MONTHS';
+
+  @override
+  String trendDeltaDown(int pct, String month) {
+    return '$pct% less than $month';
+  }
+
+  @override
+  String trendDeltaUp(int pct, String month) {
+    return '$pct% more than $month';
+  }
+
+  @override
+  String trendDeltaFlat(String month) {
+    return 'About the same as $month';
+  }
+
+  @override
+  String get trendCurrentMonthLabel => 'Spent this month';
+
+  @override
+  String get exportCsvTooltip => 'Export month (CSV)';
+
+  @override
+  String get exportCsvEmpty => 'No entries this month to export';
+
+  @override
+  String exportCsvShareSubject(String month) {
+    return '$month finances — HomeSync';
+  }
+
+  @override
+  String get csvHeaderDate => 'Date';
+
+  @override
+  String get csvHeaderType => 'Type';
+
+  @override
+  String get csvHeaderTitle => 'Detail';
+
+  @override
+  String get csvHeaderCategory => 'Category';
+
+  @override
+  String get csvHeaderAmount => 'Amount';
+
+  @override
+  String get csvHeaderPayer => 'Paid by';
+
+  @override
+  String get csvHeaderSplit => 'Split';
+
+  @override
+  String get csvTypeExpense => 'Expense';
+
+  @override
+  String get csvTypeIncome => 'Income';
+
+  @override
+  String get csvTypeSettlement => 'Settlement';
+
+  @override
   String get expensesPlannedSkip => 'Skip';
 
   @override

@@ -28,15 +28,18 @@ import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/app_swipe_to_delete.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
 import 'package:homesync_client/shared/widgets/expressive/expressive.dart';
+import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:intl/intl.dart';
 
 import '../providers/estimated_income_provider.dart';
+import '../utils/expense_csv_exporter.dart';
 import '../widgets/budget_section.dart';
 import '../widgets/estimated_income_sheet.dart';
 import '../widgets/expense_detail_sheet.dart';
 import '../widgets/expense_form_sheet.dart';
 import '../widgets/planned_expense_payment_sheet.dart';
 import '../widgets/recurring_expense_form_sheet.dart';
+import '../widgets/spend_trend_card.dart';
 import 'recurrentes_tab.dart';
 import 'savings_tab.dart';
 
@@ -231,7 +234,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             // 2. PRESUPUESTOS POR CATEGORÍA (premium; teaser para free)
             const SliverToBoxAdapter(child: BudgetSection()),
 
-            // 3. FEED & FUTURE EXPENSES
+            // 3. TENDENCIA 6 MESES (se oculta hasta tener 2 meses con datos)
+            const SliverToBoxAdapter(child: SpendTrendCard()),
+
+            // 4. FEED & FUTURE EXPENSES
             feedAsync.when(
               loading: () => _buildFeedLoadingSliver(),
               error: (e, _) => SliverFillRemaining(
@@ -276,15 +282,31 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              Text(
-                                AppLocalizations.of(context)
-                                    .expensesActivityRecentEyebrow,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 12,
+                              Expanded(
+                                child: Text(
+                                  AppLocalizations.of(context)
+                                      .expensesActivityRecentEyebrow,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 12,
+                                    color: theme.textSecondary
+                                        .withValues(alpha: 0.7),
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                              ),
+                              // Export CSV del mes (premium): discreto, junto
+                              // al eyebrow — es una acción de power user.
+                              IconButton(
+                                onPressed: _exportMonthCsv,
+                                tooltip: AppLocalizations.of(context)
+                                    .exportCsvTooltip,
+                                visualDensity: VisualDensity.compact,
+                                icon: Icon(
+                                  Icons.ios_share_rounded,
+                                  size: 17,
                                   color: theme.textSecondary
-                                      .withValues(alpha: 0.7),
-                                  letterSpacing: 1.2,
+                                      .withValues(alpha: 0.8),
                                 ),
                               ),
                             ],
@@ -395,6 +417,39 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       category: category,
       transactionType: transactionType,
     );
+  }
+
+  /// Exporta los movimientos del mes a CSV (premium) y abre el share sheet.
+  Future<void> _exportMonthCsv() async {
+    final t = AppLocalizations.of(context);
+    final isPremium = ref.read(premiumProvider).value ?? false;
+    if (!isPremium) {
+      PremiumPaywall.show(context);
+      return;
+    }
+
+    try {
+      final exported = await ExpenseCsvExporter.exportCurrentMonth(
+        feed: _effectiveFeedForBreakdowns(),
+        t: t,
+        localeTag: Localizations.localeOf(context).toString(),
+      );
+      if (!mounted) return;
+      if (exported == 0) {
+        AppSnackBar.show(
+          context,
+          message: t.exportCsvEmpty,
+          type: AppSnackBarType.neutral,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      AppSnackBar.show(
+        context,
+        message: t.commonErrorWithDetails('$e'),
+        type: AppSnackBarType.error,
+      );
+    }
   }
 
   List<FeedItemModel> _effectiveFeedForBreakdowns() {

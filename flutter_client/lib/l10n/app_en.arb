@@ -2147,6 +2147,58 @@
       }
     }
   },
+  "trendTitle": "TREND · 6 MONTHS",
+  "trendDeltaDown": "{pct}% less than {month}",
+  "@trendDeltaDown": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "trendDeltaUp": "{pct}% more than {month}",
+  "@trendDeltaUp": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "trendDeltaFlat": "About the same as {month}",
+  "@trendDeltaFlat": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "trendCurrentMonthLabel": "Spent this month",
+  "exportCsvTooltip": "Export month (CSV)",
+  "exportCsvEmpty": "No entries this month to export",
+  "exportCsvShareSubject": "{month} finances — HomeSync",
+  "@exportCsvShareSubject": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "csvHeaderDate": "Date",
+  "csvHeaderType": "Type",
+  "csvHeaderTitle": "Detail",
+  "csvHeaderCategory": "Category",
+  "csvHeaderAmount": "Amount",
+  "csvHeaderPayer": "Paid by",
+  "csvHeaderSplit": "Split",
+  "csvTypeExpense": "Expense",
+  "csvTypeIncome": "Income",
+  "csvTypeSettlement": "Settlement",
   "expensesPlannedSkip": "Skip",
   "expensesPlannedPay": "{type, select, income{Collect} other{Pay}}",
   "@expensesPlannedPay": {

@@ -2182,6 +2182,58 @@
       }
     }
   },
+  "trendTitle": "TENDENCIA · 6 MESES",
+  "trendDeltaDown": "{pct}% menos que en {month}",
+  "@trendDeltaDown": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "trendDeltaUp": "{pct}% más que en {month}",
+  "@trendDeltaUp": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "trendDeltaFlat": "Parecido a {month}",
+  "@trendDeltaFlat": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "trendCurrentMonthLabel": "Gasto de este mes",
+  "exportCsvTooltip": "Exportar mes (CSV)",
+  "exportCsvEmpty": "No hay movimientos este mes para exportar",
+  "exportCsvShareSubject": "Finanzas de {month} — HomeSync",
+  "@exportCsvShareSubject": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "csvHeaderDate": "Fecha",
+  "csvHeaderType": "Tipo",
+  "csvHeaderTitle": "Detalle",
+  "csvHeaderCategory": "Categoría",
+  "csvHeaderAmount": "Monto",
+  "csvHeaderPayer": "Pagó",
+  "csvHeaderSplit": "División",
+  "csvTypeExpense": "Gasto",
+  "csvTypeIncome": "Ingreso",
+  "csvTypeSettlement": "Liquidación",
   "expensesPlannedSkip": "Omitir",
   "expensesPlannedPay": "{type, select, income{Cobrar} other{Pagar}}",
   "@expensesPlannedPay": {
