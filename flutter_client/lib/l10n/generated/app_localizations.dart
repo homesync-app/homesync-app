@@ -5733,6 +5733,42 @@ abstract class AppLocalizations {
   /// **'QUIÉN PUSO'**
   String get recapPayersTitle;
 
+  /// No description provided for @allowanceRepeatToggle.
+  ///
+  /// In es, this message translates to:
+  /// **'Repetir todos los meses'**
+  String get allowanceRepeatToggle;
+
+  /// No description provided for @allowanceActiveScheduleInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'Mesada mensual activa: {amount} el día {day}'**
+  String allowanceActiveScheduleInfo(String amount, int day);
+
+  /// No description provided for @allowanceScheduleDisable.
+  ///
+  /// In es, this message translates to:
+  /// **'Desactivar'**
+  String get allowanceScheduleDisable;
+
+  /// No description provided for @allowanceScheduleDisabledSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'Mesada mensual desactivada'**
+  String get allowanceScheduleDisabledSnack;
+
+  /// No description provided for @allowanceScheduledSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'Mesada enviada y programada para el día {day} de cada mes'**
+  String allowanceScheduledSnack(int day);
+
+  /// No description provided for @allowanceScheduleError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo programar la mesada: {details}'**
+  String allowanceScheduleError(String details);
+
   /// No description provided for @poolsSectionTitle.
   ///
   /// In es, this message translates to:

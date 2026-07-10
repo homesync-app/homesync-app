@@ -3559,6 +3559,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recapPayersTitle => 'WHO PAID';
 
   @override
+  String get allowanceRepeatToggle => 'Repeat every month';
+
+  @override
+  String allowanceActiveScheduleInfo(String amount, int day) {
+    return 'Monthly allowance active: $amount on day $day';
+  }
+
+  @override
+  String get allowanceScheduleDisable => 'Turn off';
+
+  @override
+  String get allowanceScheduleDisabledSnack => 'Monthly allowance turned off';
+
+  @override
+  String allowanceScheduledSnack(int day) {
+    return 'Allowance sent and scheduled for day $day of every month';
+  }
+
+  @override
+  String allowanceScheduleError(String details) {
+    return 'Couldn\'t schedule the allowance: $details';
+  }
+
+  @override
   String get poolsSectionTitle => 'POOLS';
 
   @override

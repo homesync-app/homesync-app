@@ -3571,6 +3571,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recapPayersTitle => 'QUIÉN PUSO';
 
   @override
+  String get allowanceRepeatToggle => 'Repetir todos los meses';
+
+  @override
+  String allowanceActiveScheduleInfo(String amount, int day) {
+    return 'Mesada mensual activa: $amount el día $day';
+  }
+
+  @override
+  String get allowanceScheduleDisable => 'Desactivar';
+
+  @override
+  String get allowanceScheduleDisabledSnack => 'Mesada mensual desactivada';
+
+  @override
+  String allowanceScheduledSnack(int day) {
+    return 'Mesada enviada y programada para el día $day de cada mes';
+  }
+
+  @override
+  String allowanceScheduleError(String details) {
+    return 'No se pudo programar la mesada: $details';
+  }
+
+  @override
   String get poolsSectionTitle => 'FONDOS';
 
   @override

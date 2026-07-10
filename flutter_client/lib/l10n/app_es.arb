@@ -2304,6 +2304,36 @@
   },
   "recapCategoriesTitle": "EN QUÉ SE FUE",
   "recapPayersTitle": "QUIÉN PUSO",
+  "allowanceRepeatToggle": "Repetir todos los meses",
+  "allowanceActiveScheduleInfo": "Mesada mensual activa: {amount} el día {day}",
+  "@allowanceActiveScheduleInfo": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "allowanceScheduleDisable": "Desactivar",
+  "allowanceScheduleDisabledSnack": "Mesada mensual desactivada",
+  "allowanceScheduledSnack": "Mesada enviada y programada para el día {day} de cada mes",
+  "@allowanceScheduledSnack": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "allowanceScheduleError": "No se pudo programar la mesada: {details}",
+  "@allowanceScheduleError": {
+    "placeholders": {
+      "details": {
+        "type": "String"
+      }
+    }
+  },
   "poolsSectionTitle": "FONDOS",
   "poolsNewAction": "Nuevo",
   "poolsEmptyCta": "Crear un fondo (asado, viaje, regalo…)",

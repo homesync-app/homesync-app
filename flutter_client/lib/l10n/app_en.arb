@@ -2269,6 +2269,36 @@
   },
   "recapCategoriesTitle": "WHERE IT WENT",
   "recapPayersTitle": "WHO PAID",
+  "allowanceRepeatToggle": "Repeat every month",
+  "allowanceActiveScheduleInfo": "Monthly allowance active: {amount} on day {day}",
+  "@allowanceActiveScheduleInfo": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "allowanceScheduleDisable": "Turn off",
+  "allowanceScheduleDisabledSnack": "Monthly allowance turned off",
+  "allowanceScheduledSnack": "Allowance sent and scheduled for day {day} of every month",
+  "@allowanceScheduledSnack": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "allowanceScheduleError": "Couldn't schedule the allowance: {details}",
+  "@allowanceScheduleError": {
+    "placeholders": {
+      "details": {
+        "type": "String"
+      }
+    }
+  },
   "poolsSectionTitle": "POOLS",
   "poolsNewAction": "New",
   "poolsEmptyCta": "Create a pool (BBQ, trip, gift…)",

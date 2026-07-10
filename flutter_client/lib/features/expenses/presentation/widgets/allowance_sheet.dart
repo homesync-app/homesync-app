@@ -7,6 +7,7 @@ import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/allowance_schedule_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -44,6 +45,11 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
   bool _loading = false;
   String? _errorMessage;
 
+  /// Mesada recurrente: repetir todos los meses el día elegido (fase 3 del
+  /// spec de teen finances; el cron server-side hace los envíos siguientes).
+  bool _repeatMonthly = false;
+  int _repeatDay = DateTime.now().day.clamp(1, 28);
+
   @override
   void initState() {
     super.initState();
@@ -63,9 +69,12 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
   Future<void> _send() async {
     final t = AppLocalizations.of(context);
     final householdId = ref.read(householdIdProvider).value;
-    final amount = double.tryParse(
-      _amountController.text.replaceAll('.', '').replaceAll(',', '.'),
-    );
+    // es-AR sin centavos: coma = decimal al parsear, pero se redondea.
+    final amount = double
+        .tryParse(
+          _amountController.text.replaceAll('.', '').replaceAll(',', '.'),
+        )
+        ?.roundToDouble();
 
     if (householdId == null || _recipientId == null) {
       setState(() => _errorMessage = t.allowanceRecipientRequired);
@@ -107,12 +116,42 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
         return;
       }
 
+      // Mesada recurrente: dejamos programados los meses siguientes (el
+      // envío de HOY ya salió arriba; last_run_month evita el doble envío).
+      var scheduled = false;
+      if (_repeatMonthly) {
+        try {
+          await ref.read(allowanceScheduleMutationsProvider).upsert(
+                toUserId: _recipientId!,
+                amount: amount,
+                dayOfMonth: _repeatDay,
+                note: _noteController.text.trim().isEmpty
+                    ? null
+                    : _noteController.text.trim(),
+              );
+          scheduled = true;
+        } catch (e) {
+          // La transferencia YA salió: avisamos que la programación falló
+          // sin deshacer nada.
+          if (mounted) {
+            _snack(
+              t.allowanceScheduleError(friendlyErrorMessage(e, t: t)),
+              AppSnackBarType.error,
+            );
+          }
+        }
+      }
+
+      if (!mounted) return;
       ref.invalidate(userBalanceProvider);
       ref.invalidate(expenseControllerProvider);
       Navigator.of(context).pop(true);
       // Success snackbar is fine: the sheet has popped, so it is no longer
       // hidden behind a modal barrier.
-      _snack(t.allowanceSentSnack, AppSnackBarType.success);
+      _snack(
+        scheduled ? t.allowanceScheduledSnack(_repeatDay) : t.allowanceSentSnack,
+        AppSnackBarType.success,
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -234,6 +273,8 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    _buildRepeatSection(t, theme),
                   ],
                   if (_errorMessage != null) ...[
                     const SizedBox(height: 16),
@@ -245,6 +286,150 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Toggle de mesada mensual + día, y banner de la programación activa
+  /// hacia el teen seleccionado (con desactivar).
+  Widget _buildRepeatSection(AppLocalizations t, AppThemeColors theme) {
+    final schedules =
+        ref.watch(myAllowanceSchedulesProvider).value ?? const [];
+    AllowanceScheduleModel? activeForRecipient;
+    for (final schedule in schedules) {
+      if (schedule.toUserId == _recipientId) {
+        activeForRecipient = schedule;
+        break;
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (activeForRecipient != null) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+              border: Border.all(
+                color: AppColors.success.withValues(alpha: 0.16),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.event_repeat_rounded,
+                  size: 18,
+                  color: AppColors.success,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    t.allowanceActiveScheduleInfo(
+                      '\$${activeForRecipient.amount.round()}',
+                      activeForRecipient.dayOfMonth,
+                    ),
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: theme.textPrimary,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final id = activeForRecipient!.id;
+                    try {
+                      await ref
+                          .read(allowanceScheduleMutationsProvider)
+                          .deactivate(id);
+                      if (!mounted) return;
+                      _snack(
+                        t.allowanceScheduleDisabledSnack,
+                        AppSnackBarType.neutral,
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      _snack(
+                        t.allowanceScheduleError(
+                          friendlyErrorMessage(e, t: t),
+                        ),
+                        AppSnackBarType.error,
+                      );
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: Text(
+                    t.allowanceScheduleDisable,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                t.allowanceRepeatToggle,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary,
+                ),
+              ),
+            ),
+            Switch.adaptive(
+              value: _repeatMonthly,
+              activeThumbColor: AppColors.primary,
+              onChanged: (value) => setState(() => _repeatMonthly = value),
+            ),
+          ],
+        ),
+        if (_repeatMonthly) ...[
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: theme.surfaceVariant.withValues(alpha: 0.42),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<int>(
+                value: _repeatDay,
+                isExpanded: true,
+                borderRadius: BorderRadius.circular(AppRadii.lg),
+                items: [
+                  for (var day = 1; day <= 28; day++)
+                    DropdownMenuItem(
+                      value: day,
+                      child: Text(
+                        t.expensesRecurrentesDayOfMonth(day),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: theme.textPrimary,
+                        ),
+                      ),
+                    ),
+                ],
+                onChanged: (day) {
+                  if (day != null) setState(() => _repeatDay = day);
+                },
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
