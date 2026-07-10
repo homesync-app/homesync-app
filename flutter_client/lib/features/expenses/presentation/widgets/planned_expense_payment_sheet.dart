@@ -54,10 +54,10 @@ class _PlannedExpensePaymentSheetState
   @override
   void initState() {
     super.initState();
-    // decimalPattern es_ES agrupa miles con '.' y decimales con ',', así que
-    // un monto con centavos no se trunca (antes se hacía .toInt()).
-    _amountController.text =
-        NumberFormat.decimalPattern('es_ES').format(widget.plannedExpense.amount);
+    // es-AR sin centavos: enteros redondeados, como el form de gastos
+    // (los centavos "ya no son nada y molestan visualmente").
+    _amountController.text = NumberFormat.decimalPattern('es_ES')
+        .format(widget.plannedExpense.amount.round());
     _paidBy = widget.plannedExpense.payerId;
   }
 
@@ -94,43 +94,27 @@ class _PlannedExpensePaymentSheetState
     return adults.isNotEmpty ? adults : members;
   }
 
-  /// Interpreta el texto con convención es-AR: '.' agrupa miles y ',' separa
-  /// decimales. Antes la coma se descartaba como si fuera un separador de
-  /// miles, así que "1.500,50" se leía como 150.050 (×100).
+  /// es-AR sin centavos: el monto vive como entero. La coma se interpreta
+  /// como separador decimal (no de miles) para no leer "1.500,50" como
+  /// 150.050 (×100), pero el resultado se redondea — los centavos son ruido.
+  /// Misma convención que _parseFormattedAmount del form de gastos.
   double? _parseAmount(String raw) {
-    final cleaned = raw.trim().replaceAll('.', '').replaceAll(',', '.');
-    if (cleaned.isEmpty) return null;
-    return double.tryParse(cleaned);
+    final normalized = raw.trim().replaceAll('.', '').replaceAll(',', '.');
+    if (normalized.isEmpty) return null;
+    final parsed = double.tryParse(normalized);
+    return parsed?.roundToDouble();
   }
 
   void _onAmountChanged(String val) {
-    // Dejamos solo dígitos y una coma decimal (máx. 2 decimales); la parte
-    // entera se reformatea con puntos de miles en cada tecla.
-    final sanitized = val.replaceAll(RegExp(r'[^0-9,]'), '');
-    if (sanitized.isEmpty) {
+    final parsed = _parseAmount(val);
+    if (parsed == null) {
       _amountController.text = '';
       return;
     }
 
-    final commaIndex = sanitized.indexOf(',');
-    final intDigits = (commaIndex >= 0
-            ? sanitized.substring(0, commaIndex)
-            : sanitized)
-        .replaceAll(',', '');
-    var decimals = commaIndex >= 0
-        ? sanitized.substring(commaIndex + 1).replaceAll(',', '')
-        : null;
-    if (decimals != null && decimals.length > 2) {
-      decimals = decimals.substring(0, 2);
-    }
-
-    final intValue = int.tryParse(intDigits) ?? 0;
-    final formattedInt = intDigits.isEmpty
-        ? '0'
-        : NumberFormat.decimalPattern('es_ES').format(intValue);
+    // Enteros con puntos de miles; una coma tipeada se traga al instante.
     final formatted =
-        decimals == null ? formattedInt : '$formattedInt,$decimals';
-
+        NumberFormat.decimalPattern('es_ES').format(parsed.round());
     _amountController.value = TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),
@@ -284,7 +268,7 @@ class _PlannedExpensePaymentSheetState
           autofocus: true,
           controller: _amountController,
           onChanged: _onAmountChanged,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: TextInputType.number,
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w900,
