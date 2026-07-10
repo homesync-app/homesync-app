@@ -54,9 +54,10 @@ class _PlannedExpensePaymentSheetState
   @override
   void initState() {
     super.initState();
-    final initialAmount = widget.plannedExpense.amount.toInt();
+    // decimalPattern es_ES agrupa miles con '.' y decimales con ',', así que
+    // un monto con centavos no se trunca (antes se hacía .toInt()).
     _amountController.text =
-        NumberFormat.decimalPattern('es_ES').format(initialAmount);
+        NumberFormat.decimalPattern('es_ES').format(widget.plannedExpense.amount);
     _paidBy = widget.plannedExpense.payerId;
   }
 
@@ -93,31 +94,55 @@ class _PlannedExpensePaymentSheetState
     return adults.isNotEmpty ? adults : members;
   }
 
+  /// Interpreta el texto con convención es-AR: '.' agrupa miles y ',' separa
+  /// decimales. Antes la coma se descartaba como si fuera un separador de
+  /// miles, así que "1.500,50" se leía como 150.050 (×100).
+  double? _parseAmount(String raw) {
+    final cleaned = raw.trim().replaceAll('.', '').replaceAll(',', '.');
+    if (cleaned.isEmpty) return null;
+    return double.tryParse(cleaned);
+  }
+
   void _onAmountChanged(String val) {
-    final clean = val.replaceAll('.', '').replaceAll(',', '');
-    if (clean.isEmpty) {
+    // Dejamos solo dígitos y una coma decimal (máx. 2 decimales); la parte
+    // entera se reformatea con puntos de miles en cada tecla.
+    final sanitized = val.replaceAll(RegExp(r'[^0-9,]'), '');
+    if (sanitized.isEmpty) {
       _amountController.text = '';
       return;
     }
 
-    final parsed = int.tryParse(clean);
-    if (parsed != null) {
-      final formatted = NumberFormat.decimalPattern('es_ES').format(parsed);
-      _amountController.value = TextEditingValue(
-        text: formatted,
-        selection: TextSelection.collapsed(offset: formatted.length),
-      );
+    final commaIndex = sanitized.indexOf(',');
+    final intDigits = (commaIndex >= 0
+            ? sanitized.substring(0, commaIndex)
+            : sanitized)
+        .replaceAll(',', '');
+    var decimals = commaIndex >= 0
+        ? sanitized.substring(commaIndex + 1).replaceAll(',', '')
+        : null;
+    if (decimals != null && decimals.length > 2) {
+      decimals = decimals.substring(0, 2);
     }
+
+    final intValue = int.tryParse(intDigits) ?? 0;
+    final formattedInt = intDigits.isEmpty
+        ? '0'
+        : NumberFormat.decimalPattern('es_ES').format(intValue);
+    final formatted =
+        decimals == null ? formattedInt : '$formattedInt,$decimals';
+
+    _amountController.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   }
 
   Future<void> _confirmPayment() async {
-    if (_amountController.text.isEmpty) return;
+    final amount = _parseAmount(_amountController.text);
+    if (amount == null || amount <= 0) return;
 
     setState(() => _isLoading = true);
     try {
-      final amount = double.parse(
-        _amountController.text.replaceAll('.', '').replaceAll(',', ''),
-      );
 
       final result = await ref
           .read(combinedFeedControllerProvider.notifier)
@@ -201,7 +226,9 @@ class _PlannedExpensePaymentSheetState
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  AppLocalizations.of(context).expensesPlannedPaymentTitle,
+                  AppLocalizations.of(context).expensesPlannedPaymentTitle(
+                    widget.plannedExpense.transactionType,
+                  ),
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -212,6 +239,7 @@ class _PlannedExpensePaymentSheetState
                 const SizedBox(height: 8),
                 Text(
                   AppLocalizations.of(context).expensesPlannedPaymentSubtitle(
+                    widget.plannedExpense.transactionType,
                     widget.plannedExpense.title,
                   ),
                   style: TextStyle(
@@ -256,7 +284,7 @@ class _PlannedExpensePaymentSheetState
           autofocus: true,
           controller: _amountController,
           onChanged: _onAmountChanged,
-          keyboardType: TextInputType.number,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w900,
@@ -296,7 +324,9 @@ class _PlannedExpensePaymentSheetState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          AppLocalizations.of(context).expensesPlannedPaymentDateEyebrow,
+          AppLocalizations.of(context).expensesPlannedPaymentDateEyebrow(
+            widget.plannedExpense.transactionType,
+          ),
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,

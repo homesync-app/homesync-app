@@ -354,10 +354,16 @@ class CombinedFeedController extends _$CombinedFeedController {
         throw l;
       },
       (r) {
-        if (ref.read(isOnlineProvider)) {
+        // El pago ya está escrito; el refresh es best-effort. `ref.mounted`
+        // protege contra el auto-dispose del controller durante el await del
+        // RPC (mismo patrón que ExpenseController.settleDebt).
+        if (ref.mounted && ref.read(isOnlineProvider)) {
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
           ref.invalidate(personalFinanceSummaryProvider);
           ref.invalidate(recentActivityRemoteProvider);
+          // El pago crea un gasto real con splits: la deuda entre miembros
+          // cambia y el widget de división del Inicio debe reflejarlo.
+          ref.invalidate(expenseBalancesProvider);
           ref.invalidateSelf();
         }
         return r;
@@ -374,7 +380,7 @@ class CombinedFeedController extends _$CombinedFeedController {
         throw l;
       },
       (r) {
-        if (ref.read(isOnlineProvider)) {
+        if (ref.mounted && ref.read(isOnlineProvider)) {
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
           ref.invalidateSelf();
         }
@@ -431,11 +437,12 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
         throw l;
       },
       (r) async {
+        if (!ref.mounted) return;
         final householdId = await ref.read(householdIdProvider.future);
         if (householdId != null) {
           await repo.processRecurringExpenses(householdId);
         }
-        if (ref.read(isOnlineProvider)) {
+        if (ref.mounted && ref.read(isOnlineProvider)) {
           ref.invalidate(combinedFeedControllerProvider);
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
           ref.invalidate(personalFinanceSummaryProvider);
@@ -455,7 +462,7 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
         throw l;
       },
       (r) {
-        if (ref.read(isOnlineProvider)) {
+        if (ref.mounted && ref.read(isOnlineProvider)) {
           ref.invalidate(combinedFeedControllerProvider);
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
           ref.invalidateSelf();
@@ -472,10 +479,16 @@ class MonthlyProjectionData {
   const MonthlyProjectionData({required this.spent, required this.pending});
 }
 
+/// Parte del usuario en un movimiento pendiente: personal/gift completos solo
+/// para su payer; el resto respeta el ratio anclado del hogar cuando reparten
+/// exactamente dos (mismo criterio que ExpenseSplitBuilder) y partes iguales
+/// si no. Quien no reparte (p. ej. un teen en familia) no tiene parte.
 double _projectedShareForUser({
   required FeedItemModel item,
   required String userId,
-  required int memberCount,
+  required List<String> splitMemberIds,
+  required double defaultRatio,
+  required String? anchorId,
 }) {
   final splitType = (item.splitType ?? 'equal').toLowerCase();
 
@@ -483,8 +496,19 @@ double _projectedShareForUser({
     return item.payerId == userId ? item.amount : 0.0;
   }
 
-  final safeMemberCount = memberCount > 0 ? memberCount : 2;
-  return item.amount / safeMemberCount;
+  // Miembros aún no cargados: mostrar el monto completo es menos engañoso que
+  // inventar una división (y en solo-mode el único adulto ES el total).
+  if (splitMemberIds.isEmpty) return item.amount;
+  if (!splitMemberIds.contains(userId)) return 0.0;
+
+  if (splitMemberIds.length == 2 &&
+      defaultRatio != 0.5 &&
+      anchorId != null &&
+      splitMemberIds.contains(anchorId)) {
+    return item.amount * (userId == anchorId ? defaultRatio : 1.0 - defaultRatio);
+  }
+
+  return item.amount / splitMemberIds.length;
 }
 
 @riverpod
@@ -540,10 +564,8 @@ Future<MonthlyProjectionData> monthlyProjection(
   final splitMembers = isFriendsOrRoommates
       ? members
       : members.where((m) => m.isAdult).toList();
-  // Fallback 1 (no 2): si los miembros aún no cargaron, mostrar el monto
-  // completo es menos engañoso que inventar una división por la mitad
-  // (y en solo-mode el único adulto ES el total).
-  final memberCount = splitMembers.isNotEmpty ? splitMembers.length : 1;
+  final splitMemberIds =
+      splitMembers.map((m) => m.userId).toList(growable: false);
   // Integrated/shared economy (couple or family): pending planned expenses count
   // in full toward the household rather than being split per member.
   final isSharedEconomy = household?.financeMode == 'shared';
@@ -552,7 +574,10 @@ Future<MonthlyProjectionData> monthlyProjection(
     // Only current month
     if (item.date.month != now.month || item.date.year != now.year) continue;
 
-    if (item.isRealExpense) {
+    // "Pagado" cuenta solo GASTOS: un ingreso no es plata gastada y una
+    // liquidación duplicaría el gasto original que ya contó (mismo criterio
+    // que FamilyFinanceSection).
+    if (item.isRealExpense && item.transactionType == 'expense') {
       // "Pagado" shows REAL money that left a wallet, never debts/shares:
       //  - shared (unified) economy: the whole household's spend — both members
       //    see the same figure;
@@ -568,12 +593,16 @@ Future<MonthlyProjectionData> monthlyProjection(
   }
 
   for (final item in monthlyPendingItems) {
+    // Los planificados de ingreso (sueldo recurrente) no son gasto proyectado.
+    if (item.transactionType != 'expense') continue;
     pending += isSharedEconomy
         ? item.amount
         : _projectedShareForUser(
             item: item,
             userId: userId,
-            memberCount: memberCount,
+            splitMemberIds: splitMemberIds,
+            defaultRatio: household?.defaultSplitRatio ?? 0.5,
+            anchorId: household?.splitRatioAnchorId,
           );
   }
 

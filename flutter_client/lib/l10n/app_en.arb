@@ -2058,6 +2058,10 @@
   "expensesTabRecurring": "Recurring",
   "expensesTabGoals": "Goals",
   "expensesFabMovement": "Entry",
+  "expensesEmptyCta": "Log a movement",
+  "@expensesEmptyCta": {
+    "description": "CTA button inside the empty movements feed."
+  },
   "expensesFabNewSubscription": "New subscription",
   "expensesFabNewGoal": "New goal",
   "expensesActivityRecentEyebrow": "RECENT ACTIVITY",
@@ -2094,10 +2098,20 @@
   "expensesBreakdownEmpty": "No entries recorded",
   "expensesBreakdownMovementsEyebrow": "ENTRIES",
   "expensesPlannedSkip": "Skip",
-  "expensesPlannedPay": "Pay",
-  "expensesPlannedPaymentSnack": "Payment for \"{title}\" recorded",
+  "expensesPlannedPay": "{type, select, income{Collect} other{Pay}}",
+  "@expensesPlannedPay": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesPlannedPaymentSnack": "{type, select, income{Income \"{title}\" recorded} other{Payment for \"{title}\" recorded}}",
   "@expensesPlannedPaymentSnack": {
     "placeholders": {
+      "type": {
+        "type": "String"
+      },
       "title": {
         "type": "String"
       }
@@ -3002,6 +3016,15 @@
   "statsRetry": "Retry",
   "statsHouseholdSummary": "Household summary",
   "statsTasks": "Tasks",
+  "statsTasksLabel": "{count, plural, =1{Task} other{Tasks}}",
+  "@statsTasksLabel": {
+    "description": "Pluralized 'tasks' label under the household summary metric.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "statsXP": "XP",
   "statsCoins": "Coins",
   "statsWeeklyHistory": "Weekly history",
@@ -3039,6 +3062,10 @@
     }
   },
   "weeklyWinnerSecondPlace": "Second place",
+  "weeklyWinnerFinalScore": "Final score",
+  "@weeklyWinnerFinalScore": {
+    "description": "Label of the revealed duel score card on the weekly winner screen."
+  },
   "weeklyWinnerRankingTitle": "Weekly ranking",
   "weeklyWinnerFallbackWinner": "Winner",
   "weeklyWinnerFallbackLoser": "Loser",
@@ -3152,6 +3179,32 @@
     }
   },
   "faceoffWeeklyRhythm": "Weekly rhythm",
+  "faceoffMyWeekLabel": "Your week",
+  "@faceoffMyWeekLabel": {
+    "description": "Label of the personal weekly XP progress bar on the duel card."
+  },
+  "faceoffPersonalRecordChip": "Best: {xp} XP",
+  "@faceoffPersonalRecordChip": {
+    "description": "Personal best week shown next to the weekly progress bar.",
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "faceoffStarterGoalChip": "Goal: {xp} XP",
+  "@faceoffStarterGoalChip": {
+    "description": "Starter goal shown when the user has no duel history yet.",
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "faceoffNewRecord": "New personal best!",
+  "@faceoffNewRecord": {
+    "description": "Shown under the weekly progress bar when the user beats their best week."
+  },
   "faceoffClosesToday": "Closes today",
   "faceoffDaysRemaining": "{days, plural, =1{1 day left} other{{days} days left}}",
   "@faceoffDaysRemaining": {
@@ -3647,17 +3700,34 @@
       }
     }
   },
-  "expensesPlannedPaymentTitle": "Confirm payment",
-  "expensesPlannedPaymentSubtitle": "You'll mark \"{title}\" as paid.",
+  "expensesPlannedPaymentTitle": "{type, select, income{Confirm income} other{Confirm payment}}",
+  "@expensesPlannedPaymentTitle": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesPlannedPaymentSubtitle": "{type, select, income{You'll mark \"{title}\" as collected.} other{You'll mark \"{title}\" as paid.}}",
   "@expensesPlannedPaymentSubtitle": {
     "placeholders": {
+      "type": {
+        "type": "String"
+      },
       "title": {
         "type": "String"
       }
     }
   },
   "expensesPlannedPaymentAmountEyebrow": "ACTUAL AMOUNT",
-  "expensesPlannedPaymentDateEyebrow": "PAYMENT DATE",
+  "expensesPlannedPaymentDateEyebrow": "{type, select, income{INCOME DATE} other{PAYMENT DATE}}",
+  "@expensesPlannedPaymentDateEyebrow": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
   "expensesDetailHeaderIncome": "Income detail",
   "expensesDetailHeaderSettlement": "Balance settlement detail",
   "expensesDetailHeaderExpense": "Expense detail",
@@ -3688,6 +3758,18 @@
   "expensesRecurrentesPremiumTitle": "Recurring payments",
   "expensesRecurrentesPremiumSubtitle": "Manage subscriptions, rent, and services automatically with HomeSync Premium.",
   "expensesRecurrentesPremiumCta": "LEARN MORE",
+  "expensesRecurrentesPremiumBullet1": "Rent, utilities and subscriptions log themselves every month.",
+  "@expensesRecurrentesPremiumBullet1": {
+    "description": "First benefit bullet on the recurring payments premium teaser."
+  },
+  "expensesRecurrentesPremiumBullet2": "Reminders before due dates so nothing slips.",
+  "@expensesRecurrentesPremiumBullet2": {
+    "description": "Second benefit bullet on the recurring payments premium teaser."
+  },
+  "expensesRecurrentesPremiumBullet3": "Everyone sees what's coming and what's left to pay.",
+  "@expensesRecurrentesPremiumBullet3": {
+    "description": "Third benefit bullet on the recurring payments premium teaser."
+  },
   "expensesRecurringEmptyTitle": "No recurring items",
   "expensesRecurringEmptySubtitle": "Create templates for subscriptions, rent, utilities, or fixed income.",
   "expensesRecurringIncomeSection": "FIXED INCOME",

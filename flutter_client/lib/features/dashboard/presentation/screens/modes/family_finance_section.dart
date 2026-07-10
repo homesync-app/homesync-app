@@ -81,13 +81,17 @@ class FamilyFinanceSection extends ConsumerWidget {
     } else {
       final feed = feedAsync.value ?? const <FeedItemModel>[];
       final now = DateTime.now();
+      // "Gasto compartido del mes": los personales/gift del viewer quedan
+      // fuera — el tile debe mostrar la misma cifra a todos los adultos.
       final spent = feed
           .where(
             (item) =>
                 item.isRealExpense &&
                 item.date.isSameMonth(now) &&
                 !item.isSettlement &&
-                item.transactionType == 'expense',
+                item.transactionType == 'expense' &&
+                !const {'personal', 'gift'}
+                    .contains((item.splitType ?? 'equal').toLowerCase()),
           )
           .fold<double>(0, (total, item) => total + item.amount);
 

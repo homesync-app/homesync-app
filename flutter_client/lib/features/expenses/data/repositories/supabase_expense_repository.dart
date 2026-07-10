@@ -646,7 +646,8 @@ class SupabaseExpenseRepository
             split_type,
             payer_default,
             due_date,
-            status
+            status,
+            type
           ''')
             .eq('household_id', householdId)
             .eq('status', 'pending')
@@ -672,7 +673,7 @@ class SupabaseExpenseRepository
             .map(
               (row) => FeedItemModel(
                 recordType: 'planned',
-                transactionType: 'expense',
+                transactionType: row['type'] as String? ?? 'expense',
                 id: row['id']?.toString() ?? '',
                 title: row['title'] as String? ?? 'Pendiente',
                 titleKey: row['title_key'] as String?,

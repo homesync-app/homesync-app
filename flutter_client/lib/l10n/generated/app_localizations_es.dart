@@ -3251,6 +3251,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get expensesFabMovement => 'Movimiento';
 
   @override
+  String get expensesEmptyCta => 'Registrar un movimiento';
+
+  @override
   String get expensesFabNewSubscription => 'Nueva Suscripción';
 
   @override
@@ -3363,11 +3366,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get expensesPlannedSkip => 'Omitir';
 
   @override
-  String get expensesPlannedPay => 'Pagar';
+  String expensesPlannedPay(String type) {
+    String _temp0 = intl.Intl.selectLogic(
+      type,
+      {
+        'income': 'Cobrar',
+        'other': 'Pagar',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
-  String expensesPlannedPaymentSnack(String title) {
-    return 'Pago de \"$title\" registrado';
+  String expensesPlannedPaymentSnack(String type, String title) {
+    String _temp0 = intl.Intl.selectLogic(
+      type,
+      {
+        'income': 'Cobro de \"$title\" registrado',
+        'other': 'Pago de \"$title\" registrado',
+      },
+    );
+    return '$_temp0';
   }
 
   @override
@@ -4972,6 +4991,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get statsTasks => 'Tareas';
 
   @override
+  String statsTasksLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Tareas',
+      one: 'Tarea',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get statsXP => 'XP';
 
   @override
@@ -5043,6 +5073,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get weeklyWinnerSecondPlace => 'Segundo puesto';
+
+  @override
+  String get weeklyWinnerFinalScore => 'Marcador final';
 
   @override
   String get weeklyWinnerRankingTitle => 'Ranking semanal';
@@ -5254,6 +5287,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get faceoffWeeklyRhythm => 'Ritmo semanal';
+
+  @override
+  String get faceoffMyWeekLabel => 'Tu semana';
+
+  @override
+  String faceoffPersonalRecordChip(int xp) {
+    return 'Récord: $xp XP';
+  }
+
+  @override
+  String faceoffStarterGoalChip(int xp) {
+    return 'Meta: $xp XP';
+  }
+
+  @override
+  String get faceoffNewRecord => '¡Nuevo récord personal!';
 
   @override
   String get faceoffClosesToday => 'Cierra hoy';
@@ -5914,18 +5963,43 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get expensesPlannedPaymentTitle => 'Confirmar pago';
+  String expensesPlannedPaymentTitle(String type) {
+    String _temp0 = intl.Intl.selectLogic(
+      type,
+      {
+        'income': 'Confirmar cobro',
+        'other': 'Confirmar pago',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
-  String expensesPlannedPaymentSubtitle(String title) {
-    return 'Vas a marcar \"$title\" como pagado.';
+  String expensesPlannedPaymentSubtitle(String type, String title) {
+    String _temp0 = intl.Intl.selectLogic(
+      type,
+      {
+        'income': 'Vas a marcar \"$title\" como cobrado.',
+        'other': 'Vas a marcar \"$title\" como pagado.',
+      },
+    );
+    return '$_temp0';
   }
 
   @override
   String get expensesPlannedPaymentAmountEyebrow => 'MONTO EFECTIVO';
 
   @override
-  String get expensesPlannedPaymentDateEyebrow => 'FECHA DE PAGO';
+  String expensesPlannedPaymentDateEyebrow(String type) {
+    String _temp0 = intl.Intl.selectLogic(
+      type,
+      {
+        'income': 'FECHA DE COBRO',
+        'other': 'FECHA DE PAGO',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get expensesDetailHeaderIncome => 'Detalle de ingreso';
@@ -5980,6 +6054,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get expensesRecurrentesPremiumCta => 'SABER MÁS';
+
+  @override
+  String get expensesRecurrentesPremiumBullet1 =>
+      'Alquiler, servicios y suscripciones se registran solos cada mes.';
+
+  @override
+  String get expensesRecurrentesPremiumBullet2 =>
+      'Recordatorios antes del vencimiento para que nada se pase.';
+
+  @override
+  String get expensesRecurrentesPremiumBullet3 =>
+      'Todos ven qué viene y cuánto falta pagar.';
 
   @override
   String get expensesRecurringEmptyTitle => 'Sin recurrentes';

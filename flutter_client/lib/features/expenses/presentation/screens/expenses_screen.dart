@@ -27,6 +27,7 @@ import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/app_swipe_to_delete.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
+import 'package:homesync_client/shared/widgets/expressive/expressive.dart';
 import 'package:intl/intl.dart';
 
 import '../providers/estimated_income_provider.dart';
@@ -155,10 +156,13 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         ref.invalidate(expenseControllerProvider);
       },
       color: AppColors.primary,
+      // Fade también arriba: el contenido se disuelve al pasar bajo las tabs
+      // en vez de cortarse seco (tip flutterpro "fade behind").
       child: EdgeFade(
-        fadeStart: false,
-        fadeEnd: true,
+        extent: 0.035,
         child: CustomScrollView(
+          // PrimaryScrollController del tab Finanzas (re-tap sube al tope).
+          primary: true,
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
@@ -337,6 +341,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           ),
                           child: _buildEmptyState(
                             AppLocalizations.of(context).expensesActivityEmpty,
+                            actionLabel:
+                                AppLocalizations.of(context).expensesEmptyCta,
+                            onAction: () => _showExpenseSheet(),
                           ),
                         ),
                       ),
@@ -431,17 +438,22 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         .toList();
   }
 
-  ExpenseModel _expenseFromFeedItem(FeedItemModel item) {
-    final expenses = ref.read(expenseControllerProvider).value;
-    final matches = expenses?.where((e) => e.id == item.id).toList() ??
-        const <ExpenseModel>[];
-    if (matches.isNotEmpty) return matches.first;
+  ExpenseModel _expenseFromFeedItem(
+    FeedItemModel item, {
+    double? amountOverride,
+  }) {
+    if (amountOverride == null) {
+      final expenses = ref.read(expenseControllerProvider).value;
+      final matches = expenses?.where((e) => e.id == item.id).toList() ??
+          const <ExpenseModel>[];
+      if (matches.isNotEmpty) return matches.first;
+    }
 
     return ExpenseModel(
       id: item.id,
       title: item.title,
       titleKey: item.titleKey,
-      amount: item.amount,
+      amount: amountOverride ?? item.amount,
       category: item.category,
       householdId: '',
       paidBy: item.payerId,
@@ -455,9 +467,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     );
   }
 
-  int _householdMemberCount() {
+  List<String> _splitMemberIds() {
     final members = ref.read(householdMembersProvider).value;
-    if (members == null || members.isEmpty) return 2;
+    if (members == null || members.isEmpty) return const [];
     // Rent/bills split between adults only — kids and teens don't share
     // household expenses (mirrors pay_planned_expense's split-member filter).
     // Friends/roommates households have no "kids", everyone splits.
@@ -467,11 +479,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         householdType == 'friends' || householdType == 'roommates';
     final splitMembers =
         isFriendsOrRoommates ? members : members.where((m) => m.isAdult);
-    final count = splitMembers.length;
-    return count > 0 ? count : 2;
+    return splitMembers.map((m) => m.userId).toList(growable: false);
   }
 
-  double _plannedShareAmount(FeedItemModel item, String? userId) {
+  /// Parte del usuario en un movimiento (feed o planificado): personal/gift
+  /// cuentan completos solo para su payer; el resto respeta el ratio anclado
+  /// del hogar cuando reparten exactamente dos (mismo criterio que
+  /// ExpenseSplitBuilder) y partes iguales si no. Quien no reparte (p. ej.
+  /// un teen en familia) no tiene parte.
+  double _memberShareAmount(FeedItemModel item, String? userId) {
     if (userId == null) return 0.0;
 
     final splitType = (item.splitType ?? 'equal').toLowerCase();
@@ -479,7 +495,22 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       return item.payerId == userId ? item.amount : 0.0;
     }
 
-    return item.amount / _householdMemberCount();
+    final memberIds = _splitMemberIds();
+    // Miembros aún no cargados: mitades, la aproximación menos engañosa.
+    if (memberIds.isEmpty) return item.amount / 2;
+    if (!memberIds.contains(userId)) return 0.0;
+
+    final household = ref.read(currentHouseholdProvider).value;
+    final ratio = household?.defaultSplitRatio ?? 0.5;
+    final anchorId = household?.splitRatioAnchorId;
+    if (memberIds.length == 2 &&
+        ratio != 0.5 &&
+        anchorId != null &&
+        memberIds.contains(anchorId)) {
+      return item.amount * (userId == anchorId ? ratio : 1.0 - ratio);
+    }
+
+    return item.amount / memberIds.length;
   }
 
   /// Intercala el divisor vertical del pie entre celdas y las expande.
@@ -700,16 +731,18 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       ),
       child: Stack(
         children: [
-          // Decorative soft orbs — same language as the home bento tiles.
+          // Siluetas expresivas asomando desde las esquinas (patrón player
+          // card de bunpod): mismas posiciones que los viejos orbes, pero con
+          // formas M3E que le dan intención al recorte.
           Positioned(
             right: -42,
             top: -42,
             child: Container(
               width: 128,
               height: 128,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
+              decoration: ShapeDecoration(
                 color: theme.primary.withValues(alpha: 0.07),
+                shape: MaterialShapeBorder(shape: AppShapes.sunny),
               ),
             ),
           ),
@@ -719,9 +752,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             child: Container(
               width: 96,
               height: 96,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
+              decoration: ShapeDecoration(
                 color: theme.primary.withValues(alpha: 0.045),
+                shape: MaterialShapeBorder(shape: AppShapes.clover),
               ),
             ),
           ),
@@ -839,7 +872,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   ? (isIncomeEstimated
                                       ? () => EstimatedIncomeSheet.show(context)
                                       : () => _showIncomeBreakdownSheet(income))
-                                  : () => _showExpensesBreakdownSheet(paid),
+                                  : () => _showExpensesBreakdownSheet(
+                                        paid,
+                                        cashFlow: true,
+                                      ),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -856,7 +892,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   ? Icons.trending_down_rounded
                                   : Icons.event_available_rounded,
                               onTap: hasIncome
-                                  ? () => _showExpensesBreakdownSheet(expense)
+                                  ? () => _showExpensesBreakdownSheet(
+                                        expense,
+                                        cashFlow: false,
+                                      )
                                   : () => _showPendingBreakdownSheet(
                                         projectedPending,
                                       ),
@@ -932,9 +971,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final pendingFeed = _effectiveMonthlyPendingForBreakdowns();
     final userId = ref.read(currentUserIdProvider);
     final theme = context.theme;
+    final isSharedEconomy =
+        ref.read(currentHouseholdProvider).value?.financeMode == 'shared';
 
     final pendingItems = pendingFeed
-        .where((item) => _plannedShareAmount(item, userId) > 0)
+        .where(
+          (item) =>
+              item.transactionType == 'expense' &&
+              (isSharedEconomy || _memberShareAmount(item, userId) > 0),
+        )
         .toList();
     final t = AppLocalizations.of(context);
 
@@ -1070,7 +1115,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             ),
                             Text(
                               _formatCurrency(
-                                _plannedShareAmount(item, userId),
+                                isSharedEconomy
+                                    ? item.amount
+                                    : _memberShareAmount(item, userId),
                               ),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w800,
@@ -1217,17 +1264,28 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final feed = _effectiveFeedForBreakdowns();
     final userId = ref.read(currentUserIdProvider);
     final now = DateTime.now();
+    final isSharedEconomy =
+        ref.read(currentHouseholdProvider).value?.financeMode == 'shared';
 
+    // Solo type='income': el total viene del resumen v2, que no cuenta
+    // liquidaciones — listarlas acá rompía la suma del desglose. En economía
+    // dividida el total es MI parte (personales míos + share de compartidos),
+    // así que las filas se ajustan con el mismo criterio.
     final items = feed
         .where(
           (item) =>
               item.isRealExpense &&
               item.date.isSameMonth(now) &&
-              ((item.transactionType == 'income' && item.payerId == userId) ||
-                  (item.transactionType == 'settlement' &&
-                      item.payerId != userId)),
+              item.transactionType == 'income' &&
+              (isSharedEconomy || _memberShareAmount(item, userId) > 0),
         )
-        .map(_expenseFromFeedItem)
+        .map(
+          (item) => _expenseFromFeedItem(
+            item,
+            amountOverride:
+                isSharedEconomy ? null : _memberShareAmount(item, userId),
+          ),
+        )
         .toList();
 
     final t = AppLocalizations.of(context);
@@ -1240,27 +1298,46 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     );
   }
 
-  void _showExpensesBreakdownSheet(num total) {
+  void _showExpensesBreakdownSheet(num total, {required bool cashFlow}) {
     final feed = _effectiveFeedForBreakdowns();
     final userId = ref.read(currentUserIdProvider);
     final now = DateTime.now();
-    // "Pagado" shows real money that left a wallet (see monthlyProjection):
-    //  - shared economy: every household payment this month;
-    //  - divided economy: only what the current user actually paid.
     final isSharedEconomy =
         ref.read(currentHouseholdProvider).value?.financeMode == 'shared';
 
-    final items = feed
-        .where(
-          (item) =>
-              item.isRealExpense &&
-              item.date.isSameMonth(now) &&
-              (item.transactionType == 'expense' ||
-                  item.transactionType == 'settlement') &&
-              (isSharedEconomy || item.payerId == userId),
-        )
-        .map(_expenseFromFeedItem)
-        .toList();
+    // Solo type='expense': las liquidaciones saldan deuda ya devengada y los
+    // totales (resumen v2 y proyección) las excluyen. Dos modos:
+    //  - cashFlow ("Pagado"): plata que salió de la billetera — en economía
+    //    dividida solo lo que YO pagué, a monto completo;
+    //  - share ("Gastos"): MI parte del mes — compartidos (los pague quien
+    //    los pague) a valor share + mis personales completos.
+    // En economía integrada ambos coinciden: todo el hogar a monto completo.
+    final monthExpenses = feed.where(
+      (item) =>
+          item.isRealExpense &&
+          item.date.isSameMonth(now) &&
+          item.transactionType == 'expense',
+    );
+
+    final List<ExpenseModel> items;
+    if (isSharedEconomy) {
+      items = monthExpenses.map(_expenseFromFeedItem).toList();
+    } else if (cashFlow) {
+      items = monthExpenses
+          .where((item) => item.payerId == userId)
+          .map(_expenseFromFeedItem)
+          .toList();
+    } else {
+      items = monthExpenses
+          .where((item) => _memberShareAmount(item, userId) > 0)
+          .map(
+            (item) => _expenseFromFeedItem(
+              item,
+              amountOverride: _memberShareAmount(item, userId),
+            ),
+          )
+          .toList();
+    }
 
     final t = AppLocalizations.of(context);
     _showGenericBreakdownSheet(
@@ -1275,9 +1352,18 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   void _showPendingBreakdownSheet(num total) {
     final pendingFeed = _effectiveMonthlyPendingForBreakdowns();
     final userId = ref.read(currentUserIdProvider);
+    // Igual que la proyección: en economía integrada el pendiente cuenta a
+    // monto completo para todo el hogar; en dividida, solo mi share. Los
+    // planificados de ingreso no son gasto pendiente.
+    final isSharedEconomy =
+        ref.read(currentHouseholdProvider).value?.financeMode == 'shared';
 
     final items = pendingFeed
-        .where((item) => _plannedShareAmount(item, userId) > 0)
+        .where(
+          (item) =>
+              item.transactionType == 'expense' &&
+              (isSharedEconomy || _memberShareAmount(item, userId) > 0),
+        )
         .toList();
 
     final t = AppLocalizations.of(context);
@@ -1301,7 +1387,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     category: item.category,
                     transactionType: item.transactionType,
                   ),
-                  amount: _plannedShareAmount(item, userId),
+                  amount: isSharedEconomy
+                      ? item.amount
+                      : _memberShareAmount(item, userId),
                   date: item.date,
                   icon: CategoryMapping.getSmartExpenseDisplayIcon(
                     item.category,
@@ -1738,6 +1826,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         context,
                         message: AppLocalizations.of(context)
                             .expensesPlannedPaymentSnack(
+                          item.transactionType,
                           result['title'].toString(),
                         ),
                         type: AppSnackBarType.success,
@@ -1759,7 +1848,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       ),
                     ),
                     child: Text(
-                      AppLocalizations.of(context).expensesPlannedPay,
+                      AppLocalizations.of(context)
+                          .expensesPlannedPay(item.transactionType),
                       style: const TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 12,
@@ -2129,6 +2219,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   Widget _buildEmptyState(
     String message, {
     String? subtitle,
+    String? actionLabel,
+    VoidCallback? onAction,
   }) {
     final theme = context.theme;
 
@@ -2137,19 +2229,19 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 112,
-            height: 112,
+            width: 96,
+            height: 96,
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.receipt_long_rounded,
-              size: 44,
+              size: 40,
               color: AppColors.primary.withValues(alpha: 0.82),
             ).animatePulse(),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 28),
             child: Text(
@@ -2180,6 +2272,30 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               ),
             ),
           ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: onAction,
+              icon: const Icon(Icons.add_rounded),
+              label: Text(actionLabel),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl,
+                  vertical: AppSpacing.md,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     ).animateEntrance();

@@ -5169,6 +5169,12 @@ abstract class AppLocalizations {
   /// **'Movimiento'**
   String get expensesFabMovement;
 
+  /// CTA button inside the empty movements feed.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrar un movimiento'**
+  String get expensesEmptyCta;
+
   /// No description provided for @expensesFabNewSubscription.
   ///
   /// In es, this message translates to:
@@ -5388,14 +5394,14 @@ abstract class AppLocalizations {
   /// No description provided for @expensesPlannedPay.
   ///
   /// In es, this message translates to:
-  /// **'Pagar'**
-  String get expensesPlannedPay;
+  /// **'{type, select, income{Cobrar} other{Pagar}}'**
+  String expensesPlannedPay(String type);
 
   /// No description provided for @expensesPlannedPaymentSnack.
   ///
   /// In es, this message translates to:
-  /// **'Pago de \"{title}\" registrado'**
-  String expensesPlannedPaymentSnack(String title);
+  /// **'{type, select, income{Cobro de \"{title}\" registrado} other{Pago de \"{title}\" registrado}}'**
+  String expensesPlannedPaymentSnack(String type, String title);
 
   /// No description provided for @expensesPlannedBadgeUpcoming.
   ///
@@ -7953,6 +7959,12 @@ abstract class AppLocalizations {
   /// **'Tareas'**
   String get statsTasks;
 
+  /// Pluralized 'tasks' label under the household summary metric.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{Tarea} other{Tareas}}'**
+  String statsTasksLabel(int count);
+
   /// No description provided for @statsXP.
   ///
   /// In es, this message translates to:
@@ -8078,6 +8090,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Segundo puesto'**
   String get weeklyWinnerSecondPlace;
+
+  /// Label of the revealed duel score card on the weekly winner screen.
+  ///
+  /// In es, this message translates to:
+  /// **'Marcador final'**
+  String get weeklyWinnerFinalScore;
 
   /// No description provided for @weeklyWinnerRankingTitle.
   ///
@@ -8450,6 +8468,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ritmo semanal'**
   String get faceoffWeeklyRhythm;
+
+  /// Label of the personal weekly XP progress bar on the duel card.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu semana'**
+  String get faceoffMyWeekLabel;
+
+  /// Personal best week shown next to the weekly progress bar.
+  ///
+  /// In es, this message translates to:
+  /// **'Récord: {xp} XP'**
+  String faceoffPersonalRecordChip(int xp);
+
+  /// Starter goal shown when the user has no duel history yet.
+  ///
+  /// In es, this message translates to:
+  /// **'Meta: {xp} XP'**
+  String faceoffStarterGoalChip(int xp);
+
+  /// Shown under the weekly progress bar when the user beats their best week.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Nuevo récord personal!'**
+  String get faceoffNewRecord;
 
   /// No description provided for @faceoffClosesToday.
   ///
@@ -9600,14 +9642,14 @@ abstract class AppLocalizations {
   /// No description provided for @expensesPlannedPaymentTitle.
   ///
   /// In es, this message translates to:
-  /// **'Confirmar pago'**
-  String get expensesPlannedPaymentTitle;
+  /// **'{type, select, income{Confirmar cobro} other{Confirmar pago}}'**
+  String expensesPlannedPaymentTitle(String type);
 
   /// No description provided for @expensesPlannedPaymentSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Vas a marcar \"{title}\" como pagado.'**
-  String expensesPlannedPaymentSubtitle(String title);
+  /// **'{type, select, income{Vas a marcar \"{title}\" como cobrado.} other{Vas a marcar \"{title}\" como pagado.}}'**
+  String expensesPlannedPaymentSubtitle(String type, String title);
 
   /// No description provided for @expensesPlannedPaymentAmountEyebrow.
   ///
@@ -9618,8 +9660,8 @@ abstract class AppLocalizations {
   /// No description provided for @expensesPlannedPaymentDateEyebrow.
   ///
   /// In es, this message translates to:
-  /// **'FECHA DE PAGO'**
-  String get expensesPlannedPaymentDateEyebrow;
+  /// **'{type, select, income{FECHA DE COBRO} other{FECHA DE PAGO}}'**
+  String expensesPlannedPaymentDateEyebrow(String type);
 
   /// No description provided for @expensesDetailHeaderIncome.
   ///
@@ -9716,6 +9758,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'SABER MÁS'**
   String get expensesRecurrentesPremiumCta;
+
+  /// First benefit bullet on the recurring payments premium teaser.
+  ///
+  /// In es, this message translates to:
+  /// **'Alquiler, servicios y suscripciones se registran solos cada mes.'**
+  String get expensesRecurrentesPremiumBullet1;
+
+  /// Second benefit bullet on the recurring payments premium teaser.
+  ///
+  /// In es, this message translates to:
+  /// **'Recordatorios antes del vencimiento para que nada se pase.'**
+  String get expensesRecurrentesPremiumBullet2;
+
+  /// Third benefit bullet on the recurring payments premium teaser.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos ven qué viene y cuánto falta pagar.'**
+  String get expensesRecurrentesPremiumBullet3;
 
   /// No description provided for @expensesRecurringEmptyTitle.
   ///

@@ -2093,6 +2093,10 @@
   "expensesTabRecurring": "Recurrentes",
   "expensesTabGoals": "Metas",
   "expensesFabMovement": "Movimiento",
+  "expensesEmptyCta": "Registrar un movimiento",
+  "@expensesEmptyCta": {
+    "description": "CTA button inside the empty movements feed."
+  },
   "expensesFabNewSubscription": "Nueva Suscripción",
   "expensesFabNewGoal": "Nueva Meta",
   "expensesActivityRecentEyebrow": "ACTIVIDAD RECIENTE",
@@ -2129,10 +2133,20 @@
   "expensesBreakdownEmpty": "No hay movimientos registrados",
   "expensesBreakdownMovementsEyebrow": "MOVIMIENTOS",
   "expensesPlannedSkip": "Omitir",
-  "expensesPlannedPay": "Pagar",
-  "expensesPlannedPaymentSnack": "Pago de \"{title}\" registrado",
+  "expensesPlannedPay": "{type, select, income{Cobrar} other{Pagar}}",
+  "@expensesPlannedPay": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesPlannedPaymentSnack": "{type, select, income{Cobro de \"{title}\" registrado} other{Pago de \"{title}\" registrado}}",
   "@expensesPlannedPaymentSnack": {
     "placeholders": {
+      "type": {
+        "type": "String"
+      },
       "title": {
         "type": "String"
       }
@@ -3055,6 +3069,15 @@
   "statsRetry": "Reintentar",
   "statsHouseholdSummary": "Resumen del hogar",
   "statsTasks": "Tareas",
+  "statsTasksLabel": "{count, plural, =1{Tarea} other{Tareas}}",
+  "@statsTasksLabel": {
+    "description": "Pluralized 'tasks' label under the household summary metric.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "statsXP": "XP",
   "statsCoins": "Coins",
   "statsWeeklyHistory": "Historial semanal",
@@ -3092,6 +3115,10 @@
     }
   },
   "weeklyWinnerSecondPlace": "Segundo puesto",
+  "weeklyWinnerFinalScore": "Marcador final",
+  "@weeklyWinnerFinalScore": {
+    "description": "Label of the revealed duel score card on the weekly winner screen."
+  },
   "weeklyWinnerRankingTitle": "Ranking semanal",
   "weeklyWinnerFallbackWinner": "Ganador",
   "weeklyWinnerFallbackLoser": "Perdedor",
@@ -3205,6 +3232,32 @@
     }
   },
   "faceoffWeeklyRhythm": "Ritmo semanal",
+  "faceoffMyWeekLabel": "Tu semana",
+  "@faceoffMyWeekLabel": {
+    "description": "Label of the personal weekly XP progress bar on the duel card."
+  },
+  "faceoffPersonalRecordChip": "Récord: {xp} XP",
+  "@faceoffPersonalRecordChip": {
+    "description": "Personal best week shown next to the weekly progress bar.",
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "faceoffStarterGoalChip": "Meta: {xp} XP",
+  "@faceoffStarterGoalChip": {
+    "description": "Starter goal shown when the user has no duel history yet.",
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "faceoffNewRecord": "¡Nuevo récord personal!",
+  "@faceoffNewRecord": {
+    "description": "Shown under the weekly progress bar when the user beats their best week."
+  },
   "faceoffClosesToday": "Cierra hoy",
   "faceoffDaysRemaining": "{days, plural, =1{1 día restante} other{{days} días restantes}}",
   "@faceoffDaysRemaining": {
@@ -3769,17 +3822,34 @@
       }
     }
   },
-  "expensesPlannedPaymentTitle": "Confirmar pago",
-  "expensesPlannedPaymentSubtitle": "Vas a marcar \"{title}\" como pagado.",
+  "expensesPlannedPaymentTitle": "{type, select, income{Confirmar cobro} other{Confirmar pago}}",
+  "@expensesPlannedPaymentTitle": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesPlannedPaymentSubtitle": "{type, select, income{Vas a marcar \"{title}\" como cobrado.} other{Vas a marcar \"{title}\" como pagado.}}",
   "@expensesPlannedPaymentSubtitle": {
     "placeholders": {
+      "type": {
+        "type": "String"
+      },
       "title": {
         "type": "String"
       }
     }
   },
   "expensesPlannedPaymentAmountEyebrow": "MONTO EFECTIVO",
-  "expensesPlannedPaymentDateEyebrow": "FECHA DE PAGO",
+  "expensesPlannedPaymentDateEyebrow": "{type, select, income{FECHA DE COBRO} other{FECHA DE PAGO}}",
+  "@expensesPlannedPaymentDateEyebrow": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
   "expensesDetailHeaderIncome": "Detalle de ingreso",
   "expensesDetailHeaderSettlement": "Detalle de liquidación de balance",
   "expensesDetailHeaderExpense": "Detalle de gasto",
@@ -3810,6 +3880,18 @@
   "expensesRecurrentesPremiumTitle": "Pagos recurrentes",
   "expensesRecurrentesPremiumSubtitle": "Gestioná tus suscripciones, alquileres y servicios de forma automática con HomeSync Premium.",
   "expensesRecurrentesPremiumCta": "SABER MÁS",
+  "expensesRecurrentesPremiumBullet1": "Alquiler, servicios y suscripciones se registran solos cada mes.",
+  "@expensesRecurrentesPremiumBullet1": {
+    "description": "First benefit bullet on the recurring payments premium teaser."
+  },
+  "expensesRecurrentesPremiumBullet2": "Recordatorios antes del vencimiento para que nada se pase.",
+  "@expensesRecurrentesPremiumBullet2": {
+    "description": "Second benefit bullet on the recurring payments premium teaser."
+  },
+  "expensesRecurrentesPremiumBullet3": "Todos ven qué viene y cuánto falta pagar.",
+  "@expensesRecurrentesPremiumBullet3": {
+    "description": "Third benefit bullet on the recurring payments premium teaser."
+  },
   "expensesRecurringEmptyTitle": "Sin recurrentes",
   "expensesRecurringEmptySubtitle": "Creá plantillas para tus suscripciones, alquileres o ingresos fijos.",
   "expensesRecurringIncomeSection": "INGRESOS FIJOS",

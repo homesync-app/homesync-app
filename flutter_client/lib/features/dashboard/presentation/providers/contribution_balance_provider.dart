@@ -62,10 +62,16 @@ final contributionBalanceProvider =
 
   final now = DateTime.now();
 
-  // Gastos reales compartidos pagados este mes, agrupados por quien pagó.
+  // Gastos reales COMPARTIDOS pagados este mes, agrupados por quien pagó.
+  // Solo gastos (no ingresos ni liquidaciones: una liquidación es un pago
+  // entre roomies, no aporte al hogar) y solo compartidos: los personales
+  // del viewer inflarían su propio aporte, y como el feed llega filtrado por
+  // privacidad cada roomie vería números distintos.
   final paidByUser = <String, double>{};
   for (final item in feed) {
-    if (!item.isRealExpense) continue;
+    if (!item.isRealExpense || item.transactionType != 'expense') continue;
+    final split = (item.splitType ?? 'equal').toLowerCase();
+    if (split == 'personal' || split == 'gift') continue;
     if (item.date.month != now.month || item.date.year != now.year) continue;
     final payer = item.payerId;
     if (payer.isEmpty) continue;
