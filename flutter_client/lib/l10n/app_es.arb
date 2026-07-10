@@ -2252,6 +2252,21 @@
   },
   "subsSuggestionCreate": "Crear recurrente",
   "subsSuggestionDismiss": "Ahora no",
+  "goalAutoMenuAction": "Aporte automático",
+  "goalAutoTitle": "Aporte automático",
+  "goalAutoSubtitle": "Todos los meses se agenda un aporte a \"{goal}\" que confirmás con un toque.",
+  "@goalAutoSubtitle": {
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "goalAutoAmountEyebrow": "APORTE MENSUAL",
+  "goalAutoDayEyebrow": "DÍA DEL MES",
+  "goalAutoDisable": "Desactivar",
+  "goalAutoSavedSnack": "Aporte automático activado",
+  "goalAutoDisabledSnack": "Aporte automático desactivado",
   "expensesPlannedSkip": "Omitir",
   "expensesPlannedPay": "{type, select, income{Cobrar} other{Pagar}}",
   "@expensesPlannedPay": {

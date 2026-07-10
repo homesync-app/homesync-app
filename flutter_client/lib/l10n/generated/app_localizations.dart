@@ -5631,6 +5631,54 @@ abstract class AppLocalizations {
   /// **'Ahora no'**
   String get subsSuggestionDismiss;
 
+  /// No description provided for @goalAutoMenuAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Aporte automático'**
+  String get goalAutoMenuAction;
+
+  /// No description provided for @goalAutoTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Aporte automático'**
+  String get goalAutoTitle;
+
+  /// No description provided for @goalAutoSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos los meses se agenda un aporte a \"{goal}\" que confirmás con un toque.'**
+  String goalAutoSubtitle(String goal);
+
+  /// No description provided for @goalAutoAmountEyebrow.
+  ///
+  /// In es, this message translates to:
+  /// **'APORTE MENSUAL'**
+  String get goalAutoAmountEyebrow;
+
+  /// No description provided for @goalAutoDayEyebrow.
+  ///
+  /// In es, this message translates to:
+  /// **'DÍA DEL MES'**
+  String get goalAutoDayEyebrow;
+
+  /// No description provided for @goalAutoDisable.
+  ///
+  /// In es, this message translates to:
+  /// **'Desactivar'**
+  String get goalAutoDisable;
+
+  /// No description provided for @goalAutoSavedSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'Aporte automático activado'**
+  String get goalAutoSavedSnack;
+
+  /// No description provided for @goalAutoDisabledSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'Aporte automático desactivado'**
+  String get goalAutoDisabledSnack;
+
   /// No description provided for @expensesPlannedSkip.
   ///
   /// In es, this message translates to:

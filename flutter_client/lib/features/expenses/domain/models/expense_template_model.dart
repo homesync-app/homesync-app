@@ -11,6 +11,10 @@ class ExpenseTemplateModel {
   final String payerDefault;
   final bool isActive;
   final String type; // 'expense' | 'income'
+
+  /// Meta de ahorro vinculada: al pagar el planificado generado por esta
+  /// plantilla, pay_planned_expense registra además la contribución.
+  final String? goalId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? nextExecutionDate;
@@ -28,6 +32,7 @@ class ExpenseTemplateModel {
     required this.payerDefault,
     this.isActive = true,
     this.type = 'expense',
+    this.goalId,
     this.createdAt,
     this.updatedAt,
     this.nextExecutionDate,
@@ -49,6 +54,7 @@ class ExpenseTemplateModel {
       payerDefault: json['payer_default'] as String,
       isActive: json['is_active'] as bool? ?? true,
       type: json['type'] as String? ?? 'expense',
+      goalId: json['goal_id'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -75,6 +81,7 @@ class ExpenseTemplateModel {
       'payer_default': payerDefault,
       'is_active': isActive,
       'type': type,
+      'goal_id': goalId,
       if (nextExecutionDate != null)
         'next_execution_date': nextExecutionDate!.toIso8601String(),
     };
@@ -93,6 +100,7 @@ class ExpenseTemplateModel {
     String? payerDefault,
     bool? isActive,
     String? type,
+    String? goalId,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? nextExecutionDate,
@@ -110,6 +118,7 @@ class ExpenseTemplateModel {
       payerDefault: payerDefault ?? this.payerDefault,
       isActive: isActive ?? this.isActive,
       type: type ?? this.type,
+      goalId: goalId ?? this.goalId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       nextExecutionDate: nextExecutionDate ?? this.nextExecutionDate,

@@ -2217,6 +2217,21 @@
   },
   "subsSuggestionCreate": "Create recurring",
   "subsSuggestionDismiss": "Not now",
+  "goalAutoMenuAction": "Auto contribution",
+  "goalAutoTitle": "Auto contribution",
+  "goalAutoSubtitle": "Every month a contribution to \"{goal}\" gets scheduled — confirm it with one tap.",
+  "@goalAutoSubtitle": {
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "goalAutoAmountEyebrow": "MONTHLY CONTRIBUTION",
+  "goalAutoDayEyebrow": "DAY OF MONTH",
+  "goalAutoDisable": "Turn off",
+  "goalAutoSavedSnack": "Auto contribution enabled",
+  "goalAutoDisabledSnack": "Auto contribution disabled",
   "expensesPlannedSkip": "Skip",
   "expensesPlannedPay": "{type, select, income{Collect} other{Pay}}",
   "@expensesPlannedPay": {

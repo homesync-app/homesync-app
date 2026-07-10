@@ -12,6 +12,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/concept_icon.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_split_builder.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/goal_auto_contribution_sheet.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -22,6 +23,7 @@ import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/design/app_section_header.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
+import 'package:homesync_client/shared/widgets/expressive/expressive.dart';
 import 'package:intl/intl.dart';
 
 part 'savings_tab_widgets.dart';
@@ -53,7 +55,11 @@ class SavingsTab extends ConsumerWidget {
               ),
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
-                const SizedBox(height: 64),
+                // La sugerencia inteligente también sirve (sobre todo) cuando
+                // no hay ninguna meta todavía: propone la primera. Se oculta
+                // sola si el provider no tiene nada para sugerir.
+                const _SavingsSuggesterCard(),
+                const SizedBox(height: 28),
                 _buildEmptyState(
                   context,
                   ref,
@@ -70,10 +76,12 @@ class SavingsTab extends ConsumerWidget {
 
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(savingsGoalsProvider),
+          // Fade también arriba, como en Movimientos: disuelve bajo las tabs.
           child: EdgeFade(
-            fadeStart: false,
-            fadeEnd: true,
+            extent: 0.035,
             child: ListView(
+              // PrimaryScrollController del tab Finanzas (re-tap sube al tope).
+              primary: true,
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg,
                 AppSpacing.lg,
@@ -219,9 +227,11 @@ class SavingsTab extends ConsumerWidget {
     final progress = goal.progress.clamp(0.0, 1.0);
     final reached = goal.isReached;
     final currency = ref.read(currencyProvider);
-    final currentAmount = currency.format(goal.currentAmount);
     final targetAmount = currency.format(goal.targetAmount);
     final progressPercent = (progress * 100).toInt();
+    // Con ahorro real pero <1%, "0%" parece un bug: mostramos "<1%".
+    final progressLabel =
+        progressPercent == 0 && progress > 0 ? '<1%' : '$progressPercent%';
 
     return AnimatedPress(
       onTap: perms.canContribute && !reached
@@ -307,44 +317,51 @@ class SavingsTab extends ConsumerWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                // Solo el monto ahorrado: el objetivo ya se lee en el header
+                // ("Meta: …") y la barra cuenta el avance. Rueda hacia arriba
+                // al aportar (y desde 0 al entrar) con figuras tabulares.
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        currentAmount,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          color: theme.textPrimary,
-                          fontSize: 24,
-                          height: 0.98,
-                        ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: AnimatedAmount(
+                      value: goal.currentAmount.toDouble(),
+                      locale: currency.locale,
+                      format: currency.format,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: theme.textPrimary,
+                        fontSize: 24,
+                        height: 0.98,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        t.savingsGoalSavedOf(targetAmount),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: theme.textSecondary,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 if (reached)
-                  _CompletedBadge(
-                    color: goalColor,
-                    label: t.savingsCompletedBadge,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AppShapedBadge(
+                        shape: AppShapes.success,
+                        color: goalColor,
+                        size: 24,
+                        child: const Icon(
+                          Icons.check_rounded,
+                          size: 15,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      _CompletedBadge(
+                        color: goalColor,
+                        label: t.savingsCompletedBadge,
+                      ),
+                    ],
                   )
                 else
                   Text(
-                    '$progressPercent%',
+                    progressLabel,
                     style: TextStyle(
                       color: goalColor,
                       fontSize: 18,
@@ -355,27 +372,40 @@ class SavingsTab extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.xs),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadii.pill),
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: goalColor.withValues(alpha: 0.14),
-                valueColor: AlwaysStoppedAnimation(goalColor),
-                minHeight: 8,
+            // M3 Expressive: el ahorro vivo ondula; la barra se aplana sola al
+            // llegar a la meta (rampa interna del indicador). El valor crece
+            // con tween al entrar y al aportar, sincronizado con el count-up.
+            TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0, end: progress),
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => AppWavyProgress(
+                value: value,
+                color: goalColor,
               ),
             ),
             if (perms.canContribute && !reached) ...[
               const SizedBox(height: AppSpacing.sm),
               Align(
                 alignment: Alignment.centerRight,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.11),
-                    borderRadius: BorderRadius.circular(AppRadii.pill),
+                // Botón propio con press-morph M3E (pill → redondeado sobre
+                // el spring del squash), además del tap general de la card.
+                child: AnimatedPress(
+                  scale: 0.96,
+                  haptic: AppPressHaptic.light,
+                  onTap: () => _showContributionDialog(context, goal, ref),
+                  pressBuilder: (context, morphT, child) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.11),
+                      borderRadius: BorderRadius.circular(
+                        15 + (10 - 15) * morphT.clamp(0.0, 1.2),
+                      ),
+                    ),
+                    child: child,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -477,14 +507,10 @@ class SavingsTab extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadii.pill),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 4,
-                      backgroundColor: theme.divider,
-                      valueColor: AlwaysStoppedAnimation(goalColor),
-                    ),
+                  AppWavyProgress.compact(
+                    value: progress,
+                    color: goalColor,
+                    trackColor: theme.divider,
                   ),
                 ],
               ),

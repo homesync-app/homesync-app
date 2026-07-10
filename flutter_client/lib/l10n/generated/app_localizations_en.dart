@@ -3497,6 +3497,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subsSuggestionDismiss => 'Not now';
 
   @override
+  String get goalAutoMenuAction => 'Auto contribution';
+
+  @override
+  String get goalAutoTitle => 'Auto contribution';
+
+  @override
+  String goalAutoSubtitle(String goal) {
+    return 'Every month a contribution to \"$goal\" gets scheduled — confirm it with one tap.';
+  }
+
+  @override
+  String get goalAutoAmountEyebrow => 'MONTHLY CONTRIBUTION';
+
+  @override
+  String get goalAutoDayEyebrow => 'DAY OF MONTH';
+
+  @override
+  String get goalAutoDisable => 'Turn off';
+
+  @override
+  String get goalAutoSavedSnack => 'Auto contribution enabled';
+
+  @override
+  String get goalAutoDisabledSnack => 'Auto contribution disabled';
+
+  @override
   String get expensesPlannedSkip => 'Skip';
 
   @override

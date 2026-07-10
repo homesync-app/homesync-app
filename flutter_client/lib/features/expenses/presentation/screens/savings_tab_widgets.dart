@@ -280,6 +280,8 @@ class _GoalMenu extends ConsumerWidget {
         switch (value) {
           case 'edit':
             SavingsTab.showGoalSheet(context, ref, existing: goal);
+          case 'auto':
+            await GoalAutoContributionSheet.show(context, ref, goal);
           case 'archive':
             await _confirmArchive(context, ref);
           case 'delete':
@@ -297,6 +299,18 @@ class _GoalMenu extends ConsumerWidget {
             ],
           ),
         ),
+        // Aporte automático mensual: solo tiene sentido con la meta viva.
+        if (!reached)
+          PopupMenuItem(
+            value: 'auto',
+            child: Row(
+              children: [
+                const Icon(Icons.autorenew_rounded, size: 18),
+                const SizedBox(width: 10),
+                Text(t.goalAutoMenuAction),
+              ],
+            ),
+          ),
         if (reached)
           PopupMenuItem(
             value: 'archive',
