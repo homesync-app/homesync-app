@@ -5385,6 +5385,120 @@ abstract class AppLocalizations {
   /// **'MOVIMIENTOS'**
   String get expensesBreakdownMovementsEyebrow;
 
+  /// No description provided for @budgetsSectionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'PRESUPUESTOS'**
+  String get budgetsSectionTitle;
+
+  /// No description provided for @budgetsManageAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestionar'**
+  String get budgetsManageAction;
+
+  /// No description provided for @budgetsTeaserTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Presupuestos por categoría'**
+  String get budgetsTeaserTitle;
+
+  /// No description provided for @budgetsTeaserSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Definí topes mensuales y mirá cuánto te queda'**
+  String get budgetsTeaserSubtitle;
+
+  /// No description provided for @budgetsEmptyCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear tu primer presupuesto'**
+  String get budgetsEmptyCta;
+
+  /// No description provided for @budgetsManageTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Presupuestos'**
+  String get budgetsManageTitle;
+
+  /// No description provided for @budgetsManageSubtitleShared.
+  ///
+  /// In es, this message translates to:
+  /// **'Topes mensuales del hogar, visibles para todos.'**
+  String get budgetsManageSubtitleShared;
+
+  /// No description provided for @budgetsManageSubtitlePersonal.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus topes mensuales, sobre tu parte de los gastos.'**
+  String get budgetsManageSubtitlePersonal;
+
+  /// No description provided for @budgetsManageEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay presupuestos.'**
+  String get budgetsManageEmpty;
+
+  /// No description provided for @budgetsAddCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar categoría'**
+  String get budgetsAddCategory;
+
+  /// No description provided for @budgetsNewTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevo presupuesto'**
+  String get budgetsNewTitle;
+
+  /// No description provided for @budgetsEditTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar presupuesto'**
+  String get budgetsEditTitle;
+
+  /// No description provided for @budgetsCategoryEyebrow.
+  ///
+  /// In es, this message translates to:
+  /// **'CATEGORÍA'**
+  String get budgetsCategoryEyebrow;
+
+  /// No description provided for @budgetsLimitEyebrow.
+  ///
+  /// In es, this message translates to:
+  /// **'TOPE MENSUAL'**
+  String get budgetsLimitEyebrow;
+
+  /// No description provided for @budgetsDeleteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar presupuesto?'**
+  String get budgetsDeleteTitle;
+
+  /// No description provided for @budgetsDeleteBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Se elimina el tope de {category}. Tus gastos no se tocan.'**
+  String budgetsDeleteBody(String category);
+
+  /// No description provided for @budgetsRemaining.
+  ///
+  /// In es, this message translates to:
+  /// **'Queda {amount}'**
+  String budgetsRemaining(String amount);
+
+  /// No description provided for @budgetsOverBy.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} de más'**
+  String budgetsOverBy(String amount);
+
+  /// No description provided for @budgetsSpentOf.
+  ///
+  /// In es, this message translates to:
+  /// **'{spent} de {limit}'**
+  String budgetsSpentOf(String spent, String limit);
+
   /// No description provided for @expensesPlannedSkip.
   ///
   /// In es, this message translates to:

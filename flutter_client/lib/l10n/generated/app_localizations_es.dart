@@ -3363,6 +3363,74 @@ class AppLocalizationsEs extends AppLocalizations {
   String get expensesBreakdownMovementsEyebrow => 'MOVIMIENTOS';
 
   @override
+  String get budgetsSectionTitle => 'PRESUPUESTOS';
+
+  @override
+  String get budgetsManageAction => 'Gestionar';
+
+  @override
+  String get budgetsTeaserTitle => 'Presupuestos por categoría';
+
+  @override
+  String get budgetsTeaserSubtitle =>
+      'Definí topes mensuales y mirá cuánto te queda';
+
+  @override
+  String get budgetsEmptyCta => 'Crear tu primer presupuesto';
+
+  @override
+  String get budgetsManageTitle => 'Presupuestos';
+
+  @override
+  String get budgetsManageSubtitleShared =>
+      'Topes mensuales del hogar, visibles para todos.';
+
+  @override
+  String get budgetsManageSubtitlePersonal =>
+      'Tus topes mensuales, sobre tu parte de los gastos.';
+
+  @override
+  String get budgetsManageEmpty => 'Todavía no hay presupuestos.';
+
+  @override
+  String get budgetsAddCategory => 'Agregar categoría';
+
+  @override
+  String get budgetsNewTitle => 'Nuevo presupuesto';
+
+  @override
+  String get budgetsEditTitle => 'Editar presupuesto';
+
+  @override
+  String get budgetsCategoryEyebrow => 'CATEGORÍA';
+
+  @override
+  String get budgetsLimitEyebrow => 'TOPE MENSUAL';
+
+  @override
+  String get budgetsDeleteTitle => '¿Eliminar presupuesto?';
+
+  @override
+  String budgetsDeleteBody(String category) {
+    return 'Se elimina el tope de $category. Tus gastos no se tocan.';
+  }
+
+  @override
+  String budgetsRemaining(String amount) {
+    return 'Queda $amount';
+  }
+
+  @override
+  String budgetsOverBy(String amount) {
+    return '$amount de más';
+  }
+
+  @override
+  String budgetsSpentOf(String spent, String limit) {
+    return '$spent de $limit';
+  }
+
+  @override
   String get expensesPlannedSkip => 'Omitir';
 
   @override

@@ -2132,6 +2132,56 @@
   "expensesBreakdownTotalLabel": "Total del mes",
   "expensesBreakdownEmpty": "No hay movimientos registrados",
   "expensesBreakdownMovementsEyebrow": "MOVIMIENTOS",
+  "budgetsSectionTitle": "PRESUPUESTOS",
+  "budgetsManageAction": "Gestionar",
+  "budgetsTeaserTitle": "Presupuestos por categoría",
+  "budgetsTeaserSubtitle": "Definí topes mensuales y mirá cuánto te queda",
+  "budgetsEmptyCta": "Crear tu primer presupuesto",
+  "budgetsManageTitle": "Presupuestos",
+  "budgetsManageSubtitleShared": "Topes mensuales del hogar, visibles para todos.",
+  "budgetsManageSubtitlePersonal": "Tus topes mensuales, sobre tu parte de los gastos.",
+  "budgetsManageEmpty": "Todavía no hay presupuestos.",
+  "budgetsAddCategory": "Agregar categoría",
+  "budgetsNewTitle": "Nuevo presupuesto",
+  "budgetsEditTitle": "Editar presupuesto",
+  "budgetsCategoryEyebrow": "CATEGORÍA",
+  "budgetsLimitEyebrow": "TOPE MENSUAL",
+  "budgetsDeleteTitle": "¿Eliminar presupuesto?",
+  "budgetsDeleteBody": "Se elimina el tope de {category}. Tus gastos no se tocan.",
+  "@budgetsDeleteBody": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetsRemaining": "Queda {amount}",
+  "@budgetsRemaining": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetsOverBy": "{amount} de más",
+  "@budgetsOverBy": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetsSpentOf": "{spent} de {limit}",
+  "@budgetsSpentOf": {
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "expensesPlannedSkip": "Omitir",
   "expensesPlannedPay": "{type, select, income{Cobrar} other{Pagar}}",
   "@expensesPlannedPay": {

@@ -2097,6 +2097,56 @@
   "expensesBreakdownTotalLabel": "Month total",
   "expensesBreakdownEmpty": "No entries recorded",
   "expensesBreakdownMovementsEyebrow": "ENTRIES",
+  "budgetsSectionTitle": "BUDGETS",
+  "budgetsManageAction": "Manage",
+  "budgetsTeaserTitle": "Category budgets",
+  "budgetsTeaserSubtitle": "Set monthly caps and see what's left",
+  "budgetsEmptyCta": "Create your first budget",
+  "budgetsManageTitle": "Budgets",
+  "budgetsManageSubtitleShared": "Household monthly caps, visible to everyone.",
+  "budgetsManageSubtitlePersonal": "Your monthly caps, based on your share of spending.",
+  "budgetsManageEmpty": "No budgets yet.",
+  "budgetsAddCategory": "Add category",
+  "budgetsNewTitle": "New budget",
+  "budgetsEditTitle": "Edit budget",
+  "budgetsCategoryEyebrow": "CATEGORY",
+  "budgetsLimitEyebrow": "MONTHLY CAP",
+  "budgetsDeleteTitle": "Delete budget?",
+  "budgetsDeleteBody": "The cap for {category} will be removed. Your expenses stay untouched.",
+  "@budgetsDeleteBody": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetsRemaining": "{amount} left",
+  "@budgetsRemaining": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetsOverBy": "{amount} over",
+  "@budgetsOverBy": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetsSpentOf": "{spent} of {limit}",
+  "@budgetsSpentOf": {
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "expensesPlannedSkip": "Skip",
   "expensesPlannedPay": "{type, select, income{Collect} other{Pay}}",
   "@expensesPlannedPay": {

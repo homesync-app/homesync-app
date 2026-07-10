@@ -31,6 +31,7 @@ import 'package:homesync_client/shared/widgets/expressive/expressive.dart';
 import 'package:intl/intl.dart';
 
 import '../providers/estimated_income_provider.dart';
+import '../widgets/budget_section.dart';
 import '../widgets/estimated_income_sheet.dart';
 import '../widgets/expense_detail_sheet.dart';
 import '../widgets/expense_form_sheet.dart';
@@ -227,7 +228,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               ),
             ),
 
-            // 2. FEED & FUTURE EXPENSES
+            // 2. PRESUPUESTOS POR CATEGORÍA (premium; teaser para free)
+            const SliverToBoxAdapter(child: BudgetSection()),
+
+            // 3. FEED & FUTURE EXPENSES
             feedAsync.when(
               loading: () => _buildFeedLoadingSliver(),
               error: (e, _) => SliverFillRemaining(
