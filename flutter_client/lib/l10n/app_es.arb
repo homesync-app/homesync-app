@@ -2267,6 +2267,54 @@
   "goalAutoDisable": "Desactivar",
   "goalAutoSavedSnack": "Aporte automático activado",
   "goalAutoDisabledSnack": "Aporte automático desactivado",
+  "recapBannerTitle": "Tu {month} está listo ✨",
+  "@recapBannerTitle": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "recapBannerSubtitle": "Cuánto se gastó, en qué y cuánto se ahorró.",
+  "recapSheetTitle": "Tu {month}",
+  "@recapSheetTitle": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "recapMovementsCount": "{count} movimientos registrados",
+  "@recapMovementsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recapTotalLabelShared": "GASTO DEL HOGAR",
+  "recapTotalLabelPersonal": "TU PARTE DEL MES",
+  "recapIncomeRow": "Ingresos del mes: {amount}",
+  "@recapIncomeRow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "recapCategoriesTitle": "EN QUÉ SE FUE",
+  "recapPayersTitle": "QUIÉN PUSO",
+  "recapSavingsRow": "{type, select, solo{Sumaste {amount} a tus metas de ahorro.} other{Sumaron {amount} a las metas de ahorro.}}",
+  "@recapSavingsRow": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "expensesPlannedSkip": "Omitir",
   "expensesPlannedPay": "{type, select, income{Cobrar} other{Pagar}}",
   "@expensesPlannedPay": {

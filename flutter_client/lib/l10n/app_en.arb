@@ -2232,6 +2232,54 @@
   "goalAutoDisable": "Turn off",
   "goalAutoSavedSnack": "Auto contribution enabled",
   "goalAutoDisabledSnack": "Auto contribution disabled",
+  "recapBannerTitle": "Your {month} is ready ✨",
+  "@recapBannerTitle": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "recapBannerSubtitle": "What was spent, on what, and how much was saved.",
+  "recapSheetTitle": "Your {month}",
+  "@recapSheetTitle": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "recapMovementsCount": "{count} entries recorded",
+  "@recapMovementsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recapTotalLabelShared": "HOUSEHOLD SPEND",
+  "recapTotalLabelPersonal": "YOUR SHARE THIS MONTH",
+  "recapIncomeRow": "Income this month: {amount}",
+  "@recapIncomeRow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "recapCategoriesTitle": "WHERE IT WENT",
+  "recapPayersTitle": "WHO PAID",
+  "recapSavingsRow": "{type, select, solo{You added {amount} to your savings goals.} other{You added {amount} to the savings goals.}}",
+  "@recapSavingsRow": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "expensesPlannedSkip": "Skip",
   "expensesPlannedPay": "{type, select, income{Collect} other{Pay}}",
   "@expensesPlannedPay": {

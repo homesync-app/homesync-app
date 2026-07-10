@@ -37,6 +37,7 @@ import '../widgets/budget_section.dart';
 import '../widgets/estimated_income_sheet.dart';
 import '../widgets/expense_detail_sheet.dart';
 import '../widgets/expense_form_sheet.dart';
+import '../widgets/month_recap_sheet.dart';
 import '../widgets/planned_expense_payment_sheet.dart';
 import '../widgets/recurring_expense_form_sheet.dart';
 import '../widgets/spend_trend_card.dart';
@@ -172,6 +173,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             parent: AlwaysScrollableScrollPhysics(),
           ),
           slivers: [
+            // 0. CIERRE DE MES (primeros días del mes, si el anterior tuvo
+            // movimientos; premium abre el recap, free el paywall)
+            const SliverToBoxAdapter(child: MonthRecapBanner()),
+
             // 1. SUMMARY WIDGET WITH PROJECTION
             SliverToBoxAdapter(
               child: Padding(

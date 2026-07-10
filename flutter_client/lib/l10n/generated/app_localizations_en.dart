@@ -3523,6 +3523,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goalAutoDisabledSnack => 'Auto contribution disabled';
 
   @override
+  String recapBannerTitle(String month) {
+    return 'Your $month is ready ✨';
+  }
+
+  @override
+  String get recapBannerSubtitle =>
+      'What was spent, on what, and how much was saved.';
+
+  @override
+  String recapSheetTitle(String month) {
+    return 'Your $month';
+  }
+
+  @override
+  String recapMovementsCount(int count) {
+    return '$count entries recorded';
+  }
+
+  @override
+  String get recapTotalLabelShared => 'HOUSEHOLD SPEND';
+
+  @override
+  String get recapTotalLabelPersonal => 'YOUR SHARE THIS MONTH';
+
+  @override
+  String recapIncomeRow(String amount) {
+    return 'Income this month: $amount';
+  }
+
+  @override
+  String get recapCategoriesTitle => 'WHERE IT WENT';
+
+  @override
+  String get recapPayersTitle => 'WHO PAID';
+
+  @override
+  String recapSavingsRow(String type, String amount) {
+    String _temp0 = intl.Intl.selectLogic(
+      type,
+      {
+        'solo': 'You added $amount to your savings goals.',
+        'other': 'You added $amount to the savings goals.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get expensesPlannedSkip => 'Skip';
 
   @override

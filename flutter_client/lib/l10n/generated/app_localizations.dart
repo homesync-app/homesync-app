@@ -5679,6 +5679,66 @@ abstract class AppLocalizations {
   /// **'Aporte automático desactivado'**
   String get goalAutoDisabledSnack;
 
+  /// No description provided for @recapBannerTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu {month} está listo ✨'**
+  String recapBannerTitle(String month);
+
+  /// No description provided for @recapBannerSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuánto se gastó, en qué y cuánto se ahorró.'**
+  String get recapBannerSubtitle;
+
+  /// No description provided for @recapSheetTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu {month}'**
+  String recapSheetTitle(String month);
+
+  /// No description provided for @recapMovementsCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} movimientos registrados'**
+  String recapMovementsCount(int count);
+
+  /// No description provided for @recapTotalLabelShared.
+  ///
+  /// In es, this message translates to:
+  /// **'GASTO DEL HOGAR'**
+  String get recapTotalLabelShared;
+
+  /// No description provided for @recapTotalLabelPersonal.
+  ///
+  /// In es, this message translates to:
+  /// **'TU PARTE DEL MES'**
+  String get recapTotalLabelPersonal;
+
+  /// No description provided for @recapIncomeRow.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresos del mes: {amount}'**
+  String recapIncomeRow(String amount);
+
+  /// No description provided for @recapCategoriesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'EN QUÉ SE FUE'**
+  String get recapCategoriesTitle;
+
+  /// No description provided for @recapPayersTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'QUIÉN PUSO'**
+  String get recapPayersTitle;
+
+  /// No description provided for @recapSavingsRow.
+  ///
+  /// In es, this message translates to:
+  /// **'{type, select, solo{Sumaste {amount} a tus metas de ahorro.} other{Sumaron {amount} a las metas de ahorro.}}'**
+  String recapSavingsRow(String type, String amount);
+
   /// No description provided for @expensesPlannedSkip.
   ///
   /// In es, this message translates to:
