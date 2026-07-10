@@ -5499,6 +5499,24 @@ abstract class AppLocalizations {
   /// **'{spent} de {limit}'**
   String budgetsSpentOf(String spent, String limit);
 
+  /// No description provided for @financeInsightsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Análisis'**
+  String get financeInsightsTitle;
+
+  /// No description provided for @financeInsightsSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tendencia y presupuestos del mes'**
+  String get financeInsightsSubtitle;
+
+  /// No description provided for @financeInsightsTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver análisis'**
+  String get financeInsightsTooltip;
+
   /// No description provided for @trendTitle.
   ///
   /// In es, this message translates to:

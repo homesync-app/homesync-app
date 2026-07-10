@@ -2147,6 +2147,9 @@
       }
     }
   },
+  "financeInsightsTitle": "Insights",
+  "financeInsightsSubtitle": "This month's trend and budgets",
+  "financeInsightsTooltip": "View insights",
   "trendTitle": "TREND · 6 MONTHS",
   "trendDeltaDown": "{pct}% less than {month}",
   "@trendDeltaDown": {

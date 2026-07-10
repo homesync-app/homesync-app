@@ -33,15 +33,14 @@ import 'package:intl/intl.dart';
 
 import '../providers/estimated_income_provider.dart';
 import '../utils/expense_csv_exporter.dart';
-import '../widgets/budget_section.dart';
 import '../widgets/estimated_income_sheet.dart';
 import '../widgets/expense_detail_sheet.dart';
 import '../widgets/expense_form_sheet.dart';
+import '../widgets/finance_insights_sheet.dart';
 import '../widgets/month_recap_sheet.dart';
 import '../widgets/planned_expense_payment_sheet.dart';
 import '../widgets/pool_section.dart';
 import '../widgets/recurring_expense_form_sheet.dart';
-import '../widgets/spend_trend_card.dart';
 import '../widgets/subscription_suggestion_banner.dart';
 import 'recurrentes_tab.dart';
 import 'savings_tab.dart';
@@ -238,19 +237,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               ),
             ),
 
-            // 2. PRESUPUESTOS POR CATEGORÍA (premium; teaser para free)
-            const SliverToBoxAdapter(child: BudgetSection()),
+            // Presupuestos y tendencia viven en el sheet "Análisis" (ícono
+            // junto a la píldora del mes): el home de Finanzas queda
+            // balance → movimientos, sin ruido intermedio.
 
-            // 3. TENDENCIA 6 MESES (se oculta hasta tener 2 meses con datos)
-            const SliverToBoxAdapter(child: SpendTrendCard()),
-
-            // 4. FONDOS DE GASTO (solo convivencia)
+            // 2. FONDOS DE GASTO (solo convivencia)
             const SliverToBoxAdapter(child: PoolSection()),
 
-            // 5. SUGERENCIA DE SUSCRIPCIÓN (gasto que se repite sin plantilla)
+            // 3. SUGERENCIA DE SUSCRIPCIÓN (gasto que se repite sin plantilla)
             const SliverToBoxAdapter(child: SubscriptionSuggestionBanner()),
 
-            // 5. FEED & FUTURE EXPENSES
+            // 4. FEED & FUTURE EXPENSES
             feedAsync.when(
               loading: () => _buildFeedLoadingSliver(),
               error: (e, _) => SliverFillRemaining(
@@ -851,6 +848,25 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           ),
                         ),
                         const SizedBox(width: 8),
+                        // Análisis (tendencia + presupuestos): viven en un
+                        // sheet para no cargar el scroll de Movimientos.
+                        IconButton(
+                          onPressed: () => FinanceInsightsSheet.show(context),
+                          tooltip: AppLocalizations.of(context)
+                              .financeInsightsTooltip,
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 34,
+                            minHeight: 30,
+                          ),
+                          icon: Icon(
+                            Icons.donut_small_rounded,
+                            size: 19,
+                            color: theme.primary.withValues(alpha: 0.85),
+                          ),
+                        ),
+                        const SizedBox(width: 2),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,

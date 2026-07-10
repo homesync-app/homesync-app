@@ -2182,6 +2182,9 @@
       }
     }
   },
+  "financeInsightsTitle": "Análisis",
+  "financeInsightsSubtitle": "Tendencia y presupuestos del mes",
+  "financeInsightsTooltip": "Ver análisis",
   "trendTitle": "TENDENCIA · 6 MESES",
   "trendDeltaDown": "{pct}% menos que en {month}",
   "@trendDeltaDown": {

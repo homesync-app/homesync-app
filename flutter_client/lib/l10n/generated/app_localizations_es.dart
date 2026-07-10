@@ -3431,6 +3431,15 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get financeInsightsTitle => 'Análisis';
+
+  @override
+  String get financeInsightsSubtitle => 'Tendencia y presupuestos del mes';
+
+  @override
+  String get financeInsightsTooltip => 'Ver análisis';
+
+  @override
   String get trendTitle => 'TENDENCIA · 6 MESES';
 
   @override
