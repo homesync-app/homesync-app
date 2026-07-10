@@ -40,6 +40,7 @@ import '../widgets/expense_form_sheet.dart';
 import '../widgets/planned_expense_payment_sheet.dart';
 import '../widgets/recurring_expense_form_sheet.dart';
 import '../widgets/spend_trend_card.dart';
+import '../widgets/subscription_suggestion_banner.dart';
 import 'recurrentes_tab.dart';
 import 'savings_tab.dart';
 
@@ -237,7 +238,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             // 3. TENDENCIA 6 MESES (se oculta hasta tener 2 meses con datos)
             const SliverToBoxAdapter(child: SpendTrendCard()),
 
-            // 4. FEED & FUTURE EXPENSES
+            // 4. SUGERENCIA DE SUSCRIPCIÓN (gasto que se repite sin plantilla)
+            const SliverToBoxAdapter(child: SubscriptionSuggestionBanner()),
+
+            // 5. FEED & FUTURE EXPENSES
             feedAsync.when(
               loading: () => _buildFeedLoadingSliver(),
               error: (e, _) => SliverFillRemaining(

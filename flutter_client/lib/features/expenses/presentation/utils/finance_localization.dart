@@ -201,6 +201,11 @@ const _categoryAliases = {
   'liquidacion de balance': 'settlement',
 };
 
+/// Token normalizado para comparar títulos de finanzas (lowercase, sin
+/// tildes, espacios colapsados). Lo usa también el detector de suscripciones
+/// para agrupar movimientos que se repiten mes a mes.
+String normalizeFinanceToken(String? value) => _normalizeFinanceToken(value);
+
 String _normalizeFinanceToken(String? value) {
   final lower = (value ?? '').trim().toLowerCase();
   if (lower.isEmpty) return '';

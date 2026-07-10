@@ -2199,6 +2199,24 @@
   "csvTypeExpense": "Expense",
   "csvTypeIncome": "Income",
   "csvTypeSettlement": "Settlement",
+  "subsSuggestionTitle": "Is \"{title}\" a recurring bill?",
+  "@subsSuggestionTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "subsSuggestionBody": "It repeats every month (~{amount}). Turn it into a recurring bill and it schedules itself.",
+  "@subsSuggestionBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "subsSuggestionCreate": "Create recurring",
+  "subsSuggestionDismiss": "Not now",
   "expensesPlannedSkip": "Skip",
   "expensesPlannedPay": "{type, select, income{Collect} other{Pay}}",
   "@expensesPlannedPay": {

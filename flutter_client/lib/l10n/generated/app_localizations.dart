@@ -5607,6 +5607,30 @@ abstract class AppLocalizations {
   /// **'Liquidación'**
   String get csvTypeSettlement;
 
+  /// No description provided for @subsSuggestionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿\"{title}\" es un gasto fijo?'**
+  String subsSuggestionTitle(String title);
+
+  /// No description provided for @subsSuggestionBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Se repite todos los meses (~{amount}). Crealo como recurrente y se agenda solo.'**
+  String subsSuggestionBody(String amount);
+
+  /// No description provided for @subsSuggestionCreate.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear recurrente'**
+  String get subsSuggestionCreate;
+
+  /// No description provided for @subsSuggestionDismiss.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora no'**
+  String get subsSuggestionDismiss;
+
   /// No description provided for @expensesPlannedSkip.
   ///
   /// In es, this message translates to:

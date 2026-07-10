@@ -3493,6 +3493,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get csvTypeSettlement => 'Liquidación';
 
   @override
+  String subsSuggestionTitle(String title) {
+    return '¿\"$title\" es un gasto fijo?';
+  }
+
+  @override
+  String subsSuggestionBody(String amount) {
+    return 'Se repite todos los meses (~$amount). Crealo como recurrente y se agenda solo.';
+  }
+
+  @override
+  String get subsSuggestionCreate => 'Crear recurrente';
+
+  @override
+  String get subsSuggestionDismiss => 'Ahora no';
+
+  @override
   String get expensesPlannedSkip => 'Omitir';
 
   @override

@@ -3481,6 +3481,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get csvTypeSettlement => 'Settlement';
 
   @override
+  String subsSuggestionTitle(String title) {
+    return 'Is \"$title\" a recurring bill?';
+  }
+
+  @override
+  String subsSuggestionBody(String amount) {
+    return 'It repeats every month (~$amount). Turn it into a recurring bill and it schedules itself.';
+  }
+
+  @override
+  String get subsSuggestionCreate => 'Create recurring';
+
+  @override
+  String get subsSuggestionDismiss => 'Not now';
+
+  @override
   String get expensesPlannedSkip => 'Skip';
 
   @override

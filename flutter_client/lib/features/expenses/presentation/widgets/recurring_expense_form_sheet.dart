@@ -25,10 +25,22 @@ class RecurringExpenseFormSheet extends ConsumerStatefulWidget {
   final ExpenseTemplateModel? template;
   final String initialType;
 
+  /// Prefill para ALTA (sin [template]): usado por la sugerencia de
+  /// suscripciones para precargar el gasto detectado sin entrar en modo
+  /// edición (con [template] el sheet edita esa plantilla existente).
+  final String? initialTitle;
+  final double? initialAmount;
+  final String? initialCategory;
+  final int? initialDayOfMonth;
+
   const RecurringExpenseFormSheet({
     super.key,
     this.template,
     this.initialType = 'expense',
+    this.initialTitle,
+    this.initialAmount,
+    this.initialCategory,
+    this.initialDayOfMonth,
   });
 
   @override
@@ -39,6 +51,10 @@ class RecurringExpenseFormSheet extends ConsumerStatefulWidget {
     BuildContext context, {
     ExpenseTemplateModel? template,
     String initialType = 'expense',
+    String? initialTitle,
+    double? initialAmount,
+    String? initialCategory,
+    int? initialDayOfMonth,
   }) {
     return AppSheet.show(
       context: context,
@@ -51,6 +67,10 @@ class RecurringExpenseFormSheet extends ConsumerStatefulWidget {
           child: RecurringExpenseFormSheet(
             template: template,
             initialType: initialType,
+            initialTitle: initialTitle,
+            initialAmount: initialAmount,
+            initialCategory: initialCategory,
+            initialDayOfMonth: initialDayOfMonth,
           ),
         ),
       ),
@@ -96,6 +116,19 @@ class _RecurringExpenseFormSheetState
       _type = template.type;
     } else {
       _type = widget.initialType;
+      if (widget.initialTitle != null) {
+        _titleController.text = widget.initialTitle!;
+      }
+      if (widget.initialAmount != null) {
+        _amountController.text = NumberFormat.decimalPattern('es_ES')
+            .format(widget.initialAmount!.round());
+      }
+      if (widget.initialCategory != null) {
+        _category = widget.initialCategory!;
+      }
+      if (widget.initialDayOfMonth != null) {
+        _dayOfMonth = widget.initialDayOfMonth!.clamp(1, 28);
+      }
     }
     _titleController.addListener(_onTitleChanged);
     _initializeDefaultPayer();

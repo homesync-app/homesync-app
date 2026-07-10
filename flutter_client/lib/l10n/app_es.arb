@@ -2234,6 +2234,24 @@
   "csvTypeExpense": "Gasto",
   "csvTypeIncome": "Ingreso",
   "csvTypeSettlement": "Liquidación",
+  "subsSuggestionTitle": "¿\"{title}\" es un gasto fijo?",
+  "@subsSuggestionTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "subsSuggestionBody": "Se repite todos los meses (~{amount}). Crealo como recurrente y se agenda solo.",
+  "@subsSuggestionBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "subsSuggestionCreate": "Crear recurrente",
+  "subsSuggestionDismiss": "Ahora no",
   "expensesPlannedSkip": "Omitir",
   "expensesPlannedPay": "{type, select, income{Cobrar} other{Pagar}}",
   "@expensesPlannedPay": {
