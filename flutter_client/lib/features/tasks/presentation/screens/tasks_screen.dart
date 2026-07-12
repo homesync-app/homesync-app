@@ -1,9 +1,9 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
-import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -12,7 +12,6 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/utils/app_scroll_physics.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -30,9 +29,10 @@ import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
+import 'package:homesync_client/shared/widgets/edge_fade.dart';
 import 'package:homesync_client/shared/widgets/schedule_dialog.dart'
     show ScheduleDialog, TaskRepeatMode;
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:motor/motor.dart';
 // ignore: implementation_imports
 import 'package:timeago/src/messages/es_messages.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -47,15 +47,62 @@ class TasksScreen extends ConsumerStatefulWidget {
 }
 
 class _TasksScreenState extends ConsumerState<TasksScreen>
-    with SingleTickerProviderStateMixin {
-  RealtimeChannel? _tasksChannel;
-  SupabaseClient? _realtimeClient;
+    with TickerProviderStateMixin {
   late TabController _tabController;
   late final ConfettiController _completionConfettiController;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearchOpen = false;
   bool _showTodayDoneCelebration = false;
+
+  // Auto-centrado de los chips de filtro (patrón FilterTabs de bunpod): el
+  // chip recién activado entra a la banda cómoda del viewport con un spring
+  // real en vez de un ensureVisible con curva.
+  static const String _allChipId = '__all__';
+  final ScrollController _chipScroll = ScrollController();
+  final Map<String, GlobalKey> _chipKeys = {};
+  late final SingleMotionController _chipScrollMotion = SingleMotionController(
+    motion: const MaterialSpringMotion.standardSpatialFast(),
+    vsync: this,
+  )..addListener(() {
+      if (!_chipScroll.hasClients) return;
+      final position = _chipScroll.position;
+      _chipScroll.jumpTo(
+        _chipScrollMotion.value.clamp(
+          position.minScrollExtent,
+          position.maxScrollExtent,
+        ),
+      );
+    });
+
+  GlobalKey _chipKeyFor(String? id) =>
+      _chipKeys.putIfAbsent(id ?? _allChipId, GlobalKey.new);
+
+  /// Lleva el chip a la banda cómoda (25%..75% del viewport) si quedó jammed
+  /// contra un borde; si ya está en la banda, no lo mueve.
+  void _scrollChipIntoView(String? id) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_chipScroll.hasClients) return;
+      final keyContext = _chipKeys[id ?? _allChipId]?.currentContext;
+      final box = keyContext?.findRenderObject();
+      if (box is! RenderBox) return;
+
+      final position = _chipScroll.position;
+      final viewport = RenderAbstractViewport.of(box);
+      final current = _chipScroll.offset;
+      final near = viewport.getOffsetToReveal(box, 0.25).offset;
+      final far = viewport.getOffsetToReveal(box, 0.75).offset;
+      final lo = far < near ? far : near;
+      final hi = far < near ? near : far;
+      if (current >= lo - 0.5 && current <= hi + 0.5) return;
+
+      final target = (current < lo ? lo : hi).clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      );
+      _chipScrollMotion.animateTo(target, from: current);
+    });
+  }
 
   @override
   void initState() {
@@ -80,26 +127,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         }
       }
     });
-
-    _setupRealtime();
   }
 
   @override
   void dispose() {
-    final channel = _tasksChannel;
-    final client = _realtimeClient;
-    if (channel != null && client != null) {
-      // removeChannel unsubscribes AND releases the channel from the client's
-      // registry; a bare unsubscribe() can leave the channel object lingering.
-      // Use the cached client (not ref) because reading ref in dispose is unsafe.
-      client.removeChannel(channel);
-      _tasksChannel = null;
-      _realtimeClient = null;
-    }
     _tabController.dispose();
     _completionConfettiController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _chipScrollMotion.dispose();
+    _chipScroll.dispose();
     super.dispose();
   }
 
@@ -119,32 +156,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     }
   }
 
-  Future<void> _setupRealtime() async {
-    // Wait for household ID to be available
-    final householdId = await ref.read(householdIdProvider.future);
-    if (householdId == null || !mounted) return;
-
-    final client = ref.read(supabaseClientProvider);
-    _realtimeClient = client;
-    _tasksChannel = client
-        .channel('tasks_screen:$householdId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'tasks',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'household_id',
-            value: householdId,
-          ),
-          callback: (_) {
-            if (mounted) {
-              ref.invalidate(tasksProvider);
-            }
-          },
-        )
-        .subscribe();
-  }
+  // NOTA: esta pantalla NO abre su propio canal realtime. El notifier `Tasks`
+  // ya escucha la tabla `tasks` (apply local optimista + silentRefresh con
+  // debounce); un segundo canal acá invalidaba el provider en cada evento y
+  // causaba doble fetch pisando el update optimista.
 
   void _showScheduleDialog(TaskModel task) {
     final members = ref
@@ -284,10 +299,21 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       }
     });
 
+    // Poda el "filtro fantasma": cuando la última tarea activa de una
+    // categoría filtrada desaparece, su chip deja de renderizarse pero el
+    // filtro quedaba seteado y la lista se veía vacía sin selección visible.
+    ref.listen(activeCategoriesProvider, (previous, next) {
+      final active = next.value;
+      if (active != null) {
+        ref.read(taskCategoryFilterProvider.notifier).retainOnly(active);
+      }
+    });
+
     final theme = context.theme;
     final filteredAsync = ref.watch(filteredTasksProvider);
     final membersAsync = ref.watch(householdMembersProvider);
     final selectedCategories = ref.watch(taskCategoryFilterProvider);
+    final searchQuery = ref.watch(taskSearchQueryProvider).trim().toLowerCase();
     final activeCatsAsync = ref.watch(activeCategoriesProvider);
 
     final members = membersAsync.maybeWhen(
@@ -343,167 +369,217 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                           ref.invalidate(categoriesProvider);
                         },
                       ),
-                      data: (tasks) => RefreshIndicator(
-                        onRefresh: () async {
-                          ref.invalidate(tasksProvider);
-                          ref.invalidate(categoriesProvider);
-                        },
-                        color: AppColors.accentGold,
-                        child: CustomScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          slivers: [
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(24, 8, 24, 10),
-                                child: activeCatsAsync.when(
-                                  data: (activeCats) {
-                                    return categoriesAsync.when(
-                                      data: (catList) {
-                                        final visibleCats = catList
-                                            .where(
-                                              (c) => activeCats.contains(
-                                                CategoryMapping
-                                                    .normaliseCategory(
-                                                  c.id,
-                                                ),
-                                              ),
-                                            )
-                                            .toList();
-
-                                        return Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            ShaderMask(
-                                              shaderCallback: (bounds) {
-                                                return const LinearGradient(
-                                                  begin: Alignment.centerLeft,
-                                                  end: Alignment.centerRight,
-                                                  colors: [
-                                                    Colors.white,
-                                                    Colors.white,
-                                                    Colors.transparent,
-                                                  ],
-                                                  stops: [0, 0.92, 1],
-                                                ).createShader(bounds);
-                                              },
-                                              blendMode: BlendMode.dstIn,
-                                              child: SizedBox(
-                                                height: 40,
-                                                child: ListView.builder(
-                                                  scrollDirection:
-                                                      Axis.horizontal,
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                    right: 18,
+                      data: (tasks) {
+                        // La búsqueda matchea contra el título que el usuario
+                        // VE (localizado vía titleKey) además del crudo de DB.
+                        final locale = AppLocalizations.of(context);
+                        final searched = searchQuery.isEmpty
+                            ? tasks
+                            : tasks
+                                .where(
+                                  (task) =>
+                                      task.title
+                                          .toLowerCase()
+                                          .contains(searchQuery) ||
+                                      localizedTaskTitle(locale, task)
+                                          .toLowerCase()
+                                          .contains(searchQuery),
+                                )
+                                .toList();
+                        final hasFilters = selectedCategories.isNotEmpty ||
+                            searchQuery.isNotEmpty;
+                        return RefreshIndicator(
+                          onRefresh: () async {
+                            ref.invalidate(tasksProvider);
+                            ref.invalidate(categoriesProvider);
+                          },
+                          color: AppColors.accentGold,
+                          // La lista se disuelve contra los bordes en vez de
+                          // cortarse seca (mismo tratamiento que Finanzas).
+                          child: EdgeFade(
+                            extent: 0.035,
+                            child: CustomScrollView(
+                              // PrimaryScrollController del tab (re-tap sube al tope).
+                              primary: true,
+                              physics: const BouncingScrollPhysics(),
+                              slivers: [
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      24,
+                                      8,
+                                      24,
+                                      10,
+                                    ),
+                                    child: activeCatsAsync.when(
+                                      data: (activeCats) {
+                                        return categoriesAsync.when(
+                                          data: (catList) {
+                                            final visibleCats = catList
+                                                .where(
+                                                  (c) => activeCats.contains(
+                                                    CategoryMapping
+                                                        .normaliseCategory(
+                                                      c.id,
+                                                    ),
                                                   ),
-                                                  itemCount:
-                                                      visibleCats.length + 2,
-                                                  itemBuilder:
-                                                      (context, index) {
-                                                    if (index == 0) {
-                                                      return _buildSearchChip()
-                                                          .animateStaggered(0);
-                                                    }
+                                                )
+                                                .toList();
 
-                                                    if (index == 1) {
-                                                      return _buildCategoryChip(
-                                                        null,
-                                                        AppLocalizations.of(
-                                                          context,
-                                                        ).tasksFilterAll,
-                                                        AppColors.textSecondary,
-                                                      ).animateStaggered(1);
-                                                    }
-
-                                                    final category =
-                                                        visibleCats[index - 2];
-                                                    return _buildCategoryChip(
-                                                      category.id,
-                                                      localizedTaskCategoryName(
-                                                        AppLocalizations.of(
-                                                          context,
-                                                        ),
-                                                        category,
-                                                      ),
-                                                      AppColors.fromHex(
-                                                        category.color,
-                                                      ),
-                                                    ).animateStaggered(index);
+                                            return Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                ShaderMask(
+                                                  shaderCallback: (bounds) {
+                                                    return const LinearGradient(
+                                                      begin:
+                                                          Alignment.centerLeft,
+                                                      end:
+                                                          Alignment.centerRight,
+                                                      colors: [
+                                                        Colors.white,
+                                                        Colors.white,
+                                                        Colors.transparent,
+                                                      ],
+                                                      stops: [0, 0.92, 1],
+                                                    ).createShader(bounds);
                                                   },
-                                                ),
-                                              ),
-                                            ),
-                                            AnimatedSize(
-                                              duration: const Duration(
-                                                milliseconds: 220,
-                                              ),
-                                              curve: Curves.easeOutCubic,
-                                              child: _isSearchOpen
-                                                  ? Padding(
+                                                  blendMode: BlendMode.dstIn,
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: ListView.builder(
+                                                      controller: _chipScroll,
+                                                      scrollDirection:
+                                                          Axis.horizontal,
                                                       padding:
                                                           const EdgeInsets.only(
-                                                        top: 10,
+                                                        right: 18,
                                                       ),
-                                                      child: Container(
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: theme.surface,
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                            20,
-                                                          ),
-                                                          border: Border.all(
-                                                            color: theme.border
-                                                                .withValues(
-                                                              alpha: 0.88,
-                                                            ),
-                                                          ),
-                                                          boxShadow:
-                                                              theme.cardShadow,
-                                                        ),
-                                                        child: TextField(
-                                                          controller:
-                                                              _searchController,
-                                                          focusNode:
-                                                              _searchFocusNode,
-                                                          textInputAction:
-                                                              TextInputAction
-                                                                  .search,
-                                                          onChanged: (val) {
-                                                            ref
-                                                                .read(
-                                                                  taskSearchQueryProvider
-                                                                      .notifier,
-                                                                )
-                                                                .setQuery(val);
-                                                            setState(() {});
-                                                          },
-                                                          decoration:
-                                                              InputDecoration(
-                                                            hintText:
-                                                                AppLocalizations
-                                                                    .of(
+                                                      itemCount:
+                                                          visibleCats.length +
+                                                              2,
+                                                      itemBuilder:
+                                                          (context, index) {
+                                                        if (index == 0) {
+                                                          return _buildSearchChip()
+                                                              .animateStaggered(
+                                                            0,
+                                                          );
+                                                        }
+
+                                                        if (index == 1) {
+                                                          // "Todas" no es una
+                                                          // categoría: usa el
+                                                          // peach de acción, no
+                                                          // el gris de texto
+                                                          // secundario (leía
+                                                          // como deshabilitado).
+                                                          return _buildCategoryChip(
+                                                            null,
+                                                            AppLocalizations.of(
                                                               context,
-                                                            ).tasksSearchHint,
-                                                            hintStyle:
-                                                                TextStyle(
-                                                              color: theme
-                                                                  .textMuted,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
+                                                            ).tasksFilterAll,
+                                                            theme.primary,
+                                                          ).animateStaggered(1);
+                                                        }
+
+                                                        final category =
+                                                            visibleCats[
+                                                                index - 2];
+                                                        return _buildCategoryChip(
+                                                          category.id,
+                                                          localizedTaskCategoryName(
+                                                            AppLocalizations.of(
+                                                              context,
                                                             ),
-                                                            prefixIcon: Icon(
-                                                              Icons
-                                                                  .search_rounded,
-                                                              color: theme
-                                                                  .textSecondary,
+                                                            category,
+                                                          ),
+                                                          AppColors.fromHex(
+                                                            category.color,
+                                                          ),
+                                                        ).animateStaggered(
+                                                          index,
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+                                                ),
+                                                AnimatedSize(
+                                                  duration: const Duration(
+                                                    milliseconds: 220,
+                                                  ),
+                                                  curve: Curves.easeOutCubic,
+                                                  child: _isSearchOpen
+                                                      ? Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                            top: 10,
+                                                          ),
+                                                          child: Container(
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              color:
+                                                                  theme.surface,
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                20,
+                                                              ),
+                                                              border:
+                                                                  Border.all(
+                                                                color: theme
+                                                                    .border
+                                                                    .withValues(
+                                                                  alpha: 0.88,
+                                                                ),
+                                                              ),
+                                                              boxShadow: theme
+                                                                  .cardShadow,
                                                             ),
-                                                            suffixIcon:
-                                                                _searchController
+                                                            child: TextField(
+                                                              controller:
+                                                                  _searchController,
+                                                              focusNode:
+                                                                  _searchFocusNode,
+                                                              textInputAction:
+                                                                  TextInputAction
+                                                                      .search,
+                                                              onChanged: (val) {
+                                                                ref
+                                                                    .read(
+                                                                      taskSearchQueryProvider
+                                                                          .notifier,
+                                                                    )
+                                                                    .setQuery(
+                                                                      val,
+                                                                    );
+                                                                setState(() {});
+                                                              },
+                                                              decoration:
+                                                                  InputDecoration(
+                                                                hintText:
+                                                                    AppLocalizations
+                                                                        .of(
+                                                                  context,
+                                                                ).tasksSearchHint,
+                                                                hintStyle:
+                                                                    TextStyle(
+                                                                  color: theme
+                                                                      .textMuted,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                ),
+                                                                prefixIcon:
+                                                                    Icon(
+                                                                  Icons
+                                                                      .search_rounded,
+                                                                  color: theme
+                                                                      .textSecondary,
+                                                                ),
+                                                                suffixIcon: _searchController
                                                                         .text
                                                                         .isNotEmpty
                                                                     ? IconButton(
@@ -537,119 +613,134 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                                         ),
                                                                       )
                                                                     : null,
-                                                            filled: true,
-                                                            fillColor: Colors
-                                                                .transparent,
-                                                            border:
-                                                                OutlineInputBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                20,
+                                                                filled: true,
+                                                                fillColor: Colors
+                                                                    .transparent,
+                                                                border:
+                                                                    OutlineInputBorder(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                    20,
+                                                                  ),
+                                                                  borderSide:
+                                                                      BorderSide
+                                                                          .none,
+                                                                ),
+                                                                contentPadding:
+                                                                    const EdgeInsets
+                                                                        .symmetric(
+                                                                  vertical: 14,
+                                                                  horizontal:
+                                                                      16,
+                                                                ),
                                                               ),
-                                                              borderSide:
-                                                                  BorderSide
-                                                                      .none,
-                                                            ),
-                                                            contentPadding:
-                                                                const EdgeInsets
-                                                                    .symmetric(
-                                                              vertical: 14,
-                                                              horizontal: 16,
                                                             ),
                                                           ),
-                                                        ),
-                                                      ),
-                                                    )
-                                                  : const SizedBox.shrink(),
-                                            ),
-                                          ],
+                                                        )
+                                                      : const SizedBox.shrink(),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                          loading: () => const SizedBox(),
+                                          error: (_, __) => Row(
+                                            children: [
+                                              _buildSearchChip(),
+                                              _buildCategoryChip(
+                                                null,
+                                                AppLocalizations.of(context)
+                                                    .tasksFilterAll,
+                                                theme.primary,
+                                              ),
+                                            ],
+                                          ),
                                         );
                                       },
                                       loading: () => const SizedBox(),
-                                      error: (_, __) => Row(
-                                        children: [
-                                          _buildSearchChip(),
-                                          _buildCategoryChip(
-                                            null,
-                                            AppLocalizations.of(context)
-                                                .tasksFilterAll,
-                                            AppColors.textSecondary,
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                  loading: () => const SizedBox(),
-                                  error: (_, __) => const SizedBox(),
-                                ),
-                              ).animateEntrance(delay: 100),
-                            ),
-                            // Tasks list
-                            SliverPadding(
-                              padding: EdgeInsets.only(
-                                bottom: 158 +
-                                    MediaQuery.viewPaddingOf(context).bottom,
-                              ),
-                              sliver: SliverList(
-                                delegate: SliverChildListDelegate([
-                                  if (tasks.isEmpty)
-                                    _buildEmptyState(
-                                      selectedCategories.isEmpty
-                                          ? null
-                                          : 'filtered',
+                                      error: (_, __) => const SizedBox(),
                                     ),
-                                  ..._buildGroupedTasks(
-                                    tasks,
-                                    members,
-                                    selectedCategories,
+                                  ).animateEntrance(delay: 100),
+                                ),
+                                // Tasks list
+                                SliverPadding(
+                                  padding: EdgeInsets.only(
+                                    bottom: 158 +
+                                        MediaQuery.viewPaddingOf(context)
+                                            .bottom,
                                   ),
-                                ]),
-                              ),
-                            ),
-                            if (ref.read(tasksProvider.notifier).hasMore &&
-                                tasks.isNotEmpty &&
-                                selectedCategories.isEmpty)
-                              SliverToBoxAdapter(
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(24, 0, 24, 140),
-                                  child: Center(
-                                    child: OutlinedButton.icon(
-                                      onPressed: () => ref
-                                          .read(tasksProvider.notifier)
-                                          .loadMore(),
-                                      icon: const Icon(Icons.add_rounded),
-                                      label: Text(
-                                        AppLocalizations.of(context)
-                                            .tasksLoadMore,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
+                                  sliver: SliverList(
+                                    delegate: SliverChildListDelegate([
+                                      if (searched.isEmpty)
+                                        _buildEmptyState(
+                                          hasFilters ? 'filtered' : null,
                                         ),
+                                      ..._buildGroupedTasks(
+                                        searched,
+                                        members,
+                                        selectedCategories,
                                       ),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: AppColors.primary,
-                                        side: const BorderSide(
-                                          color: AppColors.primary,
-                                          width: 1.5,
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: AppSpacing.xl,
-                                          vertical: AppSpacing.md,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            AppRadii.xl,
+                                      // Va al final de la lista, dentro del
+                                      // mismo padding inferior: como sliver
+                                      // aparte quedaba un hueco muerto de
+                                      // ~158px entre la última card y el botón.
+                                      if (ref
+                                              .read(tasksProvider.notifier)
+                                              .hasMore &&
+                                          searched.isNotEmpty &&
+                                          !hasFilters)
+                                        Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                            24,
+                                            16,
+                                            24,
+                                            0,
+                                          ),
+                                          child: Center(
+                                            child: OutlinedButton.icon(
+                                              onPressed: () => ref
+                                                  .read(tasksProvider.notifier)
+                                                  .loadMore(),
+                                              icon: const Icon(
+                                                Icons.add_rounded,
+                                              ),
+                                              label: Text(
+                                                AppLocalizations.of(context)
+                                                    .tasksLoadMore,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                              style: OutlinedButton.styleFrom(
+                                                foregroundColor:
+                                                    AppColors.primary,
+                                                side: const BorderSide(
+                                                  color: AppColors.primary,
+                                                  width: 1.5,
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: AppSpacing.xl,
+                                                  vertical: AppSpacing.md,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                    AppRadii.xl,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ),
+                                    ]),
                                   ),
                                 ),
-                              ),
-                          ],
-                        ),
-                      ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     // CALENDAR TAB
                     CalendarScreen(
@@ -717,8 +808,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   }
 
   void _showCompletionFeedback({required bool isFinalTodayTask}) {
-    final media = MediaQuery.maybeOf(context);
-    if (!isFinalTodayTask || (media?.accessibleNavigation ?? false)) {
+    if (!isFinalTodayTask || AppMotion.reduce(context)) {
       AppHaptics.tap();
       return;
     }
@@ -738,55 +828,59 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     final hasQuery = _searchController.text.trim().isNotEmpty;
     final isSelected = _isSearchOpen || hasQuery;
 
-    return GestureDetector(
-      onTap: _toggleSearch,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        margin: const EdgeInsets.only(right: AppSpacing.xs),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? theme.primary.withValues(alpha: 0.12)
-              : theme.surface,
-          borderRadius: BorderRadius.circular(AppRadii.md),
-          border: Border.all(
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: GestureDetector(
+        onTap: _toggleSearch,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.only(right: AppSpacing.xs),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          decoration: BoxDecoration(
             color: isSelected
-                ? theme.primary.withValues(alpha: 0.45)
-                : theme.border,
-            width: isSelected ? 1.4 : 1.1,
+                ? theme.primary.withValues(alpha: 0.12)
+                : theme.surface,
+            borderRadius: BorderRadius.circular(AppRadii.md),
+            border: Border.all(
+              color: isSelected
+                  ? theme.primary.withValues(alpha: 0.45)
+                  : theme.border,
+              width: isSelected ? 1.4 : 1.1,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: theme.primary.withValues(alpha: 0.10),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : theme.cardShadow,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: theme.primary.withValues(alpha: 0.10),
-                    blurRadius: 14,
-                    offset: const Offset(0, 6),
-                  ),
-                ]
-              : theme.cardShadow,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected ? Icons.close_rounded : Icons.search_rounded,
-              size: 18,
-              color: isSelected ? theme.primary : theme.textSecondary,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              hasQuery
-                  ? AppLocalizations.of(context).tasksSearchActiveLabel
-                  : AppLocalizations.of(context).tasksSearchIdleLabel,
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: isSelected ? theme.primary : theme.textPrimary,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isSelected ? Icons.close_rounded : Icons.search_rounded,
+                size: 18,
+                color: isSelected ? theme.primary : theme.textSecondary,
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Text(
+                hasQuery
+                    ? AppLocalizations.of(context).tasksSearchActiveLabel
+                    : AppLocalizations.of(context).tasksSearchIdleLabel,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: isSelected ? theme.primary : theme.textPrimary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -798,62 +892,100 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         ? selectedCategories.isEmpty
         : selectedCategories.contains(CategoryMapping.normaliseCategory(id));
     final theme = context.theme;
+    // Gramática soft unificada con el chip de búsqueda: tinte del color de la
+    // categoría + texto en el color oscurecido (mismo blend que las pills de
+    // las cards). El relleno sólido anterior fallaba contraste AA (blanco
+    // sobre el color a 13px) y en "Todas" leía como deshabilitado.
+    final readable = Color.alphaBlend(
+      Colors.black.withValues(alpha: 0.28),
+      color,
+    );
+    final selectedBg = Color.alphaBlend(
+      color.withValues(alpha: 0.14),
+      theme.surface,
+    );
 
-    return GestureDetector(
-      onTap: () {
-        if (id == null) {
-          ref.read(taskCategoryFilterProvider.notifier).clear();
-        } else {
-          ref
-              .read(taskCategoryFilterProvider.notifier)
-              .toggle(CategoryMapping.normaliseCategory(id));
-        }
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-        margin: const EdgeInsets.only(right: AppSpacing.xs),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-        decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.12) : theme.surface,
-          borderRadius: BorderRadius.circular(AppRadii.md),
-          border: Border.all(
-            color: isSelected ? color.withValues(alpha: 0.45) : theme.border,
-            width: isSelected ? 1.4 : 1.1,
-          ),
-          boxShadow: isSelected
-              ? [
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: GestureDetector(
+        key: _chipKeyFor(id),
+        onTap: () {
+          AppHaptics.selection();
+          if (id == null) {
+            ref.read(taskCategoryFilterProvider.notifier).clear();
+            _scrollChipIntoView(null);
+          } else {
+            ref
+                .read(taskCategoryFilterProvider.notifier)
+                .toggle(CategoryMapping.normaliseCategory(id));
+            // Solo perseguimos el chip cuando se ACTIVA (al apagarlo no hay
+            // nada que mirar ahí).
+            if (!isSelected) _scrollChipIntoView(id);
+          }
+        },
+        // Patrón FilterTabs de bunpod: al seleccionarse, el chip se tiñe con
+        // el color de su categoría y redondea hacia pill, sobre un spring.
+        child: SingleMotionBuilder(
+          motion: const MaterialSpringMotion.standardSpatialFast(),
+          value: isSelected ? 1.0 : 0.0,
+          builder: (context, rawT, _) {
+            final t = rawT.clamp(0.0, 1.0).toDouble();
+            final bg = Color.lerp(theme.surface, selectedBg, t)!;
+            final borderColor =
+                Color.lerp(theme.border, color.withValues(alpha: 0.45), t)!;
+            final fg = Color.lerp(theme.textPrimary, readable, t)!;
+            final iconColor =
+                Color.lerp(color.withValues(alpha: 0.85), readable, t)!;
+            final radius =
+                AppRadii.md + (19 - AppRadii.md) * rawT.clamp(0.0, 1.2);
+
+            return Container(
+              margin: const EdgeInsets.only(right: AppSpacing.xs),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(radius < 0 ? 0 : radius),
+                border: Border.all(color: borderColor, width: 1.1 + 0.3 * t),
+                boxShadow: [
                   BoxShadow(
-                    color: color.withValues(alpha: 0.10),
+                    color: color.withValues(alpha: 0.04 + 0.06 * t),
                     blurRadius: 14,
                     offset: const Offset(0, 6),
                   ),
-                ]
-              : theme.cardShadow,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              CategoryMapping.getCategoryMaterialIcon(id ?? name),
-              color: isSelected ? color : color.withValues(alpha: 0.85),
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 116),
-              child: Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
-                  color: isSelected ? color : theme.textPrimary,
-                ),
+                ],
               ),
-            ),
-          ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    // El ícono de "Todas" no puede depender del label
+                    // localizado (solo matcheaba el string 'todas' en es).
+                    id == null
+                        ? Icons.format_list_bulleted_rounded
+                        : CategoryMapping.getCategoryMaterialIcon(id),
+                    color: iconColor,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 116),
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight:
+                            isSelected ? FontWeight.w800 : FontWeight.w700,
+                        color: fg,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
@@ -906,16 +1038,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         .where((t) => !(hideReviewQueue && t.isPendingApproval))
         .toList();
 
-    // Filter if specific categories selected
-    List<TaskModel> tasksToDisplay = deduped;
-    if (selectedCategories.isNotEmpty) {
-      tasksToDisplay = deduped
-          .where(
-            (t) => selectedCategories
-                .contains(CategoryMapping.normaliseCategory(t.category)),
-          )
-          .toList();
-    }
+    // La lista ya llega filtrada por categoría (filteredTasksProvider) y por
+    // búsqueda (matcheada contra el título localizado en el build).
+    final tasksToDisplay = deduped;
     final todayTasksLeft = deduped.where((task) => task.isDueToday).length;
     final canCelebrateAllDoneToday =
         selectedCategories.isEmpty && _searchController.text.trim().isEmpty;
@@ -925,10 +1050,12 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     final t = AppLocalizations.of(context);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+    final tomorrowDate = today.add(const Duration(days: 1));
     final weekEnd = today.add(const Duration(days: 7));
 
     final overdue = <TaskModel>[];
     final dueToday = <TaskModel>[];
+    final dueTomorrow = <TaskModel>[];
     final thisWeek = <TaskModel>[];
     final upcoming = <TaskModel>[];
     final unscheduled = <TaskModel>[];
@@ -942,6 +1069,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         final dueDate = task.dueDateOnly;
         if (dueDate == null) {
           unscheduled.add(task);
+        } else if (dueDate.isAtSameMomentAs(tomorrowDate)) {
+          // Una diaria recién completada vence mañana: "Mañana" lee mucho
+          // más natural que verla caer en "Esta semana".
+          dueTomorrow.add(task);
         } else if (!dueDate.isAfter(weekEnd)) {
           thisWeek.add(task);
         } else {
@@ -953,7 +1084,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     int byDueDate(TaskModel a, TaskModel b) {
       final dueA = a.dueDateOnly;
       final dueB = b.dueDateOnly;
-      if (dueA == null || dueB == null) return 0;
+      if (dueA == null && dueB == null) return 0;
+      if (dueA == null) return 1;
+      if (dueB == null) return -1;
       return dueA.compareTo(dueB);
     }
 
@@ -969,6 +1102,12 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         overdue
       ),
       (Icons.today_rounded, t.tasksSectionToday, AppColors.primary, dueToday),
+      (
+        Icons.wb_twilight_rounded,
+        t.tasksSectionTomorrow,
+        AppColors.accentPeach,
+        dueTomorrow
+      ),
       (
         Icons.date_range_rounded,
         t.tasksSectionThisWeek,

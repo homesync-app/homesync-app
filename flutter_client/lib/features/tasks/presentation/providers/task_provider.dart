@@ -79,6 +79,17 @@ class TaskCategoryFilter extends _$TaskCategoryFilter {
   }
 
   void clear() => state = {};
+
+  /// Descarta del filtro las categorías que ya no tienen tareas activas.
+  /// Sin esto, al completarse la última tarea de una categoría filtrada su
+  /// chip desaparecía pero el filtro seguía vivo: lista vacía "filtrada" sin
+  /// ninguna selección visible para deshacerla.
+  void retainOnly(Iterable<String> validCategories) {
+    if (state.isEmpty) return;
+    final valid = validCategories.toSet();
+    final next = state.where(valid.contains).toSet();
+    if (next.length != state.length) state = next;
+  }
 }
 
 @riverpod
@@ -976,27 +987,23 @@ class Tasks extends _$Tasks {
 
 // ── Derived / Filtered Providers ──────────────────────────────────────────────
 
+/// Tareas filtradas por categoría. La búsqueda de texto NO vive acá: se
+/// aplica en la pantalla contra el título localizado (titleKey → ARB), que es
+/// lo que el usuario realmente ve — matchear `title` crudo rompía la búsqueda
+/// en cualquier locale distinto del español.
 @riverpod
 AsyncValue<List<TaskModel>> filteredTasks(Ref ref) {
   final tasksAsync = ref.watch(tasksProvider);
   final selectedCategories = ref.watch(taskCategoryFilterProvider);
-  final searchQuery = ref.watch(taskSearchQueryProvider);
 
   return tasksAsync.whenData((tasks) {
-    var result = tasks;
-    if (selectedCategories.isNotEmpty) {
-      result = result
-          .where(
-            (t) => selectedCategories
-                .contains(CategoryMapping.normaliseCategory(t.category)),
-          )
-          .toList();
-    }
-    if (searchQuery.isNotEmpty) {
-      final q = searchQuery.toLowerCase();
-      result = result.where((t) => t.title.toLowerCase().contains(q)).toList();
-    }
-    return result;
+    if (selectedCategories.isEmpty) return tasks;
+    return tasks
+        .where(
+          (t) => selectedCategories
+              .contains(CategoryMapping.normaliseCategory(t.category)),
+        )
+        .toList();
   });
 }
 

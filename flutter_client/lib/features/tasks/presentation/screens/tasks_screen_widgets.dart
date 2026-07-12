@@ -112,7 +112,8 @@ class _SectionHeader extends StatelessWidget {
             title.toUpperCase(),
             style: TextStyle(
               fontSize: 13,
-              fontWeight: FontWeight.w900,
+              // w800: la disciplina de pesos reserva w900 para heroAmount.
+              fontWeight: FontWeight.w800,
               color: theme.textPrimary.withValues(alpha: 0.82),
               letterSpacing: 1.0,
             ),
@@ -290,11 +291,13 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                             localizedTitle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
+                            // Rol cardTitle (16/700/-0.2): w800 hacía gritar
+                            // a todas las cards a la vez.
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w700,
                               color: theme.textPrimary,
-                              letterSpacing: -0.35,
+                              letterSpacing: -0.2,
                               height: 1.12,
                             ),
                           ),
@@ -342,16 +345,10 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                                     alpha: 0.16,
                                   ),
                                 ),
-                              if (task.isOverdue)
-                                _pill(
-                                  icon: Icons.priority_high_rounded,
-                                  label: AppLocalizations.of(context)
-                                      .tasksPillOverdue,
-                                  color: AppColors.accentRed,
-                                  background: AppColors.accentRed
-                                      .withValues(alpha: 0.16),
-                                  borderAlpha: 0.26,
-                                ),
+                              // Sin pill "Vencida": en esta lista toda tarea
+                              // vencida ya vive bajo el header VENCIDAS y
+                              // lleva el borde rojizo — la pill era una
+                              // tercera codificación del mismo dato.
                               if (isFamilyMode && task.isPendingApproval)
                                 _pill(
                                   icon: Icons.hourglass_top_rounded,
@@ -828,6 +825,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
 
   Future<void> _submitTaskForApproval() async {
     setState(() => _isSubmitting = true);
+    // El notifier ya hace silentRefresh + invalida los providers de
+    // aprobaciones/actividad: invalidar acá duplicaba los fetch.
     try {
       await ref.read(tasksProvider.notifier).submitTaskForApproval(widget.task);
       if (!mounted) return;
@@ -837,9 +836,17 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         type: AppSnackBarType.info,
         duration: const Duration(milliseconds: 1500),
       );
-      ref.invalidate(tasksProvider);
-      ref.invalidate(todayTasksProvider);
-      ref.invalidate(recentActivityProvider);
+    } catch (e) {
+      // El notifier relanza el fallo: sin este catch el spinner se reseteaba
+      // sin ningún aviso y el error moría como excepción async sin manejar.
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message:
+              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
+          type: AppSnackBarType.error,
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -847,6 +854,12 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
 
   Future<void> _completeTask() async {
     AppHaptics.tap();
+    // Snapshot ANTES del update optimista: al completar, el rebuild recalcula
+    // isFinalTodayTask con la tarea ya "cerrada" (todayTasksLeft pasa a 0) y
+    // widget.onCompletedFeedback apuntaría al widget nuevo con el flag en
+    // false — la celebración de "todo listo por hoy" nunca disparaba para
+    // tareas recurrentes.
+    final onCompletedFeedback = widget.onCompletedFeedback;
     setState(() => _isSubmitting = true);
     try {
       final result =
@@ -860,16 +873,17 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
           type: AppSnackBarType.error,
         );
       } else {
-        widget.onCompletedFeedback();
+        onCompletedFeedback();
         AppSnackBar.show(
           context,
           message: t.tasksSnackCompleted,
           type: AppSnackBarType.success,
           duration: const Duration(milliseconds: 1500),
         );
-        ref.invalidate(tasksProvider);
-        ref.invalidate(todayTasksProvider);
-        ref.invalidate(recentActivityProvider);
+        // Sin invalidates acá: el notifier ya hace silentRefresh (y
+        // todayTasksProvider deriva de tasksProvider); invalidar
+        // recentActivityProvider tiraba abajo su stream realtime y causaba
+        // el doble refresh visible de los movimientos del hogar.
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -885,8 +899,10 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     FontWeight textWeight = FontWeight.w800,
     double gap = 5,
   }) {
+    // Blend al 28%: al 18% los acentos claros (gold sobre tinte gold)
+    // quedaban en ~2.3:1 de contraste.
     final readableColor = Color.alphaBlend(
-      Colors.black.withValues(alpha: 0.18),
+      Colors.black.withValues(alpha: 0.28),
       color,
     );
 
@@ -906,7 +922,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
             label,
             style: TextStyle(
               fontWeight: textWeight,
-              fontSize: 10,
+              fontSize: 11,
               color: readableColor,
               letterSpacing: -0.1,
             ),
@@ -917,11 +933,17 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   }
 
   /// Badge único de recompensa: XP y coins comparten pill para bajar el ruido
-  /// visual de la card (antes eran dos badges apilados).
+  /// visual de la card (antes eran dos badges apilados). Todo en gold: en el
+  /// sistema el verde es plata/éxito de Finanzas y el dorado es recompensas;
+  /// los íconos (estrella vs moneda) ya diferencian XP de coins.
   Widget _rewardBadge(int xp, int coins) {
+    final rewardColor = Color.alphaBlend(
+      Colors.black.withValues(alpha: 0.28),
+      AppColors.accentGold,
+    );
     TextStyle style(Color color) => TextStyle(
           fontWeight: FontWeight.w900,
-          fontSize: 10,
+          fontSize: 11,
           color: color,
           letterSpacing: -0.1,
         );
@@ -936,13 +958,13 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (xp > 0) ...[
-            const Icon(
+            Icon(
               Icons.star_rounded,
               size: 12,
-              color: AppColors.accentGold,
+              color: rewardColor,
             ),
             const SizedBox(width: 3),
-            Text('$xp', style: style(AppColors.accentGold)),
+            Text('$xp', style: style(rewardColor)),
           ],
           if (xp > 0 && coins > 0) ...[
             const SizedBox(width: 6),
@@ -957,13 +979,13 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
             const SizedBox(width: 6),
           ],
           if (coins > 0) ...[
-            const Icon(
+            Icon(
               Icons.monetization_on_rounded,
               size: 12,
-              color: AppColors.accentGreen,
+              color: rewardColor,
             ),
             const SizedBox(width: 3),
-            Text('$coins', style: style(AppColors.accentGreen)),
+            Text('$coins', style: style(rewardColor)),
           ],
         ],
       ),

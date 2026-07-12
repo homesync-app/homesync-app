@@ -1794,6 +1794,10 @@
   "@tasksSectionToday": {
     "description": "Tasks list section header: tasks due today."
   },
+  "tasksSectionTomorrow": "Tomorrow",
+  "@tasksSectionTomorrow": {
+    "description": "Tasks list section header: tasks due tomorrow."
+  },
   "tasksSectionThisWeek": "This week",
   "@tasksSectionThisWeek": {
     "description": "Tasks list section header: tasks due within the next 7 days."

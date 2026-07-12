@@ -3909,6 +3909,12 @@ abstract class AppLocalizations {
   /// **'Hoy'**
   String get tasksSectionToday;
 
+  /// Tasks list section header: tasks due tomorrow.
+  ///
+  /// In es, this message translates to:
+  /// **'Mañana'**
+  String get tasksSectionTomorrow;
+
   /// Tasks list section header: tasks due within the next 7 days.
   ///
   /// In es, this message translates to:

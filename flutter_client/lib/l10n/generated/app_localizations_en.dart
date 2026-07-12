@@ -2534,6 +2534,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksSectionToday => 'Today';
 
   @override
+  String get tasksSectionTomorrow => 'Tomorrow';
+
+  @override
   String get tasksSectionThisWeek => 'This week';
 
   @override
