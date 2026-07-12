@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
 class CategoryMapping {
+  // Paleta de categorías de TAREAS: debe coincidir 1:1 con `categories.color`
+  // en la DB (migración task_category_brand_palette). Tonos separados en matiz
+  // para que las pills tintadas (10-16% alpha) sigan distinguibles entre sí.
   static Color getCategoryColor(String? category) {
     if (category == null) return AppColors.textSecondary;
     final lower = category.toLowerCase();
@@ -9,25 +12,28 @@ class CategoryMapping {
     switch (lower) {
       case 'limpieza':
       case 'cleaning':
-        return AppColors.iconBlue;
+        return AppColors.accentBlue;
       case 'hogar':
       case 'general':
-      case 'residuos':
         return AppColors.iconSage;
+      case 'residuos':
+        return const Color(0xFF8A8078);
       case 'mascotas':
       case 'pets':
-        return AppColors.iconPeach;
+        return const Color(0xFFA97045);
       case 'comida':
       case 'kitchen':
       case 'cocina':
-        return const Color(0xFFFB923C);
+        return const Color(0xFFC6503B);
       case 'jardin':
       case 'jardín':
       case 'exterior':
       case 'outdoor':
-        return const Color(0xFF84CC16);
+        return const Color(0xFF7FA045);
       case 'compras':
+        return const Color(0xFF4E9E6B);
       case 'supermarket':
+        // Categoría de Finanzas: mantiene el azul histórico de gastos.
         return AppColors.iconBlue;
       case 'mercadolibre':
       case 'mercado libre':
@@ -61,7 +67,7 @@ class CategoryMapping {
       case 'ropa':
       case 'clothing':
       case 'indumentaria':
-        return const Color(0xFF818CF8);
+        return const Color(0xFFA05795);
       case 'electronics':
       case 'tecnología':
       case 'tecnologia':
@@ -86,26 +92,26 @@ class CategoryMapping {
       case 'baño':
       case 'bano':
       case 'bathroom':
-        return const Color(0xFF06B6D4);
+        return const Color(0xFF3F9FA8);
       case 'dormitorio':
       case 'bedroom':
         return AppColors.accentPurple;
       case 'sala':
       case 'sala / espacios comunes':
       case 'espacios comunes':
-        return const Color(0xFFFB923C);
+        return const Color(0xFFC08A33);
       case 'mantenimiento':
       case 'mantenimiento del hogar':
       case 'bricolaje':
-        return AppColors.textSecondary;
+        return const Color(0xFF64748B);
       case 'niños':
       case 'ninos':
       case 'niños / cuidado':
-        return AppColors.accentOrange;
+        return const Color(0xFFD96A8B);
       case 'administracion':
       case 'administración':
       case 'administración del hogar':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFF6D62C4);
       default:
         return AppColors.textSecondary;
     }
