@@ -281,6 +281,10 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     int? count,
     Color? accentColor,
     String? categoryId,
+    // Los contadores de categorías son tamaño de catálogo (productos
+    // disponibles), no items del usuario: se atenúan para no competir con los
+    // contadores de "Lista actual" / "Comprar de nuevo", que sí son suyos.
+    bool mutedCount = false,
   }) {
     final isExpanded = _expandedSections.contains(sectionId);
     final theme = context.theme;
@@ -351,24 +355,38 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 ),
                 if (count != null) ...[
                   const SizedBox(width: 10),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: highlightColor.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(AppRadii.pill),
-                    ),
-                    child: Text(
+                  if (mutedCount)
+                    Text(
                       '$count',
                       style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        color: highlightColor.withValues(
-                          alpha: isExpanded ? 1 : 0.82,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: theme.textMuted.withValues(
+                          alpha: isExpanded ? 0.9 : 0.7,
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: highlightColor.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(AppRadii.pill),
+                      ),
+                      child: Text(
+                        '$count',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: highlightColor.withValues(
+                            alpha: isExpanded ? 1 : 0.82,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
                 const SizedBox(width: 8),
                 AnimatedRotation(
@@ -763,103 +781,103 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                             accentColor: AppColors.primary,
                           ),
                           // -- EMPTY STATE / PENDING LIST HEADER ------------------------
+                          // Card compacta a propósito: cuando la lista quedó
+                          // resuelta, lo accionable ("Comprar de nuevo" y las
+                          // categorías) debe quedar arriba del fold, no un
+                          // hero de pantalla completa.
                           if (pending.isEmpty)
                             SliverToBoxAdapter(
                               child: Padding(
                                 padding:
-                                    const EdgeInsets.fromLTRB(24, 10, 24, 28),
+                                    const EdgeInsets.fromLTRB(20, 8, 20, 6),
                                 child: TweenAnimationBuilder<double>(
-                                  duration: const Duration(seconds: 1),
+                                  duration: const Duration(milliseconds: 450),
                                   tween: Tween(begin: 0.0, end: 1.0),
+                                  curve: Curves.easeOutCubic,
                                   builder: (context, value, child) => Opacity(
                                     opacity: value,
-                                    child: Transform.scale(
-                                      scale: 0.94 + (0.06 * value),
+                                    child: Transform.translate(
+                                      offset: Offset(0, 8 * (1 - value)),
                                       child: child,
                                     ),
                                   ),
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(28),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              AppColors.primary
-                                                  .withValues(alpha: 0.14),
-                                              AppColors.accentGreen
-                                                  .withValues(alpha: 0.10),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: context.theme.surface,
+                                      borderRadius: BorderRadius.circular(22),
+                                      border: Border.all(
+                                        color: AppColors.accentGreen
+                                            .withValues(alpha: 0.22),
+                                      ),
+                                      boxShadow: context.theme.cardShadow,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 44,
+                                          height: 44,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                AppColors.primary
+                                                    .withValues(alpha: 0.14),
+                                                AppColors.accentGreen
+                                                    .withValues(alpha: 0.12),
+                                              ],
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.shopping_basket_outlined,
+                                            size: 22,
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                done.isEmpty
+                                                    ? t.shoppingEmptyFirstLineDone
+                                                    : t.shoppingEmptyFirstLineBought,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  color:
+                                                      context.theme.textPrimary,
+                                                  fontSize: 15.5,
+                                                  height: 1.2,
+                                                  fontWeight: FontWeight.w800,
+                                                  letterSpacing: -0.35,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 3),
+                                              Text(
+                                                t.shoppingEmptyHint,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  color: context
+                                                      .theme.textSecondary,
+                                                  fontSize: 12.5,
+                                                  fontWeight: FontWeight.w600,
+                                                  height: 1.3,
+                                                ),
+                                              ),
                                             ],
                                           ),
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: AppColors.primary
-                                                  .withValues(alpha: 0.10),
-                                              blurRadius: 24,
-                                              offset: const Offset(0, 10),
-                                            ),
-                                          ],
                                         ),
-                                        child: const Icon(
-                                          Icons.shopping_basket_outlined,
-                                          size: 56,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 22),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary
-                                              .withValues(alpha: 0.10),
-                                          borderRadius: BorderRadius.circular(
-                                            AppRadii.pill,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          done.isEmpty
-                                              ? t.shoppingAllDone
-                                              : t.shoppingListResolved,
-                                          style: const TextStyle(
-                                            color: AppColors.primary,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w800,
-                                            letterSpacing: 0.1,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        done.isEmpty
-                                            ? t.shoppingEmptyFirstLineDone
-                                            : t.shoppingEmptyFirstLineBought,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: context.theme.textPrimary,
-                                          fontSize: 22,
-                                          height: 1.3,
-                                          fontWeight: FontWeight.w900,
-                                          letterSpacing: -0.5,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        t.shoppingEmptyHint,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: context.theme.textSecondary,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          height: 1.45,
-                                        ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -985,6 +1003,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                 cat['id'],
                                 context,
                               ).length,
+                              mutedCount: true,
                             ),
                             if (_expandedSections.contains(cat['id']))
                               _buildPredefinedGrid(cat, pending, done),
@@ -1214,7 +1233,7 @@ class _ShoppingItemTile extends StatelessWidget {
                           : catInfo['emoji'] as String,
                       allowProductAsset: true,
                       size: isCompleted ? 34 : 56,
-                      opacity: isCompleted ? 0.48 : 1,
+                      opacity: isCompleted ? 0.78 : 1,
                     ),
                     const SizedBox(height: 8),
                     Padding(
@@ -1230,20 +1249,22 @@ class _ShoppingItemTile extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           fontSize: isCompleted ? 11 : 13,
                           height: 1.1,
-                          color:
-                              isCompleted ? theme.textMuted : theme.textPrimary,
-                          decoration:
-                              isCompleted ? TextDecoration.lineThrough : null,
+                          color: isCompleted
+                              ? theme.textSecondary
+                              : theme.textPrimary,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
+              // La sección "Comprar de nuevo" es un atajo para RE-AGREGAR: el
+              // badge muestra "+" (acción) y solo muestra el check como
+              // feedback momentáneo cuando el item se acaba de marcar comprado.
               if (isCompleted)
                 Positioned(
-                  right: 8,
-                  bottom: 8,
+                  right: 6,
+                  top: 6,
                   child: Transform.scale(
                     scale: 1 + (pulse * 0.18),
                     child: Container(
@@ -1264,8 +1285,8 @@ class _ShoppingItemTile extends StatelessWidget {
                             ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.check,
+                      child: Icon(
+                        isFreshlyCompleted ? Icons.check : Icons.add_rounded,
                         size: 12,
                         color: Colors.white,
                       ),

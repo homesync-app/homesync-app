@@ -315,14 +315,37 @@ String _foldDiacritics(String input) {
   // Asciifolding ES + EU basico: suficiente para los alias del catalogo.
   // Mantener equivalencia con public.normalize_shopping_name() de SQL.
   const map = {
-    'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ü': 'u', 'ñ': 'n',
-    'ä': 'a', 'ë': 'e', 'ï': 'i', 'ö': 'o',
-    'â': 'a', 'ê': 'e', 'î': 'i', 'ô': 'o', 'û': 'u',
-    'à': 'a', 'è': 'e', 'ì': 'i', 'ò': 'o', 'ù': 'u',
-    'ã': 'a', 'ẽ': 'e', 'ĩ': 'i', 'õ': 'o', 'ũ': 'u',
-    'ý': 'y', 'ÿ': 'y',
+    'á': 'a',
+    'é': 'e',
+    'í': 'i',
+    'ó': 'o',
+    'ú': 'u',
+    'ü': 'u',
+    'ñ': 'n',
+    'ä': 'a',
+    'ë': 'e',
+    'ï': 'i',
+    'ö': 'o',
+    'â': 'a',
+    'ê': 'e',
+    'î': 'i',
+    'ô': 'o',
+    'û': 'u',
+    'à': 'a',
+    'è': 'e',
+    'ì': 'i',
+    'ò': 'o',
+    'ù': 'u',
+    'ã': 'a',
+    'ẽ': 'e',
+    'ĩ': 'i',
+    'õ': 'o',
+    'ũ': 'u',
+    'ý': 'y',
+    'ÿ': 'y',
     'ç': 'c',
-    '¿': '', '¡': '',
+    '¿': '',
+    '¡': '',
   };
   final buffer = StringBuffer();
   for (final ch in input.split('')) {
@@ -375,7 +398,7 @@ String localizedShoppingCategoryName(
     case 'general':
       return 'Frequent';
     case 'fruits':
-      return 'Fruit & veg.';
+      return 'Fruit & vegetables';
     case 'meat':
       return 'Meat';
     case 'dairy':
@@ -406,7 +429,7 @@ String _spanishShoppingCategoryName(String categoryId) {
     case 'general':
       return 'Frecuentes';
     case 'fruits':
-      return 'Frutas y verd.';
+      return 'Frutas y verduras';
     case 'meat':
       return 'Carnes';
     case 'dairy':

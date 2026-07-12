@@ -3,7 +3,7 @@ class ShoppingCategories {
     {'id': 'general', 'name': 'Frecuentes', 'emoji': '🛒', 'color': 0xFF6366F1},
     {
       'id': 'fruits',
-      'name': 'Frutas y verd.',
+      'name': 'Frutas y verduras',
       'emoji': '🥦',
       'color': 0xFF22C55E,
     },
