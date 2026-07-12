@@ -28,7 +28,8 @@ class PremiumAvatarMotionController {
 ///
 /// El idle/llegada es un clip en reverse (el personaje llega con el objeto y
 /// lo deja, terminando en la pose del sticker = primer frame original). Los
-/// eventos son one-shot que vuelven a la pose. Asi todo asienta en reposo.
+/// eventos son one-shot: el ultimo frame del clip QUEDA como pose de reposo,
+/// sin fundir al PNG estatico (el owner no quiere efectos de "asentado").
 ///
 /// Los assets pueden ser rutas de bundle (`assets/...`) o archivos locales
 /// descargados (ruta absoluta del cache de la app).
@@ -85,21 +86,13 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
   Timer? _timer;
   bool _failed = false;
 
-  /// Fundido del ultimo frame hacia el PNG estatico al terminar una pasada.
-  Timer? _settleTimer;
-  bool _settling = false;
-
-  /// Respiracion en reposo (solo si widget.breathing).
-  late final AnimationController _breathController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 2600),
-  );
-  late final Animation<double> _breathScale = Tween<double>(
-    begin: 1,
-    end: 1.018,
-  ).animate(
-    CurvedAnimation(parent: _breathController, curve: Curves.easeInOut),
-  );
+  /// Respiracion en reposo (solo si widget.breathing). Se crea en initState:
+  /// como `late final` perezoso, en avatares sin breathing el primer acceso
+  /// ocurria recien en dispose() y crashea ("Looking up a deactivated
+  /// widget's ancestor is unsafe": crear el AnimationController consulta
+  /// TickerMode sobre un arbol ya desactivado).
+  late final AnimationController _breathController;
+  late final Animation<double> _breathScale;
 
   /// Hay una pasada de WebP corriendo (la respiracion se pausa mientras).
   bool _passActive = false;
@@ -120,6 +113,13 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
   @override
   void initState() {
     super.initState();
+    _breathController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2600),
+    );
+    _breathScale = Tween<double>(begin: 1, end: 1.018).animate(
+      CurvedAnimation(parent: _breathController, curve: Curves.easeInOut),
+    );
     WidgetsBinding.instance.addObserver(this);
     widget.controller?._attached = this;
     if (kDebugMode) {
@@ -210,7 +210,6 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
       widget.controller?._attached = null;
     }
     _timer?.cancel();
-    _settleTimer?.cancel();
     _breathController.dispose();
     _playToken++;
     _frame?.dispose();
@@ -296,8 +295,6 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
 
   Future<void> _playPass(String asset, {required VoidCallback onDone}) async {
     _timer?.cancel();
-    _settleTimer?.cancel();
-    _settling = false;
     _passActive = true;
     _updateBreathing();
     final token = ++_playToken;
@@ -349,37 +346,20 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
       if (framesShown < codec.frameCount) {
         _timer = Timer(info.duration, advance);
       } else {
+        // Fin de pasada: el ultimo frame del video QUEDA como pose de reposo.
+        // Nada de fundir al PNG estatico — el owner no quiere ningun efecto
+        // de "asentado" al terminar (2026-07-06); el clip termina donde
+        // termina y ahi se queda.
         if (kDebugMode) {
           debugPrint('[PAA] done #${identityHashCode(this)} token=$token '
-              'shown=$framesShown (settling to sticker)');
+              'shown=$framesShown (holding last frame)');
         }
-        _scheduleSettle(token);
         _endPass();
         onDone();
       }
     }
 
     await advance();
-  }
-
-  /// Tras completar una pasada, funde el ultimo frame al PNG estatico: los
-  /// takes de Veo no siempre terminan exactamente en la pose del sticker y
-  /// sostener un frame intermedio se ve "trabado". El PNG ES la pose estable.
-  void _scheduleSettle(int token) {
-    _settleTimer?.cancel();
-    _settleTimer = Timer(const Duration(milliseconds: 450), () {
-      if (!mounted || token != _playToken) return;
-      setState(() => _settling = true);
-    });
-  }
-
-  void _onSettleFinished() {
-    if (!mounted) return;
-    setState(() {
-      _frame?.dispose();
-      _frame = null;
-      _settling = false;
-    });
   }
 
   /// Envuelve [child] con la respiracion (escala anclada a los pies) cuando
@@ -410,39 +390,14 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
     }
     // RepaintBoundary: cada frame del WebP marca dirty solo esta capa en
     // vez de repintar hasta el boundary ancestro (la card/pantalla entera).
-    final frameImage = RawImage(
-      image: _frame,
-      width: widget.size,
-      height: widget.size,
-      fit: BoxFit.contain,
-      filterQuality: FilterQuality.medium,
-    );
-    if (!_settling) {
-      return _withBreathing(RepaintBoundary(child: frameImage));
-    }
-    // Asentado: PNG estable debajo, ultimo frame fundiendose encima.
     return _withBreathing(
       RepaintBoundary(
-        child: Stack(
-          children: [
-            Image.asset(
-              widget.fallbackAsset,
-              width: widget.size,
-              height: widget.size,
-              fit: BoxFit.contain,
-              filterQuality: FilterQuality.low,
-              errorBuilder: (_, __, ___) =>
-                  SizedBox(width: widget.size, height: widget.size),
-            ),
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 1, end: 0),
-              duration: const Duration(milliseconds: 400),
-              onEnd: _onSettleFinished,
-              child: frameImage,
-              builder: (_, opacity, child) =>
-                  Opacity(opacity: opacity, child: child),
-            ),
-          ],
+        child: RawImage(
+          image: _frame,
+          width: widget.size,
+          height: widget.size,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.medium,
         ),
       ),
     );

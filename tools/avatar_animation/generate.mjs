@@ -57,8 +57,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Compone el PNG (con alfa) sobre un lienzo 1280x720 del color de chroma,
 // con el personaje centrado ocupando ~85% de la altura.
 function prepareInput(avatar) {
-  const src = join(SRC_DIR, `${avatar.id}.png`);
-  if (!existsSync(src)) throw new Error(`No existe el asset: ${src}`);
+  const src = [`${avatar.id}.webp`, `${avatar.id}.png`]
+    .map((name) => join(SRC_DIR, name))
+    .find((p) => existsSync(p));
+  if (!src) throw new Error(`No existe el asset: ${join(SRC_DIR, avatar.id)}.{webp,png}`);
   const out = join(INPUT_DIR, `${avatar.id}_input.png`);
   if (existsSync(out)) return out;
 

@@ -5,6 +5,7 @@ import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/premium_avatar_motion_cache.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 
 import 'app_smooth_network_image.dart';
 import 'premium_animated_avatar.dart';
@@ -344,7 +345,7 @@ class _AnimatedAvatarState extends State<_AnimatedAvatar>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
+    );
 
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
@@ -353,6 +354,17 @@ class _AnimatedAvatarState extends State<_AnimatedAvatar>
     _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppMotion.reduce(context)) {
+      _controller.stop();
+      _controller.value = 0;
+    } else if (!_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    }
   }
 
   @override
@@ -782,7 +794,7 @@ class _PremiumAvatarMotionState extends State<_PremiumAvatarMotion>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3600),
-    )..repeat(reverse: true);
+    );
 
     _offsetAnimation = Tween<double>(begin: 0.0, end: -2.5).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
@@ -793,6 +805,17 @@ class _PremiumAvatarMotionState extends State<_PremiumAvatarMotion>
     _glowAnimation = Tween<double>(begin: 0.06, end: 0.16).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppMotion.reduce(context)) {
+      _controller.stop();
+      _controller.value = 0;
+    } else if (!_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    }
   }
 
   @override
