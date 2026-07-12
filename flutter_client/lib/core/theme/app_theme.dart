@@ -6,60 +6,40 @@ import 'app_page_transitions.dart';
 import 'app_system_ui.dart';
 
 class AppTheme {
-  /// Refined weight hierarchy (see [AppTypography]): hero weights only at hero
-  /// sizes; titles at w700; body at w500/w600. Size carries the contrast.
+  /// Material slots mapped onto the [AppTypography] scale so both systems say
+  /// the same thing. Slots without a named role interpolate between roles.
   /// Colors are resolved by Material from the active [ColorScheme].
   static const TextTheme _textTheme = TextTheme(
+    displaySmall: AppTypography.heroAmount,
     headlineLarge: TextStyle(
       fontSize: 28,
       fontWeight: FontWeight.w800,
-      letterSpacing: -0.8,
+      letterSpacing: -0.6,
       height: 1.1,
     ),
-    headlineMedium: TextStyle(
-      fontSize: 24,
-      fontWeight: FontWeight.w800,
-      letterSpacing: -0.5,
-      height: 1.12,
-    ),
-    headlineSmall: TextStyle(
-      fontSize: 20,
-      fontWeight: FontWeight.w700,
-      letterSpacing: -0.3,
-    ),
+    headlineMedium: AppTypography.screenTitle,
+    headlineSmall: AppTypography.sectionTitle,
     titleLarge: TextStyle(
       fontSize: 18,
       fontWeight: FontWeight.w700,
       letterSpacing: -0.2,
     ),
-    titleMedium: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
-    titleSmall: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+    titleMedium: AppTypography.cardTitle,
+    titleSmall: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
     bodyLarge: TextStyle(
-      fontSize: 15.5,
+      fontSize: 16,
       fontWeight: FontWeight.w500,
       height: 1.45,
     ),
-    bodyMedium: TextStyle(
-      fontSize: 13.5,
-      fontWeight: FontWeight.w500,
-      height: 1.4,
-    ),
+    bodyMedium: AppTypography.body,
     bodySmall: TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w500,
       height: 1.35,
     ),
-    labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-    labelMedium: TextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.w600,
-      letterSpacing: 0.2,
-    ),
-    labelSmall: TextStyle(
-      fontSize: 10.5,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.6,
-    ),
+    labelLarge: AppTypography.bodyStrong,
+    labelMedium: AppTypography.caption,
+    labelSmall: AppTypography.eyebrow,
   );
 
   // ── Light Theme ────────────────────────────────────────────────────────────

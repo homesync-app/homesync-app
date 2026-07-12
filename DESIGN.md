@@ -29,42 +29,56 @@ colors:
   surface-dark: "#26211F"
   elevated-surface-dark: "#342E2B"
 typography:
-  display:
+  # Mirrors AppTypography in flutter_client/lib/core/theme/app_design_tokens.dart
+  # (the single source of truth). Edit both together.
+  hero-amount:
     fontFamily: Outfit
-    fontSize: 32px
+    fontSize: 34px
     fontWeight: 900
+    lineHeight: 1.1
+    letterSpacing: -0.8px
+  screen-title:
+    fontFamily: Outfit
+    fontSize: 24px
+    fontWeight: 800
     lineHeight: 1.12
-    letterSpacing: -1px
-  title:
+    letterSpacing: -0.5px
+  section-title:
     fontFamily: Outfit
-    fontSize: 26px
-    fontWeight: 900
-    lineHeight: 1.16
-    letterSpacing: -1px
+    fontSize: 20px
+    fontWeight: 800
+    lineHeight: 1.15
+    letterSpacing: -0.4px
   card-title:
     fontFamily: Outfit
-    fontSize: 18px
-    fontWeight: 800
+    fontSize: 16px
+    fontWeight: 700
     lineHeight: 1.25
-    letterSpacing: 0px
+    letterSpacing: -0.2px
   body:
     fontFamily: Outfit
-    fontSize: 16px
+    fontSize: 14px
     fontWeight: 500
-    lineHeight: 1.5
+    lineHeight: 1.4
     letterSpacing: 0px
   body-strong:
     fontFamily: Outfit
-    fontSize: 16px
-    fontWeight: 700
-    lineHeight: 1.4
-    letterSpacing: 0px
-  label:
-    fontFamily: Outfit
     fontSize: 14px
     fontWeight: 700
-    lineHeight: 1.25
+    lineHeight: 1.35
     letterSpacing: 0px
+  caption:
+    fontFamily: Outfit
+    fontSize: 12px
+    fontWeight: 600
+    lineHeight: 1.35
+    letterSpacing: 0px
+  eyebrow:
+    fontFamily: Outfit
+    fontSize: 11px
+    fontWeight: 800
+    lineHeight: 1.2
+    letterSpacing: 1.1px
   nav-label:
     fontFamily: Outfit
     fontSize: 12px
@@ -129,7 +143,7 @@ components:
   pill:
     backgroundColor: "{colors.primary-light}"
     textColor: "{colors.text-primary}"
-    typography: "{typography.label}"
+    typography: "{typography.caption}"
     rounded: "{rounded.pill}"
     padding: 12px
   nav-bar:
@@ -177,9 +191,11 @@ Dark mode keeps the same warm direction with brown-black backgrounds and cream t
 
 Use Outfit everywhere, with `sans-serif` and `Arial` as fallbacks. Typography should feel rounded, clear, and modern.
 
-Use `w900` for hero titles, dashboard amounts, and high-emphasis numbers. Use `w800` for card titles, selected tab labels, and important controls. Use `w700` for compact labels and key metadata. Use `w500` or `w600` for body/supporting copy so screens do not become visually loud.
+The scale lives in `AppTypography` (`flutter_client/lib/core/theme/app_design_tokens.dart`) as named `TextStyle` roles: `heroAmount` (34/900), `screenTitle` (24/800), `sectionTitle` (20/800), `cardTitle` (16/700), `body` (14/500), `bodyStrong` (14/700), `caption` (12/600), and `eyebrow` (11/800, tracked uppercase). New text must use one of these roles (with color applied from `context.theme`); a literal `fontSize:` in a feature screen needs an intentional, documented reason.
 
-Negative letter spacing is reserved for hero titles and large amounts. Standard UI labels and body text should keep neutral letter spacing.
+Weight discipline: `w900` belongs to `heroAmount` only — one per screen. `w800` carries screen and section titles. `w700` is for card titles and emphasized body. Everything else stays at `w500`/`w600` so screens do not become visually loud.
+
+Negative letter spacing is reserved for 20px+ titles and hero amounts. The eyebrow is the only role with positive tracking; standard labels and body text keep neutral letter spacing.
 
 ## Layout
 

@@ -89,23 +89,87 @@ class AppElevation {
       ];
 }
 
-/// Weight hierarchy for HomeSync. When everything is bold, nothing is —
-/// contrast should come from SIZE first, weight second.
+/// Type scale for HomeSync. When everything is bold, nothing is — contrast
+/// comes from SIZE first, weight second.
 ///
-/// - [hero]: screen titles and hero amounts ONLY (one per screen).
-/// - [title]: card and section titles.
-/// - [emphasis]: buttons, chips, selected states, small labels.
-/// - [body]: running text and descriptions.
+/// Reach for these roles before writing a literal `fontSize:`; a raw size in
+/// a feature screen needs an intentional reason. Styles carry no color on
+/// purpose: apply it from `context.theme` via `.copyWith(color: ...)`.
+///
+/// - [heroAmount]: THE number or headline of a screen. One per screen.
+/// - [screenTitle]: screen-level titles.
+/// - [sectionTitle]: section headers inside a screen.
+/// - [cardTitle]: titles inside cards and list rows.
+/// - [body] / [bodyStrong]: running text and its emphasized variant.
+/// - [caption]: metadata, helper copy, timestamps.
+/// - [eyebrow]: tracked uppercase kickers above titles (pair with
+///   `.toUpperCase()` on the string).
 class AppTypography {
+  /// Weight alias for hero sizes. Prefer the [TextStyle] roles below.
   static const FontWeight hero = FontWeight.w900;
-  static const FontWeight title = FontWeight.w700;
-  static const FontWeight emphasis = FontWeight.w600;
-  static const FontWeight body = FontWeight.w500;
 
   /// Tight tracking is reserved for hero sizes (26+); body text stays at 0.
   static const double heroLetterSpacing = -0.8;
+
+  static const TextStyle heroAmount = TextStyle(
+    fontSize: 34,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.8,
+    height: 1.1,
+  );
+
+  static const TextStyle screenTitle = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.5,
+    height: 1.12,
+  );
+
+  static const TextStyle sectionTitle = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.4,
+    height: 1.15,
+  );
+
+  static const TextStyle cardTitle = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.2,
+    height: 1.25,
+  );
+
+  static const TextStyle body = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    height: 1.4,
+  );
+
+  static const TextStyle bodyStrong = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    height: 1.35,
+  );
+
+  static const TextStyle caption = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    height: 1.35,
+  );
+
+  static const TextStyle eyebrow = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w800,
+    letterSpacing: 1.1,
+  );
 }
 
+/// Escala de motion de HomeSync.
+/// - [fast] 160ms: feedback de press, micro-fades.
+/// - [normal] 220ms: pop-in de contenido, switchers, cambio de tab.
+/// - [slow] 360ms: entrada de bloques/pantallas, draw-ins cortos.
+/// Curva por defecto: [standard]. Los draw-ins de charts y las
+/// celebraciones pueden exceder la escala deliberadamente.
 class AppMotion {
   static const Duration fast = Duration(milliseconds: 160);
   static const Duration normal = Duration(milliseconds: 220);
@@ -117,4 +181,13 @@ class AppMotion {
     stiffness: 200,
     damping: 18,
   );
+
+  /// true cuando el OS pide reducir movimiento o hay lector de pantalla
+  /// activo: los loops ambientales quedan quietos y las entradas se vuelven
+  /// fade puro. No apagar indicadores de carga ni fades de comprensión.
+  static bool reduce(BuildContext context) {
+    final media = MediaQuery.maybeOf(context);
+    if (media == null) return false;
+    return media.disableAnimations || media.accessibleNavigation;
+  }
 }
