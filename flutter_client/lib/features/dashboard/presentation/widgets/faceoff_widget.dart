@@ -5,13 +5,30 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/rewards/presentation/providers/couple_duel_stats_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/expressive/expressive.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
+/// Card del duelo semanal. El marcador de la pareja es oculto a propósito
+/// (se revela el domingo), así que todo lo que muestra la card es información
+/// propia y real: tu XP, tu progreso contra tu récord personal y tu ritmo
+/// diario de la semana. Nada de barras decorativas sin datos.
 class AIFaceoffWidget extends ConsumerWidget {
   final List<Map<String, dynamic>> weeklyRanking;
 
-  const AIFaceoffWidget({super.key, required this.weeklyRanking});
+  /// Historial de duelos cerrados (`get_weekly_duel_history`): se usa para
+  /// calcular el récord personal de XP semanal del usuario.
+  final List<Map<String, dynamic>> duelHistory;
+
+  /// Meta inicial cuando todavía no hay semanas cerradas en el historial.
+  static const int _starterGoalXp = 50;
+
+  const AIFaceoffWidget({
+    super.key,
+    required this.weeklyRanking,
+    this.duelHistory = const [],
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,6 +39,8 @@ class AIFaceoffWidget extends ConsumerWidget {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     final currentUserId = ref.watch(currentUserIdProvider);
+    final xpByDay =
+        ref.watch(weeklyXpByDayProvider).value ?? const [0, 0, 0, 0, 0, 0, 0];
     final leader = weeklyRanking[0];
     final challenger = weeklyRanking[1];
 
@@ -33,6 +52,7 @@ class AIFaceoffWidget extends ConsumerWidget {
         leader['user_id'] == currentUserId ? challenger : leader;
     final currentUserXp =
         leader['user_id'] == currentUserId ? leaderXp : challengerXp;
+    final personalRecord = _personalRecordXp();
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -112,55 +132,101 @@ class AIFaceoffWidget extends ConsumerWidget {
               height: 1.1,
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            t.faceoffHiddenScoreSubtitle,
-            style: TextStyle(
-              color: theme.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              height: 1.45,
-            ),
-          ),
           const SizedBox(height: 20),
-          Row(
+          Stack(
+            alignment: Alignment.center,
             children: [
-              Expanded(
-                child: _competitorCard(
-                  context: context,
-                  player: currentUserData,
-                  xp: currentUserXp,
-                  t: t,
-                  isLeader: true,
-                  isCurrentUser: true,
-                  showExactXp: true,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _competitorCard(
+                      context: context,
+                      player: currentUserData,
+                      xp: currentUserXp,
+                      t: t,
+                      isCurrentUser: true,
+                      showExactXp: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _competitorCard(
+                      context: context,
+                      player: partnerData,
+                      xp: leader['user_id'] == currentUserId
+                          ? challengerXp
+                          : leaderXp,
+                      t: t,
+                      isCurrentUser: false,
+                      showExactXp: false,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _competitorCard(
-                  context: context,
-                  player: partnerData,
-                  xp: leader['user_id'] == currentUserId
-                      ? challengerXp
-                      : leaderXp,
-                  t: t,
-                  isLeader: false,
-                  isCurrentUser: false,
-                  showExactXp: false,
-                ),
-              ),
+              _vsBadge(context),
             ],
           ),
           const SizedBox(height: 18),
-          _buildDuelBar(
+          _buildMyWeekProgress(
             context: context,
-            currentUserXp: currentUserXp,
             t: t,
+            currentUserXp: currentUserXp,
+            personalRecord: personalRecord,
           ),
           const SizedBox(height: 16),
-          _buildWeekRow(context, t),
+          _buildWeekRow(context, t, xpByDay),
         ],
+      ),
+    );
+  }
+
+  /// Mejor semana propia según el historial de duelos cerrados (gané →
+  /// winner_xp, perdí → loser_xp). 0 cuando no hay historial.
+  int _personalRecordXp() {
+    var record = 0;
+    for (final week in duelHistory) {
+      final result = week['user_result']?.toString();
+      final xp = switch (result) {
+        'win' => (week['winner_xp'] as num?)?.toInt() ?? 0,
+        'loss' => (week['loser_xp'] as num?)?.toInt() ?? 0,
+        _ => 0,
+      };
+      if (xp > record) record = xp;
+    }
+    return record;
+  }
+
+  Widget _vsBadge(BuildContext context) {
+    final theme = context.theme;
+    // Silueta gem M3E en vez de círculo: le da carácter de "enfrentamiento"
+    // al pivote de la card sin tocar la paleta.
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: ShapeDecoration(
+        color: theme.surface,
+        shape: MaterialShapeBorder(
+          shape: AppShapes.gem,
+          side: BorderSide(color: theme.border.withValues(alpha: 0.7)),
+        ),
+        shadows: [
+          BoxShadow(
+            color: theme.shadowBase.withValues(alpha: 0.07),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          'VS',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.2,
+            color: theme.textSecondary,
+          ),
+        ),
       ),
     );
   }
@@ -171,7 +237,6 @@ class AIFaceoffWidget extends ConsumerWidget {
     required int xp,
     required AppLocalizations t,
     required bool showExactXp,
-    required bool isLeader,
     required bool isCurrentUser,
   }) {
     final theme = context.theme;
@@ -185,7 +250,7 @@ class AIFaceoffWidget extends ConsumerWidget {
         color: theme.surface,
         borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(
-          color: accent.withValues(alpha: isLeader ? 0.18 : 0.12),
+          color: accent.withValues(alpha: isCurrentUser ? 0.18 : 0.12),
         ),
       ),
       child: Column(
@@ -225,13 +290,26 @@ class AIFaceoffWidget extends ConsumerWidget {
               color: accent.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(AppRadii.pill),
             ),
-            child: Text(
-              showExactXp ? t.faceoffXpValue(xp) : t.faceoffHiddenXp,
-              style: TextStyle(
-                color: accent,
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!showExactXp) ...[
+                  Icon(
+                    Icons.visibility_off_rounded,
+                    size: 12,
+                    color: accent.withValues(alpha: 0.85),
+                  ),
+                  const SizedBox(width: 5),
+                ],
+                Text(
+                  showExactXp ? t.faceoffXpValue(xp) : t.faceoffHiddenXp,
+                  style: TextStyle(
+                    color: accent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -239,19 +317,28 @@ class AIFaceoffWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildDuelBar({
+  /// Progreso propio de la semana contra el récord personal (o la meta
+  /// inicial si todavía no hay historial). Reemplaza a la vieja barra de
+  /// "ventaja" que era un gradiente estático sin datos.
+  Widget _buildMyWeekProgress({
     required BuildContext context,
-    required int currentUserXp,
     required AppLocalizations t,
+    required int currentUserXp,
+    required int personalRecord,
   }) {
     final theme = context.theme;
+    final goal = personalRecord > 0 ? personalRecord : _starterGoalXp;
+    final beatRecord = personalRecord > 0 && currentUserXp > personalRecord;
+    final progress = goal == 0 ? 0.0 : (currentUserXp / goal).clamp(0.0, 1.0);
+    final barColor = beatRecord ? AppColors.accentGold : AppColors.primary;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             Text(
-              t.faceoffWeeklyAdvantage,
+              t.faceoffMyWeekLabel,
               style: TextStyle(
                 color: theme.textSecondary,
                 fontSize: 11,
@@ -260,7 +347,9 @@ class AIFaceoffWidget extends ConsumerWidget {
             ),
             const Spacer(),
             Text(
-              t.faceoffHiddenScore,
+              personalRecord > 0
+                  ? t.faceoffPersonalRecordChip(personalRecord)
+                  : t.faceoffStarterGoalChip(_starterGoalXp),
               style: TextStyle(
                 color: theme.textMuted,
                 fontSize: 11,
@@ -270,39 +359,76 @@ class AIFaceoffWidget extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 10),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadii.pill),
-          child: Container(
-            height: 16,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.18),
-                  AppColors.accentPeach.withValues(alpha: 0.18),
-                  AppColors.sage.withValues(alpha: 0.18),
-                ],
-              ),
-            ),
+        TweenAnimationBuilder<double>(
+          tween: Tween<double>(begin: 0, end: progress),
+          duration: const Duration(milliseconds: 700),
+          curve: Curves.easeOutCubic,
+          // M3 Expressive: el ritmo semanal ondula mientras el duelo está
+          // vivo; la onda se aplana sola al acercarse al récord.
+          builder: (context, value, _) => AppWavyProgress(
+            value: value,
+            color: barColor,
+            trackColor: barColor.withValues(alpha: 0.12),
+            strokeWidth: 7,
+            amplitude: 2.6,
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          t.faceoffCurrentXpCounts(currentUserXp),
-          style: TextStyle(
-            color: theme.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            height: 1.35,
-          ),
+        Row(
+          children: [
+            // Al romper el récord en vivo, el badge brota de círculo a burst
+            // de celebración sobre spring expresivo (M3E).
+            if (beatRecord) ...[
+              AppShapeMorph(
+                active: beatRecord,
+                from: AppShapes.circle,
+                to: AppShapes.celebration,
+                fromValue: 0,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  alignment: Alignment.center,
+                  color: AppColors.accentGold,
+                  child: const Icon(
+                    Icons.star_rounded,
+                    size: 13,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+            ],
+            Expanded(
+              child: Text(
+                beatRecord
+                    ? t.faceoffNewRecord
+                    : t.faceoffCurrentXpCounts(currentUserXp),
+                style: TextStyle(
+                  color:
+                      beatRecord ? const Color(0xFFB07E1F) : theme.textSecondary,
+                  fontSize: 12,
+                  fontWeight: beatRecord ? FontWeight.w800 : FontWeight.w600,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildWeekRow(BuildContext context, AppLocalizations t) {
+  /// Ritmo semanal con datos reales: cada día se pinta según el XP propio
+  /// ganado ese día (intensidad relativa al mejor día de la semana).
+  Widget _buildWeekRow(
+    BuildContext context,
+    AppLocalizations t,
+    List<int> xpByDay,
+  ) {
     final theme = context.theme;
     final days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
     final today = DateTime.now().weekday;
+    final maxDayXp = xpByDay.fold(0, (max, xp) => xp > max ? xp : max);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,39 +447,64 @@ class AIFaceoffWidget extends ConsumerWidget {
           children: List.generate(7, (index) {
             final dayNumber = index + 1;
             final isToday = dayNumber == today;
-            final isPast = dayNumber < today;
+            final isFuture = dayNumber > today;
+            final dayXp = index < xpByDay.length ? xpByDay[index] : 0;
+            final hasActivity = dayXp > 0;
+            final intensity = maxDayXp == 0 ? 0.0 : dayXp / maxDayXp;
+
+            final background = hasActivity
+                ? AppColors.primary.withValues(alpha: 0.10 + 0.16 * intensity)
+                : isToday
+                    ? AppColors.primary.withValues(alpha: 0.06)
+                    : Colors.transparent;
+            final borderColor = isToday
+                ? AppColors.primary.withValues(alpha: 0.45)
+                : hasActivity
+                    ? AppColors.primary.withValues(alpha: 0.22)
+                    : theme.border.withValues(alpha: isFuture ? 0.35 : 0.55);
+            final letterColor = hasActivity || isToday
+                ? AppColors.primary
+                : isFuture
+                    ? theme.textMuted.withValues(alpha: 0.6)
+                    : theme.textMuted;
 
             return Expanded(
               child: Container(
                 margin: EdgeInsets.only(right: index == 6 ? 0 : 6),
-                height: 34,
+                height: 42,
                 decoration: BoxDecoration(
-                  color: isToday
-                      ? AppColors.primary.withValues(alpha: 0.12)
-                      : isPast
-                          ? theme.surface
-                          : Colors.transparent,
+                  color: background,
                   borderRadius: BorderRadius.circular(AppRadii.sm),
                   border: Border.all(
-                    color: isToday
-                        ? AppColors.primary.withValues(alpha: 0.35)
-                        : theme.border.withValues(alpha: 0.55),
+                    color: borderColor,
                     width: isToday ? 1.6 : 1,
                   ),
                 ),
-                child: Center(
-                  child: Text(
-                    days[index],
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isToday ? FontWeight.w900 : FontWeight.w700,
-                      color: isToday
-                          ? AppColors.primary
-                          : isPast
-                              ? theme.textSecondary
-                              : theme.textMuted,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      days[index],
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: hasActivity || isToday
+                            ? FontWeight.w900
+                            : FontWeight.w700,
+                        color: letterColor,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 3),
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: hasActivity
+                            ? AppColors.primary
+                            : Colors.transparent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );

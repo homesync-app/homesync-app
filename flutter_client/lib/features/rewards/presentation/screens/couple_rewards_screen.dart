@@ -137,6 +137,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       // abre al instante. El pull-to-refresh fuerza datos frescos.
       if (forceRefresh) {
         ref.invalidate(coupleDuelStatsProvider);
+        ref.invalidate(weeklyXpByDayProvider);
       }
       final stats = await ref.read(coupleDuelStatsProvider.future);
       if (!mounted) return;
