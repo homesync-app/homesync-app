@@ -4766,6 +4766,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rewardsStatusReview => 'Review';
 
   @override
+  String get rewardsPendingRedemptionsTitle => 'Prizes to deliver';
+
+  @override
+  String get rewardsPendingRedemptionsSubtitle =>
+      'Redeemed prizes still waiting to be delivered.';
+
+  @override
+  String rewardsRedeemedByOn(String name, String date) {
+    return 'Redeemed by $name · $date';
+  }
+
+  @override
+  String rewardsRedeemedByYouOn(String date) {
+    return 'You redeemed it on $date';
+  }
+
+  @override
+  String get rewardsWaitingFulfillment => 'On its way';
+
+  @override
+  String get rewardsMarkFulfilled => 'Delivered';
+
+  @override
+  String get rewardsFulfillConfirmTitle => 'Prize delivered?';
+
+  @override
+  String rewardsFulfillConfirmBody(String title, String name) {
+    return 'You\'re about to mark \"$title\" as delivered to $name.';
+  }
+
+  @override
+  String rewardsFulfilledSnack(String title) {
+    return 'You marked \"$title\" as delivered.';
+  }
+
+  @override
+  String get rewardsMemberFallbackName => 'Member';
+
+  @override
   String get rewardsWaitingPartnerDecision =>
       'Waiting for your partner\'s decision.';
 

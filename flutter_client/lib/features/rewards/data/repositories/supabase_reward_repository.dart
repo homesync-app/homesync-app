@@ -8,6 +8,7 @@ import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/repository_error_handler.dart';
 import 'package:homesync_client/core/services/rpc/reward_rpc_service.dart';
+import 'package:homesync_client/features/rewards/domain/models/redemption_model.dart';
 import 'package:homesync_client/features/rewards/domain/repositories/reward_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -194,6 +195,54 @@ class SupabaseRewardRepository
             target: 'redeem_reward',
             params: {
               'p_reward_id': rewardId,
+              if (userId != null) 'p_user_id': userId,
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Future<Either<Failure, List<RedemptionModel>>> getPendingRedemptions(
+    String householdId,
+  ) async {
+    return executeWithHandling(
+      () async {
+        final response = await _client
+            .from('reward_redemptions')
+            .select(
+              'id, reward_id, user_id, household_id, cost, status, '
+              'created_at, rewards(title, title_key, icon)',
+            )
+            .eq('household_id', householdId)
+            .eq('status', 'pending')
+            .order('created_at', ascending: false);
+        return List<Map<String, dynamic>>.from(response)
+            .map(RedemptionModel.fromJson)
+            .toList();
+      },
+      context: 'SupabaseRewardRepository.getPendingRedemptions',
+      isOnline: _isOnline,
+    );
+  }
+
+  @override
+  Future<Either<Failure, void>> fulfillRedemption(String redemptionId) async {
+    return executeWithHandling(
+      () async {
+        await _rpc.fulfillRedemption(redemptionId);
+      },
+      context: 'SupabaseRewardRepository.fulfillRedemption',
+      isOnline: _isOnline,
+      onOffline: () async {
+        final userId = await AppIdentityService.instance.refresh();
+        await _queueAction(
+          OfflineAction(
+            type: OfflineActionType.rpc,
+            target: 'fulfill_redemption',
+            params: {
+              'p_redemption_id': redemptionId,
               if (userId != null) 'p_user_id': userId,
             },
           ),

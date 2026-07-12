@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/features/rewards/domain/models/redemption_model.dart';
 
 /// Abstract contract for rewards data.
 abstract class RewardRepository {
@@ -37,6 +38,14 @@ abstract class RewardRepository {
 
   /// Redeem a reward (spends coins).
   Future<Either<Failure, void>> redeemReward(String rewardId);
+
+  /// Fetch the household's pending (not yet fulfilled) redemptions.
+  Future<Either<Failure, List<RedemptionModel>>> getPendingRedemptions(
+    String householdId,
+  );
+
+  /// Mark a redemption as fulfilled (delivered by another adult).
+  Future<Either<Failure, void>> fulfillRedemption(String redemptionId);
 
   /// Delete a reward.
   Future<Either<Failure, void>> deleteReward(String rewardId);

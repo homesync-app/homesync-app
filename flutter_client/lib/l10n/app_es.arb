@@ -3009,6 +3009,50 @@
   "rewardsPendingApproval": "Deseos pendientes de aprobación. Tocá una propuesta para revisarla.",
   "rewardsStatusPending": "Pendiente",
   "rewardsStatusReview": "Revisar",
+  "rewardsPendingRedemptionsTitle": "Canjes por entregar",
+  "rewardsPendingRedemptionsSubtitle": "Premios ya canjeados que faltan entregar.",
+  "rewardsRedeemedByOn": "Canjeado por {name} · {date}",
+  "@rewardsRedeemedByOn": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsRedeemedByYouOn": "Lo canjeaste el {date}",
+  "@rewardsRedeemedByYouOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsWaitingFulfillment": "En camino",
+  "rewardsMarkFulfilled": "Entregado",
+  "rewardsFulfillConfirmTitle": "¿Premio entregado?",
+  "rewardsFulfillConfirmBody": "Vas a marcar \"{title}\" como entregado para {name}.",
+  "@rewardsFulfillConfirmBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsFulfilledSnack": "Marcaste \"{title}\" como entregado.",
+  "@rewardsFulfilledSnack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsMemberFallbackName": "Miembro",
   "rewardsWaitingPartnerDecision": "Esperando una decisión de tu pareja.",
   "rewardsCoinsAvailable": "{count} coins disponibles",
   "@rewardsCoinsAvailable": {

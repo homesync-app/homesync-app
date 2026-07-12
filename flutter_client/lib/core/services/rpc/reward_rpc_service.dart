@@ -28,6 +28,27 @@ class RewardRpcService extends BaseRpcService {
     return result;
   }
 
+  Future<Map<String, dynamic>> fulfillRedemption(String redemptionId) async {
+    final userId = await requireCurrentUserId();
+    final response = await client.rpc(
+      'fulfill_redemption',
+      params: {
+        'p_redemption_id': redemptionId,
+        'p_user_id': userId,
+      },
+    );
+
+    final result = Map<String, dynamic>.from(response as Map);
+    // Igual que redeem_reward: los fallos de negocio (canje ya procesado,
+    // caller sin permiso) llegan como {'success': false, ...} sin excepción.
+    if (result['success'] != true) {
+      throw ValidationFailure(
+        (result['message'] as String?) ?? 'No se pudo marcar el canje.',
+      );
+    }
+    return result;
+  }
+
   Future<int> cloneRewardTemplates() async {
     final userId = await requireCurrentUserId();
     final response = await client.rpc(

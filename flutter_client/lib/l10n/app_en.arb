@@ -2956,6 +2956,50 @@
   "rewardsPendingApproval": "Wishes pending approval. Tap a proposal to review it.",
   "rewardsStatusPending": "Pending",
   "rewardsStatusReview": "Review",
+  "rewardsPendingRedemptionsTitle": "Prizes to deliver",
+  "rewardsPendingRedemptionsSubtitle": "Redeemed prizes still waiting to be delivered.",
+  "rewardsRedeemedByOn": "Redeemed by {name} · {date}",
+  "@rewardsRedeemedByOn": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsRedeemedByYouOn": "You redeemed it on {date}",
+  "@rewardsRedeemedByYouOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsWaitingFulfillment": "On its way",
+  "rewardsMarkFulfilled": "Delivered",
+  "rewardsFulfillConfirmTitle": "Prize delivered?",
+  "rewardsFulfillConfirmBody": "You're about to mark \"{title}\" as delivered to {name}.",
+  "@rewardsFulfillConfirmBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsFulfilledSnack": "You marked \"{title}\" as delivered.",
+  "@rewardsFulfilledSnack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsMemberFallbackName": "Member",
   "rewardsWaitingPartnerDecision": "Waiting for your partner's decision.",
   "rewardsCoinsAvailable": "{count} coins available",
   "@rewardsCoinsAvailable": {

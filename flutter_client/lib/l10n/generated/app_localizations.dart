@@ -7641,6 +7641,66 @@ abstract class AppLocalizations {
   /// **'Revisar'**
   String get rewardsStatusReview;
 
+  /// No description provided for @rewardsPendingRedemptionsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Canjes por entregar'**
+  String get rewardsPendingRedemptionsTitle;
+
+  /// No description provided for @rewardsPendingRedemptionsSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Premios ya canjeados que faltan entregar.'**
+  String get rewardsPendingRedemptionsSubtitle;
+
+  /// No description provided for @rewardsRedeemedByOn.
+  ///
+  /// In es, this message translates to:
+  /// **'Canjeado por {name} · {date}'**
+  String rewardsRedeemedByOn(String name, String date);
+
+  /// No description provided for @rewardsRedeemedByYouOn.
+  ///
+  /// In es, this message translates to:
+  /// **'Lo canjeaste el {date}'**
+  String rewardsRedeemedByYouOn(String date);
+
+  /// No description provided for @rewardsWaitingFulfillment.
+  ///
+  /// In es, this message translates to:
+  /// **'En camino'**
+  String get rewardsWaitingFulfillment;
+
+  /// No description provided for @rewardsMarkFulfilled.
+  ///
+  /// In es, this message translates to:
+  /// **'Entregado'**
+  String get rewardsMarkFulfilled;
+
+  /// No description provided for @rewardsFulfillConfirmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Premio entregado?'**
+  String get rewardsFulfillConfirmTitle;
+
+  /// No description provided for @rewardsFulfillConfirmBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Vas a marcar \"{title}\" como entregado para {name}.'**
+  String rewardsFulfillConfirmBody(String title, String name);
+
+  /// No description provided for @rewardsFulfilledSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'Marcaste \"{title}\" como entregado.'**
+  String rewardsFulfilledSnack(String title);
+
+  /// No description provided for @rewardsMemberFallbackName.
+  ///
+  /// In es, this message translates to:
+  /// **'Miembro'**
+  String get rewardsMemberFallbackName;
+
   /// No description provided for @rewardsWaitingPartnerDecision.
   ///
   /// In es, this message translates to:

@@ -25,6 +25,7 @@ import '../providers/reward_provider.dart';
 import '../utils/reward_localization.dart';
 import '../widgets/couple_challenge_card.dart';
 import '../widgets/couple_challenge_completion_mixin.dart';
+import '../widgets/pending_redemptions_section.dart';
 import '../widgets/redeem_reward_dialog.dart';
 
 class CoupleRewardsScreen extends ConsumerStatefulWidget {
@@ -305,6 +306,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
               const SizedBox(height: 18),
               _buildChallengeSection(widget.householdId),
               const SizedBox(height: 28),
+              const PendingRedemptionsSection(
+                margin: EdgeInsets.only(bottom: 28),
+              ),
               if (approvedRewards.isEmpty)
                 _buildEmptyState()
               else

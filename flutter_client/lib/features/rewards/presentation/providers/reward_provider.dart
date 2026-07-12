@@ -8,6 +8,7 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/data/repositories/supabase_reward_repository.dart';
+import 'package:homesync_client/features/rewards/domain/models/redemption_model.dart';
 import 'package:homesync_client/features/rewards/domain/models/reward_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -256,6 +257,9 @@ class Rewards extends _$Rewards {
         if (ref.mounted) {
           ref.invalidate(recentActivityProvider);
           ref.invalidate(userBalanceProvider);
+          // El canje crea una fila pending: la bandeja "por entregar" del
+          // hogar tiene que reflejarla al instante.
+          ref.invalidate(pendingRedemptionsProvider);
         }
         return Right(success);
       },
@@ -323,6 +327,78 @@ class Rewards extends _$Rewards {
       (count) {
         if (ref.mounted) ref.invalidateSelf();
         return Right(count);
+      },
+    );
+  }
+}
+
+/// Canjes pendientes de entrega del hogar (bandeja "por entregar").
+///
+/// Vive aparte de [Rewards] porque cambia con otra cadencia (cada canje /
+/// cumplimiento) y así marcar un canje no recarga toda la boutique.
+@riverpod
+class PendingRedemptions extends _$PendingRedemptions {
+  RealtimeChannel? _channel;
+
+  @override
+  Future<List<RedemptionModel>> build() async {
+    final householdId = await ref.watch(householdIdProvider.future);
+    if (householdId == null) return [];
+
+    final repo = ref.read(rewardRepositoryProvider);
+    final result = await repo.getPendingRedemptions(householdId);
+
+    _setupRealtime(householdId);
+
+    return result.getOrElse((_) => []);
+  }
+
+  void _setupRealtime(String householdId) {
+    _channel?.unsubscribe();
+    final client = ref.read(supabaseClientProvider);
+
+    _channel = client
+        .channel('redemptions_realtime_$householdId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: AppConstants.tableRewardRedemptions,
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'household_id',
+            value: householdId,
+          ),
+          callback: (payload) {
+            log.i('Realtime redemption change detected: ${payload.eventType}');
+            ref.invalidateSelf();
+          },
+        )
+        .subscribe();
+
+    ref.onDispose(() {
+      _channel?.unsubscribe();
+    });
+  }
+
+  /// Marca un canje como entregado vía `fulfill_redemption`. El RPC valida
+  /// server-side que el caller sea un adulto del hogar distinto del que
+  /// canjeó; acá solo propagamos el resultado.
+  Future<Either<Failure, void>> fulfill(String redemptionId) async {
+    final repo = ref.read(rewardRepositoryProvider);
+    final result = await repo.fulfillRedemption(redemptionId);
+
+    return result.fold(
+      (failure) {
+        log.w('Fulfill redemption failure: ${failure.message}');
+        return Left(failure);
+      },
+      (success) {
+        // Guard `ref`: notifier auto-dispose; puede morir durante el await.
+        if (ref.mounted) {
+          ref.invalidateSelf();
+          ref.invalidate(recentActivityProvider);
+        }
+        return Right(success);
       },
     );
   }

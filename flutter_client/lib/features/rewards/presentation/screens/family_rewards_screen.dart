@@ -11,6 +11,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/rewards/domain/models/reward_model.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
 import 'package:homesync_client/features/rewards/presentation/utils/reward_localization.dart';
+import 'package:homesync_client/features/rewards/presentation/widgets/pending_redemptions_section.dart';
 import 'package:homesync_client/features/rewards/presentation/widgets/redeem_reward_dialog.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_amount.dart';
@@ -116,6 +117,9 @@ class FamilyRewardsScreen extends ConsumerWidget {
                     ),
                   ),
                 ],
+                const PendingRedemptionsSection(
+                  margin: EdgeInsets.only(top: 28),
+                ),
                 const SizedBox(height: 30),
                 if (approvedRewards.isEmpty)
                   _EmptyBoutique(
