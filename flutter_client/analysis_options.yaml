@@ -10,6 +10,9 @@ analyzer:
     # Third-party vendored UI components (Portal Labs, MIT). Kept as-is; not
     # subject to our lint rules.
     - lib/shared/widgets/portal_labs/**
+    # Vendored M3 Expressive ports (MIT, ksokolovskyi via bunpod): shape
+    # morphing (material_shapes) + wavy progress indicator.
+    - lib/shared/widgets/vendor/**
   language:
     strict-casts: false
     strict-raw-types: false
