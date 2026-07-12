@@ -254,7 +254,10 @@ class SupabaseDashboardRepository implements DashboardRepository {
           final splitType = (data['split_type'] as String?)?.toLowerCase();
           final isGift = splitType == 'gift' || splitType == 'regalo';
 
-          final shouldShow = isShared || isGift || creatorId == userId;
+          // Los gastos personales (no compartidos) solo viven en las
+          // finanzas de su dueño; el feed del hogar muestra únicamente lo
+          // que atañe a ambos miembros.
+          final shouldShow = isShared || isGift;
 
           dev.log(
             'Activity Filter Trace [Expense]: title="${data['title']}", isShared=$isShared, isGift=$isGift, creatorId=$creatorId, currentUserId=$userId, results SHOW=$shouldShow',
