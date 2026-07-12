@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/presentation/providers/setup_wizard_controller.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -42,22 +43,20 @@ class SetupTeamOptionsStep extends ConsumerWidget {
           const SizedBox(height: 10),
           Text(
             t.setupConnectTitle,
-            style: TextStyle(
-              fontSize: 34,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1.4,
-              height: 0.95,
+            // Tracking a -1.0 (~-0.03em): más apretado se tocan las letras.
+            style: AppTypography.heroAmount.copyWith(
+              letterSpacing: -1.0,
+              height: 1.0,
               color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
           Text(
             t.setupConnectSubtitle,
-            style: TextStyle(
+            style: AppTypography.body.copyWith(
               fontSize: 15.5,
-              height: 1.28,
+              height: 1.3,
               color: theme.textSecondary.withValues(alpha: 0.9),
-              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 16),
@@ -82,11 +81,9 @@ class SetupTeamOptionsStep extends ConsumerWidget {
             const SizedBox(height: 14),
             Text(
               t.setupConnectCodeInputLabel,
-              style: TextStyle(
+              style: AppTypography.bodyStrong.copyWith(
                 fontSize: 15,
-                fontWeight: FontWeight.w800,
                 color: theme.textPrimary,
-                letterSpacing: -0.2,
               ),
             ),
             const SizedBox(height: 8),
@@ -168,7 +165,7 @@ class SetupJoinCodeInput extends StatelessWidget {
           if (showLabel) ...[
             Text(
               AppLocalizations.of(context).setupJoinCodeTitle,
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+              style: AppTypography.cardTitle,
             ),
             SizedBox(height: compact ? 8 : 12),
           ],

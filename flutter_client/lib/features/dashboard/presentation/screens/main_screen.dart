@@ -138,6 +138,9 @@ class _MainScreenState extends ConsumerState<MainScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _notifService.dispose();
+    for (final controller in _tabScrollControllers.values) {
+      controller.dispose();
+    }
     _linkSubscription?.cancel();
     _taskRealtimeNoticeSubscription?.close();
     for (final sub in _idlePrefetchSubs) {
@@ -605,7 +608,16 @@ class _MainScreenState extends ConsumerState<MainScreen>
             NavClearance(
               child: FadeIndexedStack(
                 index: safeIndex,
-                children: navConfigs.map((c) => c.screen).toList(),
+                // Cada tab recibe su PrimaryScrollController: el scrollable
+                // principal de cada pantalla marca `primary: true` y así el
+                // re-tap en el nav puede subir la lista al tope.
+                children: [
+                  for (final c in navConfigs)
+                    PrimaryScrollController(
+                      controller: _tabScrollControllerFor(c.tab),
+                      child: c.screen,
+                    ),
+                ],
               ),
             ),
             // In-app notification banner (slides from top)
@@ -672,8 +684,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
     );
     Navigator.push(
       context,
-      AppTransitions.slideUp(
-        SettingsScreen(
+      MaterialPageRoute<void>(
+        builder: (_) => SettingsScreen(
           onLogout: () {
             _notifService.dispose();
           },
@@ -691,7 +703,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
     );
     Navigator.push(
       context,
-      AppTransitions.slideHorizontal(page: const NotificationsScreen()),
+      MaterialPageRoute<void>(builder: (_) => const NotificationsScreen()),
     );
   }
 
@@ -829,6 +841,32 @@ class _MainScreenState extends ConsumerState<MainScreen>
     };
   }
 
+  /// Un ScrollController por tab, inyectado como PrimaryScrollController
+  /// alrededor de cada pantalla del stack para poder subir al tope en re-tap.
+  final Map<MainTab, ScrollController> _tabScrollControllers = {};
+
+  ScrollController _tabScrollControllerFor(MainTab tab) =>
+      _tabScrollControllers.putIfAbsent(tab, ScrollController.new);
+
+  /// Re-tap en el tab activo: sube al tope todas las posiciones adjuntas
+  /// (el gesto estándar de bottom nav). Háptica solo si había scroll.
+  void _scrollActiveTabToTop(MainTab tab) {
+    final controller = _tabScrollControllers[tab];
+    if (controller == null || !controller.hasClients) return;
+    var scrolled = false;
+    for (final position in controller.positions) {
+      if (position.pixels > 0) {
+        scrolled = true;
+        position.animateTo(
+          0,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    }
+    if (scrolled) AppHaptics.selection();
+  }
+
   void _setBottomNavIndex(int index, {required String source}) {
     final currentIndex = ref.read(bottomNavIndexProvider);
     final caps = ref.read(householdCapabilitiesProvider);
@@ -838,6 +876,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
     if (currentIndex == index) {
       _trackMainTabIfNeeded(index: index, source: '${source}_repeat');
+      if (targetTab != null) _scrollActiveTabToTop(targetTab);
       if (targetTab == MainTab.home || targetTab == MainTab.tasks) {
         _refreshRealtimeBackedData();
       }

@@ -75,35 +75,51 @@ class AppButton extends StatelessWidget {
       content = SizedBox(width: double.infinity, child: content);
     }
 
+    final boxShadow =
+        variant == AppButtonVariant.primary && !isDisabled && !isDark
+            ? [
+                BoxShadow(
+                  color: theme.primary.withValues(alpha: 0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : null;
+
     return AnimatedPress(
       haptic: haptic,
       onTap: (isDisabled || isLoading) ? null : onTap,
-      child: Opacity(
-        opacity: (isDisabled || isLoading) ? 0.6 : 1.0,
-        child: Container(
+      // M3 Expressive: al presionar, el pill se contrae hacia un rectángulo
+      // redondeado montado sobre el mismo spring del squash.
+      pressBuilder: (context, t, child) {
+        final radius = _pressRadius(height, t);
+        return Container(
           height: height,
           padding: padding,
           decoration: BoxDecoration(
             color: backgroundColor,
-            borderRadius: BorderRadius.circular(AppRadii.pill),
+            borderRadius: BorderRadius.circular(radius),
             border: borderColor != null
                 ? Border.all(color: borderColor, width: 1.5)
                 : null,
-            boxShadow:
-                variant == AppButtonVariant.primary && !isDisabled && !isDark
-                    ? [
-                        BoxShadow(
-                          color: theme.primary.withValues(alpha: 0.2),
-                          blurRadius: 15,
-                          offset: const Offset(0, 6),
-                        ),
-                      ]
-                    : null,
+            boxShadow: boxShadow,
           ),
-          child: Center(child: content),
-        ),
+          child: child,
+        );
+      },
+      child: Opacity(
+        opacity: (isDisabled || isLoading) ? 0.6 : 1.0,
+        child: Center(child: content),
       ),
     );
+  }
+
+  /// Radio del press-morph: del pill efectivo (mitad del alto) al radio de
+  /// control, sin dejar que el overshoot del spring lo lleve a negativo.
+  double _pressRadius(double height, double t) {
+    final rest = height / 2;
+    final radius = rest + (AppRadii.md - rest) * t.clamp(0.0, 1.2);
+    return radius < 4 ? 4 : radius;
   }
 
   Color _getBackgroundColor(AppThemeColors theme, bool isDark) {
@@ -169,21 +185,18 @@ class AppButton extends StatelessWidget {
     }
   }
 
+  // Buttons ride the AppTypography scale (bodyStrong/cardTitle weights) with
+  // a touch of positive tracking — the one button-specific trait.
   TextStyle _getTextStyle() {
     switch (size) {
       case AppButtonSize.small:
-        return const TextStyle(fontSize: 14, fontWeight: FontWeight.w700);
+        return AppTypography.bodyStrong;
       case AppButtonSize.medium:
-        return const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.3,
-        );
+        return AppTypography.cardTitle.copyWith(letterSpacing: 0.2);
       case AppButtonSize.large:
-        return const TextStyle(
+        return AppTypography.cardTitle.copyWith(
           fontSize: 18,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0.4,
+          letterSpacing: 0.2,
         );
     }
   }

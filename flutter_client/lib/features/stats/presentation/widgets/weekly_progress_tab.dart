@@ -59,7 +59,10 @@ class WeeklyProgressTab extends ConsumerWidget {
             const SizedBox(height: AppSpacing.lg),
           ],
           if (weeklyRanking.isNotEmpty) ...[
-            AIFaceoffWidget(weeklyRanking: weeklyRanking),
+            AIFaceoffWidget(
+              weeklyRanking: weeklyRanking,
+              duelHistory: duelHistory,
+            ),
             const SizedBox(height: AppSpacing.xl),
           ],
           SectionLabel(label: t.statsHouseholdSummary, icon: '•'),
@@ -78,7 +81,7 @@ class WeeklyProgressTab extends ConsumerWidget {
                   child: _SummaryMetric(
                     icon: '🔥',
                     value: '$totalTasks',
-                    label: t.statsTasks,
+                    label: t.statsTasksLabel(totalTasks),
                     color: AppColors.primary,
                   ),
                 ),

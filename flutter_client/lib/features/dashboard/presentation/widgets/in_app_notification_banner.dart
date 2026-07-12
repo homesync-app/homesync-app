@@ -93,8 +93,7 @@ class InAppNotificationBannerState extends State<InAppNotificationBanner>
   }
 
   void _startAutoDismiss() {
-    final mediaQuery = MediaQuery.maybeOf(context);
-    if (mediaQuery?.accessibleNavigation ?? false) {
+    if (AppMotion.reduce(context)) {
       _progressController.stop();
       return;
     }
@@ -155,9 +154,8 @@ class InAppNotificationBannerState extends State<InAppNotificationBanner>
     if (!_visible) return const SizedBox.shrink();
 
     final theme = context.theme;
-    final isAccessibleNavigation =
-        MediaQuery.maybeOf(context)?.accessibleNavigation ?? false;
-    if (isAccessibleNavigation) {
+    final reduceMotion = AppMotion.reduce(context);
+    if (reduceMotion) {
       _dismissTimer?.cancel();
       _progressController.stop();
     }
@@ -292,7 +290,7 @@ class InAppNotificationBannerState extends State<InAppNotificationBanner>
                                     ],
                                   ),
                                 ),
-                                if (!isAccessibleNavigation)
+                                if (!reduceMotion)
                                   Positioned(
                                     left: 0,
                                     right: 0,

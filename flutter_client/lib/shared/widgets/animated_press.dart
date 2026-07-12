@@ -11,6 +11,10 @@ enum AppPressHaptic { none, selection, light, medium, heavy }
 ///
 /// The press-down and release animations ride a spring simulation using
 /// the [motor] package for native platform-specific spring physics.
+///
+/// [pressBuilder] additionally exposes the normalized press progress
+/// (0 = reposo, 1 = presionado, con overshoot del spring) para que el hijo
+/// pueda morfear su forma al presionar (M3 Expressive: pill → redondeado).
 class AnimatedPress extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
@@ -20,6 +24,8 @@ class AnimatedPress extends StatefulWidget {
   final Duration duration;
   final AppPressHaptic haptic;
   final AppPressHaptic longPressHaptic;
+  final Widget Function(BuildContext context, double t, Widget? child)?
+      pressBuilder;
 
   const AnimatedPress({
     super.key,
@@ -31,6 +37,7 @@ class AnimatedPress extends StatefulWidget {
     this.duration = const Duration(milliseconds: 80),
     this.haptic = AppPressHaptic.none,
     this.longPressHaptic = AppPressHaptic.medium,
+    this.pressBuilder,
   });
 
   @override
@@ -38,7 +45,7 @@ class AnimatedPress extends StatefulWidget {
 }
 
 class _AnimatedPressState extends State<AnimatedPress> {
-  double _scale = 1.0;
+  bool _down = false;
 
   bool get _isActive =>
       widget.onTap != null ||
@@ -47,17 +54,13 @@ class _AnimatedPressState extends State<AnimatedPress> {
 
   void _pressDown() {
     if (!_isActive) return;
-    setState(() {
-      _scale = widget.scale;
-    });
+    setState(() => _down = true);
     _triggerHaptic(widget.haptic);
   }
 
   void _release() {
     if (!_isActive) return;
-    setState(() {
-      _scale = 1.0;
-    });
+    setState(() => _down = false);
   }
 
   @override
@@ -85,11 +88,14 @@ class _AnimatedPressState extends State<AnimatedPress> {
           : null,
       child: SingleMotionBuilder(
         motion: motion,
-        value: _scale,
-        builder: (context, scale, child) => Transform.scale(
-          scale: scale,
-          child: child,
-        ),
+        value: _down ? 1.0 : 0.0,
+        builder: (context, t, child) {
+          final scale = 1 + (widget.scale - 1) * t;
+          final content = widget.pressBuilder == null
+              ? child
+              : widget.pressBuilder!(context, t, child);
+          return Transform.scale(scale: scale, child: content);
+        },
         child: widget.child,
       ),
     );

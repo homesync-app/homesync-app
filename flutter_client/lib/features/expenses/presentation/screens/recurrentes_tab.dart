@@ -50,10 +50,12 @@ class RecurrentesTab extends ConsumerWidget {
           onRefresh: () async =>
               ref.invalidate(expenseTemplateControllerProvider),
           color: AppColors.primary,
+          // Fade también arriba, como en Movimientos: disuelve bajo las tabs.
           child: EdgeFade(
-            fadeStart: false,
-            fadeEnd: true,
+            extent: 0.035,
             child: CustomScrollView(
+              // PrimaryScrollController del tab Finanzas (re-tap sube al tope).
+              primary: true,
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
               ),
@@ -343,27 +345,35 @@ class RecurrentesTab extends ConsumerWidget {
   }
 
   Widget _buildPremiumLockedRecurrentes(BuildContext context) {
+    const gold = Color(0xFFF59E0B);
+    final t = AppLocalizations.of(context);
+    final theme = context.theme;
+
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.lg,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                color: gold.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.stars_rounded,
-                size: 80,
-                color: Color(0xFFF59E0B),
+                Icons.event_repeat_rounded,
+                size: 44,
+                color: gold,
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
             Text(
-              AppLocalizations.of(context).expensesRecurrentesPremiumTitle,
+              t.expensesRecurrentesPremiumTitle,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 24,
@@ -372,23 +382,57 @@ class RecurrentesTab extends ConsumerWidget {
                 letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
-              AppLocalizations.of(context).expensesRecurrentesPremiumSubtitle,
+              t.expensesRecurrentesPremiumSubtitle,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 14.5,
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w500,
                 height: 1.4,
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
+              decoration: BoxDecoration(
+                color: theme.surface,
+                borderRadius: BorderRadius.circular(AppRadii.xl),
+                border: Border.all(color: gold.withValues(alpha: 0.18)),
+                boxShadow: theme.cardShadow,
+              ),
+              child: Column(
+                children: [
+                  _premiumBullet(
+                    icon: Icons.autorenew_rounded,
+                    text: t.expensesRecurrentesPremiumBullet1,
+                    theme: theme,
+                  ),
+                  _premiumBulletDivider(theme),
+                  _premiumBullet(
+                    icon: Icons.notifications_active_rounded,
+                    text: t.expensesRecurrentesPremiumBullet2,
+                    theme: theme,
+                  ),
+                  _premiumBulletDivider(theme),
+                  _premiumBullet(
+                    icon: Icons.visibility_rounded,
+                    text: t.expensesRecurrentesPremiumBullet3,
+                    theme: theme,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
             Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () => PremiumPaywall.show(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF59E0B),
+                  backgroundColor: gold,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.xl,
@@ -400,7 +444,7 @@ class RecurrentesTab extends ConsumerWidget {
                   elevation: 0,
                 ),
                 child: Text(
-                  AppLocalizations.of(context).expensesRecurrentesPremiumCta,
+                  t.expensesRecurrentesPremiumCta,
                   style: const TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 16,
@@ -411,6 +455,50 @@ class RecurrentesTab extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _premiumBullet({
+    required IconData icon,
+    required String text,
+    required AppThemeColors theme,
+  }) {
+    const gold = Color(0xFFF59E0B);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: gold.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+            ),
+            child: Icon(icon, size: 17, color: gold),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+                color: theme.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _premiumBulletDivider(AppThemeColors theme) {
+    return Container(
+      height: 1,
+      margin: const EdgeInsets.only(left: 46),
+      color: theme.divider.withValues(alpha: 0.25),
     );
   }
 }

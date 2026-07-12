@@ -142,6 +142,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
       color: AppColors.primary,
       backgroundColor: theme.surface,
       child: ListView(
+        // Se adjunta al PrimaryScrollController del tab (re-tap sube al tope).
+        primary: true,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         children: [
           _buildStaggeredSection(
@@ -298,11 +300,11 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   currentMemberName: currentMember?.displayName,
                   isChild: currentMember?.isChild ?? false,
                 ),
-                style: TextStyle(
-                  color: theme.textPrimary,
+                style: AppTypography.screenTitle.copyWith(
                   fontSize: 32,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -1.0,
+                  letterSpacing: -0.8,
+                  height: 1.1,
+                  color: theme.textPrimary,
                 ),
               ),
               if (showDate) ...[
@@ -311,7 +313,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   DateFormat('EEEE, d MMM', localeTag)
                       .format(DateTime.now())
                       ._capitalize(),
-                  style: TextStyle(
+                  style: AppTypography.body.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: theme.textSecondary,
@@ -391,8 +393,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           Expanded(
             child: Text(
               t.homeFamilyMemberNotFound,
-              style: TextStyle(
-                fontSize: 13.5,
+              style: AppTypography.body.copyWith(
                 fontWeight: FontWeight.w600,
                 color: theme.textPrimary,
               ),
@@ -436,21 +437,20 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           const SizedBox(width: 6),
           Text(
             value,
-            style: TextStyle(
-              color: context.theme.textPrimary,
+            style: AppTypography.bodyStrong.copyWith(
               fontSize: 13,
-              fontWeight: FontWeight.w900,
               height: 1,
+              color: context.theme.textPrimary,
             ),
           ),
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
-              color: context.theme.textSecondary,
+            style: AppTypography.caption.copyWith(
               fontSize: 11,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               height: 1,
+              color: context.theme.textSecondary,
             ),
           ),
         ],
@@ -532,12 +532,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   t.homeFamilyChildHeroTitle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: AppTypography.sectionTitle.copyWith(
+                    height: 1.1,
                     color: theme.textPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    height: 1.05,
-                    letterSpacing: -0.55,
                   ),
                 ),
               ),
@@ -576,11 +573,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             t.homeFamilyChildHeroBody(firstName),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: theme.textSecondary,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
+            style: AppTypography.caption.copyWith(
               height: 1.25,
+              color: theme.textSecondary,
             ),
           ),
           const SizedBox(height: 10),
@@ -617,11 +612,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               Expanded(
                 child: Text(
                   t.homeFamilyChildRewardsPrompt,
-                  style: TextStyle(
-                    color: theme.textSecondary,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
+                  style: AppTypography.caption.copyWith(
                     height: 1.25,
+                    color: theme.textSecondary,
                   ),
                 ),
               ),
@@ -719,9 +712,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             children: [
               Text(
                 t.homeFamilyShoppingTitle,
-                style: TextStyle(
+                style: AppTypography.sectionTitle.copyWith(
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
                   color: theme.textPrimary,
                 ),
               ),
@@ -773,9 +765,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                         Expanded(
                           child: Text(
                             t.homeFamilyShoppingAllDone,
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w800,
+                            style: AppTypography.bodyStrong.copyWith(
                               color: theme.textSecondary,
                             ),
                           ),
@@ -818,7 +808,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                           ),
                           title: Text(
                             item.name,
-                            style: TextStyle(
+                            style: AppTypography.body.copyWith(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color: theme.textPrimary,
@@ -887,9 +877,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                                     t.homeFamilyShoppingMoreItems(
                                       remainingPending,
                                     ),
-                                    style: TextStyle(
+                                    style: AppTypography.caption.copyWith(
                                       fontSize: 13,
-                                      fontWeight: FontWeight.w800,
+                                      fontWeight: FontWeight.w700,
                                       color: theme.textSecondary,
                                     ),
                                   ),
@@ -940,9 +930,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         data: (activities) {
           final header = Text(
             resolvedTitle,
-            style: TextStyle(
+            style: AppTypography.sectionTitle.copyWith(
               fontSize: 18,
-              fontWeight: FontWeight.bold,
               color: theme.textPrimary,
             ),
           );
@@ -1121,18 +1110,15 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               children: [
                 Text(
                   t.homeFamilyActivityEmptyTitle,
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
+                  style: AppTypography.bodyStrong.copyWith(
                     color: theme.textPrimary,
-                    letterSpacing: -0.35,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   t.homeFamilyActivityEmptyBody,
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w500,
                     height: 1.22,
                     color: theme.textSecondary,
                   ),
@@ -1289,11 +1275,10 @@ class _ChildHeroMetric extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: theme.textPrimary,
+                  style: AppTypography.bodyStrong.copyWith(
                     fontSize: 15,
-                    fontWeight: FontWeight.w900,
                     height: 1,
+                    color: theme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1301,11 +1286,10 @@ class _ChildHeroMetric extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: theme.textSecondary,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
                     height: 1,
+                    color: theme.textSecondary,
                   ),
                 ),
               ],

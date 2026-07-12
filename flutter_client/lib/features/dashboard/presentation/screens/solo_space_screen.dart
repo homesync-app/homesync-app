@@ -40,6 +40,8 @@ class SoloSpaceScreen extends ConsumerWidget {
           color: theme.primary,
           onRefresh: () => _refresh(ref),
           child: ListView(
+            // PrimaryScrollController del tab (re-tap sube al tope).
+            primary: true,
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
             ),

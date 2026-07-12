@@ -36,33 +36,24 @@ class AppSectionHeader extends StatelessWidget {
                 if (eyebrow != null) ...[
                   Text(
                     eyebrow!.toUpperCase(),
-                    style: TextStyle(
+                    style: AppTypography.eyebrow.copyWith(
                       color: theme.primary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.9,
                     ),
                   ),
                   const SizedBox(height: 4),
                 ],
                 Text(
                   title,
-                  style: TextStyle(
+                  style: AppTypography.sectionTitle.copyWith(
                     color: theme.textPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    height: 1.08,
                   ),
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 5),
                   Text(
                     subtitle!,
-                    style: TextStyle(
+                    style: AppTypography.caption.copyWith(
                       color: theme.textSecondary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      height: 1.35,
                     ),
                   ),
                 ],

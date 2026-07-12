@@ -125,14 +125,19 @@ class _ExpenseDetailSheetContentState
         !isShoppingList;
     final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
 
+    // Altura adaptada al contenido: un gasto simple ocupa lo justo; con ítems
+    // comprados + división crece hasta el tope del 75% y ahí scrollea.
     return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.75,
+      ),
       decoration: BoxDecoration(
         color: theme.background,
         borderRadius:
             const BorderRadius.vertical(top: Radius.circular(AppRadii.modal)),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 12),
           Container(
@@ -157,10 +162,9 @@ class _ExpenseDetailSheetContentState
                           : (expense.isSettlement
                               ? t.expensesDetailHeaderSettlement
                               : t.expensesDetailHeaderExpense),
-                      style: TextStyle(
-                        color: theme.textSecondary,
-                        fontSize: 12,
+                      style: AppTypography.caption.copyWith(
                         fontWeight: FontWeight.w700,
+                        color: theme.textSecondary,
                       ),
                     ),
                     Text(
@@ -168,10 +172,9 @@ class _ExpenseDetailSheetContentState
                         'EEEE, d MMMM',
                         Localizations.localeOf(context).toString(),
                       ).format(expense.paidAt),
-                      style: TextStyle(
-                        color: theme.textPrimary,
+                      style: AppTypography.bodyStrong.copyWith(
                         fontSize: 15,
-                        fontWeight: FontWeight.w800,
+                        color: theme.textPrimary,
                       ),
                     ),
                   ],
@@ -221,13 +224,13 @@ class _ExpenseDetailSheetContentState
                           });
                         },
                       ),
-                    ).animateScaleIn(delay: 100),
+                    ).animatePopIn(delay: 80),
                   ],
                 ),
               ],
             ),
           ),
-          Expanded(
+          Flexible(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               padding: EdgeInsets.fromLTRB(24, 0, 24, 20 + bottomPadding),
@@ -277,7 +280,7 @@ class _ExpenseDetailSheetContentState
                                         color: accentColor,
                                       ),
                               ),
-                            ).animateScaleIn(delay: 200),
+                            ).animatePopIn(delay: 0),
                             const SizedBox(width: 13),
                             Expanded(
                               child: Column(
@@ -287,27 +290,23 @@ class _ExpenseDetailSheetContentState
                                     displayTitle,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
+                                    style: AppTypography.cardTitle.copyWith(
                                       fontSize: 18,
-                                      fontWeight: FontWeight.w900,
+                                      height: 1.15,
                                       color: theme.textPrimary,
-                                      letterSpacing: -0.2,
-                                      height: 1.12,
                                     ),
-                                  ).animateEntrance(delay: 250),
+                                  ).animateEntrance(delay: 30),
                                   const SizedBox(height: 8),
                                   Text(
                                     _formatCurrency(expense.amount),
-                                    style: TextStyle(
+                                    style: AppTypography.heroAmount.copyWith(
                                       fontSize: 29,
-                                      fontWeight: FontWeight.w900,
+                                      height: 1,
                                       color: expense.isIncome
                                           ? AppColors.success
                                           : accentColor,
-                                      letterSpacing: -0.8,
-                                      height: 1,
                                     ),
-                                  ).animateScaleIn(delay: 300),
+                                  ).animatePopIn(delay: 60),
                                   const SizedBox(height: 8),
                                   Wrap(
                                     spacing: 8,
@@ -329,7 +328,7 @@ class _ExpenseDetailSheetContentState
                                           isSmall: true,
                                         ),
                                     ],
-                                  ).animateEntrance(delay: 350),
+                                  ).animateEntrance(delay: 80),
                                 ],
                               ),
                             ),
@@ -337,16 +336,14 @@ class _ExpenseDetailSheetContentState
                         ),
                       ],
                     ),
-                  ).animateEntrance(delay: 150),
+                  ).animateEntrance(delay: 100),
                   const SizedBox(height: 18),
                   if (hasSimpleDescription) ...[
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         t.expensesDetailNoteLabel,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
+                        style: AppTypography.bodyStrong.copyWith(
                           color: theme.textPrimary,
                         ),
                       ),
@@ -362,10 +359,9 @@ class _ExpenseDetailSheetContentState
                       ),
                       child: Text(
                         expense.description!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: theme.textSecondary,
+                        style: AppTypography.body.copyWith(
                           height: 1.5,
+                          color: theme.textSecondary,
                         ),
                       ),
                     ),
@@ -376,11 +372,8 @@ class _ExpenseDetailSheetContentState
                       alignment: Alignment.centerLeft,
                       child: Text(
                         t.expensesDetailPurchasedItems,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
+                        style: AppTypography.cardTitle.copyWith(
                           color: theme.textPrimary,
-                          letterSpacing: -0.1,
                         ),
                       ),
                     ),
@@ -393,9 +386,7 @@ class _ExpenseDetailSheetContentState
                       alignment: Alignment.centerLeft,
                       child: Text(
                         t.expensesDetailLabel,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
+                        style: AppTypography.bodyStrong.copyWith(
                           color: theme.textPrimary,
                         ),
                       ),
@@ -411,9 +402,7 @@ class _ExpenseDetailSheetContentState
                       alignment: Alignment.centerLeft,
                       child: Text(
                         t.expensesDetailSplitLabel,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
+                        style: AppTypography.bodyStrong.copyWith(
                           color: theme.textPrimary,
                         ),
                       ),
@@ -452,11 +441,10 @@ class _ExpenseDetailSheetContentState
                                     children: [
                                       Text(
                                         displayName,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 14,
-                                          color: theme.textPrimary,
+                                        style:
+                                            AppTypography.bodyStrong.copyWith(
                                           height: 1.1,
+                                          color: theme.textPrimary,
                                         ),
                                       ),
                                       const SizedBox(height: 3),
@@ -464,15 +452,14 @@ class _ExpenseDetailSheetContentState
                                         isPayer
                                             ? t.expensesDetailPaidLabel
                                             : t.expensesDetailTheirPartLabel,
-                                        style: TextStyle(
-                                          color: isPayer
-                                              ? accentColor
-                                              : theme.textMuted,
-                                          fontSize: 12,
+                                        style: AppTypography.caption.copyWith(
                                           fontWeight: isPayer
                                               ? FontWeight.w700
                                               : FontWeight.w600,
                                           height: 1.1,
+                                          color: isPayer
+                                              ? accentColor
+                                              : theme.textMuted,
                                         ),
                                       ),
                                     ],
@@ -480,13 +467,12 @@ class _ExpenseDetailSheetContentState
                                 ),
                                 Text(
                                   _formatCurrency(split.amount),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w900,
+                                  style: AppTypography.cardTitle.copyWith(
                                     fontSize: 17,
+                                    fontWeight: FontWeight.w800,
                                     color: isPayer
                                         ? theme.textPrimary
                                         : const Color(0xFFF97316),
-                                    letterSpacing: -0.2,
                                   ),
                                 ),
                               ],
@@ -494,7 +480,7 @@ class _ExpenseDetailSheetContentState
                           );
                         }).toList(),
                       ),
-                    ).animateEntrance(delay: 400),
+                    ).animateEntrance(delay: 120),
                   ],
                   const SizedBox(height: 32),
                 ],
@@ -537,10 +523,10 @@ class _ExpenseDetailSheetContentState
       ),
       child: Text(
         label,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w800,
+        style: AppTypography.caption.copyWith(
           fontSize: isSmall ? 10 : 12,
+          fontWeight: FontWeight.w700,
+          color: color,
         ),
       ),
     );
@@ -640,12 +626,9 @@ class _ExpenseDetailSheetContentState
                     item.isEmpty ? rawItem : item,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: theme.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
+                    style: AppTypography.bodyStrong.copyWith(
                       height: 1.12,
-                      letterSpacing: 0,
+                      color: theme.textPrimary,
                     ),
                   ),
                 ),

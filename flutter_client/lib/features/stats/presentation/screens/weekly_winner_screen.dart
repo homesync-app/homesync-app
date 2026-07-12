@@ -251,16 +251,20 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
   }
 
   Widget _buildContent(AppThemeColors theme, AppLocalizations t) {
+    // El fondo de la pantalla es el lienzo de la celebración: sin card
+    // contenedora dorada (bajaba el contraste de todo el contenido) y con el
+    // héroe centrado verticalmente en lugar de flotar arriba con un vacío
+    // hasta el botón.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       child: Column(
         children: [
           Expanded(
-            child: ListView(
-              physics: const BouncingScrollPhysics(),
-              children: [
-                _buildHero(theme, t).animateEntrance(delay: 40),
-              ],
+            child: Center(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: _buildHero(theme, t),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -275,245 +279,301 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
     final winnerName = _winner!['user_name'] ?? t.weeklyWinnerFallbackWinner;
     final winnerXp = (_winner!['xp_earned'] as num?)?.toInt() ?? 0;
 
-    return AppCard(
-      variant: AppCardVariant.hero,
-      accentColor: AppColors.accentGold,
-      padding: EdgeInsets.zero,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              theme.surface,
-              AppColors.accentGold
-                  .withValues(alpha: theme.isDarkMode ? 0.07 : 0.035),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(AppRadii.xxl),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                AppPill(
-                  label: t.weeklyWinnerWeeklyClose,
-                  icon: Icons.workspace_premium_rounded,
-                  color: AppColors.accentGold,
-                  selected: true,
-                  dense: true,
-                ),
-                const Spacer(),
-                Text(
-                  _getWeekRange(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: theme.textMuted,
-                  ),
-                ),
-              ],
+            AppPill(
+              label: t.weeklyWinnerWeeklyClose,
+              icon: Icons.workspace_premium_rounded,
+              color: AppColors.accentGold,
+              selected: true,
+              dense: true,
             ),
-            const SizedBox(height: 16),
-            Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  width: 112,
-                  height: 112,
-                  decoration: BoxDecoration(
-                    color: AppColors.accentGold.withValues(alpha: 0.075),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.accentGold.withValues(alpha: 0.16),
-                      width: 2,
-                    ),
-                  ),
-                ),
-                Container(
-                  width: 92,
-                  height: 92,
-                  decoration: BoxDecoration(
-                    color: theme.surface.withValues(alpha: 0.92),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.accentGold.withValues(alpha: 0.12),
-                        blurRadius: 22,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                ),
-                CustomUserAvatar(
-                  name: winnerName,
-                  avatarUrl: _winner!['avatar_url'],
-                  radius: 42,
-                  showBorder: true,
-                  isPriority: true,
-                  ambientMotion: AvatarMotion.victory,
-                ),
-                Positioned(
-                  right: 2,
-                  bottom: 6,
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: AppColors.accentGold,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: theme.surface, width: 4),
-                    ),
-                    child: const Icon(
-                      Icons.emoji_events_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ).animateScaleIn(delay: 420),
-                ),
-              ],
-            ).animateScaleIn(delay: 120),
-            const SizedBox(height: 14),
+            const Spacer(),
             Text(
-              t.weeklyWinnerHeadline(winnerName),
-              textAlign: TextAlign.center,
+              _getWeekRange(),
               style: TextStyle(
-                fontSize: 27,
-                fontWeight: FontWeight.w900,
-                color: theme.textPrimary,
-                letterSpacing: -0.8,
-                height: 1.05,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: theme.textMuted,
               ),
-            ).animateEntrance(delay: 260),
-            const SizedBox(height: 10),
-            Text(
-              t.weeklyWinnerSubtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: theme.textSecondary,
-                height: 1.35,
-              ),
-            ).animateEntrance(delay: 340),
-            const SizedBox(height: 18),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              alignment: WrapAlignment.center,
-              children: [
-                _buildInfoPill(
-                  icon: Icons.auto_awesome_rounded,
-                  label: '$winnerXp XP',
-                  color: AppColors.accentGold,
-                  selected: true,
-                ),
-                _buildInfoPill(
-                  icon: Icons.monetization_on_rounded,
-                  label: t.weeklyWinnerCoinsAwarded(_coinsAwarded),
-                  color: AppColors.sage,
-                  selected: true,
-                ),
-              ],
-            ).animateEntrance(delay: 420),
-            if (_awardSucceeded) ...[
-              const SizedBox(height: 12),
-              Text(
-                t.weeklyWinnerCardSubtitle,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: theme.textMuted,
-                  height: 1.25,
-                ),
-              ),
-            ],
-            if (_ranking.length > 1) ...[
-              const SizedBox(height: 14),
-              _buildRunnerUpStrip(theme, t).animateEntrance(delay: 500),
-            ],
+            ),
           ],
-        ),
-      ),
+        ).animateEntrance(delay: 40),
+        const SizedBox(height: 28),
+        Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 128,
+              height: 128,
+              decoration: BoxDecoration(
+                color: AppColors.accentGold.withValues(alpha: 0.075),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.accentGold.withValues(alpha: 0.16),
+                  width: 2,
+                ),
+              ),
+            ),
+            Container(
+              width: 104,
+              height: 104,
+              decoration: BoxDecoration(
+                color: theme.surface.withValues(alpha: 0.92),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.accentGold.withValues(alpha: 0.14),
+                    blurRadius: 26,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+            ),
+            CustomUserAvatar(
+              name: winnerName,
+              avatarUrl: _winner!['avatar_url'],
+              radius: 48,
+              showBorder: true,
+              isPriority: true,
+              ambientMotion: AvatarMotion.victory,
+            ),
+            Positioned(
+              right: 0,
+              bottom: 4,
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.accentGold,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: theme.surface, width: 4),
+                ),
+                child: const Icon(
+                  Icons.emoji_events_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ).animateScaleIn(delay: 420),
+            ),
+          ],
+        ).animateScaleIn(delay: 120),
+        const SizedBox(height: 18),
+        Text(
+          t.weeklyWinnerHeadline(winnerName),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 29,
+            fontWeight: FontWeight.w900,
+            color: theme.textPrimary,
+            letterSpacing: -0.8,
+            height: 1.05,
+          ),
+        ).animateEntrance(delay: 260),
+        const SizedBox(height: 8),
+        Text(
+          t.weeklyWinnerSubtitle,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: theme.textSecondary,
+            height: 1.35,
+          ),
+        ).animateEntrance(delay: 340),
+        const SizedBox(height: 18),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          alignment: WrapAlignment.center,
+          children: [
+            _buildInfoPill(
+              icon: Icons.auto_awesome_rounded,
+              label: '$winnerXp XP',
+              color: AppColors.accentGold,
+              selected: true,
+            ),
+            _buildInfoPill(
+              icon: Icons.monetization_on_rounded,
+              label: t.weeklyWinnerCoinsAwarded(_coinsAwarded),
+              color: AppColors.sage,
+              selected: true,
+            ),
+          ],
+        ).animateEntrance(delay: 420),
+        if (_ranking.length > 1) ...[
+          const SizedBox(height: 26),
+          _buildFinalScoreCard(theme, t).animateEntrance(delay: 500),
+        ],
+        if (_awardSucceeded) ...[
+          const SizedBox(height: 14),
+          Text(
+            t.weeklyWinnerCardSubtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: theme.textSecondary,
+              height: 1.3,
+            ),
+          ).animateEntrance(delay: 560),
+        ],
+      ],
     );
   }
 
-  Widget _buildRunnerUpStrip(AppThemeColors theme, AppLocalizations t) {
+  /// La revelación del marcador oculto: los dos frente a frente con sus XP
+  /// reales y una barra dividida proporcional. Es el payoff del duelo semanal,
+  /// no una tirita de segundo puesto.
+  Widget _buildFinalScoreCard(AppThemeColors theme, AppLocalizations t) {
+    final winner = _ranking[0];
     final runnerUp = _ranking[1];
+    final winnerXp = (winner['xp_earned'] as num?)?.toInt() ?? 0;
     final runnerXp = (runnerUp['xp_earned'] as num?)?.toInt() ?? 0;
+    final total = winnerXp + runnerXp;
+    // Mínimo visual para que el lado perdedor nunca desaparezca (ej: 35-0).
+    final winnerFraction =
+        total == 0 ? 0.5 : (winnerXp / total).clamp(0.12, 0.88);
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(11, 9, 11, 9),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       decoration: BoxDecoration(
-        color: theme.surface.withValues(alpha: 0.54),
-        borderRadius: BorderRadius.circular(AppRadii.lg),
-        border: Border.all(color: theme.border.withValues(alpha: 0.42)),
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
+        boxShadow: theme.cardShadow,
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: theme.background.withValues(alpha: 0.74),
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              '2',
-              style: TextStyle(
-                color: theme.textSecondary,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          CustomUserAvatar(
-            name: runnerUp['user_name'] ?? t.weeklyWinnerFallbackParticipant,
-            avatarUrl: runnerUp['avatar_url'],
-            radius: 18,
-            forceCircular: true,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  t.weeklyWinnerSecondPlace,
-                  style: TextStyle(
-                    color: theme.textMuted,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  runnerUp['user_name'] ?? t.weeklyWinnerFallbackParticipant,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
           Text(
-            '$runnerXp XP',
+            t.weeklyWinnerFinalScore.toUpperCase(),
             style: TextStyle(
-              color: theme.textSecondary,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w800,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+              color: theme.textMuted,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: _buildScoreSide(
+                  theme: theme,
+                  t: t,
+                  player: winner,
+                  xp: winnerXp,
+                  color: AppColors.accentGold,
+                  isWinner: true,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  'VS',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.2,
+                    color: theme.textMuted,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: _buildScoreSide(
+                  theme: theme,
+                  t: t,
+                  player: runnerUp,
+                  xp: runnerXp,
+                  color: AppColors.sage,
+                  isWinner: false,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadii.pill),
+            child: SizedBox(
+              height: 10,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: (winnerFraction * 1000).round(),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.accentGold.withValues(alpha: 0.65),
+                            AppColors.accentGold,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 3),
+                  Expanded(
+                    flex: ((1 - winnerFraction) * 1000).round(),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.sage.withValues(alpha: 0.38),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildScoreSide({
+    required AppThemeColors theme,
+    required AppLocalizations t,
+    required Map<String, dynamic> player,
+    required int xp,
+    required Color color,
+    required bool isWinner,
+  }) {
+    final name = player['user_name'] ?? t.weeklyWinnerFallbackParticipant;
+
+    return Column(
+      children: [
+        CustomUserAvatar(
+          name: name,
+          avatarUrl: player['avatar_url'],
+          radius: 20,
+          forceCircular: true,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w800,
+            color: theme.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '$xp XP',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.4,
+            color: isWinner ? color : theme.textSecondary,
+          ),
+        ),
+      ],
     );
   }
 

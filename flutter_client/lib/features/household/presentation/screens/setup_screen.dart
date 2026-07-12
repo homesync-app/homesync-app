@@ -815,10 +815,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                 Text(
                   t.setupCompletionTitle(modeKey),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 21,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.6,
+                  style: AppTypography.sectionTitle.copyWith(
                     color: context.theme.textPrimary,
                   ),
                 ),
@@ -826,9 +823,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                 Text(
                   t.setupCompletionMessage(modeKey),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    height: 1.4,
+                  style: AppTypography.body.copyWith(
                     fontWeight: FontWeight.w600,
                     color:
                         context.theme.textSecondary.withValues(alpha: 0.88),

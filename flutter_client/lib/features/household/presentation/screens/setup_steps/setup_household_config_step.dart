@@ -90,10 +90,7 @@ class _FamilySetupBody extends ConsumerWidget {
                       children: [
                         Text(
                           t.setupFamilyHouseholdNameLabel,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                          ),
+                          style: AppTypography.bodyStrong,
                         ),
                         const SizedBox(height: 10),
                         TextField(
@@ -128,10 +125,7 @@ class _FamilySetupBody extends ConsumerWidget {
                       children: [
                         Text(
                           t.setupFamilyRoleLabel,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                          ),
+                          style: AppTypography.bodyStrong,
                         ),
                         const SizedBox(height: 10),
                         Wrap(
@@ -241,22 +235,17 @@ class _FriendsEqualSplitBody extends StatelessWidget {
                         const SizedBox(height: 20),
                         Text(
                           t.setupFriendsExpensesCardTitle,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.4,
-                          ),
+                          style: AppTypography.sectionTitle,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           t.setupFriendsExpensesCardBody,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13.5,
+                          style: AppTypography.caption.copyWith(
+                            fontSize: 13,
                             height: 1.45,
                             color: theme.textSecondary
                                 .withValues(alpha: 0.84),
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],

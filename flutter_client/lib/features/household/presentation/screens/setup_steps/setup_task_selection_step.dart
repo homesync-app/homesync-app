@@ -82,10 +82,8 @@ class SetupTaskSelectionStep extends ConsumerWidget {
                         const EdgeInsets.only(top: 24, bottom: 16, left: 4),
                     child: Text(
                       '${category.icon}  ${categoryName.toUpperCase()}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.2,
+                      style: AppTypography.eyebrow.copyWith(
+                        fontSize: 12,
                         color: theme.textSecondary.withValues(alpha: 0.82),
                       ),
                     ),
@@ -195,10 +193,9 @@ class _TaskChip extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(
+              style: AppTypography.body.copyWith(
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                 color: isSelected ? accent : theme.textPrimary,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                fontSize: 14,
               ),
             ),
             if (isSelected) ...[

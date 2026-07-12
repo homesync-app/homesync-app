@@ -31,6 +31,11 @@ class AnimatedAmount extends StatefulWidget {
   final Duration duration;
   final Curve curve;
 
+  /// Formateo completo del valor animado (p.ej. `currency.format`). Cuando se
+  /// pasa, reemplaza al formatter interno y a [prefix] — útil para monedas
+  /// con símbolo como sufijo ("20.000 $").
+  final String Function(double value)? format;
+
   const AnimatedAmount({
     super.key,
     required this.value,
@@ -41,6 +46,7 @@ class AnimatedAmount extends StatefulWidget {
     this.animateFromZero = true,
     this.duration = const Duration(milliseconds: 700),
     this.curve = Curves.easeOutExpo,
+    this.format,
   });
 
   @override
@@ -79,6 +85,9 @@ class _AnimatedAmountState extends State<AnimatedAmount> {
       duration: widget.duration,
       curve: widget.curve,
       builder: (context, animated, _) {
+        if (widget.format != null) {
+          return Text(widget.format!(animated), style: style);
+        }
         final number = widget.decimalDigits == 0
             ? formatter.format(animated.round())
             : formatter.format(animated);

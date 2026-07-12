@@ -52,11 +52,11 @@ class SetupSupportBullet extends StatelessWidget {
             padding: const EdgeInsets.only(top: 8),
             child: Text(
               text,
-              style: TextStyle(
+              style: AppTypography.body.copyWith(
                 fontSize: 15,
+                fontWeight: FontWeight.w600,
                 height: 1.35,
                 color: theme.textSecondary.withValues(alpha: 0.9),
-                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -88,22 +88,21 @@ class SetupHeading extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(
+          // Tracking a -1.2 (~-0.03em): más apretado se tocan las letras.
+          style: AppTypography.heroAmount.copyWith(
             fontSize: 40,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -2,
-            height: 1.02,
+            letterSpacing: -1.2,
+            height: 1.05,
             color: theme.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
         Text(
           subtitle,
-          style: TextStyle(
+          style: AppTypography.body.copyWith(
             fontSize: 19,
-            color: theme.textSecondary.withValues(alpha: 0.84),
             height: 1.45,
-            fontWeight: FontWeight.w500,
+            color: theme.textSecondary.withValues(alpha: 0.84),
           ),
         ),
         if (kicker != null) ...[
@@ -135,10 +134,9 @@ class SetupKicker extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: TextStyle(
+            style: AppTypography.caption.copyWith(
+              fontSize: 13,
               color: theme.textSecondary,
-              fontSize: 13.5,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -219,11 +217,7 @@ class SetupPrimaryButton extends StatelessWidget {
               )
             : Text(
                 text,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.2,
-                ),
+                style: AppTypography.cardTitle.copyWith(fontSize: 18),
               ),
       ),
     );
@@ -316,18 +310,17 @@ class SetupFeatureCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: AppTypography.cardTitle.copyWith(
                     fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3,
                     color: theme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   desc,
-                  style: TextStyle(
+                  style: AppTypography.caption.copyWith(
                     fontSize: 13,
+                    fontWeight: FontWeight.w500,
                     height: 1.4,
                     color: theme.textSecondary.withValues(alpha: 0.82),
                   ),
@@ -389,15 +382,14 @@ class SetupStrategyTip extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
+                  style: AppTypography.bodyStrong.copyWith(
                     color: active ? tone : theme.textPrimary,
                   ),
                 ),
                 Text(
                   desc,
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w500,
                     color: theme.textSecondary.withValues(alpha: 0.82),
                   ),
                 ),
@@ -473,10 +465,10 @@ class SetupFamilyChoiceChip extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: selected ? tone : theme.textPrimary,
+          style: AppTypography.caption.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w700,
+            color: selected ? tone : theme.textPrimary,
           ),
         ),
       ),
@@ -548,9 +540,8 @@ class SetupOptionTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: AppTypography.cardTitle.copyWith(
                       fontSize: 17,
-                      fontWeight: FontWeight.w800,
                       color: theme.textPrimary,
                     ),
                   ),
@@ -559,10 +550,11 @@ class SetupOptionTile extends StatelessWidget {
                     desc,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                    style: AppTypography.caption.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      height: 1.25,
                       color: theme.textSecondary.withValues(alpha: 0.84),
-                      fontSize: 13.5,
-                      height: 1.24,
                     ),
                   ),
                 ],

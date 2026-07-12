@@ -162,18 +162,15 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             children: [
               Text(
                 greeting,
-                style: TextStyle(
+                style: AppTypography.heroAmount.copyWith(
                   fontSize: 29,
-                  fontWeight: FontWeight.w900,
                   color: theme.textPrimary,
-                  letterSpacing: -0.9,
                 ),
               ),
               const SizedBox(height: 6),
               Text(
                 t.homeFriendsHeaderSubtitle,
-                style: TextStyle(
-                  fontSize: 14,
+                style: AppTypography.body.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.textSecondary,
                 ),
@@ -191,7 +188,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
       onPressed: () async {
         await Navigator.push(
           context,
-          AppTransitions.slideHorizontal(page: const NotificationsScreen()),
+          MaterialPageRoute<void>(builder: (_) => const NotificationsScreen()),
         );
         _loadUnreadNotificationCount();
       },
@@ -265,8 +262,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
           Expanded(
             child: Text(
               t.homeFriendsMemberNotFound,
-              style: TextStyle(
-                fontSize: 13.5,
+              style: AppTypography.body.copyWith(
                 fontWeight: FontWeight.w600,
                 color: theme.textPrimary,
               ),
@@ -328,9 +324,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                     const SizedBox(height: 12),
                     Text(
                       t.homeFriendsBalancesEmptyTitle,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                      style: AppTypography.bodyStrong.copyWith(
                         color: theme.textPrimary,
                       ),
                     ),
@@ -338,10 +332,10 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                     Text(
                       t.homeFriendsBalancesEmptyBody,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
                         fontSize: 13,
+                        fontWeight: FontWeight.w500,
                         color: theme.textSecondary,
-                        height: 1.35,
                       ),
                     ),
                   ],
@@ -413,8 +407,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             Expanded(
               child: Text(
                 message,
-                style: TextStyle(
-                  fontSize: 13.5,
+                style: AppTypography.body.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.textPrimary,
                 ),
@@ -582,9 +575,8 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                           ),
                           title: Text(
                             item.name,
-                            style: TextStyle(
+                            style: AppTypography.bodyStrong.copyWith(
                               fontSize: 15,
-                              fontWeight: FontWeight.w700,
                               color: theme.textPrimary,
                             ),
                           ),
@@ -636,8 +628,8 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                             Expanded(
                               child: Text(
                                 t.homeFamilyShoppingMoreItems(remainingPending),
-                                style: TextStyle(
-                                  fontSize: 13.5,
+                                style: AppTypography.caption.copyWith(
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w700,
                                   color: theme.textSecondary,
                                 ),
@@ -696,8 +688,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                 child: Text(
                   t.homeFriendsActivityEmpty,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
+                  style: AppTypography.body.copyWith(
                     color: theme.textSecondary,
                   ),
                 ),
@@ -754,11 +745,9 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(
+                style: AppTypography.sectionTitle.copyWith(
                   fontSize: 18,
-                  fontWeight: FontWeight.w900,
                   color: theme.textPrimary,
-                  letterSpacing: -0.35,
                 ),
               ),
             ),
@@ -773,11 +762,10 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
           const SizedBox(height: 4),
           Text(
             subtitle,
-            style: TextStyle(
-              fontSize: 13.5,
+            style: AppTypography.caption.copyWith(
+              fontSize: 13,
               fontWeight: FontWeight.w500,
               color: theme.textSecondary,
-              height: 1.35,
             ),
           ),
         ],

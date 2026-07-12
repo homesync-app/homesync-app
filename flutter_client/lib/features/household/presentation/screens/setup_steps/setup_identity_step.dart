@@ -110,8 +110,7 @@ class SetupIdentityStep extends ConsumerWidget {
                 wizard.selectedAvatarUrl != null
                     ? t.setupProfileGoogleAvatarHint
                     : t.setupProfileEmptyAvatarHint,
-                style: TextStyle(
-                  fontSize: 14,
+                style: AppTypography.body.copyWith(
                   height: 1.45,
                   color: theme.textSecondary.withValues(alpha: 0.78),
                 ),
@@ -120,8 +119,7 @@ class SetupIdentityStep extends ConsumerWidget {
               TextField(
                 controller: nameController,
                 autofocus: true,
-                style:
-                    const TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+                style: AppTypography.cardTitle.copyWith(fontSize: 19),
                 decoration: InputDecoration(
                   hintText: t.authNameHint,
                   prefixIcon: const Icon(Icons.person_outline_rounded),
@@ -151,9 +149,9 @@ class SetupIdentityStep extends ConsumerWidget {
               const SizedBox(height: 22),
               Text(
                 t.setupProfileAvatarLabel,
-                style: TextStyle(
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: theme.textSecondary.withValues(alpha: 0.9),
                 ),
               ),

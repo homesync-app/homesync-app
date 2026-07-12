@@ -89,21 +89,20 @@ class SetupValuePropStep extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    style: const TextStyle(
+                    // Tracking a -1.2 (~-0.03em): más apretado se tocan las letras.
+                    style: AppTypography.heroAmount.copyWith(
                       fontSize: 40,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -2,
-                      height: 1,
+                      letterSpacing: -1.2,
+                      height: 1.05,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     t.setupValuePropTagline,
-                    style: TextStyle(
+                    style: AppTypography.body.copyWith(
                       fontSize: 18,
                       height: 1.45,
                       color: theme.textSecondary.withValues(alpha: 0.88),
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],

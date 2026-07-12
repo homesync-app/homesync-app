@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/household/presentation/providers/setup_wizard_controller.dart';
@@ -32,22 +33,21 @@ class SetupWelcomeStep extends ConsumerWidget {
                 const SizedBox(height: 18),
                 Text(
                   t.setupWelcomeTitle,
-                  style: TextStyle(
+                  // Tracking a -1.3 (~-0.03em): más apretado se tocan las letras.
+                  style: AppTypography.heroAmount.copyWith(
                     fontSize: 42,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -1.8,
-                    height: 0.94,
+                    letterSpacing: -1.3,
+                    height: 1.0,
                     color: theme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   t.setupWelcomeBody,
-                  style: TextStyle(
+                  style: AppTypography.body.copyWith(
                     fontSize: 17,
                     height: 1.36,
                     color: theme.textSecondary.withValues(alpha: 0.84),
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 18),

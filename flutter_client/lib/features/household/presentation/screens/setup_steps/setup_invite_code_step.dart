@@ -98,11 +98,10 @@ class SetupInviteCodeStep extends ConsumerWidget {
                                 children: [
                                   Text(
                                     t.setupInvitationCodeEyebrow,
-                                    style: TextStyle(
-                                      color: theme.textSecondary,
-                                      fontWeight: FontWeight.w900,
+                                    style: AppTypography.eyebrow.copyWith(
                                       fontSize: 12,
                                       letterSpacing: 2,
+                                      color: theme.textSecondary,
                                     ),
                                   ),
                                   if (isGeneratingCode)
@@ -160,12 +159,11 @@ class SetupInviteCodeStep extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         t.setupInvitationFooter,
-                        style: TextStyle(
+                        style: AppTypography.caption.copyWith(
                           fontSize: 13,
                           height: 1.4,
                           color:
                               theme.textSecondary.withValues(alpha: 0.82),
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),

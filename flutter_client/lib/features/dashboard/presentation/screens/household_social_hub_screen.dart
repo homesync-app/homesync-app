@@ -49,6 +49,8 @@ class _HouseholdSocialHubScreenState
           color: AppColors.primary,
           onRefresh: _refreshData,
           child: ListView(
+            // PrimaryScrollController del tab (re-tap sube al tope).
+            primary: true,
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,

@@ -59,6 +59,8 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
       color: theme.primary,
       edgeOffset: 20,
       child: ListView(
+        // Se adjunta al PrimaryScrollController del tab (re-tap sube al tope).
+        primary: true,
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
@@ -150,11 +152,8 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
           children: [
             Text(
               t.homeSoloTasksTitle,
-              style: TextStyle(
-                fontSize: 21,
-                fontWeight: AppTypography.hero,
+              style: AppTypography.sectionTitle.copyWith(
                 color: theme.textPrimary,
-                letterSpacing: -0.5,
               ),
             ),
             if (pendingCount != null && pendingCount > 0) ...[
@@ -170,10 +169,9 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
                 ),
                 child: Text(
                   '$pendingCount',
-                  style: TextStyle(
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w700,
                     color: theme.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -183,9 +181,8 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
               onPressed: () => _goToTab(MainTab.tasks),
               child: Text(
                 t.homeViewWeekButton,
-                style: TextStyle(
+                style: AppTypography.bodyStrong.copyWith(
                   color: theme.primary,
-                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -243,11 +240,8 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
       children: [
         Text(
           t.homeSoloActivityTitle,
-          style: TextStyle(
-            fontSize: 21,
-            fontWeight: AppTypography.hero,
+          style: AppTypography.sectionTitle.copyWith(
             color: theme.textPrimary,
-            letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -378,8 +372,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
           Text(
             message,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
+            style: AppTypography.bodyStrong.copyWith(
               color: theme.textPrimary,
             ),
           ),
@@ -399,7 +392,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadii.pill),
                 ),
-                textStyle: const TextStyle(fontWeight: FontWeight.w800),
+                textStyle: AppTypography.bodyStrong,
               ),
             ),
           ],

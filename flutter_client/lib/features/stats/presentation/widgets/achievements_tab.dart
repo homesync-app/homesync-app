@@ -251,15 +251,20 @@ class AchievementsTab extends StatelessWidget {
     final theme = context.theme;
     final accentColor = isUnlocked ? AppColors.accentGold : AppColors.primary;
 
-    return AppProgressFillCard(
-      progress: progress,
-      accentColor: accentColor,
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(20),
-      borderColor: isUnlocked
-          ? AppColors.accentGold.withValues(alpha: 0.2)
-          : theme.border.withValues(alpha: 0.45),
-      child: Row(
+    // Contenido pintado dos veces (técnica drench de bunpod): la copia
+    // [onFill] va con paleta invertida y se clipea al avance del relleno,
+    // así el texto cambia de color justo donde lo cruza el progreso.
+    Widget content({required bool onFill}) {
+      final titleColor = onFill
+          ? Colors.white
+          : (isUnlocked ? theme.textPrimary : theme.textMuted);
+      final bodyColor =
+          onFill ? Colors.white.withValues(alpha: 0.85) : theme.textSecondary;
+      final valueColor = onFill
+          ? Colors.white
+          : (isUnlocked ? AppColors.accentGold : AppColors.textMuted);
+
+      return Row(
         children: [
           SizedBox(
             width: 60,
@@ -281,7 +286,7 @@ class AchievementsTab extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 14,
-                    color: isUnlocked ? theme.textPrimary : theme.textMuted,
+                    color: titleColor,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -290,13 +295,13 @@ class AchievementsTab extends StatelessWidget {
                   description,
                   style: TextStyle(
                     fontSize: 12,
-                    color: theme.textSecondary,
+                    color: bodyColor,
                   ),
                 ),
                 const SizedBox(height: 10),
                 _achievementProgressHint(
                   progress: progress,
-                  color: accentColor,
+                  color: onFill ? Colors.white : accentColor,
                   isUnlocked: isUnlocked,
                 ),
               ],
@@ -308,11 +313,23 @@ class AchievementsTab extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w900,
-              color: isUnlocked ? AppColors.accentGold : AppColors.textMuted,
+              color: valueColor,
             ),
           ),
         ],
-      ),
+      );
+    }
+
+    return AppProgressFillCard(
+      progress: progress,
+      accentColor: accentColor,
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(20),
+      borderColor: isUnlocked
+          ? AppColors.accentGold.withValues(alpha: 0.2)
+          : theme.border.withValues(alpha: 0.45),
+      drenchedChild: content(onFill: true),
+      child: content(onFill: false),
     );
   }
 

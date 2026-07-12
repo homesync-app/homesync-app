@@ -79,6 +79,8 @@ class FamilyRewardsScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () => ref.read(rewardsProvider.notifier).refresh(),
             child: ListView(
+              // PrimaryScrollController del tab (re-tap sube al tope).
+              primary: true,
               padding: EdgeInsets.fromLTRB(
                 20,
                 16,

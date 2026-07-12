@@ -16,6 +16,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/category_p
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
@@ -578,55 +579,65 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                       24,
                       20 + MediaQuery.viewPaddingOf(context).bottom,
                     ),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ||
-                                _selectedTaskIds.isEmpty ||
-                                _selectedMemberIds.isEmpty
-                            ? null
-                            : _submitCompletedTasks,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          elevation: 0,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(22),
+                    child: Builder(
+                      builder: (context) {
+                        final canSubmit = !_isLoading &&
+                            _selectedTaskIds.isNotEmpty &&
+                            _selectedMemberIds.isNotEmpty;
+                        // CTA héroe con press-morph M3 Expressive: el radio
+                        // se contrae al presionar sobre el mismo spring del
+                        // squash (patrón bunpod / _GridButton).
+                        return AnimatedPress(
+                          scale: 0.97,
+                          haptic: AppPressHaptic.light,
+                          onTap: canSubmit ? _submitCompletedTasks : null,
+                          pressBuilder: (context, t, child) => Container(
+                            width: double.infinity,
+                            height: 58,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: theme.primary
+                                  .withValues(alpha: canSubmit ? 1 : 0.45),
+                              borderRadius: BorderRadius.circular(
+                                22 + (14 - 22) * t.clamp(0.0, 1.2),
+                              ),
+                            ),
+                            child: child,
                           ),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.check_circle_rounded,
-                                    size: 20,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
                                   ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    _selectedTaskIds.length == 1
-                                        ? 'Completar 1 tarea'
-                                        : 'Completar ${_selectedTaskIds.length} tareas',
-                                    style: const TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: -0.4,
+                                )
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle_rounded,
+                                      size: 20,
                                       color: Colors.white,
                                     ),
-                                  ),
-                                ],
-                              ),
-                      ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _selectedTaskIds.length == 1
+                                          ? 'Completar 1 tarea'
+                                          : 'Completar ${_selectedTaskIds.length} tareas',
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.4,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        );
+                      },
                     ),
                   ),
               ],

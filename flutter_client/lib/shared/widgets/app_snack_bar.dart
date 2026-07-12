@@ -1,14 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
+import 'package:motor/motor.dart';
 
 enum AppSnackBarType { neutral, success, error, warning, info }
 
 class AppSnackBar {
   static final ValueNotifier<bool> isVisible = ValueNotifier<bool>(false);
   static OverlayEntry? _activeEntry;
+  static String? _activeMessage;
+  static GlobalKey<_AppSnackToastState>? _activeToastKey;
 
   static void show(
     BuildContext context, {
@@ -23,6 +29,16 @@ class AppSnackBar {
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
 
+    // Mensaje duplicado: en vez de re-crear la pill, la viva tiembla con un
+    // impulso de spring (cue de bunpod) y renueva su countdown.
+    final activeToast = _activeToastKey?.currentState;
+    if (_activeMessage == message &&
+        activeToast != null &&
+        !activeToast.isDismissing) {
+      activeToast.shakeAndRestart();
+      return;
+    }
+
     final palette = _palette(context, type);
     final hasAction = actionLabel != null && onAction != null;
 
@@ -35,9 +51,11 @@ class AppSnackBar {
         ? media.viewInsets.bottom + 16
         : media.viewPadding.bottom + 76;
 
+    final toastKey = GlobalKey<_AppSnackToastState>();
     late final OverlayEntry entry;
     entry = OverlayEntry(
       builder: (overlayContext) => _AppSnackToast(
+        key: toastKey,
         message: message,
         palette: palette,
         hasAction: hasAction,
@@ -48,6 +66,8 @@ class AppSnackBar {
         onDismissed: () {
           if (_activeEntry == entry) {
             _activeEntry = null;
+            _activeMessage = null;
+            _activeToastKey = null;
             isVisible.value = false;
           }
           if (entry.mounted) {
@@ -58,12 +78,16 @@ class AppSnackBar {
     );
 
     _activeEntry = entry;
+    _activeMessage = message;
+    _activeToastKey = toastKey;
     overlay.insert(entry);
   }
 
   static void dismiss() {
     _activeEntry?.remove();
     _activeEntry = null;
+    _activeMessage = null;
+    _activeToastKey = null;
     isVisible.value = false;
   }
 
@@ -141,6 +165,7 @@ class _AppSnackToast extends StatefulWidget {
   final VoidCallback onDismissed;
 
   const _AppSnackToast({
+    super.key,
     required this.message,
     required this.palette,
     required this.hasAction,
@@ -156,46 +181,117 @@ class _AppSnackToast extends StatefulWidget {
 }
 
 class _AppSnackToastState extends State<_AppSnackToast>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+    with TickerProviderStateMixin {
+  // Recorrido de entrada/salida desde debajo del borde inferior, en px.
+  static const double _travel = 140;
+  // Umbral de drag/velocidad para cerrar al soltar; corto a propósito para
+  // que un flick rápido alcance.
+  static const double _dismissOffset = 24;
+  static const double _dismissVelocity = 300;
+  // Impulso lateral del shake por mensaje duplicado, en px/s.
+  static const double _shakeVelocity = 600;
+
+  // Offset vertical del dedo; vuelve a 0 con spring si no pasó el umbral.
+  late final AnimationController _drag = AnimationController.unbounded(
+    vsync: this,
+  )..value = 0;
+
+  // Offset horizontal del shake; descansa en 0 y solo se mueve por impulso.
+  late final AnimationController _shake = AnimationController.unbounded(
+    vsync: this,
+  )..value = 0;
+
+  bool _visible = true;
+  bool _removing = false;
   Timer? _timer;
+
+  bool get isDismissing => _removing;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 190),
-      reverseDuration: const Duration(milliseconds: 140),
-    )..forward();
-
     _timer = Timer(widget.duration, _dismiss);
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    _controller.dispose();
+    _drag.dispose();
+    _shake.dispose();
     super.dispose();
   }
 
-  Future<void> _dismiss() async {
+  void _dismiss() {
+    if (_removing) return;
+    _removing = true;
     _timer?.cancel();
-    if (!mounted) return;
-    await _controller.reverse();
-    if (mounted) {
-      widget.onDismissed();
+    _drag.stop();
+    if (mounted) setState(() => _visible = false);
+    // Sale de la lista una vez asentado el spring de salida.
+    Timer(const Duration(milliseconds: 400), () {
+      if (mounted) widget.onDismissed();
+    });
+  }
+
+  /// Cue de mensaje duplicado: impulso lateral sobre un spring que descansa
+  /// en 0 — la pill tiembla y se asienta con física real. También reinicia
+  /// el countdown: el mensaje acaba de demostrar que sigue vigente.
+  void shakeAndRestart() {
+    if (_removing) return;
+    _timer?.cancel();
+    _timer = Timer(widget.duration, _dismiss);
+    AppHaptics.selection();
+    _shake.animateWith(
+      SpringSimulation(
+        const MaterialSpringMotion.expressiveSpatialFast().description,
+        0,
+        0,
+        _shakeVelocity,
+      ),
+    );
+  }
+
+  void _onDragStart(DragStartDetails details) {
+    // Sostener la pill pausa el auto-dismiss.
+    _timer?.cancel();
+    _drag.stop();
+  }
+
+  void _onDragUpdate(DragUpdateDetails details) {
+    _drag.value = (_drag.value + details.delta.dy).clamp(0.0, _travel * 2);
+  }
+
+  void _onDragEnd(DragEndDetails details) {
+    final velocity = details.velocity.pixelsPerSecond.dy;
+    if (_drag.value > _dismissOffset || velocity > _dismissVelocity) {
+      _dismiss();
+      return;
     }
+    _settleBack(velocity);
+  }
+
+  void _settleBack(double velocity) {
+    if (_removing) return;
+    _drag.animateWith(
+      SpringSimulation(
+        const MaterialSpringMotion.standardSpatialFast().description,
+        _drag.value,
+        0,
+        velocity,
+      ),
+    );
+    _timer = Timer(widget.duration, _dismiss);
   }
 
   void _handleAction() {
     widget.onAction?.call();
-    unawaited(_dismiss());
+    _dismiss();
   }
 
   @override
   Widget build(BuildContext context) {
     final palette = widget.palette;
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
     return Positioned(
       left: 18,
@@ -204,23 +300,33 @@ class _AppSnackToastState extends State<_AppSnackToast>
       child: SafeArea(
         top: false,
         minimum: EdgeInsets.zero,
-        child: FadeTransition(
-          opacity: CurvedAnimation(
-            parent: _controller,
-            curve: Curves.easeOutCubic,
-            reverseCurve: Curves.easeInCubic,
-          ),
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.18),
-              end: Offset.zero,
-            ).animate(
-              CurvedAnimation(
-                parent: _controller,
-                curve: Curves.easeOutCubic,
-                reverseCurve: Curves.easeInCubic,
+        // Entrada con overshoot expresivo desde abajo; salida con spring
+        // estándar (calmo). El drag y el shake se suman encima del spring.
+        child: SingleMotionBuilder(
+          motion: _visible
+              ? const MaterialSpringMotion.expressiveSpatialFast()
+              : const MaterialSpringMotion.standardSpatialFast(),
+          value: _visible ? 0.0 : 1.0,
+          from: reduceMotion ? null : 1.0,
+          active: !reduceMotion,
+          builder: (context, t, child) => AnimatedBuilder(
+            animation: Listenable.merge([_drag, _shake]),
+            builder: (context, _) => Transform.translate(
+              offset: Offset(_shake.value, t * _travel + _drag.value),
+              child: Opacity(
+                // El fade solo acompaña la salida; clampeado para no vibrar
+                // con el overshoot del spring.
+                opacity: _removing ? (1 - t.clamp(0.0, 1.0)) : 1,
+                child: child,
               ),
             ),
+            child: child,
+          ),
+          child: GestureDetector(
+            onVerticalDragStart: _onDragStart,
+            onVerticalDragUpdate: _onDragUpdate,
+            onVerticalDragEnd: _onDragEnd,
+            onVerticalDragCancel: () => _settleBack(0),
             child: Material(
               color: Colors.transparent,
               child: DecoratedBox(
@@ -252,11 +358,9 @@ class _AppSnackToastState extends State<_AppSnackToast>
                           widget.message,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: AppTypography.bodyStrong.copyWith(
                             color: palette.foreground,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13.5,
-                            height: 1.18,
+                            height: 1.2,
                           ),
                         ),
                       ),
@@ -273,9 +377,8 @@ class _AppSnackToastState extends State<_AppSnackToast>
                           ),
                           child: Text(
                             widget.actionLabel!,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12.5,
+                            style: AppTypography.caption.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),

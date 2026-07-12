@@ -26,6 +26,10 @@ class AppSheet {
     BoxConstraints? constraints,
     ShapeBorder? shape,
   }) {
+    // Si había un campo enfocado, el teclado abierto pelea con la entrada
+    // del sheet (se abre y se cierra a la vez). Se cierra antes de animar
+    // (tip flutterpro "dismiss the keyboard before opening a modal").
+    FocusManager.instance.primaryFocus?.unfocus();
     AppHaptics.selection();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return showModalBottomSheet<T>(

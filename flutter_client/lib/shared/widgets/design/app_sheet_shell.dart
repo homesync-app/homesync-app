@@ -50,11 +50,8 @@ class AppSheetShell extends StatelessWidget {
                 const SizedBox(height: 22),
                 Text(
                   title!,
-                  style: TextStyle(
+                  style: AppTypography.sectionTitle.copyWith(
                     color: theme.textPrimary,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    height: 1.08,
                   ),
                 ),
               ],
@@ -62,11 +59,8 @@ class AppSheetShell extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   subtitle!,
-                  style: TextStyle(
+                  style: AppTypography.body.copyWith(
                     color: theme.textSecondary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
                   ),
                 ),
               ],

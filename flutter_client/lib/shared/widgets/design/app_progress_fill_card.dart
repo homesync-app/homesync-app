@@ -15,6 +15,16 @@ class AppProgressFillCard extends StatelessWidget {
   final List<BoxShadow>? boxShadow;
   final VoidCallback? onTap;
 
+  /// Modo "drench" (episode card de bunpod): el relleno de progreso pasa de
+  /// tinte sutil a color sólido ([fillColor] o [accentColor]) y este widget
+  /// —la misma maqueta que [child] pero con paleta invertida— se pinta encima
+  /// clipeado al progreso, de modo que el contenido cambia de color justo
+  /// donde lo cruza el borde del relleno.
+  final Widget? drenchedChild;
+
+  /// Color sólido del relleno en modo drench. Ignorado sin [drenchedChild].
+  final Color? fillColor;
+
   const AppProgressFillCard({
     super.key,
     required this.child,
@@ -27,6 +37,8 @@ class AppProgressFillCard extends StatelessWidget {
     this.borderColor,
     this.boxShadow,
     this.onTap,
+    this.drenchedChild,
+    this.fillColor,
   });
 
   @override
@@ -63,9 +75,11 @@ class AppProgressFillCard extends StatelessWidget {
                   ),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: accentColor.withValues(
-                        alpha: theme.isDarkMode ? 0.18 : 0.11,
-                      ),
+                      color: drenchedChild != null
+                          ? (fillColor ?? accentColor)
+                          : accentColor.withValues(
+                              alpha: theme.isDarkMode ? 0.18 : 0.11,
+                            ),
                     ),
                   ),
                 ),
@@ -74,6 +88,19 @@ class AppProgressFillCard extends StatelessWidget {
                 padding: padding ?? AppInsets.card,
                 child: child,
               ),
+              if (drenchedChild != null)
+                Positioned.fill(
+                  child: ClipRect(
+                    clipper: _ProgressFillClipper(
+                      progress: value,
+                      textDirection: Directionality.of(context),
+                    ),
+                    child: Padding(
+                      padding: padding ?? AppInsets.card,
+                      child: drenchedChild,
+                    ),
+                  ),
+                ),
             ],
           ),
         );

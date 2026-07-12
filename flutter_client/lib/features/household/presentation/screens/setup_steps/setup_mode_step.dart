@@ -111,11 +111,11 @@ class SetupModeStep extends ConsumerWidget {
                                 },
                                 child: Text(
                                   t.setupSignOutLink,
-                                  style: TextStyle(
-                                    color: theme.textSecondary
-                                        .withValues(alpha: 0.64),
+                                  style: AppTypography.caption.copyWith(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
+                                    color: theme.textSecondary
+                                        .withValues(alpha: 0.64),
                                   ),
                                 ),
                               ),
@@ -140,11 +140,11 @@ class SetupModeStep extends ConsumerWidget {
                                     controller.goTo(SetupStep.valueProp),
                                 child: Text(
                                   t.setupSeeFeaturesLink,
-                                  style: TextStyle(
-                                    color: theme.textSecondary
-                                        .withValues(alpha: 0.52),
+                                  style: AppTypography.caption.copyWith(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
+                                    color: theme.textSecondary
+                                        .withValues(alpha: 0.52),
                                   ),
                                 ),
                               ),
@@ -219,9 +219,9 @@ class _ModeCard extends StatelessWidget {
                 children: [
                   Text(
                     t.setupModeName(id),
-                    style: const TextStyle(
+                    style: AppTypography.cardTitle.copyWith(
                       fontSize: 18,
-                      fontWeight: FontWeight.w800,
+                      color: theme.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -229,10 +229,11 @@ class _ModeCard extends StatelessWidget {
                     t.setupModeDescription(id),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: theme.textSecondary.withValues(alpha: 0.84),
+                    style: AppTypography.caption.copyWith(
                       fontSize: 13,
+                      fontWeight: FontWeight.w500,
                       height: 1.28,
+                      color: theme.textSecondary.withValues(alpha: 0.84),
                     ),
                   ),
                 ],

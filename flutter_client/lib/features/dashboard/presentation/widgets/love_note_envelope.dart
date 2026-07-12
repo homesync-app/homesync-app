@@ -39,7 +39,7 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
     _floatController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2600),
-    )..repeat(reverse: true);
+    );
 
     _openController = AnimationController(
       vsync: this,
@@ -49,6 +49,17 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
     _confettiController = ConfettiController(
       duration: const Duration(milliseconds: 1400),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppMotion.reduce(context)) {
+      _floatController.stop();
+      _floatController.value = 0;
+    } else if (!_isOpen && !_isDismissing && !_floatController.isAnimating) {
+      _floatController.repeat(reverse: true);
+    }
   }
 
   @override

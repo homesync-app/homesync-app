@@ -11,99 +11,21 @@ export 'package:homesync_client/shared/widgets/animated_press.dart';
 export 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 export 'package:homesync_client/shared/widgets/user_avatar.dart';
 
-class AppTransitions {
-  static Route<T> slideUp<T>(Widget page) {
-    return PageRouteBuilder<T>(
-      pageBuilder: (context, animation, secondaryAnimation) => page,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(0.0, 0.015);
-        const end = Offset.zero;
-        const curve = Curves.easeOutCubic;
-
-        var tween =
-            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        var fadeTween =
-            Tween<double>(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
-
-        return FadeTransition(
-          opacity: animation.drive(fadeTween),
-          child: SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          ),
-        );
-      },
-      transitionDuration: const Duration(milliseconds: 350),
-      reverseTransitionDuration: const Duration(milliseconds: 300),
-    );
-  }
-
-  static Route<T> fadeScale<T>(Widget page) {
-    return PageRouteBuilder<T>(
-      pageBuilder: (context, animation, secondaryAnimation) => page,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const curve = Curves.easeOutCubic;
-
-        var scaleTween = Tween<double>(begin: 0.92, end: 1.0)
-            .chain(CurveTween(curve: curve));
-        var fadeTween =
-            Tween<double>(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
-
-        return FadeTransition(
-          opacity: animation.drive(fadeTween),
-          child: ScaleTransition(
-            scale: animation.drive(scaleTween),
-            child: child,
-          ),
-        );
-      },
-      transitionDuration: const Duration(milliseconds: 300),
-      reverseTransitionDuration: const Duration(milliseconds: 250),
-    );
-  }
-
-  static Route<T> slideHorizontal<T>({
-    required Widget page,
-    bool fromRight = true,
-  }) {
-    return PageRouteBuilder<T>(
-      pageBuilder: (context, animation, secondaryAnimation) => page,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const curve = Curves.easeOutCubic;
-        final begin =
-            fromRight ? const Offset(1.0, 0.0) : const Offset(-1.0, 0.0);
-        const end = Offset.zero;
-
-        var tween =
-            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        var fadeTween =
-            Tween<double>(begin: 0.7, end: 1.0).chain(CurveTween(curve: curve));
-
-        return FadeTransition(
-          opacity: animation.drive(fadeTween),
-          child: SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          ),
-        );
-      },
-      transitionDuration: const Duration(milliseconds: 320),
-      reverseTransitionDuration: const Duration(milliseconds: 280),
-    );
-  }
-}
-
 /// Extension for easy access to premium micro-animations via [flutter_animate].
 extension AppAnimationsExtension on Widget {
   Widget animateEntrance({int delay = 0}) {
     return animate()
-        .fadeIn(duration: 400.ms, delay: delay.ms, curve: Curves.easeOutCubic)
+        .fadeIn(
+          duration: AppMotion.slow,
+          delay: delay.ms,
+          curve: AppMotion.standard,
+        )
         .slideY(
           begin: 0.1,
           end: 0,
-          duration: 400.ms,
+          duration: AppMotion.slow,
           delay: delay.ms,
-          curve: Curves.easeOutCubic,
+          curve: AppMotion.standard,
         );
   }
 
@@ -121,6 +43,24 @@ extension AppAnimationsExtension on Widget {
           curve: Curves.elasticOut,
         )
         .fadeIn(duration: 300.ms, delay: delay.ms);
+  }
+
+  /// Entrada crisp para contenido de sheets/cards frecuentes: scale sutil sin
+  /// rebote. Para celebraciones raras usar [animateScaleIn] (elastic).
+  Widget animatePopIn({int delay = 0}) {
+    return animate()
+        .fadeIn(
+          duration: AppMotion.fast,
+          delay: delay.ms,
+          curve: AppMotion.standard,
+        )
+        .scale(
+          begin: const Offset(0.96, 0.96),
+          end: const Offset(1, 1),
+          duration: AppMotion.normal,
+          delay: delay.ms,
+          curve: AppMotion.standard,
+        );
   }
 
   Widget animatePulse({bool active = true}) {
@@ -143,7 +83,7 @@ class FadeIndexedStack extends StatefulWidget {
     super.key,
     required this.index,
     required this.children,
-    this.duration = const Duration(milliseconds: 300),
+    this.duration = AppMotion.normal,
   });
 
   @override
@@ -222,17 +162,11 @@ class _FadeIndexedStackState extends State<FadeIndexedStack>
             isActive ? curve : const AlwaysStoppedAnimation(1.0);
         return FadeTransition(
           opacity: drive,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.035),
-              end: Offset.zero,
-            ).animate(drive),
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.985, end: 1).animate(drive),
-              child: TickerMode(
-                enabled: isActive,
-                child: widget.children[i],
-              ),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.985, end: 1).animate(drive),
+            child: TickerMode(
+              enabled: isActive,
+              child: widget.children[i],
             ),
           ),
         );

@@ -5,6 +5,7 @@ import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 
 class NotificationBell extends ConsumerStatefulWidget {
@@ -56,8 +57,7 @@ class _NotificationBellState extends ConsumerState<NotificationBell>
       final count = (data as List).length;
       if (mounted && count != _unreadCount) {
         setState(() => _unreadCount = count);
-        final media = MediaQuery.maybeOf(context);
-        if (count > 0 && !(media?.accessibleNavigation ?? false)) {
+        if (count > 0 && !AppMotion.reduce(context)) {
           _attentionController.forward(from: 0);
         }
       }

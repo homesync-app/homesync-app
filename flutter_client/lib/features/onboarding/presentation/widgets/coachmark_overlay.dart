@@ -49,13 +49,24 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
     _glowCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1600),
-    )..repeat();
+    );
     _stepCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 380),
     );
     _confettiCtrl =
         ConfettiController(duration: const Duration(milliseconds: 1400));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppMotion.reduce(context)) {
+      _glowCtrl.stop();
+      _glowCtrl.value = 0;
+    } else if (!_glowCtrl.isAnimating) {
+      _glowCtrl.repeat();
+    }
   }
 
   @override
@@ -381,7 +392,7 @@ class _ModalIllustration extends StatelessWidget {
     final isDuel = !isWelcome && step.icon == Icons.emoji_events_rounded;
     if (isDuel) return const _DuelIllustration();
 
-    return Container(
+    final icon = Container(
       width: 88,
       height: 88,
       decoration: BoxDecoration(
@@ -404,7 +415,9 @@ class _ModalIllustration extends StatelessWidget {
         color: Colors.white,
         size: 42,
       ),
-    ).animate(onPlay: (c) => c.repeat(reverse: true)).scaleXY(
+    );
+    if (AppMotion.reduce(context)) return icon;
+    return icon.animate(onPlay: (c) => c.repeat(reverse: true)).scaleXY(
           begin: 1.0,
           end: 1.04,
           duration: 1800.ms,

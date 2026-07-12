@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 
 enum AppFeedEntryDirection {
   fromTop,
@@ -13,24 +14,36 @@ class AppFeedEntryMotion extends StatelessWidget {
   final double distance;
   final double beginScale;
 
+  /// Espera antes de arrancar (para entradas escalonadas por índice). El
+  /// widget queda invisible durante la espera.
+  final Duration delay;
+
   const AppFeedEntryMotion({
     super.key,
     required this.child,
     this.direction = AppFeedEntryDirection.fromTop,
-    this.duration = const Duration(milliseconds: 420),
+    this.duration = AppMotion.slow,
     this.distance = 24,
     this.beginScale = 0.96,
+    this.delay = Duration.zero,
   });
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.maybeOf(context);
-    if (media?.accessibleNavigation ?? false) return child;
+    if (AppMotion.reduce(context)) return child;
+
+    final totalMs = delay.inMilliseconds + duration.inMilliseconds;
 
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: 1),
-      duration: duration,
-      curve: Curves.easeOutCubic,
+      duration: Duration(milliseconds: totalMs),
+      curve: delay == Duration.zero
+          ? AppMotion.standard
+          : Interval(
+              delay.inMilliseconds / totalMs,
+              1,
+              curve: AppMotion.standard,
+            ),
       builder: (context, value, child) {
         return Opacity(
           opacity: value,

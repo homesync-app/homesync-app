@@ -32,6 +32,7 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_feed_entry_motion.dart';
 import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/expressive/expressive.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
@@ -137,6 +138,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       color: theme.primary,
       edgeOffset: 20,
       child: ListView(
+        // Se adjunta al PrimaryScrollController del tab (re-tap sube al tope).
+        primary: true,
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
@@ -188,12 +191,9 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
             theme: theme,
             currentMemberName: currentMember?.displayName,
           ),
-          style: TextStyle(
+          style: AppTypography.cardTitle.copyWith(
             color: theme.textSecondary,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
             height: 1.1,
-            letterSpacing: -0.2,
           ),
         ).animateEntrance(),
         const SizedBox(height: 10),
@@ -236,23 +236,19 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
             children: [
               Text(
                 t.homeHeadlinePrimary,
-                style: TextStyle(
-                  color: theme.textPrimary,
+                style: AppTypography.heroAmount.copyWith(
                   fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  height: 1.02,
-                  letterSpacing: -0.45,
+                  letterSpacing: -0.5,
+                  height: 1.05,
+                  color: theme.textPrimary,
                 ),
               ).animate().fadeIn(delay: 100.ms),
               const SizedBox(height: 3),
               Text(
                 t.homeCoupleHeadlineSecondary,
-                style: TextStyle(
+                style: AppTypography.screenTitle.copyWith(
+                  height: 1.05,
                   color: theme.textPrimary.withValues(alpha: 0.62),
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  height: 1.02,
-                  letterSpacing: -0.35,
                 ),
               ).animate().fadeIn(delay: 170.ms),
               const SizedBox(height: 14),
@@ -274,18 +270,16 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
                   const SizedBox(width: 10),
                   Text(
                     '${t.homeCoupleHeadlineConnector} ',
-                    style: TextStyle(
-                      color: theme.textSecondary,
-                      fontSize: 14,
+                    style: AppTypography.body.copyWith(
                       fontWeight: FontWeight.w600,
+                      color: theme.textSecondary,
                     ),
                   ),
                   Text(
                     partnerFirstName ?? t.homeCouplePartnerFallback,
-                    style: TextStyle(
-                      color: theme.primary,
+                    style: AppTypography.bodyStrong.copyWith(
                       fontSize: 15,
-                      fontWeight: FontWeight.w900,
+                      color: theme.primary,
                     ),
                   ),
                   const SizedBox(width: 5),
@@ -434,10 +428,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       children: [
         Text(
           dateEyebrow,
-          style: TextStyle(
-            fontSize: 10.5,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.1,
+          style: AppTypography.eyebrow.copyWith(
             color: theme.textMuted,
           ),
         ),
@@ -453,11 +444,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
                       t.homeCoupleTasksTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
+                      style: AppTypography.sectionTitle.copyWith(
                         color: theme.textPrimary,
-                        letterSpacing: -0.7,
                       ),
                     ),
                   ),
@@ -473,9 +461,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
               },
               child: Text(
                 t.homeViewWeekButton,
-                style: TextStyle(
+                style: AppTypography.bodyStrong.copyWith(
                   color: theme.primary,
-                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -535,11 +522,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       children: [
         Text(
           t.homeCoupleActivityTitle,
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
+          style: AppTypography.sectionTitle.copyWith(
             color: theme.textPrimary,
-            letterSpacing: -0.7,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -652,19 +636,15 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
                 children: [
                   Text(
                     t.homeCoupleActivityEmptyTitle,
-                    style: TextStyle(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w800,
+                    style: AppTypography.cardTitle.copyWith(
                       color: theme.textPrimary,
-                      letterSpacing: -0.35,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     t.homeCoupleActivityEmptyBody,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      height: 1.3,
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w500,
                       color: theme.textSecondary,
                     ),
                   ),
@@ -706,25 +686,22 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       ),
       child: Column(
         children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: theme.primary.withValues(alpha: 0.07),
-              shape: BoxShape.circle,
-            ),
+          // Silueta de corazón M3E en vez de círculo: el acento "love" de
+          // AppShapes, hecho para estos momentos de pareja.
+          AppShapedBadge(
+            shape: AppShapes.love,
+            color: theme.primary.withValues(alpha: 0.12),
+            size: 54,
             child: Icon(
-              Icons.favorite_border_rounded,
+              Icons.favorite_rounded,
               color: theme.primary.withValues(alpha: 0.68),
-              size: 26,
+              size: 22,
             ),
           ),
           const SizedBox(height: 10),
           Text(
             message,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
+            style: AppTypography.cardTitle.copyWith(
               color: theme.textPrimary,
             ),
           ),

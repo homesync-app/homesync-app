@@ -48,10 +48,11 @@ class AppPill extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: AppTypography.caption.copyWith(
               color: foreground,
-              fontSize: dense ? 11.5 : 12.5,
-              fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+              fontSize: dense ? 11 : 12,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+              height: 1.2,
             ),
           ),
         ],
