@@ -11,6 +11,7 @@ import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/mascot_motion_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_amount.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
@@ -53,6 +54,9 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
 
     return Scaffold(
       backgroundColor: theme.background,
+      // El contenido arranca detras del AppBar (solo tiene la X): sin esto el
+      // hero queda ~56dp mas abajo y toda la pantalla se siente "hundida".
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -85,34 +89,23 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
               ),
             ),
           ),
-          // Soft golden halo behind the hero so the screen opens with warmth.
-          Positioned(
-            top: -90,
-            left: 0,
-            right: 0,
-            child: IgnorePointer(
-              child: Container(
-                height: 340,
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.accentGold.withValues(
-                        alpha: theme.isDarkMode ? 0.16 : 0.14,
-                      ),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+          // Sin halo detras del hero: cualquier radial dorado sutil genera
+          // banding en pantallas reales y se lee como un "recuadro" que no
+          // se integra con el fondo (feedback del owner, 2026-07-06).
           // El contenido scrollea a pantalla completa y se desliza POR DEBAJO
           // del panel de compra flotante: sin costura dura entre ambos.
           SafeArea(
             top: false,
             bottom: isPremium,
             child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(20, 4, 20, isPremium ? 24 : 320),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                // Debajo de la barra de estado, solapado con la fila de la X
+                // para que el hero arranque bien arriba.
+                MediaQuery.paddingOf(context).top + 8,
+                20,
+                isPremium ? 24 : 320,
+              ),
               child: Column(
                 children: [
                   if (isPremium)
@@ -504,6 +497,9 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
           await ref.read(premiumProvider.notifier).buyProduct(package);
       if (isPremium && mounted) {
         AppHaptics.celebrate();
+        // La mascota del home festeja la compra al volver (no-op si el
+        // header no esta montado; mismo patron que saldar deuda).
+        ref.read(homeMascotMotionProvider).play(AvatarMotion.celebrate);
         Navigator.pop(context);
       }
     } catch (_) {
