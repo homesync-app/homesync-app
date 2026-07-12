@@ -1,38 +1,9 @@
+import 'package:homesync_client/core/errors/failures.dart';
+
 import 'base_rpc_service.dart';
 
 class RewardRpcService extends BaseRpcService {
   RewardRpcService({required super.clientOverride});
-
-  Future<List<Map<String, dynamic>>> getAvailableRewards() async {
-    final userId = await requireCurrentUserId();
-    final response = await client.rpc(
-      'get_available_rewards',
-      params: {'p_user_id': userId},
-    );
-
-    return List<Map<String, dynamic>>.from(response);
-  }
-
-  Future<String> createCustomReward({
-    required String householdId,
-    required String title,
-    String? description,
-    required int cost,
-    String icon = '??',
-  }) async {
-    final response = await client.rpc(
-      'create_custom_reward',
-      params: {
-        'p_household_id': householdId,
-        'p_title': title,
-        'p_description': description,
-        'p_cost': cost,
-        'p_icon': icon,
-      },
-    );
-
-    return response as String;
-  }
 
   Future<Map<String, dynamic>> redeemReward(String rewardId) async {
     final userId = await requireCurrentUserId();
@@ -44,51 +15,17 @@ class RewardRpcService extends BaseRpcService {
       },
     );
 
-    return Map<String, dynamic>.from(response);
-  }
-
-  Future<Map<String, dynamic>> transferCoins({
-    required String toUserId,
-    required int amount,
-    required String householdId,
-    String? note,
-  }) async {
-    final userId = await requireCurrentUserId();
-    final response = await client.rpc(
-      'transfer_coins',
-      params: {
-        'p_from_user_id': userId,
-        'p_to_user_id': toUserId,
-        'p_amount': amount,
-        'p_household_id': householdId,
-        'p_note': note,
-      },
-    );
-
-    return Map<String, dynamic>.from(response);
-  }
-
-  Future<List<Map<String, dynamic>>> getRedemptionHistory() async {
-    final userId = await requireCurrentUserId();
-    final response = await client.rpc(
-      'get_redemption_history',
-      params: {'p_user_id': userId},
-    );
-
-    return List<Map<String, dynamic>>.from(response);
-  }
-
-  Future<Map<String, dynamic>> fulfillRedemption(String redemptionId) async {
-    final userId = await requireCurrentUserId();
-    final response = await client.rpc(
-      'fulfill_redemption',
-      params: {
-        'p_redemption_id': redemptionId,
-        'p_user_id': userId,
-      },
-    );
-
-    return Map<String, dynamic>.from(response);
+    final result = Map<String, dynamic>.from(response as Map);
+    // redeem_reward reporta los fallos de negocio (coins insuficientes,
+    // premio inexistente) como {'success': false, ...} en vez de lanzar.
+    // Convertirlo en Failure acá evita que el caller celebre un canje que
+    // el servidor rechazó.
+    if (result['success'] != true) {
+      throw ValidationFailure(
+        (result['message'] as String?) ?? 'No se pudo canjear el premio.',
+      );
+    }
+    return result;
   }
 
   Future<int> cloneRewardTemplates() async {
@@ -101,5 +38,16 @@ class RewardRpcService extends BaseRpcService {
     );
 
     return response as int;
+  }
+
+  Future<int> seedFamilyDefaultRewards(String householdId) async {
+    final response = await client.rpc(
+      'seed_family_default_rewards_v1',
+      params: {
+        'p_household_id': householdId,
+      },
+    );
+
+    return (response as num).toInt();
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
@@ -8,6 +7,7 @@ import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/widgets/concept_icon.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
@@ -25,6 +25,7 @@ import '../providers/reward_provider.dart';
 import '../utils/reward_localization.dart';
 import '../widgets/couple_challenge_card.dart';
 import '../widgets/couple_challenge_completion_mixin.dart';
+import '../widgets/redeem_reward_dialog.dart';
 
 class CoupleRewardsScreen extends ConsumerStatefulWidget {
   final String householdId;
@@ -63,16 +64,20 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     );
     _hasOpenedRewardsTab = !widget.showDuel || _tabController.index == 1;
     if (widget.showDuel) {
-      _tabController.addListener(() {
-        if (!_tabController.indexIsChanging) {
-          ref
-              .read(parejaTabIndexProvider.notifier)
-              .setIndex(_tabController.index);
-          if (_tabController.index == 1 && !_hasOpenedRewardsTab && mounted) {
-            setState(() => _hasOpenedRewardsTab = true);
-          }
-        }
-      });
+      _tabController.addListener(_onTabChanged);
+      _loadDuelStats();
+    }
+  }
+
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging) return;
+    ref.read(parejaTabIndexProvider.notifier).setIndex(_tabController.index);
+    if (_tabController.index == 1 && !_hasOpenedRewardsTab && mounted) {
+      setState(() => _hasOpenedRewardsTab = true);
+    }
+    if (_tabController.index == 0) {
+      // Al volver al duelo, revalidar en silencio si la caché quedó vieja
+      // (los datos cacheados siguen visibles mientras tanto).
       _loadDuelStats();
     }
   }
@@ -89,16 +94,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       );
       _hasOpenedRewardsTab = !widget.showDuel || _tabController.index == 1;
       if (widget.showDuel) {
-        _tabController.addListener(() {
-          if (!_tabController.indexIsChanging) {
-            ref
-                .read(parejaTabIndexProvider.notifier)
-                .setIndex(_tabController.index);
-            if (_tabController.index == 1 && !_hasOpenedRewardsTab && mounted) {
-              setState(() => _hasOpenedRewardsTab = true);
-            }
-          }
-        });
+        _tabController.addListener(_onTabChanged);
         _loadDuelStats();
       }
     }
@@ -139,7 +135,16 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         ref.invalidate(coupleDuelStatsProvider);
         ref.invalidate(weeklyXpByDayProvider);
       }
-      final stats = await ref.read(coupleDuelStatsProvider.future);
+      var stats = await ref.read(coupleDuelStatsProvider.future);
+      // Revalidación silenciosa: la caché keepAlive solo se invalida desde
+      // esta pantalla, así que después de completar tareas (o al cruzar el
+      // lunes) quedaría congelada. Si los datos están viejos, refrescamos
+      // mientras la copia cacheada sigue visible.
+      if (!forceRefresh && _isDuelDataStale(stats.fetchedAt)) {
+        ref.invalidate(coupleDuelStatsProvider);
+        ref.invalidate(weeklyXpByDayProvider);
+        stats = await ref.read(coupleDuelStatsProvider.future);
+      }
       if (!mounted) return;
       setState(() {
         _taskStats = stats.taskStats;
@@ -157,6 +162,18 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       if (!mounted) return;
       setState(() => _isStatsLoading = false);
     }
+  }
+
+  /// Vieja si tiene más de 2 minutos o si se trajo antes del lunes de la
+  /// semana en curso (el duelo es semanal: datos de la semana pasada no
+  /// sirven como "actuales").
+  bool _isDuelDataStale(DateTime? fetchedAt) {
+    if (fetchedAt == null) return false;
+    final now = DateTime.now();
+    if (now.difference(fetchedAt) > const Duration(minutes: 2)) return true;
+    final monday = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
+    return fetchedAt.isBefore(monday);
   }
 
   int get _totalTasksCompleted {
@@ -724,6 +741,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
   Widget _buildCoinsDivider(int availableCoins) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Container(
       width: double.infinity,
@@ -779,7 +797,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                   duration: const Duration(milliseconds: 620),
                   curve: Curves.easeOutCubic,
                   builder: (context, animatedCoins, _) => Text(
-                    '${animatedCoins.round()} coins',
+                    t.rewardsCoinsAvailableShort(animatedCoins.round()),
                     style: TextStyle(
                       color: theme.textPrimary,
                       fontSize: 15,
@@ -792,7 +810,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Disponibles para canjear ahora',
+                  t.rewardsCoinsAvailableToRedeem,
                   style: TextStyle(
                     color: theme.textSecondary,
                     fontSize: 11.5,
@@ -808,9 +826,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
               color: AppColors.accentGold.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppRadii.pill),
             ),
-            child: const Text(
-              'Saldo',
-              style: TextStyle(
+            child: Text(
+              t.rewardsBalance,
+              style: const TextStyle(
                 color: AppColors.accentGold,
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
@@ -887,7 +905,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 top: -4,
                 right: 2,
                 child: IconButton(
-                  tooltip: 'Eliminar recompensa',
+                  tooltip: t.rewardsDeleteTooltip,
                   onPressed: () => _confirmDeleteReward(reward),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
@@ -983,6 +1001,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
   Widget _buildEmptyState() {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
@@ -993,15 +1012,14 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       ),
       child: Column(
         children: [
-          const AppEmptyState(
-            title: 'Boutique vacia',
-            subtitle: 'Todavia no hay premios cargados en esta casa.',
+          AppEmptyState(
+            title: t.rewardsEmptyBoutique,
+            subtitle: t.rewardsEmptyNoPrizes,
             icon: Icons.storefront_outlined,
           ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () =>
-                ref.read(rewardsProvider.notifier).cloneTemplates(),
+            onPressed: _seedDefaultCatalog,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary.withValues(alpha: 0.10),
               foregroundColor: AppColors.primary,
@@ -1010,17 +1028,17 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 borderRadius: BorderRadius.circular(AppRadii.md),
               ),
             ),
-            child: const Text(
-              'Cargar premios sugeridos',
-              style: TextStyle(fontWeight: FontWeight.w900),
+            child: Text(
+              t.rewardsLoadSuggested,
+              style: const TextStyle(fontWeight: FontWeight.w900),
             ),
           ),
           const SizedBox(height: 10),
           TextButton(
             onPressed: _showCreateRewardSheet,
-            child: const Text(
-              'O crear un premio personalizado',
-              style: TextStyle(fontWeight: FontWeight.w800),
+            child: Text(
+              t.rewardsOrCreateCustom,
+              style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ),
         ],
@@ -1028,8 +1046,35 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     );
   }
 
+  Future<void> _seedDefaultCatalog() async {
+    final t = AppLocalizations.of(context);
+    final result = await ref.read(rewardsProvider.notifier).seedDefaults();
+    if (!mounted) return;
+    result.fold(
+      (failure) {
+        AppHaptics.error();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      },
+      (count) {
+        if (count == 0) {
+          // Ya había filas (por ejemplo propuestas pendientes): avisar en vez
+          // de dejar un botón que aparenta no hacer nada.
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(t.rewardsSeedNothingNew)),
+          );
+        }
+      },
+    );
+  }
+
   Widget _buildActionButtons() {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1055,7 +1100,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '¿Querés sumar un deseo nuevo?',
+            t.rewardsAddNewDesirePrompt,
             style: TextStyle(
               color: theme.textPrimary,
               fontSize: 18,
@@ -1065,7 +1110,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
           ),
           const SizedBox(height: 6),
           Text(
-            'Proponelo y tu compañero podrá aprobarlo para que aparezca en la tienda.',
+            t.rewardsAddNewDesireHint,
             style: TextStyle(
               color: theme.textSecondary,
               fontSize: 13,
@@ -1079,9 +1124,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             child: ElevatedButton.icon(
               onPressed: _showSuggestRewardSheet,
               icon: const Icon(Icons.auto_awesome_rounded, size: 20),
-              label: const Text(
-                'Proponer un deseo nuevo',
-                style: TextStyle(
+              label: Text(
+                t.rewardsSuggestNewDesire,
+                style: const TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 15,
                 ),
@@ -1119,7 +1164,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
           borderRadius: BorderRadius.circular(AppRadii.lg),
         ),
         title: Text(t.rewardsDeletePrompt),
-        content: Text(t.rewardsDeleteBody(reward.title)),
+        content: Text(t.rewardsDeleteBody(localizedRewardTitle(t, reward))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -1144,7 +1189,19 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     );
 
     if (confirm == true) {
-      await ref.read(rewardsProvider.notifier).deleteReward(reward.id);
+      AppHaptics.warning();
+      final result =
+          await ref.read(rewardsProvider.notifier).deleteReward(reward.id);
+      if (!mounted) return;
+      result.fold(
+        (failure) => ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: AppColors.error,
+          ),
+        ),
+        (_) {},
+      );
     }
   }
 
@@ -1163,7 +1220,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogCtx) => _RedeemRewardDialog(
+      builder: (dialogCtx) => RedeemRewardDialog(
         title: title,
         icon: reward.icon,
         cost: reward.cost,
@@ -1182,6 +1239,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
     await result.fold(
       (failure) async {
+        AppHaptics.error();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(failure.message),
@@ -1301,7 +1359,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Motivo para aprobarlo',
+                  t.rewardsApprovalReason,
                   style: TextStyle(
                     color: theme.textSecondary,
                     fontSize: 11,
@@ -1333,11 +1391,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () async {
+                        onPressed: () {
                           Navigator.pop(context);
-                          await ref
-                              .read(rewardsProvider.notifier)
-                              .deleteReward(reward.id);
+                          _resolveProposal(reward, approve: false);
                         },
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.error,
@@ -1347,20 +1403,18 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                             borderRadius: BorderRadius.circular(AppRadii.md),
                           ),
                         ),
-                        child: const Text(
-                          'Quitar',
-                          style: TextStyle(fontWeight: FontWeight.w900),
+                        child: Text(
+                          t.rewardsRemove,
+                          style: const TextStyle(fontWeight: FontWeight.w900),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () async {
+                        onPressed: () {
                           Navigator.pop(context);
-                          await ref
-                              .read(rewardsProvider.notifier)
-                              .approveReward(reward.id);
+                          _resolveProposal(reward, approve: true);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.accentPurple,
@@ -1371,9 +1425,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                             borderRadius: BorderRadius.circular(AppRadii.md),
                           ),
                         ),
-                        child: const Text(
-                          'Aprobar',
-                          style: TextStyle(fontWeight: FontWeight.w900),
+                        child: Text(
+                          t.rewardsApprove,
+                          style: const TextStyle(fontWeight: FontWeight.w900),
                         ),
                       ),
                     ),
@@ -1383,6 +1437,38 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             ),
           ),
         );
+      },
+    );
+  }
+
+  Future<void> _resolveProposal(
+    RewardModel reward, {
+    required bool approve,
+  }) async {
+    final t = AppLocalizations.of(context);
+    final title = localizedRewardTitle(t, reward);
+    final notifier = ref.read(rewardsProvider.notifier);
+    final result = approve
+        ? await notifier.approveReward(reward.id)
+        : await notifier.deleteReward(reward.id);
+    if (!mounted) return;
+    result.fold(
+      (failure) {
+        AppHaptics.error();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      },
+      (_) {
+        if (approve) {
+          AppHaptics.success();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(t.rewardsApprovedSnack(title))),
+          );
+        }
       },
     );
   }
@@ -1459,8 +1545,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     ),
                     Text(
                       isSuggestion
-                          ? 'Proponer un deseo'
-                          : 'Nuevo premio de la casa',
+                          ? t.rewardsSuggestTitle
+                          : t.rewardsNewHouseReward,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: theme.textPrimary,
@@ -1470,7 +1556,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     ),
                     const SizedBox(height: 28),
                     Text(
-                      'TITULO',
+                      t.rewardsTitleLabel,
                       style: TextStyle(
                         color: theme.textSecondary,
                         fontSize: 11,
@@ -1484,15 +1570,15 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                       validator: (value) {
                         final title = value?.trim() ?? '';
                         if (title.isEmpty) {
-                          return 'Escribe el nombre del deseo.';
+                          return t.rewardsTitleRequiredError;
                         }
                         if (title.length < 3) {
-                          return 'Usa al menos 3 caracteres.';
+                          return t.rewardsTitleMinLengthError;
                         }
                         return null;
                       },
                       decoration: InputDecoration(
-                        hintText: 'Ej: Masaje de 20 minutos',
+                        hintText: t.rewardsTitleHint,
                         filled: true,
                         fillColor: theme.surface,
                         border:
@@ -1506,7 +1592,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      isSuggestion ? 'NOTA (OPCIONAL)' : 'DESCRIPCION',
+                      isSuggestion
+                          ? t.rewardsNoteOptionalLabel
+                          : t.rewardsDescriptionLabel,
                       style: TextStyle(
                         color: theme.textSecondary,
                         fontSize: 11,
@@ -1520,8 +1608,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                       maxLines: 2,
                       decoration: InputDecoration(
                         hintText: isSuggestion
-                            ? 'Agregá un detalle si querés (opcional)'
-                            : 'Un detalle corto para describir el premio',
+                            ? t.rewardsDescriptionSuggestionHint
+                            : t.rewardsDescriptionPrizeHint,
                         filled: true,
                         fillColor: theme.surface,
                         border:
@@ -1535,7 +1623,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      'COSTO',
+                      t.rewardsCostFieldLabel,
                       style: TextStyle(
                         color: theme.textSecondary,
                         fontSize: 11,
@@ -1549,12 +1637,12 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         final cost = int.tryParse((value ?? '').trim());
-                        if (cost == null) return 'Ingresa un costo valido.';
-                        if (cost <= 0) return 'Debe costar al menos 1 coin.';
+                        if (cost == null) return t.rewardsCostValidationInvalid;
+                        if (cost <= 0) return t.rewardsCostValidationMin;
                         return null;
                       },
                       decoration: InputDecoration(
-                        hintText: 'Costo en coins',
+                        hintText: t.rewardsCostHint,
                         prefixIcon: const Icon(
                           Icons.monetization_on_rounded,
                           color: AppColors.sage,
@@ -1572,7 +1660,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'CATEGORIA',
+                      t.rewardsCategoryFieldLabel,
                       style: TextStyle(
                         color: theme.textSecondary,
                         fontSize: 11,
@@ -1618,7 +1706,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'ICONO',
+                      t.rewardsIconLabel.toUpperCase(),
                       style: TextStyle(
                         color: theme.textSecondary,
                         fontSize: 11,
@@ -1728,8 +1816,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                             )
                           : Text(
                               isSuggestion
-                                  ? 'Enviar propuesta'
-                                  : 'Crear premio',
+                                  ? t.rewardsSendProposal
+                                  : t.rewardsCreatePrize,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w900,
@@ -1747,10 +1835,12 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   }
 
   void _showSentToast(bool isSuggestion) {
+    final t = AppLocalizations.of(context);
+    AppHaptics.success();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          isSuggestion ? 'Propuesta enviada.' : 'Premio creado con exito.',
+          isSuggestion ? t.rewardsProposalSentToast : t.rewardsPrizeCreatedToast,
         ),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
@@ -1774,130 +1864,5 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       return 'experiencias';
     }
     return 'otros';
-  }
-}
-
-class _RedeemRewardDialog extends StatelessWidget {
-  const _RedeemRewardDialog({
-    required this.title,
-    required this.icon,
-    required this.cost,
-    required this.onCancel,
-    required this.onConfirm,
-  });
-
-  final String title;
-  final String icon;
-  final int cost;
-  final VoidCallback onCancel;
-  final VoidCallback onConfirm;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 28),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.45),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 30,
-              offset: const Offset(0, 16),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Text(icon, style: const TextStyle(fontSize: 34)),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              t.rewardsRedeemPrompt,
-              textAlign: TextAlign.center,
-              style: textTheme.titleLarge?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              t.rewardsRedeemDialogBody(title, cost),
-              textAlign: TextAlign.center,
-              style: textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                height: 1.35,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: onCancel,
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      minimumSize: const Size.fromHeight(52),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                    child: Text(
-                      t.commonCancel,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: onConfirm,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(52),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                    child: Text(
-                      t.rewardsRedeem,
-                      style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ).animate().fadeIn(duration: 140.ms, curve: Curves.easeOutCubic).scale(
-            begin: const Offset(0.97, 0.97),
-            end: const Offset(1, 1),
-            duration: 210.ms,
-            curve: Curves.easeOutCubic,
-          ),
-    );
   }
 }

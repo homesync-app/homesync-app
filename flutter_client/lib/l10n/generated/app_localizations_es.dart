@@ -4825,6 +4825,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rewardsSuggestNewDesire => 'Proponer un deseo nuevo';
 
   @override
+  String get rewardsSeedNothingNew =>
+      'Ya hay premios o propuestas cargadas en esta casa.';
+
+  @override
+  String get rewardsNoteOptionalLabel => 'NOTA (OPCIONAL)';
+
+  @override
+  String get rewardsSendProposal => 'Enviar propuesta';
+
+  @override
+  String get rewardsCreatePrize => 'Crear premio';
+
+  @override
+  String get rewardsProposalSentToast => 'Propuesta enviada.';
+
+  @override
+  String get rewardsPrizeCreatedToast => 'Premio creado con éxito.';
+
+  @override
+  String get rewardsEmptyNoChildStore => 'Todavía no hay premios en tu tienda.';
+
+  @override
   String get rewardsChallengeCompletePrompt => '¿Completaron el desafío?';
 
   @override
@@ -4933,7 +4955,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get rewardsForAdultsSubtitle =>
-      'Toman el lenguaje visual y emocional de la boutique de pareja.';
+      'Mimos y recompensas pensados para los adultos de la casa.';
 
   @override
   String get rewardsFamilyPlans => 'Planes familiares';

@@ -51,23 +51,15 @@ class SupabaseRewardRepository
 
   @override
   Future<Either<Failure, List<Map<String, dynamic>>>> getRewards(
-    String householdId, {
-    int? limit,
-    int? offset,
-  }) async {
+    String householdId,
+  ) async {
     return executeWithHandling(
       () async {
-        var query = _client
+        final response = await _client
             .from('rewards')
             .select()
             .eq('household_id', householdId)
             .order('created_at', ascending: false);
-        if (offset != null && limit != null) {
-          query = query.range(offset, offset + limit - 1);
-        } else if (limit != null) {
-          query = query.limit(limit);
-        }
-        final response = await query;
         return List<Map<String, dynamic>>.from(response);
       },
       context: 'SupabaseRewardRepository.getRewards',
@@ -237,6 +229,17 @@ class SupabaseRewardRepository
         return await _rpc.cloneRewardTemplates();
       },
       context: 'SupabaseRewardRepository.cloneTemplates',
+      isOnline: _isOnline,
+    );
+  }
+
+  @override
+  Future<Either<Failure, int>> seedFamilyDefaults(String householdId) async {
+    return executeWithHandling(
+      () async {
+        return await _rpc.seedFamilyDefaultRewards(householdId);
+      },
+      context: 'SupabaseRewardRepository.seedFamilyDefaults',
       isOnline: _isOnline,
     );
   }

@@ -5,15 +5,18 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/widgets/concept_icon.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/domain/models/reward_model.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
 import 'package:homesync_client/features/rewards/presentation/utils/reward_localization.dart';
+import 'package:homesync_client/features/rewards/presentation/widgets/redeem_reward_dialog.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/animated_amount.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
 class FamilyRewardsScreen extends ConsumerWidget {
   const FamilyRewardsScreen({super.key});
@@ -96,9 +99,8 @@ class FamilyRewardsScreen extends ConsumerWidget {
                 if (isAdmin && pendingRewards.isNotEmpty) ...[
                   const SizedBox(height: 28),
                   _SectionTitle(
-                    title: 'Pendientes de aprobacion',
-                    subtitle:
-                        'Premios propuestos que todavia necesitan decision.',
+                    title: t.rewardsPendingReview,
+                    subtitle: t.rewardsPendingReviewSubtitle,
                     trailing: _CountPill(label: '${pendingRewards.length}'),
                   ),
                   const SizedBox(height: 12),
@@ -118,19 +120,17 @@ class FamilyRewardsScreen extends ConsumerWidget {
                 if (approvedRewards.isEmpty)
                   _EmptyBoutique(
                     isAdmin: isAdmin,
-                    onSeed: () =>
-                        ref.read(rewardsProvider.notifier).cloneTemplates(),
+                    onSeed: () => _seedDefaultCatalog(context, ref),
                     onCreate: isAdmin
                         ? () => _showRewardComposer(context, ref, isAdmin)
                         : null,
                   )
                 else if (isAdult) ...[
                   _RewardSection(
-                    title: 'Premios para chicos',
-                    subtitle:
-                        'Recompensas pensadas para motivar y celebrar avances.',
+                    title: t.rewardsForKids,
+                    subtitle: t.rewardsForKidsSubtitle,
                     rewards: childRewards,
-                    emptyText: 'Todavia no hay premios para chicos.',
+                    emptyText: t.rewardsEmptyNoChildPrizes,
                     canDelete: isAdmin,
                     onRedeem: (reward) => _confirmRedeem(context, ref, reward),
                     onManage: (reward) =>
@@ -138,11 +138,10 @@ class FamilyRewardsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 26),
                   _RewardSection(
-                    title: 'Premios para adultos',
-                    subtitle:
-                        'Toman el lenguaje visual y emocional de la boutique de pareja.',
+                    title: t.rewardsForAdults,
+                    subtitle: t.rewardsForAdultsSubtitle,
                     rewards: adultRewards,
-                    emptyText: 'Todavia no hay premios para adultos.',
+                    emptyText: t.rewardsEmptyNoAdultPrizes,
                     canDelete: isAdmin,
                     onRedeem: (reward) => _confirmRedeem(context, ref, reward),
                     onManage: (reward) =>
@@ -150,10 +149,10 @@ class FamilyRewardsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 26),
                   _RewardSection(
-                    title: 'Planes familiares',
-                    subtitle: 'Premios y salidas para disfrutar entre todos.',
+                    title: t.rewardsFamilyPlans,
+                    subtitle: t.rewardsFamilyPlansSubtitle,
                     rewards: familyRewards,
-                    emptyText: 'Todavia no hay planes familiares cargados.',
+                    emptyText: t.rewardsEmptyNoFamilyPlans,
                     canDelete: isAdmin,
                     onRedeem: (reward) => _confirmRedeem(context, ref, reward),
                     onManage: (reward) =>
@@ -161,20 +160,20 @@ class FamilyRewardsScreen extends ConsumerWidget {
                   ),
                 ] else ...[
                   _RewardSection(
-                    title: 'Premios para vos',
-                    subtitle: 'Elegí qué querés conseguir con tus coins.',
+                    title: t.rewardsForYou,
+                    subtitle: t.rewardsForYouSubtitle,
                     rewards: childRewards,
-                    emptyText: 'Todavia no hay premios en tu tienda.',
+                    emptyText: t.rewardsEmptyNoChildStore,
                     canDelete: false,
                     onRedeem: (reward) => _confirmRedeem(context, ref, reward),
                     onManage: (_) {},
                   ),
                   const SizedBox(height: 26),
                   _RewardSection(
-                    title: 'Planes en familia',
-                    subtitle: 'Premios para disfrutar juntos.',
+                    title: t.rewardsPlansTogether,
+                    subtitle: t.rewardsPlansTogetherSubtitle,
                     rewards: familyRewards,
-                    emptyText: 'Todavia no hay planes familiares disponibles.',
+                    emptyText: t.rewardsEmptyNoFamilyPlansChild,
                     canDelete: false,
                     onRedeem: (reward) => _confirmRedeem(context, ref, reward),
                     onManage: (_) {},
@@ -185,8 +184,32 @@ class FamilyRewardsScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: AppLoader()),
-        error: (error, _) => Center(child: Text('Error: $error')),
+        error: (error, _) => AppErrorState(
+          message: t.rewardsLoadError(error.toString()),
+          onRetry: () => ref.invalidate(rewardsProvider),
+        ),
       ),
+    );
+  }
+
+  Future<void> _seedDefaultCatalog(BuildContext context, WidgetRef ref) async {
+    final t = AppLocalizations.of(context);
+    final result = await ref.read(rewardsProvider.notifier).seedDefaults();
+    if (!context.mounted) return;
+    result.fold(
+      (failure) {
+        AppHaptics.error();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(failure.message)),
+        );
+      },
+      (count) {
+        if (count == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(t.rewardsSeedNothingNew)),
+          );
+        }
+      },
     );
   }
 
@@ -196,6 +219,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
     bool isAdmin, {
     RewardModel? reward,
   }) {
+    final formKey = GlobalKey<FormState>();
     final titleController = TextEditingController(text: reward?.title);
     final descriptionController =
         TextEditingController(text: reward?.description ?? '');
@@ -203,6 +227,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
         TextEditingController(text: reward == null ? '' : '${reward.cost}');
     var targetType = reward?.targetType ?? 'all';
     var selectedIcon = reward?.icon ?? '\uD83C\uDF81';
+    var isSubmitting = false;
     final isEditing = reward != null;
 
     const icons = [
@@ -223,6 +248,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           final theme = context.theme;
+          final t = AppLocalizations.of(context);
           return Container(
             padding: EdgeInsets.only(
               left: 20,
@@ -236,169 +262,219 @@ class FamilyRewardsScreen extends ConsumerWidget {
                 top: Radius.circular(AppRadii.xxl),
               ),
             ),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 44,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: theme.divider,
-                        borderRadius: BorderRadius.circular(AppRadii.pill),
+            child: Form(
+              key: formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: theme.divider,
+                          borderRadius: BorderRadius.circular(AppRadii.pill),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    isEditing ? 'Editar premio' : 'Nuevo premio familiar',
-                    style: TextStyle(
-                      color: theme.textPrimary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  TextField(
-                    controller: titleController,
-                    decoration:
-                        const InputDecoration(labelText: 'Titulo del premio'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: descriptionController,
-                    maxLines: 2,
-                    decoration:
-                        const InputDecoration(labelText: 'Descripcion breve'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: costController,
-                    keyboardType: TextInputType.number,
-                    decoration:
-                        const InputDecoration(labelText: 'Costo en monedas'),
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    'Dirigido a',
-                    style: TextStyle(
-                      color: theme.textSecondary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _TargetChip(
-                        label: 'Toda la familia',
-                        selected: targetType == 'all',
-                        onTap: () => setState(() => targetType = 'all'),
+                    const SizedBox(height: 20),
+                    Text(
+                      isEditing ? t.rewardsEditPrize : t.rewardsNewFamilyPrize,
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
                       ),
-                      _TargetChip(
-                        label: 'Adultos',
-                        selected: targetType == 'adult',
-                        onTap: () => setState(() => targetType = 'adult'),
-                      ),
-                      _TargetChip(
-                        label: 'Chicos',
-                        selected: targetType == 'child',
-                        onTap: () => setState(() => targetType = 'child'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    'Icono',
-                    style: TextStyle(
-                      color: theme.textSecondary,
-                      fontWeight: FontWeight.w800,
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: icons.map((icon) {
-                      final selected = selectedIcon == icon;
-                      return GestureDetector(
-                        onTap: () => setState(() => selectedIcon = icon),
-                        child: Container(
-                          width: 52,
-                          height: 52,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: selected
-                                ? AppColors.primary.withValues(alpha: 0.12)
-                                : theme.surface,
-                            borderRadius: BorderRadius.circular(AppRadii.md),
-                            border: Border.all(
+                    const SizedBox(height: 18),
+                    TextFormField(
+                      controller: titleController,
+                      validator: (value) {
+                        final title = value?.trim() ?? '';
+                        if (title.isEmpty) return t.rewardsTitleRequiredError;
+                        if (title.length < 3) {
+                          return t.rewardsTitleMinLengthError;
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        labelText: t.rewardsPrizeTitleField,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: descriptionController,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: t.rewardsPrizeDescriptionField,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: costController,
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        final cost = int.tryParse((value ?? '').trim());
+                        if (cost == null) return t.rewardsCostValidationInvalid;
+                        if (cost <= 0) return t.rewardsCostValidationMin;
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        labelText: t.rewardsCostInCoinsField,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      t.rewardsTargetAudience,
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _TargetChip(
+                          label: t.rewardsWholeFamily,
+                          selected: targetType == 'all',
+                          onTap: () => setState(() => targetType = 'all'),
+                        ),
+                        _TargetChip(
+                          label: t.rewardsAdults,
+                          selected: targetType == 'adult',
+                          onTap: () => setState(() => targetType = 'adult'),
+                        ),
+                        _TargetChip(
+                          label: t.rewardsKids,
+                          selected: targetType == 'child',
+                          onTap: () => setState(() => targetType = 'child'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      t.rewardsIconLabel,
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: icons.map((icon) {
+                        final selected = selectedIcon == icon;
+                        return GestureDetector(
+                          onTap: isSubmitting
+                              ? null
+                              : () => setState(() => selectedIcon = icon),
+                          child: Container(
+                            width: 52,
+                            height: 52,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
                               color: selected
-                                  ? AppColors.primary
-                                  : theme.divider.withValues(alpha: 0.4),
+                                  ? AppColors.primary.withValues(alpha: 0.12)
+                                  : theme.surface,
+                              borderRadius: BorderRadius.circular(AppRadii.md),
+                              border: Border.all(
+                                color: selected
+                                    ? AppColors.primary
+                                    : theme.divider.withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: Text(
+                              icon,
+                              style: const TextStyle(fontSize: 24),
                             ),
                           ),
-                          child:
-                              Text(icon, style: const TextStyle(fontSize: 24)),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final title = titleController.text.trim();
-                        final description = descriptionController.text.trim();
-                        final cost = int.tryParse(costController.text) ?? 0;
-                        if (title.isEmpty || cost <= 0) return;
-                        final result = isEditing
-                            ? await ref
-                                .read(rewardsProvider.notifier)
-                                .updateReward(
-                                  rewardId: reward.id,
-                                  title: title,
-                                  description:
-                                      description.isEmpty ? null : description,
-                                  cost: cost,
-                                  icon: selectedIcon,
-                                  category: reward.category ?? 'familia',
-                                  targetType: targetType,
-                                )
-                            : await ref
-                                .read(rewardsProvider.notifier)
-                                .suggestReward(
-                                  title: title,
-                                  description:
-                                      description.isEmpty ? null : description,
-                                  cost: cost,
-                                  icon: selectedIcon,
-                                  category: 'familia',
-                                  isApproved: isAdmin,
-                                  targetType: targetType,
-                                );
-                        result.fold(
-                          (failure) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(failure.message)),
-                            );
-                          },
-                          (_) {
-                            if (!context.mounted) return;
-                            Navigator.pop(context);
-                          },
                         );
-                      },
-                      child: Text(
-                        isEditing ? 'Guardar cambios' : 'Guardar premio',
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: isSubmitting
+                            ? null
+                            : () async {
+                                final isValid =
+                                    formKey.currentState?.validate() ?? false;
+                                if (!isValid) return;
+
+                                final title = titleController.text.trim();
+                                final description =
+                                    descriptionController.text.trim();
+                                final cost =
+                                    int.tryParse(costController.text.trim()) ??
+                                        0;
+
+                                setState(() => isSubmitting = true);
+                                final result = isEditing
+                                    ? await ref
+                                        .read(rewardsProvider.notifier)
+                                        .updateReward(
+                                          rewardId: reward.id,
+                                          title: title,
+                                          description: description.isEmpty
+                                              ? null
+                                              : description,
+                                          cost: cost,
+                                          icon: selectedIcon,
+                                          category:
+                                              reward.category ?? 'familia',
+                                          targetType: targetType,
+                                        )
+                                    : await ref
+                                        .read(rewardsProvider.notifier)
+                                        .suggestReward(
+                                          title: title,
+                                          description: description.isEmpty
+                                              ? null
+                                              : description,
+                                          cost: cost,
+                                          icon: selectedIcon,
+                                          category: 'familia',
+                                          isApproved: isAdmin,
+                                          targetType: targetType,
+                                        );
+                                if (!context.mounted) return;
+                                result.fold(
+                                  (failure) {
+                                    setState(() => isSubmitting = false);
+                                    AppHaptics.error();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(failure.message)),
+                                    );
+                                  },
+                                  (_) {
+                                    AppHaptics.success();
+                                    Navigator.pop(context);
+                                  },
+                                );
+                              },
+                        child: isSubmitting
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                isEditing
+                                    ? t.rewardsSaveChanges
+                                    : t.rewardsSavePrize,
+                              ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
@@ -412,16 +488,25 @@ class FamilyRewardsScreen extends ConsumerWidget {
     WidgetRef ref,
     RewardModel reward,
   ) async {
+    final t = AppLocalizations.of(context);
+    final title = localizedRewardTitle(t, reward);
     final result = await ref.read(rewardsProvider.notifier).approveReward(
           reward.id,
         );
+    if (!context.mounted) return;
     result.fold(
-      (failure) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(failure.message)),
-      ),
-      (_) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('"${reward.title}" quedo aprobado.')),
-      ),
+      (failure) {
+        AppHaptics.error();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(failure.message)),
+        );
+      },
+      (_) {
+        AppHaptics.success();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.rewardsApprovedSnack(title))),
+        );
+      },
     );
   }
 
@@ -432,25 +517,36 @@ class FamilyRewardsScreen extends ConsumerWidget {
     bool canDelete,
   ) async {
     if (!canDelete) return;
+    final t = AppLocalizations.of(context);
+    final title = localizedRewardTitle(t, reward);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar premio'),
-        content: Text('Se va a quitar "${reward.title}" de la tienda.'),
+        title: Text(t.rewardsDeleteDialogTitle),
+        content: Text(t.rewardsDeleteDialogBody(title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(t.commonCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Eliminar'),
+            child: Text(t.commonDelete),
           ),
         ],
       ),
     );
     if (confirm == true) {
-      await ref.read(rewardsProvider.notifier).deleteReward(reward.id);
+      AppHaptics.warning();
+      final result =
+          await ref.read(rewardsProvider.notifier).deleteReward(reward.id);
+      if (!context.mounted) return;
+      result.fold(
+        (failure) => ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(failure.message)),
+        ),
+        (_) {},
+      );
     }
   }
 
@@ -546,7 +642,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
                     );
                   },
                   icon: const Icon(Icons.edit_rounded),
-                  label: const Text('Editar premio'),
+                  label: Text(t.rewardsEditPrize),
                 ),
               ),
               const SizedBox(height: 10),
@@ -564,7 +660,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
                     ),
                   ),
                   icon: const Icon(Icons.delete_outline_rounded),
-                  label: const Text('Quitar premio'),
+                  label: Text(t.rewardsRemovePrize),
                 ),
               ),
             ],
@@ -592,30 +688,36 @@ class FamilyRewardsScreen extends ConsumerWidget {
 
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(t.rewardsRedeemDialogTitle),
-        content: Text(t.rewardsRedeemDialogBody(title, reward.cost)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(t.commonCancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(t.rewardsRedeem),
-          ),
-        ],
+      builder: (dialogCtx) => RedeemRewardDialog(
+        title: title,
+        icon: reward.icon,
+        cost: reward.cost,
+        onCancel: () => Navigator.pop(dialogCtx, false),
+        onConfirm: () => Navigator.pop(dialogCtx, true),
       ),
     );
 
-    if (confirm == true) {
-      await ref.read(rewardsProvider.notifier).redeem(reward.id);
-      if (context.mounted) {
+    if (confirm != true || !context.mounted) return;
+
+    final result = await ref.read(rewardsProvider.notifier).redeem(reward.id);
+    if (!context.mounted) return;
+    result.fold(
+      (failure) {
+        AppHaptics.error();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      },
+      (_) {
+        AppHaptics.celebrate();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(t.rewardsRedeemedSnack(title))),
         );
-      }
-    }
+      },
+    );
   }
 }
 
@@ -633,6 +735,7 @@ class _BalanceHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final gradientColors = isChild
         ? theme.isDarkMode
             ? const [
@@ -678,28 +781,39 @@ class _BalanceHero extends StatelessWidget {
               children: [
                 Text(
                   isChild
-                      ? 'Tu bolsita de coins'
+                      ? t.rewardsChildCoinPurse
                       : isAdult
-                          ? 'Balance actual'
-                          : 'Tus monedas',
+                          ? t.rewardsCurrentBalance
+                          : t.rewardsYourCoins,
                   style: TextStyle(
                     color: theme.textSecondary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  '$balance monedas',
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
+                // Mismo count-up que la boutique de pareja: el balance
+                // retargetea desde el valor mostrado en vez de saltar.
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(
+                    begin: balance.toDouble(),
+                    end: balance.toDouble(),
+                  ),
+                  duration: const Duration(milliseconds: 620),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, animatedCoins, _) => Text(
+                    t.rewardsBalanceAmount(animatedCoins.round()),
+                    style: TextStyle(
+                      color: theme.textPrimary,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      fontFeatures: kTabularFigures,
+                    ),
                   ),
                 ),
                 if (isChild) ...[
                   const SizedBox(height: 5),
                   Text(
-                    'Cuando un adulto aprueba tus misiones, crece.',
+                    t.rewardsChildBalanceHint,
                     style: TextStyle(
                       color: theme.textSecondary,
                       fontSize: 12,
@@ -847,6 +961,7 @@ class _EmptyBoutique extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
@@ -860,7 +975,7 @@ class _EmptyBoutique extends StatelessWidget {
           Icon(Icons.storefront_outlined, color: theme.textMuted, size: 40),
           const SizedBox(height: 14),
           Text(
-            'Boutique vacia',
+            t.rewardsEmptyBoutique,
             style: TextStyle(
               color: theme.textPrimary,
               fontSize: 20,
@@ -870,8 +985,8 @@ class _EmptyBoutique extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             isAdmin
-                ? 'Carga premios sugeridos o crea el primer catalogo del hogar.'
-                : 'Todavia no hay premios disponibles en la tienda del hogar.',
+                ? t.rewardsEmptyBoutiqueAdmin
+                : t.rewardsEmptyBoutiqueNonAdmin,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: theme.textSecondary,
@@ -891,18 +1006,18 @@ class _EmptyBoutique extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
               ),
-              child: const Text(
-                'Cargar catalogo inicial',
-                style: TextStyle(fontWeight: FontWeight.w900),
+              child: Text(
+                t.rewardsLoadInitialCatalog,
+                style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
             if (onCreate != null) ...[
               const SizedBox(height: 10),
               TextButton(
                 onPressed: onCreate,
-                child: const Text(
-                  'O crear un premio personalizado',
-                  style: TextStyle(fontWeight: FontWeight.w800),
+                child: Text(
+                  t.rewardsOrCreateCustom,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
             ],
@@ -1010,7 +1125,7 @@ class _RewardGrid extends ConsumerWidget {
                             top: -4,
                             right: 2,
                             child: IconButton(
-                              tooltip: 'Eliminar recompensa',
+                              tooltip: t.rewardsDeleteTooltip,
                               onPressed: () => onManage(reward),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(

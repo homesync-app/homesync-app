@@ -55,7 +55,12 @@ Future<CoupleChallengeOutcome> completeCoupleChallenge(
     title: title,
     description: description,
   );
-  ref.invalidate(coupleChallengeCompletedProvider);
+  // El widget dueño del ref pudo desmontarse durante el await del RPC;
+  // invalidar con un WidgetRef muerto lanza. El provider es autoDispose,
+  // así que en ese caso se refresca solo en el próximo mount.
+  if (ref.context.mounted) {
+    ref.invalidate(coupleChallengeCompletedProvider);
+  }
   return outcome;
 }
 

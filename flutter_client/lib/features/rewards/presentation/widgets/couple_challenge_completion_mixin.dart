@@ -9,6 +9,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/domain/models/couple_challenge.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/couple_challenge_provider.dart';
+import 'package:homesync_client/features/rewards/presentation/providers/couple_duel_stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_loader.dart';
@@ -131,6 +132,10 @@ mixin CoupleChallengeCompletionMixin<T extends ConsumerStatefulWidget>
           );
           ref.invalidate(userBalanceProvider);
           ref.invalidate(tasksProvider);
+          // El desafío acredita XP+coins a ambos: refrescar el duelo para que
+          // el tab no muestre números viejos.
+          ref.invalidate(coupleDuelStatsProvider);
+          ref.invalidate(weeklyXpByDayProvider);
         case CoupleChallengeOutcome.alreadyCompleted:
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(t.coupleChallengeAlreadyDone)),

@@ -5,10 +5,8 @@ import 'package:homesync_client/core/errors/failures.dart';
 abstract class RewardRepository {
   /// Fetch all rewards for a household.
   Future<Either<Failure, List<Map<String, dynamic>>>> getRewards(
-    String householdId, {
-    int? limit,
-    int? offset,
-  });
+    String householdId,
+  );
 
   /// Create or suggest a new reward.
   Future<Either<Failure, void>> suggestReward({
@@ -45,4 +43,7 @@ abstract class RewardRepository {
 
   /// Clone reward templates to the current household.
   Future<Either<Failure, int>> cloneTemplates();
+
+  /// Seed the family default catalog (server-side, idempotent).
+  Future<Either<Failure, int>> seedFamilyDefaults(String householdId);
 }

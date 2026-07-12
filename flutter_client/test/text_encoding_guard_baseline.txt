@@ -45,8 +45,6 @@ lib/features/rewards/domain/models/couple_challenge.dart: contains mojibake mark
 lib/features/rewards/domain/models/reward_model.dart: UTF-8 BOM detected
 lib/features/rewards/domain/models/reward_model.dart: contains mojibake marker "Ãƒ"
 lib/features/rewards/domain/usecases/suggest_reward_usecase.dart: contains mojibake marker "Ãƒ"
-lib/features/rewards/presentation/screens/rewards_screen.dart: UTF-8 BOM detected
-lib/features/rewards/presentation/screens/rewards_screen.dart: contains mojibake marker "Ãƒ"
 lib/features/savings/presentation/providers/savings_provider.dart: contains mojibake marker "Ãƒ"
 lib/features/savings/presentation/screens/savings_screen.dart: contains mojibake marker "Ãƒ"
 lib/features/settings/domain/usecases/update_avatar_usecase.dart: contains mojibake marker "Ãƒ"

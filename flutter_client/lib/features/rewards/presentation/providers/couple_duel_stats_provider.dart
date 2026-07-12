@@ -17,11 +17,16 @@ class CoupleDuelStats {
   final List<Map<String, dynamic>> weeklyRanking;
   final List<Map<String, dynamic>> duelHistory;
 
+  /// Cuándo se trajeron estos datos. null solo para [empty] (sin hogar):
+  /// la pantalla lo usa para revalidar en silencio la caché keepAlive.
+  final DateTime? fetchedAt;
+
   const CoupleDuelStats({
     this.taskStats = const [],
     this.memberStats = const [],
     this.weeklyRanking = const [],
     this.duelHistory = const [],
+    this.fetchedAt,
   });
 
   static const empty = CoupleDuelStats();
@@ -67,6 +72,7 @@ final coupleDuelStatsProvider = FutureProvider<CoupleDuelStats>((ref) async {
       memberStats: _mapList(results[1]),
       weeklyRanking: _mapList(results[2]),
       duelHistory: _mapList(results[3]),
+      fetchedAt: DateTime.now(),
     );
   }
 
@@ -82,6 +88,7 @@ final coupleDuelStatsProvider = FutureProvider<CoupleDuelStats>((ref) async {
     memberStats: _mapList(results[1]),
     weeklyRanking: _mapList(results[2]),
     duelHistory: _mapList(results[3]),
+    fetchedAt: DateTime.now(),
   );
 });
 

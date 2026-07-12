@@ -7719,6 +7719,48 @@ abstract class AppLocalizations {
   /// **'Proponer un deseo nuevo'**
   String get rewardsSuggestNewDesire;
 
+  /// No description provided for @rewardsSeedNothingNew.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya hay premios o propuestas cargadas en esta casa.'**
+  String get rewardsSeedNothingNew;
+
+  /// No description provided for @rewardsNoteOptionalLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'NOTA (OPCIONAL)'**
+  String get rewardsNoteOptionalLabel;
+
+  /// No description provided for @rewardsSendProposal.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar propuesta'**
+  String get rewardsSendProposal;
+
+  /// No description provided for @rewardsCreatePrize.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear premio'**
+  String get rewardsCreatePrize;
+
+  /// No description provided for @rewardsProposalSentToast.
+  ///
+  /// In es, this message translates to:
+  /// **'Propuesta enviada.'**
+  String get rewardsProposalSentToast;
+
+  /// No description provided for @rewardsPrizeCreatedToast.
+  ///
+  /// In es, this message translates to:
+  /// **'Premio creado con éxito.'**
+  String get rewardsPrizeCreatedToast;
+
+  /// No description provided for @rewardsEmptyNoChildStore.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay premios en tu tienda.'**
+  String get rewardsEmptyNoChildStore;
+
   /// No description provided for @rewardsChallengeCompletePrompt.
   ///
   /// In es, this message translates to:
@@ -7902,7 +7944,7 @@ abstract class AppLocalizations {
   /// No description provided for @rewardsForAdultsSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Toman el lenguaje visual y emocional de la boutique de pareja.'**
+  /// **'Mimos y recompensas pensados para los adultos de la casa.'**
   String get rewardsForAdultsSubtitle;
 
   /// No description provided for @rewardsFamilyPlans.
