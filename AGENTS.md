@@ -103,6 +103,13 @@ sus dependencias existan en la base remota antes de tocar grants globales. Un er
 `function ... does not exist` indica drift de migraciones o una dependencia faltante;
 un error `permission denied for function` indica grants/permisos.
 
+## Credenciales Supabase para agentes
+
+- El token de acceso vive en `supabase/.env.claude` (gitignored). Antes de usar la CLI de Supabase
+  o la Management API, leer ese archivo y exportar `SUPABASE_ACCESS_TOKEN` (y `SUPABASE_DB_URL` si
+  hay que correr SQL directo). No pedir al usuario que genere tokens nuevos: el token es fijo.
+- Ejemplo (bash): `export $(grep -v '^#' supabase/.env.claude | xargs)`
+
 ## Proyecto
 
 - **Supabase ref**: `tfavamqszdkoeabpyxms`

@@ -106,3 +106,9 @@ outputs/
 
 # ─── OpenMontage (video production) ───────────────────────────────────────────
 OpenMontage/
+
+# Claude Code local credentials (never commit)
+supabase/.env.claude
+
+# Impeccable (design critique) — snapshots locales regenerables
+.impeccable/
