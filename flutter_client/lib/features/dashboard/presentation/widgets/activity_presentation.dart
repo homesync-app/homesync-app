@@ -5,6 +5,7 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
     show dashboardCategoryAccent, dashboardCategoryIcon;
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_detail_cache.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_detail_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
@@ -207,24 +208,28 @@ Future<void> openActivityDetail(
           activity['created_at'] as String? ?? '',
         )?.toLocal() ??
         DateTime.now();
+    // Si el detalle ya fue precalentado (MainScreen lo trae en batch al llegar
+    // el feed), el sheet abre entero: división y pagador visibles al toque.
+    final cached = ref.read(expenseDetailCacheProvider)[expenseId];
     ExpenseDetailSheet.show(
       context,
-      ExpenseModel(
-        id: expenseId,
-        title: activityIsSettlement(data)
-            ? activitySettlementTitle
-            : data['title']?.toString() ?? '',
-        titleKey: data['title_key']?.toString(),
-        amount: activityParseAmount(data['amount']) ?? 0,
-        category: data['category'] as String?,
-        householdId: activity['household_id']?.toString() ?? '',
-        paidBy: activity['creator_id']?.toString() ?? '',
-        paidAt: createdAt,
-        createdAt: createdAt,
-        payerFullName: data['user_name'] as String?,
-        payerAvatarUrl:
-            (data['avatar_url'] ?? data['creator_avatar_url']) as String?,
-      ),
+      cached ??
+          ExpenseModel(
+            id: expenseId,
+            title: activityIsSettlement(data)
+                ? activitySettlementTitle
+                : data['title']?.toString() ?? '',
+            titleKey: data['title_key']?.toString(),
+            amount: activityParseAmount(data['amount']) ?? 0,
+            category: data['category'] as String?,
+            householdId: activity['household_id']?.toString() ?? '',
+            paidBy: activity['creator_id']?.toString() ?? '',
+            paidAt: createdAt,
+            createdAt: createdAt,
+            payerFullName: data['user_name'] as String?,
+            payerAvatarUrl:
+                (data['avatar_url'] ?? data['creator_avatar_url']) as String?,
+          ),
     );
   }
 }

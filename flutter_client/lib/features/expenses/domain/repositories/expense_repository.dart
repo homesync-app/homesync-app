@@ -22,6 +22,13 @@ abstract class ExpenseRepository {
     String expenseId,
   );
 
+  /// Varias filas completas (pagador + splits) en una sola query. Precarga
+  /// del detalle de los gastos del feed para abrir el sheet sin mini-carga.
+  Future<Either<Failure, List<Map<String, dynamic>>>>
+      getExpensesWithSplitsByIds(
+    List<String> expenseIds,
+  );
+
   Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
     String householdId,
   );

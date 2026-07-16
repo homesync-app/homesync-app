@@ -236,6 +236,32 @@ class SupabaseExpenseRepository
   }
 
   @override
+  Future<Either<Failure, List<Map<String, dynamic>>>>
+      getExpensesWithSplitsByIds(
+    List<String> expenseIds,
+  ) async {
+    return executeWithHandling(
+      () async {
+        // En modo QA admin el detalle usa la RPC qa_* por id al abrir; sin
+        // precarga el sheet se enriquece solo, como siempre.
+        if (_isAdminTestingActive || expenseIds.isEmpty) {
+          return const <Map<String, dynamic>>[];
+        }
+        final rows = await _client.from('expenses').select('''
+            *,
+            users:users!expenses_paid_by_fkey(email, full_name, avatar_url),
+            expense_splits(*, users:users!expense_splits_user_id_fkey(email, full_name, avatar_url))
+          ''').inFilter('id', expenseIds);
+        return (rows as List)
+            .map((row) => Map<String, dynamic>.from(row as Map))
+            .toList();
+      },
+      context: 'SupabaseExpenseRepository.getExpensesWithSplitsByIds',
+      isOnline: _isOnline,
+    );
+  }
+
+  @override
   Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
     String householdId,
   ) async {

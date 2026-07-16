@@ -9,6 +9,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_detail_cache.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
@@ -64,9 +65,12 @@ class _ExpenseDetailSheetContentState
       (_expense.description?.isEmpty ?? true);
 
   Future<void> _refreshIfNeeded() async {
-    if (!_needsFullExpense || _isRefreshingDetails) return;
-
-    setState(() => _isRefreshingDetails = true);
+    if (_isRefreshingDetails) return;
+    // Con el detalle precargado (cache del feed) el sheet abre completo; aun
+    // así revalidamos por si el gasto se editó después del precacheo — pero en
+    // silencio: sin spinner ni salto de layout, solo se reemplazan los datos.
+    final showSpinner = _needsFullExpense;
+    if (showSpinner) setState(() => _isRefreshingDetails = true);
     try {
       final repo = ref.read(expenseRepositoryProvider);
       final result = await repo.getExpenseWithSplits(_expense.id);
@@ -81,12 +85,14 @@ class _ExpenseDetailSheetContentState
               ExpenseModel.fromJson(fullData),
             ),
           );
+          // Reabrirlo vuelve a ser instantáneo y con datos al día.
+          ref.read(expenseDetailCacheProvider.notifier).put(_expense);
         },
       );
     } catch (e) {
       log.e('Error enriching expense detail: $e', error: e);
     } finally {
-      if (mounted) {
+      if (mounted && showSpinner) {
         setState(() => _isRefreshingDetails = false);
       }
     }

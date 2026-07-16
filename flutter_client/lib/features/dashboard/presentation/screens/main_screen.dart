@@ -23,6 +23,7 @@ import 'package:homesync_client/features/dashboard/presentation/screens/couple_s
 import 'package:homesync_client/features/dashboard/presentation/screens/home_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/household_social_hub_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/solo_space_screen.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_detail_cache.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/screens/expenses_screen.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
@@ -72,6 +73,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   ProviderSubscription<TaskRealtimeNotice?>? _taskRealtimeNoticeSubscription;
+  ProviderSubscription<AsyncValue<List<Map<String, dynamic>>>>?
+      _activityDetailPrefetchSub;
   int? _lastTrackedTabIndex;
   MemberModel? _currentMember;
   bool _reportedFirstMainFrame = false;
@@ -114,6 +117,26 @@ class _MainScreenState extends ConsumerState<MainScreen>
         });
       },
     );
+    // Precarga del detalle de gastos del feed: con cada set nuevo de
+    // movimientos calentamos las filas completas (pagador + splits) en UNA
+    // query, así el sheet de detalle abre entero — sin la mini-carga visible
+    // de la división. prefetch() dedupea, o sea que las reemisiones del poll
+    // de respaldo (misma lista cada 15s) son no-ops.
+    _activityDetailPrefetchSub = ref.listenManual(
+      recentActivityRemoteProvider,
+      fireImmediately: true,
+      (previous, next) {
+        final activities = next.value;
+        if (activities == null || activities.isEmpty) return;
+        final ids = <String>[
+          for (final activity in activities)
+            if (activity['type'] == 'expense')
+              ((activity['data'] as Map?)?['expense_id'])?.toString() ?? '',
+        ]..removeWhere((id) => id.isEmpty);
+        if (ids.isEmpty) return;
+        ref.read(expenseDetailCacheProvider.notifier).prefetch(ids);
+      },
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (!_reportedFirstMainFrame) {
@@ -143,6 +166,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
     }
     _linkSubscription?.cancel();
     _taskRealtimeNoticeSubscription?.close();
+    _activityDetailPrefetchSub?.close();
     for (final sub in _idlePrefetchSubs) {
       sub.close();
     }

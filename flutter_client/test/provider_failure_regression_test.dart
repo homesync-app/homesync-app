@@ -41,6 +41,13 @@ class _FailingExpenseRepository implements ExpenseRepository {
       throw UnimplementedError();
 
   @override
+  Future<Either<Failure, List<Map<String, dynamic>>>>
+      getExpensesWithSplitsByIds(
+    List<String> expenseIds,
+  ) async =>
+          throw UnimplementedError();
+
+  @override
   Future<Either<Failure, void>> saveExpense({
     String? id,
     required String householdId,

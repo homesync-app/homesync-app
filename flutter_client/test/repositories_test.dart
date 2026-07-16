@@ -50,6 +50,14 @@ class MockExpenseRepository implements ExpenseRepository {
   }
 
   @override
+  Future<Either<Failure, List<Map<String, dynamic>>>>
+      getExpensesWithSplitsByIds(
+    List<String> expenseIds,
+  ) async {
+    return right(const <Map<String, dynamic>>[]);
+  }
+
+  @override
   Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
     String householdId,
   ) async {

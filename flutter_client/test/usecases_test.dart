@@ -148,6 +148,13 @@ class MockExpenseRepository implements ExpenseRepository {
     String expenseId,
   ) async =>
       throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, List<Map<String, dynamic>>>>
+      getExpensesWithSplitsByIds(
+    List<String> expenseIds,
+  ) async =>
+          throw UnimplementedError();
   @override
   Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
     String householdId,
