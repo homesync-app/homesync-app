@@ -228,20 +228,16 @@ Deno.serve(async (req: Request) => {
       usageReserved = false;
     };
 
-    // Kill-switch temporal para QA: con el secret en "true" no se reserva
-    // cupo mensual (y por ende tampoco se bloquea por 23505).
-    const monthlyLimitDisabled =
-      (Deno.env.get("AVATAR_MONTHLY_LIMIT_DISABLED") ?? "")
-        .trim().toLowerCase() === "true";
-
-    const { error: reserveError } = monthlyLimitDisabled
-      ? { error: null }
-      : await supabase
-        .from("custom_avatar_monthly_usage")
-        .insert({
-          user_id: userRow.id,
-          generation_month: generationMonth,
-        });
+    // Límite mensual SIEMPRE activo. El kill-switch de QA prelanzamiento
+    // (secret AVATAR_MONTHLY_LIMIT_DISABLED) se eliminó del código el
+    // 2026-07-16: el secret quedó huérfano en el proyecto (la CLI del owner
+    // no puede unsetearlo) y ya no tiene ningún efecto.
+    const { error: reserveError } = await supabase
+      .from("custom_avatar_monthly_usage")
+      .insert({
+        user_id: userRow.id,
+        generation_month: generationMonth,
+      });
 
     if (reserveError?.code === "23505") {
       return new Response(
