@@ -25,9 +25,6 @@ abstract class HouseholdRepository {
   /// Joins a household using the provided code
   Future<Either<Failure, Map<String, dynamic>>> joinHousehold(String code);
 
-  /// Resets the current user's data (tasks, expenses, balances, etc.)
-  Future<Either<Failure, Map<String, dynamic>>> resetUserAccount();
-
   /// Removes a member from the household (only for owners)
   Future<Either<Failure, void>> removeMember(String userId);
 

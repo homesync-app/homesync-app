@@ -112,11 +112,10 @@ class _LevelTile extends StatelessWidget {
               child: Center(
                 child: Text(
                   '$level',
-                  style: TextStyle(
-                    color: theme.primary,
+                  style: AppTypography.sectionTitle.copyWith(
                     fontSize: 19,
-                    fontWeight: FontWeight.w900,
                     height: 1.0,
+                    color: theme.primary,
                   ),
                 ),
               ),
@@ -125,11 +124,9 @@ class _LevelTile extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             t.homeSoloLevelEyebrow.toUpperCase(),
-            style: TextStyle(
-              color: theme.textMuted,
+            style: AppTypography.eyebrow.copyWith(
               fontSize: 10.5,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.1,
+              color: theme.textMuted,
             ),
           ),
           const SizedBox(height: 3),
@@ -140,18 +137,18 @@ class _LevelTile extends StatelessWidget {
                 children: [
                   TextSpan(
                     text: '$xpInLevel',
-                    style: TextStyle(
-                      color: theme.textPrimary,
+                    style: AppTypography.cardTitle.copyWith(
                       fontSize: 14,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
+                      color: theme.textPrimary,
                     ),
                   ),
                   TextSpan(
                     text: '/$xpPerLevel ${t.balanceCardXpLabel}',
-                    style: TextStyle(
-                      color: theme.textSecondary,
+                    style: AppTypography.caption.copyWith(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
+                      color: theme.textSecondary,
                     ),
                   ),
                 ],

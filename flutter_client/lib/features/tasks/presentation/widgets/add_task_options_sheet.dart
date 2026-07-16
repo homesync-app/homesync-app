@@ -261,9 +261,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                     children: [
                       Text(
                         AppLocalizations.of(context).addTaskOptionsHeaderTitle,
-                        style: const TextStyle(
+                        style: AppTypography.heroAmount.copyWith(
                           fontSize: 24,
-                          fontWeight: FontWeight.w900,
                         ),
                       ),
                     ],
@@ -475,10 +474,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           const SizedBox(height: 20),
           Text(
             t.addTaskOptionsAllSuggestedDone,
-            style: TextStyle(
+            style: AppTypography.cardTitle.copyWith(
               color: theme.textPrimary,
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
             ),
           ),
           const SizedBox(height: 8),
@@ -567,9 +564,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                 const SizedBox(width: 6),
                 Text(
                   name,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w700,
                     color: color,
                   ),
                 ),
@@ -652,30 +648,26 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
             Icon(
               Icons.star_rounded,
               size: 13,
-              color: isAdded ? AppColors.textMuted : AppColors.accentGold,
+              color: isAdded ? AppColors.textMuted : AppColors.xpGold,
             ),
             const SizedBox(width: 3),
             Text(
               '${template.xpReward} XP',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isAdded ? AppColors.textMuted : AppColors.accentGold,
+              style: AppTypography.caption.copyWith(
+                color: isAdded ? AppColors.textMuted : AppColors.xpGold,
               ),
             ),
             const SizedBox(width: 10),
             Icon(
               Icons.monetization_on_rounded,
               size: 13,
-              color: isAdded ? AppColors.textMuted : AppColors.accentGreen,
+              color: isAdded ? AppColors.textMuted : AppColors.coinGreen,
             ),
             const SizedBox(width: 3),
             Text(
               '${template.coinReward}',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isAdded ? AppColors.textMuted : AppColors.accentGreen,
+              style: AppTypography.caption.copyWith(
+                color: isAdded ? AppColors.textMuted : AppColors.coinGreen,
               ),
             ),
           ],

@@ -159,9 +159,8 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
               Expanded(
                 child: TextField(
                   controller: _nameController,
-                  style: TextStyle(
+                  style: AppTypography.heroAmount.copyWith(
                     fontSize: 24,
-                    fontWeight: FontWeight.w900,
                     color: theme.textPrimary,
                   ),
                   decoration: InputDecoration(
@@ -185,9 +184,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
           const SizedBox(height: 24),
           Text(
             t.shoppingCategoryLabel,
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 14,
+            style: AppTypography.bodyStrong.copyWith(
               color: theme.textSecondary,
             ),
           ),
@@ -262,7 +259,9 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                     ? t.shoppingAddToList
                     : t.shoppingSaveChanges,
                 style:
-                    const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                    AppTypography.cardTitle.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
               ),
             ),
           ),

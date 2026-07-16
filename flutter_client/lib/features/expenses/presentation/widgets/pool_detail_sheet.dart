@@ -280,17 +280,18 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
               children: [
                 Text(
                   summary.pool.emoji,
-                  style: const TextStyle(fontSize: 28),
+                  style: AppTypography.body.copyWith(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     summary.pool.name,
-                    style: TextStyle(
+                    style: AppTypography.heroAmount.copyWith(
                       fontSize: 24,
-                      fontWeight: FontWeight.w900,
                       color: theme.textPrimary,
-                      letterSpacing: -0.6,
                     ),
                   ),
                 ),
@@ -299,11 +300,8 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
             const SizedBox(height: 14),
             Text(
               t.poolsDetailTotalLabel,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
+              style: AppTypography.eyebrow.copyWith(
                 color: theme.textMuted,
-                letterSpacing: 1.1,
               ),
             ),
             const SizedBox(height: 4),
@@ -325,11 +323,8 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
               const SizedBox(height: 24),
               Text(
                 t.recapPayersTitle,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
+                style: AppTypography.eyebrow.copyWith(
                   color: theme.textMuted,
-                  letterSpacing: 1.1,
                 ),
               ),
               const SizedBox(height: 12),
@@ -346,9 +341,8 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
                     Expanded(
                       child: Text(
                         member.name.split(' ').first,
-                        style: TextStyle(
+                        style: AppTypography.bodyStrong.copyWith(
                           fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
                           color: theme.textPrimary,
                         ),
                       ),
@@ -372,11 +366,8 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
             const SizedBox(height: 14),
             Text(
               t.poolsDetailSettleTitle,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
+              style: AppTypography.eyebrow.copyWith(
                 color: theme.textMuted,
-                letterSpacing: 1.1,
               ),
             ),
             const SizedBox(height: 12),
@@ -402,7 +393,7 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
                     Expanded(
                       child: Text(
                         t.poolsDetailAllSettled,
-                        style: TextStyle(
+                        style: AppTypography.caption.copyWith(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: theme.textPrimary,
@@ -433,11 +424,11 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
                             currency.format(debt.amount.round()),
                             debt.toName,
                           ),
-                          style: TextStyle(
+                          style: AppTypography.caption.copyWith(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: theme.textPrimary,
                             height: 1.3,
+                            color: theme.textPrimary,
                           ),
                         ),
                       ),
@@ -468,9 +459,9 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
                                 ),
                                 child: Text(
                                   t.poolsDetailSettleCta,
-                                  style: const TextStyle(
+                                  style: AppTypography.caption.copyWith(
                                     fontSize: 12.5,
-                                    fontWeight: FontWeight.w800,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ),
@@ -484,11 +475,8 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
               const SizedBox(height: 20),
               Text(
                 t.expensesBreakdownMovementsEyebrow,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
+                style: AppTypography.eyebrow.copyWith(
                   color: theme.textMuted,
-                  letterSpacing: 1.1,
                 ),
               ),
               const SizedBox(height: 12),
@@ -509,16 +497,15 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: AppTypography.bodyStrong.copyWith(
                               fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
                               color: theme.textPrimary,
                             ),
                           ),
                           Text(
                             '${DateFormat('d MMM', localeTag).format(row.paidAt)}'
                             '${row.payerName == null ? '' : ' · ${row.payerName!.split(' ').first}'}',
-                            style: TextStyle(
+                            style: AppTypography.caption.copyWith(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w500,
                               color: theme.textSecondary,

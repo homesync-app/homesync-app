@@ -141,11 +141,9 @@ class _ExpenseShoppingIntegrationCardState
                             hasItems
                                 ? t.expensesFormShoppingDetectedTitle
                                 : t.expensesFormShoppingLinkTitle,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w800,
+                            style: AppTypography.cardTitle.copyWith(
                               fontSize: 15,
                               color: theme.textPrimary,
-                              letterSpacing: 0,
                             ),
                           ),
                           if (hasItems && newCount > 0)
@@ -154,28 +152,31 @@ class _ExpenseShoppingIntegrationCardState
                                 widget.linkedItems.length,
                                 newCount,
                               ),
-                              style: TextStyle(
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 11,
-                                color: theme.textSecondary,
+                                fontWeight: FontWeight.w500,
                                 height: 1.4,
+                                color: theme.textSecondary,
                               ),
                             )
                           else if (hasItems)
                             Text(
                               t.expensesFormShoppingWillMarkBought,
-                              style: TextStyle(
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 11,
-                                color: theme.textSecondary,
+                                fontWeight: FontWeight.w500,
                                 height: 1.4,
+                                color: theme.textSecondary,
                               ),
                             )
                           else
                             Text(
                               t.expensesFormShoppingTapToLink,
-                              style: TextStyle(
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 11,
-                                color: theme.textSecondary,
+                                fontWeight: FontWeight.w500,
                                 height: 1.4,
+                                color: theme.textSecondary,
                               ),
                             ),
                         ],
@@ -301,8 +302,7 @@ class _ExpenseShoppingIntegrationCardState
                     children: [
                       Text(
                         t.expensesFormShoppingDetectedTitle,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
+                        style: AppTypography.cardTitle.copyWith(
                           fontSize: 15,
                           color: theme.textPrimary,
                         ),
@@ -310,11 +310,10 @@ class _ExpenseShoppingIntegrationCardState
                       const SizedBox(height: 2),
                       Text(
                         t.expensesFormShoppingPreparingProducts,
-                        style: TextStyle(
-                          color: theme.textSecondary,
+                        style: AppTypography.caption.copyWith(
                           fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
                           height: 1.25,
+                          color: theme.textSecondary,
                         ),
                       ),
                     ],
@@ -403,8 +402,7 @@ class _ExpenseShoppingIntegrationCardState
                                       : t.expensesFormShoppingLinkTitle,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w800,
+                                  style: AppTypography.bodyStrong.copyWith(
                                     fontSize: 14.5,
                                     color: theme.textPrimary.withValues(
                                       alpha: 0.78,
@@ -426,11 +424,10 @@ class _ExpenseShoppingIntegrationCardState
                                       : t.expensesFormShoppingTapToLink,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
+                                  style: AppTypography.caption.copyWith(
                                     fontSize: 11.5,
-                                    color: theme.textSecondary,
                                     height: 1.25,
-                                    fontWeight: FontWeight.w600,
+                                    color: theme.textSecondary,
                                   ),
                                 ),
                               ),
@@ -447,13 +444,13 @@ class _ExpenseShoppingIntegrationCardState
                                   borderRadius:
                                       BorderRadius.circular(AppRadii.pill),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'PREMIUM',
-                                  style: TextStyle(
+                                  style: AppTypography.caption.copyWith(
                                     fontSize: 9,
-                                    fontWeight: FontWeight.w900,
-                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w700,
                                     height: 1,
+                                    color: AppColors.primary,
                                   ),
                                 ),
                               ),
@@ -537,8 +534,7 @@ class _ExpenseShoppingIntegrationCardState
                               const SizedBox(width: 5),
                               Text(
                                 displayName,
-                                style: TextStyle(
-                                  fontSize: 12,
+                                style: AppTypography.caption.copyWith(
                                   fontWeight: FontWeight.w700,
                                   color: theme.textSecondary
                                       .withValues(alpha: 0.8),
@@ -724,11 +720,9 @@ class _ItemChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             localizedShoppingItemName(context, item),
-            style: const TextStyle(
-              fontSize: 12,
+            style: AppTypography.caption.copyWith(
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
-              letterSpacing: -0.05,
             ),
           ),
           if (isNew) ...[
@@ -741,11 +735,10 @@ class _ItemChip extends StatelessWidget {
               ),
               child: Text(
                 AppLocalizations.of(context).expensesFormShoppingBadgeNew,
-                style: const TextStyle(
+                style: AppTypography.caption.copyWith(
                   fontSize: 9,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.primary,
-                  letterSpacing: 0.1,
                 ),
               ),
             ),
@@ -873,9 +866,9 @@ class _ShoppingItemsSelectorSheetState
                   ),
                   child: Text(
                     t.expensesFormShoppingItemsSheetTitle,
-                    style: const TextStyle(
+                    style: AppTypography.cardTitle.copyWith(
                       fontSize: 18,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -898,9 +891,9 @@ class _ShoppingItemsSelectorSheetState
                       focusNode: _searchFocus,
                       decoration: InputDecoration(
                         hintText: t.expensesFormShoppingSearchHint,
-                        hintStyle: const TextStyle(
+                        hintStyle: AppTypography.body.copyWith(
+                          fontWeight: FontWeight.w400,
                           color: AppColors.textMuted,
-                          fontSize: 14,
                         ),
                         icon: const Icon(
                           Icons.search,
@@ -944,7 +937,10 @@ class _ShoppingItemsSelectorSheetState
                       if (showAddOption)
                         ListTile(
                           leading:
-                              const Text('âž•', style: TextStyle(fontSize: 24)),
+                              Text('âž•', style: AppTypography.body.copyWith(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w400,
+                              ),),
                           title: Text(
                             t.expensesFormShoppingAddQuery(_searchQuery),
                             style: const TextStyle(
@@ -954,7 +950,9 @@ class _ShoppingItemsSelectorSheetState
                           ),
                           subtitle: Text(
                             t.expensesFormShoppingCustomProduct,
-                            style: const TextStyle(fontSize: 12),
+                            style: AppTypography.caption.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                           onTap: () async {
                             final queryToSave = _searchQuery.trim();
@@ -1037,11 +1035,10 @@ class _ShoppingItemsSelectorSheetState
                           ),
                           child: Text(
                             t.expensesFormShoppingGlobalSuggestions,
-                            style: const TextStyle(
+                            style: AppTypography.eyebrow.copyWith(
                               fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                               color: AppColors.textMuted,
-                              letterSpacing: 1,
                             ),
                           ),
                         ),
@@ -1049,7 +1046,10 @@ class _ShoppingItemsSelectorSheetState
                           return ListTile(
                             leading: Text(
                               item['emoji']!,
-                              style: const TextStyle(fontSize: 22),
+                              style: AppTypography.body.copyWith(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
                             title: Text(
                               localizedShoppingCatalogName(
@@ -1115,10 +1115,7 @@ class _ShoppingItemsSelectorSheetState
                       ),
                       child: Text(
                         t.commonAccept,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                        style: AppTypography.cardTitle,
                       ),
                     ),
                   ),

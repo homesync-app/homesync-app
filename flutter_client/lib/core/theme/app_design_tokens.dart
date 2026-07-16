@@ -20,6 +20,17 @@ class AppRadii {
   static BorderRadius get sheet => const BorderRadius.vertical(
         top: Radius.circular(modal),
       );
+
+  /// Radio concéntrico: una superficie anidada dentro de otra redondeada se ve
+  /// bien cuando `outer = inner + padding`. Dado el radio del contenedor y el
+  /// padding entre ambos, devuelve el radio del hijo (piso en [xs] para que
+  /// paddings grandes no degeneren en esquinas rectas). Con padding > 24 las
+  /// capas se leen como superficies independientes: elegí el radio a mano.
+  static BorderRadius inner(double outerRadius, double padding) {
+    final floor = outerRadius < xs ? outerRadius : xs;
+    final radius = outerRadius - padding;
+    return BorderRadius.circular(radius < floor ? floor : radius);
+  }
 }
 
 class AppInsets {

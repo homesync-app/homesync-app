@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 /// Diálogo de confirmación de canje compartido por las boutiques de pareja y
@@ -59,7 +60,10 @@ class RedeemRewardDialog extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
-              child: Text(icon, style: const TextStyle(fontSize: 34)),
+              child: Text(icon, style: AppTypography.body.copyWith(
+                fontSize: 34,
+                fontWeight: FontWeight.w400,
+              ),),
             ),
             const SizedBox(height: 18),
             Text(

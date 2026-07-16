@@ -35,61 +35,6 @@ class SettingsLoadingCard extends StatelessWidget {
   }
 }
 
-class SettingsSectionLabel extends StatelessWidget {
-  final String eyebrow;
-  final String title;
-  final String subtitle;
-
-  const SettingsSectionLabel({
-    super.key,
-    required this.eyebrow,
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            eyebrow,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              color: theme.primary,
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: theme.textPrimary,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: theme.textSecondary,
-              height: 1.35,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class SettingsAppearanceCard extends StatelessWidget {
   final Color effectiveColor;
   final bool isPremium;
@@ -151,17 +96,16 @@ class SettingsAppearanceCard extends StatelessWidget {
                   children: [
                     Text(
                       t.settingsAppearanceTitle,
-                      style: TextStyle(
+                      style: AppTypography.cardTitle.copyWith(
                         fontSize: 15,
-                        fontWeight: FontWeight.w700,
                         color: theme.textPrimary,
                       ),
                     ),
                     Text(
                       t.settingsAppearanceSubtitle,
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w500,
                         color: theme.textSecondary,
-                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -206,7 +150,6 @@ class SettingsThemePalettePicker extends StatelessWidget {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     const palettes = ThemePalette.all;
-    const freePaletteNames = {'Naranja (Original)'};
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,7 +158,7 @@ class SettingsThemePalettePicker extends StatelessWidget {
           children: [
             Text(
               t.settingsThemePaletteTitle,
-              style: TextStyle(
+              style: AppTypography.caption.copyWith(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: theme.textPrimary,
@@ -240,9 +183,9 @@ class SettingsThemePalettePicker extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       t.settingsPremiumBadge,
-                      style: const TextStyle(
+                      style: AppTypography.caption.copyWith(
                         fontSize: 9,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.accentGold,
                       ),
                     ),
@@ -264,7 +207,8 @@ class SettingsThemePalettePicker extends StatelessWidget {
               final palette = palettes[index];
               final isSelected =
                   effectiveColor.toARGB32() == palette.primary.toARGB32();
-              final isFreePalette = freePaletteNames.contains(palette.name);
+              final isFreePalette =
+                  ThemePalette.freeNames.contains(palette.name);
               final isLocked = !isPremium && !isFreePalette;
 
               return GestureDetector(
@@ -278,15 +222,17 @@ class SettingsThemePalettePicker extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: palette.primary,
                       shape: BoxShape.circle,
+                      // Anillo de selección: gap del color del fondo + halo
+                      // del color de la paleta (visible en claro y oscuro;
+                      // el anillo surface-sobre-surface era invisible).
                       border: isSelected
-                          ? Border.all(color: theme.surface, width: 3)
+                          ? Border.all(color: theme.scaffoldBackground, width: 3)
                           : null,
                       boxShadow: [
                         if (isSelected)
                           BoxShadow(
-                            color: palette.primary.withValues(alpha: 0.14),
-                            blurRadius: 12,
-                            offset: const Offset(0, 2),
+                            color: palette.primary.withValues(alpha: 0.55),
+                            spreadRadius: 2,
                           ),
                       ],
                     ),
@@ -372,17 +318,16 @@ class SettingsLanguageCard extends StatelessWidget {
                   children: [
                     Text(
                       t.settingsLanguageTitle,
-                      style: TextStyle(
+                      style: AppTypography.cardTitle.copyWith(
                         fontSize: 15,
-                        fontWeight: FontWeight.w700,
                         color: theme.textPrimary,
                       ),
                     ),
                     Text(
                       t.settingsLanguageSubtitle,
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w500,
                         color: theme.textSecondary,
-                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -515,17 +460,16 @@ class SettingsCurrencyCard extends StatelessWidget {
                   children: [
                     Text(
                       t.settingsCurrencyTitle,
-                      style: TextStyle(
+                      style: AppTypography.cardTitle.copyWith(
                         fontSize: 15,
-                        fontWeight: FontWeight.w700,
                         color: theme.textPrimary,
                       ),
                     ),
                     Text(
                       t.settingsCurrencySubtitle,
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w500,
                         color: theme.textSecondary,
-                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -562,11 +506,10 @@ class SettingsCurrencyCard extends StatelessWidget {
                     children: [
                       Text(
                         currency.symbol,
-                        style: TextStyle(
+                        style: AppTypography.caption.copyWith(
                           fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color:
-                              isSelected ? theme.primary : theme.textSecondary,
+                          fontWeight: FontWeight.w700,
+                          color: isSelected ? theme.primary : theme.textSecondary,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -629,7 +572,7 @@ class SettingsThemeModeSelector extends StatelessWidget {
       children: [
         Text(
           t.settingsThemeModeTitle,
-          style: TextStyle(
+          style: AppTypography.caption.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w700,
             color: theme.textPrimary,
@@ -701,6 +644,7 @@ Future<String?> showSettingsRenameProfileDialog(
   required String currentName,
 }) {
   final theme = context.theme;
+  final t = AppLocalizations.of(context);
   final controller = TextEditingController(text: currentName);
 
   return showDialog<String>(
@@ -710,15 +654,15 @@ Future<String?> showSettingsRenameProfileDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.lg),
       ),
-      title: const Text(
-        'Cambiar nombre',
-        style: TextStyle(fontWeight: FontWeight.bold),
+      title: Text(
+        t.settingsRenameProfileTitle,
+        style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       content: TextField(
         controller: controller,
         autofocus: true,
         decoration: InputDecoration(
-          labelText: 'Nombre',
+          labelText: t.settingsRenameProfileLabel,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadii.sm),
           ),
@@ -731,7 +675,7 @@ Future<String?> showSettingsRenameProfileDialog(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Cancelar'),
+          child: Text(t.commonCancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
@@ -742,7 +686,7 @@ Future<String?> showSettingsRenameProfileDialog(
               borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
           ),
-          child: const Text('Guardar'),
+          child: Text(t.commonSave),
         ),
       ],
     ),
@@ -826,9 +770,8 @@ class SettingsPremiumCard extends StatelessWidget {
                             t.settingsPremiumTitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
+                            style: AppTypography.cardTitle.copyWith(
+                              fontWeight: FontWeight.w800,
                               color: theme.textPrimary,
                             ),
                           ),
@@ -839,10 +782,10 @@ class SettingsPremiumCard extends StatelessWidget {
                                 : t.settingsPremiumInactiveSubtitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: AppTypography.caption.copyWith(
                               fontSize: 12.5,
-                              color: theme.textSecondary,
                               fontWeight: FontWeight.w700,
+                              color: theme.textSecondary,
                             ),
                           ),
                         ],
@@ -913,11 +856,11 @@ class _SettingsPremiumFeedbackStrip extends StatelessWidget {
                 t.settingsPremiumFeedbackRewardNote,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: theme.textSecondary,
+                style: AppTypography.caption.copyWith(
                   fontSize: 11.8,
                   fontWeight: FontWeight.w700,
                   height: 1.2,
+                  color: theme.textSecondary,
                 ),
               ),
             ),
@@ -931,100 +874,6 @@ class _SettingsPremiumFeedbackStrip extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class SettingsPremiumFeatureChip extends StatelessWidget {
-  final String text;
-
-  const SettingsPremiumFeatureChip({
-    super.key,
-    required this.text,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textColor =
-        theme.isDarkMode ? theme.textPrimary : const Color(0xFF92400E);
-    final iconColor =
-        theme.isDarkMode ? AppColors.accentGold : const Color(0xFFB45309);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      decoration: BoxDecoration(
-        color: theme.isDarkMode
-            ? AppColors.accentGold.withValues(alpha: 0.10)
-            : Colors.white.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(AppRadii.pill),
-        border: Border.all(
-          color: AppColors.accentGold.withValues(
-            alpha: theme.isDarkMode ? 0.20 : 0.18,
-          ),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.check_rounded,
-            size: 13,
-            color: iconColor,
-          ),
-          const SizedBox(width: 6),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 190),
-            child: Text(
-              text,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w800,
-                color: textColor,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class SettingsPremiumFeatureItem extends StatelessWidget {
-  final String text;
-
-  const SettingsPremiumFeatureItem({
-    super.key,
-    required this.text,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final accent =
-        theme.isDarkMode ? AppColors.accentGold : const Color(0xFFB45309);
-    final textColor =
-        theme.isDarkMode ? theme.textSecondary : const Color(0xFF92400E);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
-      child: Row(
-        children: [
-          Icon(
-            Icons.check_circle_outline_rounded,
-            size: 14,
-            color: accent,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: textColor,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1049,6 +898,7 @@ class SettingsProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -1136,20 +986,17 @@ class SettingsProfileCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: TextStyle(
+                      style: AppTypography.sectionTitle.copyWith(
                         fontSize: 19,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.5,
                         color: theme.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       email,
-                      style: TextStyle(
-                        color: theme.textSecondary,
-                        fontSize: 12,
+                      style: AppTypography.caption.copyWith(
                         fontWeight: FontWeight.w500,
+                        color: theme.textSecondary,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1164,7 +1011,7 @@ class SettingsProfileCard extends StatelessWidget {
               Expanded(
                 child: SettingsProfileActionButton(
                   icon: Icons.pets_rounded,
-                  label: 'Avatar',
+                  label: t.settingsProfileAvatarAction,
                   onTap: onAvatarTap,
                 ),
               ),
@@ -1172,7 +1019,7 @@ class SettingsProfileCard extends StatelessWidget {
               Expanded(
                 child: SettingsProfileActionButton(
                   icon: Icons.badge_rounded,
-                  label: 'Nombre',
+                  label: t.settingsProfileNameAction,
                   onTap: onNameTap,
                 ),
               ),
@@ -1218,10 +1065,9 @@ class SettingsProfileActionButton extends StatelessWidget {
               const SizedBox(width: 7),
               Text(
                 label,
-                style: TextStyle(
+                style: AppTypography.caption.copyWith(
+                  fontWeight: FontWeight.w700,
                   color: theme.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
                 ),
               ),
             ],
@@ -1232,93 +1078,3 @@ class SettingsProfileActionButton extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// SettingsMinorPremiumCard
-// ---------------------------------------------------------------------------
-
-/// Tarjeta que se muestra a miembros menores de edad (child/teen) en lugar
-/// de la tarjeta de compra de premium.
-///
-/// Informa que existen funciones premium pero **no** muestra ni redirige al
-/// paywall — esa decision es exclusiva de los adultos del hogar.
-///
-/// [isChild] determina el copy:
-///  - true  → "pedi a tus papas" (niño)
-///  - false → "los adultos pueden activar" (adolescente)
-class SettingsMinorPremiumCard extends StatelessWidget {
-  final bool isChild;
-
-  const SettingsMinorPremiumCard({
-    super.key,
-    required this.isChild,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-    final body = isChild
-        ? t.settingsMinorPremiumChildBody
-        : t.settingsMinorPremiumAdultBody;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        border: Border.all(
-          color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadow.withValues(alpha: 0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppRadii.sm),
-            ),
-            child: const Icon(
-              Icons.star_outline_rounded,
-              color: Color(0xFFF59E0B),
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  t.settingsMinorPremiumTitle,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: theme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  body,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: theme.textSecondary,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

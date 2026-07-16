@@ -121,12 +121,10 @@ class DashboardTaskCard extends ConsumerWidget {
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
+                          style: AppTypography.cardTitle.copyWith(
                             fontSize: 15.5,
-                            color: theme.textPrimary,
                             height: 1.18,
-                            letterSpacing: -0.25,
+                            color: theme.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -296,7 +294,7 @@ class _TaskIconTile extends StatelessWidget {
             )!,
           ],
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: AppRadii.inner(AppRadii.xl, 12),
       ),
       child: Icon(
         icon,
@@ -453,12 +451,11 @@ class _TaskRewardPill extends StatelessWidget {
   Widget build(BuildContext context) {
     if (xp <= 0 && coins <= 0) return const SizedBox.shrink();
 
-    TextStyle style(Color color) => TextStyle(
-          fontWeight: FontWeight.w800,
-          fontSize: 10,
-          color: color,
-          letterSpacing: -0.1,
-        );
+    TextStyle style(Color color) => AppTypography.caption.copyWith(
+      fontSize: 10,
+      fontWeight: FontWeight.w700,
+      color: color,
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -466,16 +463,16 @@ class _TaskRewardPill extends StatelessWidget {
         vertical: AppSpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0A146).withValues(alpha: 0.1),
+        color: AppColors.accentGold.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (xp > 0) ...[
-            const Icon(Icons.star_rounded, size: 11, color: Color(0xFFF0A146)),
+            const Icon(Icons.star_rounded, size: 11, color: AppColors.xpGold),
             const SizedBox(width: 3),
-            Text('$xp XP', style: style(const Color(0xFFF0A146))),
+            Text('$xp XP', style: style(AppColors.xpGold)),
           ],
           if (xp > 0 && coins > 0) ...[
             const SizedBox(width: 6),
@@ -493,10 +490,10 @@ class _TaskRewardPill extends StatelessWidget {
             const Icon(
               Icons.monetization_on_rounded,
               size: 11,
-              color: Color(0xFF7CB08B),
+              color: AppColors.coinGreen,
             ),
             const SizedBox(width: 3),
-            Text('$coins', style: style(const Color(0xFF7CB08B))),
+            Text('$coins', style: style(AppColors.coinGreen)),
           ],
         ],
       ),

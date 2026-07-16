@@ -13,6 +13,19 @@ class ThemePalette {
     required this.gradient,
   });
 
+  /// Paletas disponibles sin premium.
+  static const Set<String> freeNames = {'Naranja (Original)'};
+
+  /// Paleta que se aplica cuando un color premium deja de estar permitido.
+  static ThemePalette get fallback => all.first;
+
+  /// True si [color] corresponde al primario de una paleta gratuita.
+  static bool isFreePrimary(Color color) => all.any(
+        (palette) =>
+            freeNames.contains(palette.name) &&
+            palette.primary.toARGB32() == color.toARGB32(),
+      );
+
   static const List<ThemePalette> all = [
     ThemePalette(
       name: 'Naranja (Original)',

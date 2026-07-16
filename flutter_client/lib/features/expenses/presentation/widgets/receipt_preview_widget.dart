@@ -1,6 +1,8 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/shared/widgets/app_smooth_network_image.dart';
 
 /// Miniatura del ticket escaneado que aparece en el formulario.
@@ -58,10 +60,14 @@ class ReceiptPreviewWidget extends StatelessWidget {
             child: Container(
               color: Colors.black54,
               padding: const EdgeInsets.symmetric(vertical: 2),
-              child: const Text(
+              child: Text(
                 '🧾 Ticket',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 9),
+                style: AppTypography.caption.copyWith(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),

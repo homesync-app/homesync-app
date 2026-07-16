@@ -575,7 +575,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
                       child: AnimatedPress(
                         scale: 0.92,
                         onTap: () => _openSettings(context),
+                        // Padding interno al GestureDetector: el área táctil
+                        // queda en 48x48 sin agrandar el botón visible.
                         child: Container(
+                          margin: const EdgeInsets.all(4),
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
@@ -664,10 +667,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
           child: Text(
             capitalizedDate,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: theme.textSecondary,
+            style: AppTypography.caption.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
+              color: theme.textSecondary,
             ),
           ),
         ),

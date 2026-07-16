@@ -189,10 +189,7 @@ class _CoupleSplitStrategyScreenState
                           ? const CircularProgressIndicator(color: Colors.white)
                           : Text(
                               t.coupleSplitSaveButton,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                              ),
+                              style: AppTypography.cardTitle,
                             ),
                     ),
                     const SizedBox(height: 40),

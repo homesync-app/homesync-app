@@ -36,11 +36,10 @@ class CategoryBarChart extends StatelessWidget {
             children: [
               Text(
                 t.categoriesImpactDistribution,
-                style: TextStyle(
+                style: AppTypography.eyebrow.copyWith(
                   fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  color: theme.textSecondary,
                   letterSpacing: 1.5,
+                  color: theme.textSecondary,
                 ),
               ),
               const Spacer(),
@@ -53,9 +52,9 @@ class CategoryBarChart extends StatelessWidget {
                 ),
                 child: Text(
                   t.categoriesTasksCount(totalValue.toInt()),
-                  style: const TextStyle(
+                  style: AppTypography.caption.copyWith(
                     fontSize: 10,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.primary,
                   ),
                 ),
@@ -93,7 +92,10 @@ class CategoryBarChart extends StatelessWidget {
                         child: weight > 0.08
                             ? Text(
                                 CategoryMapping.categoryIcons[category] ?? '📋',
-                                style: const TextStyle(fontSize: 20),
+                                style: AppTypography.body.copyWith(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w400,
+                                ),
                               )
                             : const SizedBox.shrink(),
                       ),
@@ -126,8 +128,7 @@ class CategoryBarChart extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     name,
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: AppTypography.caption.copyWith(
                       fontWeight: FontWeight.w700,
                       color: theme.textSecondary,
                     ),
@@ -183,7 +184,10 @@ class CategoryDetailCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadii.lg),
             ),
             child: Center(
-              child: Text(icon, style: const TextStyle(fontSize: 28)),
+              child: Text(icon, style: AppTypography.body.copyWith(
+                fontSize: 28,
+                fontWeight: FontWeight.w400,
+              ),),
             ),
           ),
           const SizedBox(width: 20),
@@ -193,11 +197,10 @@ class CategoryDetailCard extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
+                  style: AppTypography.cardTitle.copyWith(
                     fontSize: 17,
+                    fontWeight: FontWeight.w800,
                     color: theme.textPrimary,
-                    letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -211,10 +214,9 @@ class CategoryDetailCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       t.categoriesCompletedCount(count),
-                      style: TextStyle(
-                        color: theme.textSecondary,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        color: theme.textSecondary,
                       ),
                     ),
                   ],
@@ -227,20 +229,16 @@ class CategoryDetailCard extends StatelessWidget {
             children: [
               Text(
                 '$xp',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
+                style: AppTypography.sectionTitle.copyWith(
                   fontSize: 22,
                   color: color,
-                  letterSpacing: -0.5,
                 ),
               ),
               Text(
                 'XP TOTAL',
-                style: TextStyle(
+                style: AppTypography.eyebrow.copyWith(
                   fontSize: 9,
-                  fontWeight: FontWeight.w900,
                   color: color.withValues(alpha: 0.5),
-                  letterSpacing: 0.8,
                 ),
               ),
             ],

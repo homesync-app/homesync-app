@@ -963,21 +963,20 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                                       AppColors.primary.withValues(alpha: 0.18),
                                 ),
                               ),
-                              child: const Row(
+                              child: Row(
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.auto_fix_high_rounded,
                                     color: AppColors.primary,
                                     size: 18,
                                   ),
-                                  SizedBox(width: 10),
+                                  const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
                                       'Preview QA del onboarding. No modifica tu perfil real; sirve para configurar y testear el escenario activo.',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        height: 1.35,
+                                      style: AppTypography.caption.copyWith(
                                         fontWeight: FontWeight.w700,
+                                        height: 1.35,
                                         color: AppColors.textPrimary,
                                       ),
                                     ),

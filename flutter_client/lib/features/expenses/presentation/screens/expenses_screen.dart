@@ -1163,7 +1163,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                               ),
                               child: Text(
                                 item.categoryIcon,
-                                style: const TextStyle(fontSize: 16),
+                                style: AppTypography.body.copyWith(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),

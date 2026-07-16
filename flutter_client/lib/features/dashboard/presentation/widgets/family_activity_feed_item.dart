@@ -110,11 +110,11 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       if (amount != null)
         _TrailingFigure(_formatCurrency(ref, amount), theme.textPrimary),
       if (xpReward != null && xpReward > 0)
-        _TrailingFigure('+$xpReward XP', const Color(0xFFE8943A)),
+        _TrailingFigure('+$xpReward XP', AppColors.xpGold),
       if (coinsReward != null && coinsReward > 0)
         _TrailingFigure(
           AppLocalizations.of(context).activityCoinsPlus(coinsReward),
-          AppColors.sage,
+          AppColors.coinGreen,
         ),
     ].take(2).toList();
 
@@ -148,11 +148,10 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                       _headlineFor(type, userName, isSettlement: isSettlement),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: theme.textSecondary,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.05,
+                        fontWeight: FontWeight.w700,
+                        color: theme.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -160,20 +159,17 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                       detailTitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: theme.textPrimary.withValues(alpha: 0.92),
+                      style: AppTypography.bodyStrong.copyWith(
                         fontSize: 14.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
                         height: 1.2,
+                        color: theme.textPrimary.withValues(alpha: 0.92),
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       timeLabel,
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
                         fontSize: 11,
-                        fontWeight: FontWeight.w600,
                         color: theme.textMuted,
                       ),
                     ),
@@ -542,11 +538,11 @@ class _PendingApprovalActivityCard extends StatelessWidget {
                               '$userName espera revisión de',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: accent.withValues(alpha: 0.94),
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w900,
+                                fontWeight: FontWeight.w700,
                                 height: 1.05,
+                                color: accent.withValues(alpha: 0.94),
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -554,11 +550,10 @@ class _PendingApprovalActivityCard extends StatelessWidget {
                               detailTitle,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: theme.textPrimary,
+                              style: AppTypography.cardTitle.copyWith(
                                 fontSize: 15.5,
-                                fontWeight: FontWeight.w800,
                                 height: 1.18,
+                                color: theme.textPrimary,
                               ),
                             ),
                           ],
@@ -597,13 +592,13 @@ class _PendingApprovalActivityCard extends StatelessWidget {
                   ),
                   if (xpReward != null && xpReward! > 0)
                     _ReviewMetaPill(
-                      color: const Color(0xFFE8943A),
+                      color: AppColors.xpGold,
                       icon: Icons.star_rounded,
                       label: '${xpReward!} XP',
                     ),
                   if (coinsReward != null && coinsReward! > 0)
                     _ReviewMetaPill(
-                      color: AppColors.sage,
+                      color: AppColors.coinGreen,
                       icon: Icons.monetization_on_rounded,
                       label:
                           '${coinsReward!} ${coinsReward == 1 ? "coin" : "coins"}',
@@ -673,11 +668,11 @@ class _ReviewMetaPill extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             label,
-            style: TextStyle(
-              color: color,
+            style: AppTypography.caption.copyWith(
               fontSize: 11,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
               height: 1,
+              color: color,
             ),
           ),
         ],
@@ -744,11 +739,11 @@ class _ReviewActionButton extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       softWrap: false,
-                      style: TextStyle(
-                        color: foreground,
+                      style: AppTypography.cardTitle.copyWith(
                         fontSize: 14,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
                         height: 1,
+                        color: foreground,
                       ),
                     ),
                   ),

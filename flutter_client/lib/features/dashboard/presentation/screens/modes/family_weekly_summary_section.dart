@@ -70,9 +70,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
             children: [
               Text(
                 AppLocalizations.of(context).familyWeeklyTitle,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+                style: AppTypography.bodyStrong.copyWith(
                   color: theme.primary,
                 ),
               ),
@@ -131,11 +129,10 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
             const SizedBox(width: 4),
             Text(
               value,
-              style: TextStyle(
+              style: AppTypography.cardTitle.copyWith(
                 fontSize: 18,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w800,
                 color: theme.textPrimary,
-                letterSpacing: -0.5,
               ),
             ),
           ],
@@ -143,9 +140,8 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(
+          style: AppTypography.caption.copyWith(
             fontSize: 10,
-            fontWeight: FontWeight.w600,
             color: theme.textSecondary,
           ),
         ),
@@ -256,9 +252,8 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
           children: [
             Text(
               AppLocalizations.of(context).familyWeeklyRankingTitle,
-              style: TextStyle(
+              style: AppTypography.cardTitle.copyWith(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
                 color: theme.textPrimary,
               ),
             ),
@@ -272,7 +267,11 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
                 ),
                 child: Text(
                   AppLocalizations.of(context).familyWeeklyRankingSubtitle,
-                  style: TextStyle(fontSize: 10, color: theme.textSecondary),
+                  style: AppTypography.caption.copyWith(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: theme.textSecondary,
+                  ),
                 ),
               ),
           ],
@@ -455,8 +454,8 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
                         : t.familyWeeklyRankingTabEmptyMessage(
                             tabs[_selectedTab],
                           ),
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w500,
                       color: theme.textSecondary,
                     ),
                   ),
@@ -482,9 +481,8 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
                           : theme.divider.withValues(alpha: 0.1),
                       child: Text(
                         (index + 1).toString(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                        style: AppTypography.caption.copyWith(
+                          fontWeight: FontWeight.w700,
                           color: isFirst && xp > 0
                               ? Colors.black
                               : theme.textPrimary,
@@ -517,9 +515,8 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
                       ),
                       child: Text(
                         xp > 0 ? '$xp pts' : '— pts',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
+                        style: AppTypography.caption.copyWith(
+                          fontWeight: FontWeight.w700,
                           color: xp > 0 ? theme.primary : theme.textSecondary,
                         ),
                       ),
@@ -541,8 +538,8 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
                 const SizedBox(width: 6),
                 Text(
                   t.familyWeeklyRankingEmptyMessage,
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w500,
                     color: theme.textSecondary,
                   ),
                 ),

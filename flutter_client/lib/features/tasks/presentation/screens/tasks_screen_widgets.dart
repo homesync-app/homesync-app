@@ -56,10 +56,8 @@ class _TodayDoneCelebration extends StatelessWidget {
                   message,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: AppTypography.bodyStrong.copyWith(
                     color: theme.textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -130,7 +128,7 @@ class _SectionHeader extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '$count',
-            style: const TextStyle(
+            style: AppTypography.caption.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: AppColors.textMuted,
@@ -293,12 +291,9 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                             overflow: TextOverflow.ellipsis,
                             // Rol cardTitle (16/700/-0.2): w800 hacía gritar
                             // a todas las cards a la vez.
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: theme.textPrimary,
-                              letterSpacing: -0.2,
+                            style: AppTypography.cardTitle.copyWith(
                               height: 1.12,
+                              color: theme.textPrimary,
                             ),
                           ),
                         ),
@@ -581,8 +576,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
-                fontSize: 12,
+              style: AppTypography.caption.copyWith(
                 fontWeight: FontWeight.w700,
                 color: color,
               ),
@@ -630,11 +624,10 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
             const SizedBox(height: 6),
             Text(
               label,
-              style: TextStyle(
+              style: AppTypography.caption.copyWith(
                 fontSize: 11,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: onTap == null ? AppColors.textMuted : color,
-                letterSpacing: -0.2,
               ),
             ),
           ],
@@ -743,21 +736,20 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                   const SizedBox(height: 20),
                   Text(
                     t.tasksTakeoverHeading(ownerName),
-                    style: TextStyle(
+                    style: AppTypography.sectionTitle.copyWith(
                       fontSize: 22,
-                      fontWeight: FontWeight.w900,
                       color: theme.textPrimary,
-                      letterSpacing: -0.5,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
                   Text(
                     t.tasksTakeoverPrompt,
-                    style: TextStyle(
+                    style: AppTypography.body.copyWith(
                       fontSize: 15,
-                      color: theme.textSecondary,
+                      fontWeight: FontWeight.w400,
                       height: 1.4,
+                      color: theme.textSecondary,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -778,9 +770,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                           onPressed: () => Navigator.pop(context, false),
                           child: Text(
                             t.commonClose,
-                            style: TextStyle(
+                            style: AppTypography.cardTitle.copyWith(
                               fontSize: 15,
-                              fontWeight: FontWeight.w700,
                               color: theme.textPrimary,
                             ),
                           ),
@@ -803,10 +794,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                           onPressed: () => Navigator.pop(context, true),
                           child: Text(
                             t.tasksTakeoverConfirm,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                            ),
+                            style: AppTypography.bodyStrong,
                           ),
                         ),
                       ),
@@ -933,20 +921,14 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   }
 
   /// Badge único de recompensa: XP y coins comparten pill para bajar el ruido
-  /// visual de la card (antes eran dos badges apilados). Todo en gold: en el
-  /// sistema el verde es plata/éxito de Finanzas y el dorado es recompensas;
-  /// los íconos (estrella vs moneda) ya diferencian XP de coins.
+  /// visual de la card (antes eran dos badges apilados). Colores semánticos
+  /// de AppColors: XP en dorado, coins en verde — igual que en el Home.
   Widget _rewardBadge(int xp, int coins) {
-    final rewardColor = Color.alphaBlend(
-      Colors.black.withValues(alpha: 0.28),
-      AppColors.accentGold,
+    TextStyle style(Color color) => AppTypography.caption.copyWith(
+      fontSize: 11,
+      fontWeight: FontWeight.w700,
+      color: color,
     );
-    TextStyle style(Color color) => TextStyle(
-          fontWeight: FontWeight.w900,
-          fontSize: 11,
-          color: color,
-          letterSpacing: -0.1,
-        );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -958,13 +940,13 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (xp > 0) ...[
-            Icon(
+            const Icon(
               Icons.star_rounded,
               size: 12,
-              color: rewardColor,
+              color: AppColors.xpGold,
             ),
             const SizedBox(width: 3),
-            Text('$xp', style: style(rewardColor)),
+            Text('$xp', style: style(AppColors.xpGold)),
           ],
           if (xp > 0 && coins > 0) ...[
             const SizedBox(width: 6),
@@ -979,13 +961,13 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
             const SizedBox(width: 6),
           ],
           if (coins > 0) ...[
-            Icon(
+            const Icon(
               Icons.monetization_on_rounded,
               size: 12,
-              color: rewardColor,
+              color: AppColors.coinGreen,
             ),
             const SizedBox(width: 3),
-            Text('$coins', style: style(rewardColor)),
+            Text('$coins', style: style(AppColors.coinGreen)),
           ],
         ],
       ),

@@ -100,9 +100,9 @@ class MonthRecapBanner extends ConsumerWidget {
                   children: [
                     Text(
                       t.recapBannerTitle(monthName),
-                      style: TextStyle(
+                      style: AppTypography.cardTitle.copyWith(
                         fontSize: 14,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
                         color: theme.textPrimary,
                       ),
                     ),
@@ -111,8 +111,7 @@ class MonthRecapBanner extends ConsumerWidget {
                       t.recapBannerSubtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: AppTypography.caption.copyWith(
                         fontWeight: FontWeight.w500,
                         color: theme.textSecondary,
                       ),
@@ -220,19 +219,16 @@ class MonthRecapSheet extends ConsumerWidget {
               const SizedBox(height: 20),
               Text(
                 t.recapSheetTitle(monthName),
-                style: TextStyle(
+                style: AppTypography.heroAmount.copyWith(
                   fontSize: 28,
-                  fontWeight: FontWeight.w900,
                   color: theme.textPrimary,
-                  letterSpacing: -0.8,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 t.recapMovementsCount(recap.expenseCount),
-                style: TextStyle(
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
-                  fontWeight: FontWeight.w600,
                   color: theme.textSecondary,
                 ),
               ),
@@ -243,11 +239,8 @@ class MonthRecapSheet extends ConsumerWidget {
                 recap.sharedEconomy
                     ? t.recapTotalLabelShared
                     : t.recapTotalLabelPersonal,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
+                style: AppTypography.eyebrow.copyWith(
                   color: theme.textMuted,
-                  letterSpacing: 1.1,
                 ),
               ),
               const SizedBox(height: 6),
@@ -267,9 +260,8 @@ class MonthRecapSheet extends ConsumerWidget {
                 const SizedBox(height: 6),
                 Text(
                   deltaText,
-                  style: TextStyle(
+                  style: AppTypography.bodyStrong.copyWith(
                     fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
                     color: deltaColor,
                   ),
                 ),
@@ -286,9 +278,7 @@ class MonthRecapSheet extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Text(
                       t.recapIncomeRow(currency.format(recap.income.round())),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                      style: AppTypography.bodyStrong.copyWith(
                         color: theme.textPrimary,
                       ),
                     ),
@@ -301,11 +291,8 @@ class MonthRecapSheet extends ConsumerWidget {
                 const SizedBox(height: 32),
                 Text(
                   t.recapCategoriesTitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
+                  style: AppTypography.eyebrow.copyWith(
                     color: theme.textMuted,
-                    letterSpacing: 1.1,
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -324,11 +311,8 @@ class MonthRecapSheet extends ConsumerWidget {
                 const SizedBox(height: 20),
                 Text(
                   t.recapPayersTitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
+                  style: AppTypography.eyebrow.copyWith(
                     color: theme.textMuted,
-                    letterSpacing: 1.1,
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -345,9 +329,7 @@ class MonthRecapSheet extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           payer.name.split(' ').first,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
+                          style: AppTypography.bodyStrong.copyWith(
                             color: theme.textPrimary,
                           ),
                         ),
@@ -382,7 +364,10 @@ class MonthRecapSheet extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      const Text('🎯', style: TextStyle(fontSize: 20)),
+                      Text('🎯', style: AppTypography.body.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w400,
+                      ),),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -390,11 +375,10 @@ class MonthRecapSheet extends ConsumerWidget {
                             householdType,
                             currency.format(recap.savingsAdded.round()),
                           ),
-                          style: TextStyle(
+                          style: AppTypography.bodyStrong.copyWith(
                             fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
-                            color: theme.textPrimary,
                             height: 1.3,
+                            color: theme.textPrimary,
                           ),
                         ),
                       ),
@@ -419,9 +403,9 @@ class MonthRecapSheet extends ConsumerWidget {
                   ),
                   child: Text(
                     t.commonClose,
-                    style: const TextStyle(
+                    style: AppTypography.cardTitle.copyWith(
                       fontSize: 15,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
@@ -463,7 +447,7 @@ class _CategoryBar extends StatelessWidget {
                 localizedExpenseCategoryName(t, category.category),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: theme.textPrimary,

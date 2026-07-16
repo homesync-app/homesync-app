@@ -80,9 +80,9 @@ class SoloActivityTile extends ConsumerWidget {
       if (amount != null && amount > 0)
         _TrailingFigure(currency.format(amount), theme.textPrimary),
       if (xpReward != null && xpReward > 0)
-        _TrailingFigure('+$xpReward XP', const Color(0xFFE8943A)),
+        _TrailingFigure('+$xpReward XP', AppColors.xpGold),
       if (coinsReward != null && coinsReward > 0)
-        _TrailingFigure(t.activityCoinsPlus(coinsReward), AppColors.sage),
+        _TrailingFigure(t.activityCoinsPlus(coinsReward), AppColors.coinGreen),
       if (isReward && rewardCost != null)
         _TrailingFigure(t.activityCoinsMinus(rewardCost), rewardAccent),
     ].take(2).toList();
@@ -108,7 +108,7 @@ class SoloActivityTile extends ConsumerWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppRadii.sm),
+                  borderRadius: AppRadii.inner(AppRadii.lg, 12),
                 ),
                 child: Icon(
                   activityIcon(type, category, isSettlement: isSettlement),
@@ -125,20 +125,17 @@ class SoloActivityTile extends ConsumerWidget {
                       title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: theme.textPrimary.withValues(alpha: 0.92),
+                      style: AppTypography.bodyStrong.copyWith(
                         fontSize: 14.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
                         height: 1.2,
+                        color: theme.textPrimary.withValues(alpha: 0.92),
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       timeLabel,
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
                         fontSize: 11,
-                        fontWeight: FontWeight.w600,
                         color: theme.textMuted,
                       ),
                     ),

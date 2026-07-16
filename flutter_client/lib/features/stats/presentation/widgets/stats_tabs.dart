@@ -70,11 +70,10 @@ class WeeklyTab extends ConsumerWidget {
           // ── Summary row (Global context) ──────────────────────────────────
           Text(
             t.statsHouseholdSummary,
-            style: TextStyle(
+            style: AppTypography.cardTitle.copyWith(
               fontSize: 18,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
               color: AppColors.textPrimary.withValues(alpha: 0.9),
-              letterSpacing: -0.2,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -179,9 +178,7 @@ class WeeklyTab extends ConsumerWidget {
                       children: [
                         Text(
                           t.loveNoteSendTitle,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
+                          style: AppTypography.cardTitle.copyWith(
                             color: isPremium
                                 ? const Color(0xFF991B1B)
                                 : AppColors.textPrimary,
@@ -192,9 +189,8 @@ class WeeklyTab extends ConsumerWidget {
                           isPremium
                               ? t.loveNoteSendSubtitle
                               : t.loveNotePremiumFeature,
-                          style: TextStyle(
+                          style: AppTypography.caption.copyWith(
                             fontSize: 13,
-                            fontWeight: FontWeight.w600,
                             color: isPremium
                                 ? const Color(0xFFB91C1C).withValues(alpha: 0.7)
                                 : AppColors.textSecondary,
@@ -249,26 +245,28 @@ class SummaryMetric extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(icon, style: const TextStyle(fontSize: 18)),
+        Text(icon, style: AppTypography.body.copyWith(
+          fontSize: 18,
+          fontWeight: FontWeight.w400,
+        ),),
         const SizedBox(height: AppSpacing.xs),
         Text(
           value,
-          style: const TextStyle(
+          style: AppTypography.sectionTitle.copyWith(
             fontSize: 22,
-            fontWeight: FontWeight.w900,
-            color: AppColors.textPrimary,
             letterSpacing: -0.8,
             height: 1,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           label.toUpperCase(),
-          style: TextStyle(
-            color: color.withValues(alpha: 0.8),
+          style: AppTypography.caption.copyWith(
             fontSize: 10,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             letterSpacing: 0.6,
+            color: color.withValues(alpha: 0.8),
           ),
         ),
       ],
@@ -377,15 +375,18 @@ class _ProgressTabState extends State<ProgressTab> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('🌱', style: TextStyle(fontSize: 32)),
+                        Text('🌱', style: AppTypography.body.copyWith(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w400,
+                        ),),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           t.statsNoDataMessage,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColors.textMuted,
+                          style: AppTypography.caption.copyWith(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
+                            color: AppColors.textMuted,
                           ),
                         ),
                       ],
@@ -546,7 +547,10 @@ class CategoriesTab extends StatelessWidget {
                 color: AppColors.primary.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
-              child: const Text('📊', style: TextStyle(fontSize: 48)),
+              child: Text('📊', style: AppTypography.body.copyWith(
+                fontSize: 48,
+                fontWeight: FontWeight.w400,
+              ),),
             ),
             const SizedBox(height: AppSpacing.lg),
             Row(
@@ -574,10 +578,8 @@ class CategoriesTab extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               t.statsNoDataTitle,
-              style: const TextStyle(
+              style: AppTypography.cardTitle.copyWith(
                 fontSize: 18,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -660,17 +662,20 @@ class CategoriesTab extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Text('💡', style: TextStyle(fontSize: 20)),
+                  child: Text('💡', style: AppTypography.body.copyWith(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w400,
+                  ),),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
                     t.categoriesBalanceTip,
-                    style: const TextStyle(
+                    style: AppTypography.caption.copyWith(
                       fontSize: 13,
+                      fontWeight: FontWeight.w500,
                       height: 1.5,
                       color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),

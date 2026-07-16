@@ -233,8 +233,10 @@ class InAppNotificationBannerState extends State<InAppNotificationBanner>
                                           color: theme.primary.withValues(
                                             alpha: 0.12,
                                           ),
-                                          borderRadius:
-                                              BorderRadius.circular(14),
+                                          borderRadius: AppRadii.inner(
+                                            AppRadii.lg,
+                                            12,
+                                          ),
                                         ),
                                         child: Icon(
                                           Icons.notifications_none_rounded,
@@ -251,10 +253,8 @@ class InAppNotificationBannerState extends State<InAppNotificationBanner>
                                           children: [
                                             Text(
                                               _title,
-                                              style: TextStyle(
+                                              style: AppTypography.bodyStrong.copyWith(
                                                 color: theme.textPrimary,
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 14,
                                               ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -263,11 +263,9 @@ class InAppNotificationBannerState extends State<InAppNotificationBanner>
                                               const SizedBox(height: 2),
                                               Text(
                                                 _body,
-                                                style: TextStyle(
-                                                  color: theme.textSecondary,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 12,
+                                                style: AppTypography.caption.copyWith(
                                                   height: 1.2,
+                                                  color: theme.textSecondary,
                                                 ),
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,

@@ -345,10 +345,8 @@ class _ModalCard extends StatelessWidget {
                   Text(
                     step.title,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: AppTypography.heroAmount.copyWith(
                       fontSize: 26,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.9,
                       height: 1.05,
                       color: theme.textPrimary,
                     ),
@@ -357,11 +355,10 @@ class _ModalCard extends StatelessWidget {
                   Text(
                     step.body,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: AppTypography.body.copyWith(
                       fontSize: 15,
                       height: 1.4,
                       color: theme.textSecondary,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 28),
@@ -487,13 +484,13 @@ class _DuelIllustration extends StatelessWidget {
               ],
               border: Border.all(color: theme.surface, width: 3),
             ),
-            child: const Text(
+            child: Text(
               'VS',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
+              style: AppTypography.cardTitle.copyWith(
                 fontSize: 18,
+                fontWeight: FontWeight.w800,
                 letterSpacing: 0.5,
+                color: Colors.white,
               ),
             ),
           )
@@ -709,10 +706,8 @@ class _TooltipCard extends StatelessWidget {
                 ],
                 Text(
                   step.title,
-                  style: TextStyle(
+                  style: AppTypography.sectionTitle.copyWith(
                     fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.7,
                     height: 1.08,
                     color: theme.textPrimary,
                   ),
@@ -720,10 +715,9 @@ class _TooltipCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   step.body,
-                  style: TextStyle(
+                  style: AppTypography.body.copyWith(
                     fontSize: 14.5,
                     height: 1.42,
-                    fontWeight: FontWeight.w500,
                     color: theme.textSecondary,
                   ),
                 ),
@@ -757,9 +751,8 @@ class _TooltipCard extends StatelessWidget {
                         ),
                         child: Text(
                           step.secondaryCta!,
-                          style: const TextStyle(
+                          style: AppTypography.bodyStrong.copyWith(
                             fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -808,11 +801,11 @@ class _BulletRow extends StatelessWidget {
         Expanded(
           child: Text(
             bullet.text,
-            style: TextStyle(
+            style: AppTypography.body.copyWith(
               fontSize: 13.5,
               fontWeight: FontWeight.w600,
-              color: theme.textPrimary.withValues(alpha: 0.88),
               height: 1.3,
+              color: theme.textPrimary.withValues(alpha: 0.88),
             ),
           ),
         ),
@@ -839,10 +832,7 @@ class _Eyebrow extends StatelessWidget {
       ),
       child: Text(
         text.toUpperCase(),
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 1.2,
+        style: AppTypography.eyebrow.copyWith(
           color: AppColors.primary,
         ),
       ),
@@ -890,11 +880,10 @@ class _PrimaryCta extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: AppTypography.cardTitle.copyWith(
                     fontSize: 15,
-                    fontWeight: FontWeight.w800,
                     letterSpacing: 0.2,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -932,13 +921,12 @@ class _SkipButton extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.28),
             ),
           ),
-          child: const Text(
+          child: Text(
             'Saltar',
-            style: TextStyle(
-              color: Colors.white,
+            style: AppTypography.caption.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.2,
+              color: Colors.white,
             ),
           ),
         ),

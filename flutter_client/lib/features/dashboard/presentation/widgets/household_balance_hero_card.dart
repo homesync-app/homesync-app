@@ -75,10 +75,10 @@ class HouseholdBalanceHeroCard extends ConsumerWidget {
           children: [
             Text(
               _greeting(),
-              style: const TextStyle(
-                color: AppColors.primary,
+              style: AppTypography.caption.copyWith(
                 fontSize: 13,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: 10),
@@ -100,11 +100,10 @@ class HouseholdBalanceHeroCard extends ConsumerWidget {
             const SizedBox(height: 14),
             Text(
               _sectionLine(balance: balance),
-              style: TextStyle(
-                color: theme.textSecondary,
-                fontSize: 14,
+              style: AppTypography.body.copyWith(
                 fontWeight: FontWeight.w600,
                 height: 1.38,
+                color: theme.textSecondary,
               ),
             ),
             const SizedBox(height: 18),
@@ -126,12 +125,9 @@ class HouseholdBalanceHeroCard extends ConsumerWidget {
                       children: [
                         Text(
                           _currency(ref, balance.abs()),
-                          style: TextStyle(
-                            color: theme.textPrimary,
-                            fontSize: 34,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1.0,
+                          style: AppTypography.heroAmount.copyWith(
                             height: 1.0,
+                            color: theme.textPrimary,
                           ),
                         ),
                       ],
@@ -144,7 +140,7 @@ class HouseholdBalanceHeroCard extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: 0.11),
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: AppRadii.inner(AppRadii.xl, 14),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -165,10 +161,10 @@ class HouseholdBalanceHeroCard extends ConsumerWidget {
                               : balance < 0
                                   ? 'Equilibrar'
                                   : 'A favor',
-                          style: TextStyle(
-                            color: accent,
+                          style: AppTypography.caption.copyWith(
                             fontSize: 11,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
+                            color: accent,
                           ),
                         ),
                       ],
@@ -266,10 +262,9 @@ class _MembersHeader extends StatelessWidget {
         if (prefix != null)
           Text(
             prefix,
-            style: TextStyle(
-              color: theme.textSecondary,
+            style: AppTypography.cardTitle.copyWith(
               fontSize: 15,
-              fontWeight: FontWeight.w700,
+              color: theme.textSecondary,
             ),
           ),
         Container(
@@ -312,10 +307,10 @@ class _MembersHeader extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Text(
                 label,
-                style: TextStyle(
-                  color: theme.textPrimary,
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary,
                 ),
               ),
             ],

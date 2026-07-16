@@ -185,19 +185,19 @@ class FamilyFinanceSection extends ConsumerWidget {
               children: [
                 Text(
                   'Sin resumen financiero todavía',
-                  style: TextStyle(
+                  style: AppTypography.cardTitle.copyWith(
                     fontSize: 15,
-                    fontWeight: FontWeight.w800,
                     color: theme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
+                  style: AppTypography.caption.copyWith(
                     fontSize: 12.5,
-                    color: theme.textSecondary,
+                    fontWeight: FontWeight.w500,
                     height: 1.3,
+                    color: theme.textSecondary,
                   ),
                 ),
               ],
@@ -316,11 +316,10 @@ class _ApprovalsTile extends ConsumerWidget {
                     child: hasPending
                         ? Text(
                             '$count',
-                            style: TextStyle(
-                              color: accent,
+                            style: AppTypography.sectionTitle.copyWith(
                               fontSize: 19,
-                              fontWeight: FontWeight.w900,
                               height: 1.0,
+                              color: accent,
                             ),
                           )
                         : Icon(
@@ -335,11 +334,9 @@ class _ApprovalsTile extends ConsumerWidget {
                 t.homeFamilyApprovalsTileLabel.toUpperCase(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: theme.textMuted,
+                style: AppTypography.eyebrow.copyWith(
                   fontSize: 10.5,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.1,
+                  color: theme.textMuted,
                 ),
               ),
               const SizedBox(height: 3),
@@ -351,10 +348,10 @@ class _ApprovalsTile extends ConsumerWidget {
                         : t.homeFamilyApprovalsAllClear,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: theme.textPrimary,
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary,
                 ),
               ),
             ],

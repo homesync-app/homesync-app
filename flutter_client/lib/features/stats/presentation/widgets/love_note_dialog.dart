@@ -47,10 +47,9 @@ Future<void> showLoveNoteDialog({
                   t.loveNoteDialogTitle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: theme.textPrimary,
+                  style: AppTypography.heroAmount.copyWith(
                     fontSize: 24,
-                    fontWeight: FontWeight.w900,
+                    color: theme.textPrimary,
                   ),
                 ),
               ),

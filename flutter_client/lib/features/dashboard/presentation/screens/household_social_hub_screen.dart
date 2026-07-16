@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/contribution_balance_card.dart';
@@ -176,20 +177,18 @@ class _HeaderCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: AppTypography.heroAmount.copyWith(
                         fontSize: 24,
-                        fontWeight: FontWeight.w900,
                         letterSpacing: -0.4,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: TextStyle(
-                        color: theme.textSecondary,
-                        fontSize: 14,
+                      style: AppTypography.body.copyWith(
                         fontWeight: FontWeight.w600,
                         height: 1.3,
+                        color: theme.textSecondary,
                       ),
                     ),
                   ],
@@ -203,11 +202,11 @@ class _HeaderCard extends StatelessWidget {
               Expanded(
                 child: Builder(
                   builder: (context) {
-                    final roleStyle = TextStyle(
-                      color: theme.textSecondary,
+                    final roleStyle = AppTypography.caption.copyWith(
                       fontSize: 12.5,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       height: 1.2,
+                      color: theme.textSecondary,
                     );
                     if (currentMember == null) {
                       return Text(
@@ -297,10 +296,10 @@ class _QuickActionButton extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 label,
-                style: TextStyle(
-                  color: theme.textPrimary,
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
+                  color: theme.textPrimary,
                 ),
               ),
             ],
@@ -334,21 +333,19 @@ class _SettleUpSection extends ConsumerWidget {
           children: [
             Text(
               t.householdSettleUpTitle,
-              style: TextStyle(
+              style: AppTypography.cardTitle.copyWith(
                 fontSize: 18,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w800,
                 color: theme.textPrimary,
-                letterSpacing: -0.35,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               t.householdSettleUpSubtitle,
-              style: TextStyle(
+              style: AppTypography.body.copyWith(
                 fontSize: 13.5,
-                fontWeight: FontWeight.w500,
-                color: theme.textSecondary,
                 height: 1.35,
+                color: theme.textSecondary,
               ),
             ),
             const SizedBox(height: 12),

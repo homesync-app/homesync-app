@@ -46,11 +46,9 @@ class HomeShoppingPreviewCard extends ConsumerWidget {
           children: [
             Text(
               title,
-              style: TextStyle(
+              style: AppTypography.sectionTitle.copyWith(
                 fontSize: 22,
-                fontWeight: FontWeight.w900,
                 color: theme.textPrimary,
-                letterSpacing: -0.7,
               ),
             ),
             TextButton(
@@ -107,7 +105,7 @@ class HomeShoppingPreviewCard extends ConsumerWidget {
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: AppColors.accentGold.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: AppRadii.inner(AppRadii.xl, 16),
                           ),
                           child: const Icon(
                             Icons.shopping_cart_rounded,
@@ -119,10 +117,10 @@ class HomeShoppingPreviewCard extends ConsumerWidget {
                         Expanded(
                           child: Text(
                             '${pending.length} pendiente${pending.length == 1 ? '' : 's'}',
-                            style: TextStyle(
-                              color: theme.textSecondary,
+                            style: AppTypography.caption.copyWith(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
+                              color: theme.textSecondary,
                             ),
                           ),
                         ),
@@ -169,10 +167,9 @@ class HomeShoppingPreviewCard extends ConsumerWidget {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           '+${pending.length - maxItems} más en la lista',
-                          style: TextStyle(
-                            color: theme.textSecondary,
-                            fontSize: 12,
+                          style: AppTypography.caption.copyWith(
                             fontWeight: FontWeight.w700,
+                            color: theme.textSecondary,
                           ),
                         ),
                       ),

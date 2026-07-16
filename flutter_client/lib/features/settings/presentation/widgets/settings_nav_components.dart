@@ -75,10 +75,8 @@ class SettingsNavRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: AppTypography.cardTitle.copyWith(
                     fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.2,
                     color: titleColor,
                   ),
                 ),
@@ -88,10 +86,11 @@ class SettingsNavRow extends StatelessWidget {
                     subtitle!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                    style: AppTypography.caption.copyWith(
                       fontSize: 12.5,
-                      color: theme.textSecondary,
+                      fontWeight: FontWeight.w500,
                       height: 1.2,
+                      color: theme.textSecondary,
                     ),
                   ),
                 ],
@@ -102,7 +101,7 @@ class SettingsNavRow extends StatelessWidget {
             const SizedBox(width: 10),
             Text(
               value!,
-              style: TextStyle(
+              style: AppTypography.body.copyWith(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
                 color: theme.textSecondary,
@@ -185,10 +184,9 @@ class SettingsNavGroup extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
             child: Text(
               label!,
-              style: TextStyle(
+              style: AppTypography.caption.copyWith(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
-                letterSpacing: 0.1,
                 color: theme.textMuted,
               ),
             ),

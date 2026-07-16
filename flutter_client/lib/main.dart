@@ -15,6 +15,7 @@ import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/locale_provider.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/riverpod_retry.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
@@ -26,6 +27,7 @@ import 'package:homesync_client/core/services/premium_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_system_ui.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
+import 'package:homesync_client/core/theme/theme_palettes.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
 import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
@@ -180,7 +182,7 @@ void main() async {
       'startup.supabase_initialize',
       () => Supabase.initialize(
         url: AppEnvironment.supabaseUrl,
-        anonKey: AppEnvironment.supabaseAnonKey,
+        publishableKey: AppEnvironment.supabasePublishableKey,
         // Firebase Third-Party Auth: each Supabase request carries the Firebase JWT.
         // Supabase validates it against Firebase's JWKS endpoint automatically.
         // This replaces the manual session sync (_syncSupabaseSession).
@@ -712,7 +714,17 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
-    final customPrimary = ref.watch(primaryColorProvider);
+    // Gate premium al APLICAR el color, no solo en el picker: un premium
+    // vencido no conserva paletas pagas. Mientras el status carga o falla se
+    // mantiene el color guardado (evita flash en el arranque); solo un false
+    // confirmado degrada al naranja original.
+    final savedPrimary = ref.watch(primaryColorProvider);
+    final premiumStatus = ref.watch(premiumProvider);
+    final customPrimary = switch (premiumStatus) {
+      AsyncData(value: false) when !ThemePalette.isFreePrimary(savedPrimary) =>
+        ThemePalette.fallback.primary,
+      _ => savedPrimary,
+    };
     final locale = ref.watch(localeProvider);
     if (locale != null) {
       Intl.defaultLocale = locale.toLanguageTag();

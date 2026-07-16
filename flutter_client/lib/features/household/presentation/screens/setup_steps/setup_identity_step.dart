@@ -205,7 +205,10 @@ class SetupIdentityStep extends ConsumerWidget {
                           child: Center(
                             child: Text(
                               emoji,
-                              style: const TextStyle(fontSize: 30),
+                              style: AppTypography.body.copyWith(
+                                fontSize: 30,
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
                           ),
                         ),

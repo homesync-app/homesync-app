@@ -9,7 +9,7 @@ Siempre:
 
 - `APP_ENV`
 - `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
+- `SUPABASE_PUBLISHABLE_KEY` (o `SUPABASE_ANON_KEY` legacy como fallback)
 - `GOOGLE_WEB_CLIENT_ID`
 
 Adicionales para Web:

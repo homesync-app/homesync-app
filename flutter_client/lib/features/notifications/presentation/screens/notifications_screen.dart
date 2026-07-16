@@ -207,8 +207,8 @@ class _NotificationCard extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     content.body,
-                    style: TextStyle(
-                      fontSize: 14,
+                    style: AppTypography.body.copyWith(
+                      fontWeight: FontWeight.w400,
                       color: notification.isRead
                           ? AppColors.textSecondary
                           : AppColors.textPrimary,
@@ -220,8 +220,8 @@ class _NotificationCard extends ConsumerWidget {
                       notification.createdAt,
                       locale: Localizations.localeOf(context).languageCode,
                     ),
-                    style: const TextStyle(
-                      fontSize: 12,
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w500,
                       color: AppColors.textMuted,
                     ),
                   ),
@@ -271,17 +271,17 @@ class _NotificationsEmptyState extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             t.notificationsEmptyTitle,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+            style: AppTypography.sectionTitle.copyWith(
+              fontWeight: FontWeight.w700,
               color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             t.notificationsEmptySubtitle,
-            style: TextStyle(
+            style: AppTypography.body.copyWith(
               fontSize: 16,
+              fontWeight: FontWeight.w400,
               color: theme.textSecondary,
             ),
           ),
@@ -317,17 +317,17 @@ class _NotificationsErrorState extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             t.notificationsErrorTitle,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+            style: AppTypography.sectionTitle.copyWith(
+              fontWeight: FontWeight.w700,
               color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             t.notificationsErrorSubtitle,
-            style: TextStyle(
+            style: AppTypography.body.copyWith(
               fontSize: 16,
+              fontWeight: FontWeight.w400,
               color: theme.textSecondary,
             ),
           ),

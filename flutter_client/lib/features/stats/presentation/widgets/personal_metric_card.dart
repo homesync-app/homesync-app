@@ -41,16 +41,19 @@ class PersonalMetricCard extends StatelessWidget {
                   color: color.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
-                child: Text(icon, style: const TextStyle(fontSize: 16)),
+                child: Text(icon, style: AppTypography.body.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                ),),
               ),
               const SizedBox(width: 10),
               Text(
                 label.toUpperCase(),
-                style: TextStyle(
-                  color: theme.textSecondary,
+                style: AppTypography.caption.copyWith(
                   fontSize: 10,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   letterSpacing: 0.5,
+                  color: theme.textSecondary,
                 ),
               ),
             ],
@@ -58,22 +61,20 @@ class PersonalMetricCard extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             value,
-            style: TextStyle(
-              color: theme.textPrimary,
+            style: AppTypography.heroAmount.copyWith(
               fontSize: 24,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
               height: 1,
+              color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             subtitle,
-            style: TextStyle(
-              color: color.withValues(alpha: 0.7),
+            style: AppTypography.caption.copyWith(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               height: 1.3,
+              color: color.withValues(alpha: 0.7),
             ),
           ),
         ],

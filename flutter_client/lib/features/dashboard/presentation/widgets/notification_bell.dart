@@ -117,10 +117,10 @@ class _NotificationBellState extends ConsumerState<NotificationBell>
               child: Center(
                 child: Text(
                   _unreadCount > 9 ? '9+' : '$_unreadCount',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 9,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
                 ),
               ),

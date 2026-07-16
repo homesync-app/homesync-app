@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -116,12 +117,10 @@ class FamilyTaskCard extends StatelessWidget {
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.cardTitle.copyWith(
                         fontSize: 15.5,
-                        color: theme.textPrimary,
                         height: 1.18,
-                        letterSpacing: -0.25,
+                        color: theme.textPrimary,
                       ),
                     ),
                     if (contextLabel != null) ...[
@@ -130,7 +129,7 @@ class FamilyTaskCard extends StatelessWidget {
                         contextLabel,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: AppTypography.caption.copyWith(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                           color: theme.textSecondary,
@@ -159,13 +158,13 @@ class FamilyTaskCard extends StatelessWidget {
                         _FamilyTaskPill(
                           icon: Icons.star_rounded,
                           label: '${task.xpReward} XP',
-                          color: const Color(0xFFF0A146),
+                          color: AppColors.xpGold,
                         ),
                         if (task.coinReward > 0)
                           _FamilyTaskPill(
                             icon: Icons.monetization_on_rounded,
                             label: '${task.coinReward}',
-                            color: const Color(0xFF7CB08B),
+                            color: AppColors.coinGreen,
                           ),
                         if (task.hasRotation)
                           _FamilyTaskPill(
@@ -273,7 +272,7 @@ class FamilyTaskCard extends StatelessWidget {
             accent.withValues(alpha: 0.04),
           ],
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: AppRadii.inner(AppRadii.xl, 12),
         border: Border.all(color: accent.withValues(alpha: 0.08)),
       ),
       child: Center(
@@ -306,7 +305,7 @@ class FamilyTaskCard extends StatelessWidget {
             accent.withValues(alpha: 0.05),
           ],
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: AppRadii.inner(AppRadii.xl, 12),
       ),
       child: Icon(
         dashboardCategoryIcon(task.category),
@@ -394,9 +393,9 @@ class _FamilyTaskPill extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             label,
-            style: TextStyle(
+            style: AppTypography.caption.copyWith(
               fontSize: 10,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               color: color,
             ),
           ),

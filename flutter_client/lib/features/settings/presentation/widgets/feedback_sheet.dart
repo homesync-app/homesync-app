@@ -235,9 +235,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           _type == FeedbackType.bug
               ? t.feedbackThanksBug
               : t.feedbackThanksSuggestion,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
+          style: AppTypography.sectionTitle.copyWith(
             color: theme.textPrimary,
           ),
         ),
@@ -246,7 +244,10 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           _type == FeedbackType.bug
               ? t.feedbackReviewBug
               : t.feedbackConsiderSuggestion,
-          style: TextStyle(fontSize: 14, color: theme.textSecondary),
+          style: AppTypography.body.copyWith(
+            fontWeight: FontWeight.w400,
+            color: theme.textSecondary,
+          ),
         ),
         const SizedBox(height: 24),
       ],
@@ -297,11 +298,10 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           _type == FeedbackType.bug
               ? t.feedbackBugTitlePlaceholder
               : t.feedbackSuggestionTitlePlaceholder,
-          style: TextStyle(
+          style: AppTypography.caption.copyWith(
             fontSize: 13,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: theme.textSecondary,
-            letterSpacing: 0.3,
           ),
         ),
         const SizedBox(height: 8),
@@ -324,7 +324,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
               borderRadius: BorderRadius.circular(AppRadii.md),
               borderSide: BorderSide(color: theme.primary, width: 1.5),
             ),
-            counterStyle: TextStyle(fontSize: 11, color: theme.textMuted),
+            counterStyle: AppTypography.caption.copyWith(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: theme.textMuted,
+            ),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
@@ -349,7 +353,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
               borderRadius: BorderRadius.circular(AppRadii.md),
               borderSide: BorderSide(color: theme.primary, width: 1.5),
             ),
-            counterStyle: TextStyle(fontSize: 11, color: theme.textMuted),
+            counterStyle: AppTypography.caption.copyWith(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: theme.textMuted,
+            ),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
@@ -367,15 +375,16 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           activeThumbColor: theme.primary,
           title: Text(
             t.feedbackEmailResponseTitle,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
+            style: AppTypography.bodyStrong.copyWith(
               color: theme.textPrimary,
             ),
           ),
           subtitle: Text(
             t.feedbackEmailResponseSubtitle,
-            style: TextStyle(fontSize: 12, color: theme.textSecondary),
+            style: AppTypography.caption.copyWith(
+              fontWeight: FontWeight.w500,
+              color: theme.textSecondary,
+            ),
           ),
         ),
         const SizedBox(height: 20),
@@ -408,10 +417,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
                     _type == FeedbackType.bug
                         ? t.feedbackSendBugReport
                         : t.feedbackSendSuggestion,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                    ),
+                    style: AppTypography.cardTitle,
                   ),
           ),
         ),

@@ -213,11 +213,9 @@ class _PlannedExpensePaymentSheetState
                   AppLocalizations.of(context).expensesPlannedPaymentTitle(
                     widget.plannedExpense.transactionType,
                   ),
-                  style: TextStyle(
+                  style: AppTypography.sectionTitle.copyWith(
                     fontSize: 22,
-                    fontWeight: FontWeight.w900,
                     color: theme.textPrimary,
-                    letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -256,11 +254,8 @@ class _PlannedExpensePaymentSheetState
       children: [
         Text(
           AppLocalizations.of(context).expensesPlannedPaymentAmountEyebrow,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
+          style: AppTypography.eyebrow.copyWith(
             color: theme.textMuted,
-            letterSpacing: 1,
           ),
         ),
         const SizedBox(height: 8),
@@ -269,9 +264,8 @@ class _PlannedExpensePaymentSheetState
           controller: _amountController,
           onChanged: _onAmountChanged,
           keyboardType: TextInputType.number,
-          style: TextStyle(
+          style: AppTypography.heroAmount.copyWith(
             fontSize: 32,
-            fontWeight: FontWeight.w900,
             color: theme.textPrimary,
           ),
           decoration: InputDecoration(
@@ -311,11 +305,8 @@ class _PlannedExpensePaymentSheetState
           AppLocalizations.of(context).expensesPlannedPaymentDateEyebrow(
             widget.plannedExpense.transactionType,
           ),
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
+          style: AppTypography.eyebrow.copyWith(
             color: theme.textMuted,
-            letterSpacing: 1,
           ),
         ),
         const SizedBox(height: 8),
@@ -372,11 +363,8 @@ class _PlannedExpensePaymentSheetState
       children: [
         Text(
           AppLocalizations.of(context).expensesFormFieldPayer.toUpperCase(),
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
+          style: AppTypography.eyebrow.copyWith(
             color: theme.textMuted,
-            letterSpacing: 1,
           ),
         ),
         const SizedBox(height: 8),
@@ -447,9 +435,8 @@ class _PlannedExpensePaymentSheetState
             ? const CircularProgressIndicator(color: Colors.white)
             : Text(
                 AppLocalizations.of(context).plannedExpensePaymentConfirmButton,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
+                style: AppTypography.cardTitle.copyWith(
+                  fontWeight: FontWeight.w800,
                 ),
               ),
       ),

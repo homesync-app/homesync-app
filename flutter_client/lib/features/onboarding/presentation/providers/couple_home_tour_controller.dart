@@ -149,12 +149,12 @@ class CoupleHomeTourController extends Notifier<CoupleHomeTourState> {
             ),
           CoachmarkBullet(
             icon: Icons.star_rounded,
-            tint: const Color(0xFFE8943A),
+            tint: AppColors.xpGold,
             text: t.tourBalanceBulletXp,
           ),
           CoachmarkBullet(
             icon: Icons.monetization_on_rounded,
-            tint: AppColors.sage,
+            tint: AppColors.coinGreen,
             text: t.tourBalanceBulletCoins,
           ),
         ],

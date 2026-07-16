@@ -70,9 +70,8 @@ class PoolSection extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     t.poolsEmptyCta,
-                    style: TextStyle(
+                    style: AppTypography.bodyStrong.copyWith(
                       fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
                       color: theme.primary,
                     ),
                   ),
@@ -117,11 +116,9 @@ class PoolSection extends ConsumerWidget {
               Expanded(
                 child: Text(
                   t.poolsSectionTitle,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
+                  style: AppTypography.eyebrow.copyWith(
                     fontSize: 12,
                     color: theme.textSecondary.withValues(alpha: 0.7),
-                    letterSpacing: 1.2,
                   ),
                 ),
               ),
@@ -135,9 +132,8 @@ class PoolSection extends ConsumerWidget {
                 ),
                 child: Text(
                   t.poolsNewAction,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -191,16 +187,19 @@ class _PoolCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Text(pool.emoji, style: const TextStyle(fontSize: 17)),
+                Text(pool.emoji, style: AppTypography.body.copyWith(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w400,
+                ),),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     pool.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                    style: AppTypography.caption.copyWith(
                       fontSize: 13,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       color: theme.textPrimary,
                     ),
                   ),
@@ -212,11 +211,10 @@ class _PoolCard extends ConsumerWidget {
               summary == null
                   ? '—'
                   : currency.format(summary.total.round()),
-              style: TextStyle(
+              style: AppTypography.cardTitle.copyWith(
                 fontSize: 17,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w800,
                 color: theme.textPrimary,
-                letterSpacing: -0.4,
               ),
             ),
             const SizedBox(height: 2),
@@ -228,9 +226,8 @@ class _PoolCard extends ConsumerWidget {
                       : t.poolsCardExpenseCount(summary.expenses.length)),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: AppTypography.caption.copyWith(
                 fontSize: 11,
-                fontWeight: FontWeight.w600,
                 color: theme.textSecondary,
               ),
             ),
@@ -329,11 +326,9 @@ class _PoolCreateSheetState extends ConsumerState<PoolCreateSheet> {
             const SizedBox(height: 16),
             Text(
               t.poolsCreateTitle,
-              style: TextStyle(
+              style: AppTypography.sectionTitle.copyWith(
                 fontSize: 22,
-                fontWeight: FontWeight.w900,
                 color: theme.textPrimary,
-                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 6),
@@ -351,9 +346,8 @@ class _PoolCreateSheetState extends ConsumerState<PoolCreateSheet> {
               controller: _nameController,
               textCapitalization: TextCapitalization.sentences,
               maxLength: 40,
-              style: TextStyle(
+              style: AppTypography.cardTitle.copyWith(
                 fontSize: 18,
-                fontWeight: FontWeight.w800,
                 color: theme.textPrimary,
               ),
               decoration: InputDecoration(
@@ -405,7 +399,10 @@ class _PoolCreateSheetState extends ConsumerState<PoolCreateSheet> {
                       ),
                     ),
                     child: Center(
-                      child: Text(emoji, style: const TextStyle(fontSize: 20)),
+                      child: Text(emoji, style: AppTypography.body.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w400,
+                      ),),
                     ),
                   ),
                 );
@@ -436,9 +433,9 @@ class _PoolCreateSheetState extends ConsumerState<PoolCreateSheet> {
                       )
                     : Text(
                         t.poolsCreateCta,
-                        style: const TextStyle(
+                        style: AppTypography.cardTitle.copyWith(
                           fontSize: 15,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
               ),

@@ -1315,7 +1315,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               onSelected: (_) => setState(() => _selectedPoolId = null),
               showCheckmark: false,
               label: Text(t.expensesFormPoolNone),
-              labelStyle: TextStyle(
+              labelStyle: AppTypography.caption.copyWith(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
                 color: _selectedPoolId == null
@@ -1340,7 +1340,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                     setState(() => _selectedPoolId = pool.id),
                 showCheckmark: false,
                 label: Text('${pool.emoji} ${pool.name}'),
-                labelStyle: TextStyle(
+                labelStyle: AppTypography.caption.copyWith(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                   color: _selectedPoolId == pool.id
@@ -1461,7 +1461,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 radius: 14,
                 forceCircular: true,
               ),
-              title: Text(m.displayName, style: const TextStyle(fontSize: 13)),
+              title: Text(m.displayName, style: AppTypography.caption.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),),
               trailing: Text(
                 '${(memRatio * 100).toInt()}%',
                 style: TextStyle(

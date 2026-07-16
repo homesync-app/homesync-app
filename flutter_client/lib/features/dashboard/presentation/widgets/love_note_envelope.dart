@@ -280,10 +280,9 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
                   Expanded(
                     child: Text(
                       '${widget.senderName} te escribió',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF5C504C),
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF5C504C),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -310,11 +309,10 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
                 child: Text(
                   widget.note.content,
-                  style: const TextStyle(
-                    fontSize: 14,
+                  style: AppTypography.body.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF3F3835),
                     height: 1.42,
+                    color: const Color(0xFF3F3835),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -331,12 +329,12 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
                     color: AppColors.accentOrange.withValues(alpha: 0.9),
                   ),
                   const SizedBox(width: 5),
-                  const Text(
+                  Text(
                     'Guardado en el hogar',
-                    style: TextStyle(
+                    style: AppTypography.caption.copyWith(
                       fontSize: 11,
-                      color: Color(0xFF8B7A73),
                       fontWeight: FontWeight.w700,
+                      color: const Color(0xFF8B7A73),
                     ),
                   ),
                 ],

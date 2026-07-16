@@ -485,10 +485,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                           Text(
                             AppLocalizations.of(context)
                                 .completeTaskHeaderTitle,
-                            style: TextStyle(
+                            style: AppTypography.heroAmount.copyWith(
                               fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.5,
                               color: theme.textPrimary,
                             ),
                           ),
@@ -500,11 +498,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                         child: Text(
                           AppLocalizations.of(context)
                               .completeTaskHeaderSubtitle,
-                          style: TextStyle(
+                          style: AppTypography.caption.copyWith(
                             fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: theme.textSecondary,
                             height: 1.35,
+                            color: theme.textSecondary,
                           ),
                         ),
                       ),
@@ -627,10 +624,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                                       _selectedTaskIds.length == 1
                                           ? 'Completar 1 tarea'
                                           : 'Completar ${_selectedTaskIds.length} tareas',
-                                      style: const TextStyle(
+                                      style: AppTypography.cardTitle.copyWith(
                                         fontSize: 17,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: -0.4,
                                         color: Colors.white,
                                       ),
                                     ),
@@ -666,11 +661,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: AppTypography.cardTitle.copyWith(
                     fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.35,
-                    color: Color(0xFF1E293B),
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF1E293B),
                   ),
                 ),
               ],
@@ -846,9 +840,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
+                style: AppTypography.bodyStrong.copyWith(
                   color: isSelected ? Colors.white : theme.textSecondary,
                 ),
               ),
@@ -884,10 +876,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
             child: TextField(
               controller: _searchController,
               onChanged: (val) => setState(() => _searchQuery = val),
-              style: TextStyle(
-                color: theme.textPrimary,
+              style: AppTypography.body.copyWith(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
+                color: theme.textPrimary,
               ),
               decoration: InputDecoration(
                 hintText: AppLocalizations.of(context).completeTaskSearchHint,
@@ -1085,10 +1077,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           Text(
             t.completeTaskAddPromptTitle,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: theme.textSecondary,
+            style: AppTypography.caption.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
+              color: theme.textSecondary,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -1108,9 +1100,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadii.lg),
                 ),
-                textStyle: const TextStyle(
+                textStyle: AppTypography.cardTitle.copyWith(
                   fontSize: 15,
-                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
@@ -1133,11 +1124,9 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           const SizedBox(width: 8),
           Text(
             title.toUpperCase(),
-            style: TextStyle(
+            style: AppTypography.eyebrow.copyWith(
               fontSize: 12,
-              fontWeight: FontWeight.w900,
               color: color,
-              letterSpacing: 1.0,
             ),
           ),
           const SizedBox(width: 8),
@@ -1198,9 +1187,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
               if (task.xpReward > 0)
                 Text(
                   '${task.xpReward} XP',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w700,
                     color: theme.textMuted,
                   ),
                 ),

@@ -6,11 +6,16 @@ part of 'savings_tab.dart';
 
 class _ContributionHistory extends ConsumerWidget {
   final String goalId;
-  const _ContributionHistory({required this.goalId});
+
+  /// Color de la meta: tiñe los montos para atarlos visualmente a la barra.
+  final Color accentColor;
+
+  const _ContributionHistory({required this.goalId, required this.accentColor});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppLocalizations.of(context);
+    final theme = context.theme;
     final currency = ref.watch(currencyProvider);
     final contributionsAsync = ref.watch(goalContributionsProvider(goalId));
 
@@ -23,21 +28,19 @@ class _ContributionHistory extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            Divider(height: 1, color: context.theme.divider),
+            Divider(height: 1, color: theme.divider),
             const SizedBox(height: 12),
             Text(
               t.savingsHistoryTitle,
-              style: const TextStyle(
+              style: AppTypography.eyebrow.copyWith(
                 fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textMuted,
-                letterSpacing: 1,
+                color: theme.textMuted,
               ),
             ),
             const SizedBox(height: 10),
             for (final c in visible)
               Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                 child: Builder(
                   builder: (context) {
                     final participants = c.isSharedContribution
@@ -53,6 +56,9 @@ class _ContributionHistory extends ConsumerWidget {
                       participants,
                       t.savingsContributionSomeone,
                     );
+                    // Quién a la izquierda, cuánto a la derecha: el monto en
+                    // "+" con el color de la meta lee como abono, sin la frase
+                    // completa en negro que aplastaba la jerarquía.
                     return Row(
                       children: [
                         _ContributionParticipantAvatars(
@@ -60,27 +66,39 @@ class _ContributionHistory extends ConsumerWidget {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text(
-                            c.isSharedContribution
-                                ? t.savingsSharedContributionLine(
-                                    names,
-                                    currency.format(c.amount),
-                                  )
-                                : t.savingsContributionLine(
-                                    names,
-                                    currency.format(c.amount),
-                                  ),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textPrimary,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                names,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.caption.copyWith(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                DateFormat('dd MMM').format(c.createdAt),
+                                style: AppTypography.caption.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: theme.textMuted,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        const SizedBox(width: AppSpacing.xs),
                         Text(
-                          DateFormat('dd MMM').format(c.createdAt),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppColors.textSecondary,
+                          '+${currency.format(c.amount)}',
+                          style: AppTypography.caption.copyWith(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w800,
+                            color: accentColor,
+                            fontFeatures: kTabularFigures,
                           ),
                         ),
                       ],
@@ -203,10 +221,9 @@ class _CompletedGoalDetailSheet extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           t.savingsCompletedGoalsHistoryTitle,
-                          style: TextStyle(
-                            color: theme.textPrimary,
+                          style: AppTypography.sectionTitle.copyWith(
                             fontSize: 22,
-                            fontWeight: FontWeight.w900,
+                            color: theme.textPrimary,
                           ),
                         ),
                       ),
@@ -254,10 +271,10 @@ class _CompletedBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
-          color: color,
+        style: AppTypography.caption.copyWith(
           fontSize: 11,
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w700,
+          color: color,
         ),
       ),
     );
@@ -283,9 +300,9 @@ class _GoalMenu extends ConsumerWidget {
           case 'auto':
             await GoalAutoContributionSheet.show(context, ref, goal);
           case 'archive':
-            await _confirmArchive(context, ref);
+            await _confirmArchiveGoal(context, ref, goal);
           case 'delete':
-            await _confirmDelete(context, ref);
+            await _confirmDeleteGoal(context, ref, goal);
         }
       },
       itemBuilder: (context) => [
@@ -343,55 +360,198 @@ class _GoalMenu extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmArchive(BuildContext context, WidgetRef ref) async {
-    final t = AppLocalizations.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(t.savingsArchiveConfirmTitle),
-        content: Text(t.savingsArchiveConfirmBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(t.commonCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(t.savingsArchiveAction),
-          ),
-        ],
-      ),
-    );
-    if (ok == true) {
-      await ref.read(savingsGoalsProvider.notifier).archiveGoal(goal.id);
-    }
-  }
+}
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final t = AppLocalizations.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(t.savingsDeleteConfirmTitle),
-        content: Text(t.savingsDeleteConfirmBody(goal.title)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(t.commonCancel),
+/// Confirmación de archivo compartida entre el kebab y el sheet de long-press.
+Future<void> _confirmArchiveGoal(
+  BuildContext context,
+  WidgetRef ref,
+  SavingsGoalModel goal,
+) async {
+  final t = AppLocalizations.of(context);
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(t.savingsArchiveConfirmTitle),
+      content: Text(t.savingsArchiveConfirmBody),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(t.commonCancel),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(t.savingsArchiveAction),
+        ),
+      ],
+    ),
+  );
+  if (ok == true) {
+    await ref.read(savingsGoalsProvider.notifier).archiveGoal(goal.id);
+  }
+}
+
+Future<void> _confirmDeleteGoal(
+  BuildContext context,
+  WidgetRef ref,
+  SavingsGoalModel goal,
+) async {
+  final t = AppLocalizations.of(context);
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(t.savingsDeleteConfirmTitle),
+      content: Text(t.savingsDeleteConfirmBody(goal.title)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(t.commonCancel),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(
+            t.savingsDeleteAction,
+            style: const TextStyle(color: AppColors.error),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              t.savingsDeleteAction,
-              style: const TextStyle(color: AppColors.error),
+        ),
+      ],
+    ),
+  );
+  if (ok == true) {
+    await ref.read(savingsGoalsProvider.notifier).removeGoal(goal.id);
+  }
+}
+
+/// Sheet de gestión de la meta (long-press en la card). No ejecuta nada por
+/// sí mismo: hace pop con la acción elegida y [SavingsTab._showGoalActionsSheet]
+/// la resuelve con un context que sigue vivo.
+class _GoalActionsSheet extends StatelessWidget {
+  final SavingsGoalModel goal;
+  final bool reached;
+
+  const _GoalActionsSheet({required this.goal, required this.reached});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final theme = context.theme;
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.lg + safeBottom,
+      ),
+      decoration: BoxDecoration(
+        color: theme.background,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadii.modal),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 46,
+              height: 6,
+              margin: const EdgeInsets.only(bottom: AppSpacing.md),
+              decoration: BoxDecoration(
+                color: theme.divider,
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+              ),
             ),
           ),
+          Row(
+            children: [
+              ConceptIcon(emoji: goal.icon, size: 34),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  goal.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.cardTitle.copyWith(
+                    fontSize: 18,
+                    color: theme.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _actionTile(
+            context,
+            icon: Icons.edit_outlined,
+            label: t.savingsEditAction,
+            value: 'edit',
+          ),
+          if (!reached)
+            _actionTile(
+              context,
+              icon: Icons.autorenew_rounded,
+              label: t.goalAutoMenuAction,
+              value: 'auto',
+            ),
+          if (reached)
+            _actionTile(
+              context,
+              icon: Icons.archive_outlined,
+              label: t.savingsArchiveAction,
+              value: 'archive',
+            ),
+          _actionTile(
+            context,
+            icon: Icons.delete_outline_rounded,
+            label: t.savingsDeleteAction,
+            value: 'delete',
+            color: AppColors.error,
+          ),
         ],
       ),
     );
-    if (ok == true) {
-      await ref.read(savingsGoalsProvider.notifier).removeGoal(goal.id);
-    }
+  }
+
+  Widget _actionTile(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    Color? color,
+  }) {
+    final theme = context.theme;
+    final accent = color ?? AppColors.primary;
+    return AnimatedPress(
+      haptic: AppPressHaptic.light,
+      onTap: () => Navigator.pop(context, value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(AppRadii.md),
+              ),
+              child: Icon(icon, size: 20, color: accent),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              label,
+              style: AppTypography.cardTitle.copyWith(
+                fontSize: 16,
+                color: color ?? theme.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -428,20 +588,18 @@ class _TotalSavingsHeader extends ConsumerWidget {
         children: [
           Text(
             t.savingsTotalLabel,
-            style: TextStyle(
-              color: theme.textSecondary,
+            style: AppTypography.caption.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
+              color: theme.textSecondary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             currency.format(total),
-            style: TextStyle(
-              color: theme.textPrimary,
+            style: AppTypography.heroAmount.copyWith(
               fontSize: 37,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1,
+              color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -473,18 +631,15 @@ class _TotalSavingsHeader extends ConsumerWidget {
       children: [
         Text(
           value,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.w800,
+          style: AppTypography.cardTitle.copyWith(
             fontSize: 18,
+            color: color,
           ),
         ),
         Text(
           label,
-          style: TextStyle(
+          style: AppTypography.caption.copyWith(
             color: theme.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -518,7 +673,10 @@ class _SavingsSuggesterCard extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('💡', style: TextStyle(fontSize: 26)),
+          Text('💡', style: AppTypography.body.copyWith(
+            fontSize: 26,
+            fontWeight: FontWeight.w400,
+          ),),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -530,10 +688,9 @@ class _SavingsSuggesterCard extends ConsumerWidget {
                     suggestion.percentageBoost.toStringAsFixed(1),
                     suggestion.goal.title,
                   ),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    height: 1.35,
+                  style: AppTypography.body.copyWith(
                     fontWeight: FontWeight.w600,
+                    height: 1.35,
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -547,10 +704,10 @@ class _SavingsSuggesterCard extends ConsumerWidget {
                     ),
                     child: Text(
                       t.savingsSuggesterCta,
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w900,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -665,15 +822,13 @@ class _ContributionSheetState extends ConsumerState<_ContributionSheet> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('🎉', style: TextStyle(fontSize: 48)).animatePulse(),
+            const Text('🎉', style: TextStyle(fontSize: 48))
+                .animatePulse(),
             const SizedBox(height: 12),
             Text(
               t.savingsCompletedCelebrationTitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-              ),
+              style: AppTypography.sectionTitle,
             ),
             const SizedBox(height: 8),
             Text(
@@ -773,17 +928,15 @@ class _ContributionSheetState extends ConsumerState<_ContributionSheet> {
                                   children: [
                                     Text(
                                       t.savingsContributeTo,
-                                      style: TextStyle(
-                                        color: theme.textMuted,
-                                        fontSize: 12,
+                                      style: AppTypography.caption.copyWith(
                                         fontWeight: FontWeight.w700,
+                                        color: theme.textMuted,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       goal.title,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w900,
+                                      style: AppTypography.sectionTitle.copyWith(
                                         fontSize: 22,
                                         height: 1.05,
                                         color: theme.textPrimary,
@@ -819,19 +972,17 @@ class _ContributionSheetState extends ConsumerState<_ContributionSheet> {
                               ),
                               textInputAction: TextInputAction.done,
                               inputFormatters: [ThousandsInputFormatter()],
-                              style: TextStyle(
+                              style: AppTypography.heroAmount.copyWith(
                                 fontSize: 36,
-                                fontWeight: FontWeight.w900,
                                 color: theme.textPrimary,
                               ),
                               decoration: InputDecoration(
                                 hintText: '0',
                                 prefixText:
                                     ref.watch(currencyProvider).inputPrefix(),
-                                prefixStyle: TextStyle(
-                                  color: theme.textMuted,
+                                prefixStyle: AppTypography.cardTitle.copyWith(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.w800,
+                                  color: theme.textMuted,
                                 ),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
@@ -849,11 +1000,9 @@ class _ContributionSheetState extends ConsumerState<_ContributionSheet> {
                             const SizedBox(height: AppSpacing.md),
                             Text(
                               t.savingsContributeSplitTitle,
-                              style: TextStyle(
+                              style: AppTypography.eyebrow.copyWith(
                                 fontSize: 12,
-                                fontWeight: FontWeight.w900,
                                 color: theme.textMuted,
-                                letterSpacing: 1,
                               ),
                             ),
                             const SizedBox(height: AppSpacing.xs),
@@ -942,10 +1091,10 @@ class _ContributionSheetState extends ConsumerState<_ContributionSheet> {
                               )
                             : Text(
                                 t.savingsConfirmContribution,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w900,
+                                style: AppTypography.cardTitle.copyWith(
                                   fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
                                 ),
                               ),
                       ),
@@ -995,18 +1144,19 @@ class _ContributionSheetState extends ConsumerState<_ContributionSheet> {
               const SizedBox(height: 6),
               Text(
                 label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
+                  fontWeight: FontWeight.w700,
                   color: selected ? AppColors.primary : AppColors.textPrimary,
                 ),
               ),
               Text(
                 desc,
-                style: const TextStyle(
+                style: AppTypography.caption.copyWith(
                   fontSize: 11,
-                  color: AppColors.textMuted,
+                  fontWeight: FontWeight.w500,
                   height: 1.2,
+                  color: AppColors.textMuted,
                 ),
               ),
             ],
@@ -1161,21 +1311,20 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                                     _isEditing
                                         ? t.savingsEditGoalTitle
                                         : t.savingsNewGoalTitle,
-                                    style: TextStyle(
+                                    style: AppTypography.heroAmount.copyWith(
                                       fontSize: 30,
-                                      fontWeight: FontWeight.w900,
-                                      color: theme.textPrimary,
                                       letterSpacing: -1.2,
+                                      color: theme.textPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 10),
                                   Text(
                                     t.savingsNewGoalSubtitle(modeKey),
-                                    style: TextStyle(
+                                    style: AppTypography.body.copyWith(
                                       fontSize: 16,
+                                      fontWeight: FontWeight.w600,
                                       height: 1.4,
                                       color: theme.textSecondary,
-                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
@@ -1188,11 +1337,10 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                         const SizedBox(height: 12),
                         Text(
                           t.savingsSectionDetailTitle(modeKey),
-                          style: TextStyle(
+                          style: AppTypography.cardTitle.copyWith(
                             fontSize: 18,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w800,
                             color: theme.textPrimary,
-                            letterSpacing: -0.4,
                           ),
                         ),
                         const SizedBox(height: 18),
@@ -1225,11 +1373,10 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                         const SizedBox(height: 12),
                         Text(
                           t.savingsSectionPersonalizationTitle,
-                          style: TextStyle(
+                          style: AppTypography.cardTitle.copyWith(
                             fontSize: 18,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w800,
                             color: theme.textPrimary,
-                            letterSpacing: -0.4,
                           ),
                         ),
                         const SizedBox(height: 18),
@@ -1318,10 +1465,8 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                         onPressed: () => Navigator.pop(context),
                         child: Text(
                           t.commonCancel,
-                          style: TextStyle(
+                          style: AppTypography.cardTitle.copyWith(
                             color: theme.textMuted,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 16,
                           ),
                         ),
                       ),
@@ -1344,9 +1489,9 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                               _isEditing
                                   ? t.savingsSaveChangesAction
                                   : t.savingsCreateGoalAction,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
+                              style: AppTypography.cardTitle.copyWith(
                                 fontSize: 18,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ),
@@ -1365,11 +1510,10 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
 
   Widget _sectionLabel(AppThemeColors theme, String text) => Text(
         text,
-        style: TextStyle(
-          color: theme.textMuted,
+        style: AppTypography.eyebrow.copyWith(
           fontSize: 12,
-          fontWeight: FontWeight.w900,
           letterSpacing: 1.5,
+          color: theme.textMuted,
         ),
       );
 
@@ -1396,9 +1540,7 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
         hintText: hint,
         prefixIcon: icon != null ? Icon(icon, color: AppColors.primary) : null,
         prefixText: prefixText,
-        prefixStyle: TextStyle(
-          fontWeight: FontWeight.w800,
-          fontSize: 20,
+        prefixStyle: AppTypography.sectionTitle.copyWith(
           color: theme.textSecondary,
         ),
         filled: true,
@@ -1441,9 +1583,7 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                style: AppTypography.caption.copyWith(
                   color: theme.textMuted,
                 ),
               ),
@@ -1490,9 +1630,8 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 18,
-                  fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 20),
@@ -1548,9 +1687,8 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 18,
-                  fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 20),
@@ -1624,9 +1762,7 @@ class _DateField extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                    style: AppTypography.caption.copyWith(
                       color: theme.textMuted,
                     ),
                   ),
@@ -1635,9 +1771,7 @@ class _DateField extends StatelessWidget {
                     value != null
                         ? DateFormat('dd MMM yyyy').format(value!)
                         : clearLabel,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
+                    style: AppTypography.cardTitle.copyWith(
                       color: theme.textPrimary,
                     ),
                   ),

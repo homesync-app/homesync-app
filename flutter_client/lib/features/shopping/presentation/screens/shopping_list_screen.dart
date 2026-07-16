@@ -345,10 +345,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(
+                    style: AppTypography.cardTitle.copyWith(
                       fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.25,
                       color: isExpanded ? highlightColor : theme.textPrimary,
                     ),
                   ),
@@ -358,8 +356,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                   if (mutedCount)
                     Text(
                       '$count',
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: AppTypography.caption.copyWith(
                         fontWeight: FontWeight.w700,
                         color: theme.textMuted.withValues(
                           alpha: isExpanded ? 0.9 : 0.7,
@@ -378,9 +375,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                       ),
                       child: Text(
                         '$count',
-                        style: TextStyle(
+                        style: AppTypography.caption.copyWith(
                           fontSize: 11,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                           color: highlightColor.withValues(
                             alpha: isExpanded ? 1 : 0.82,
                           ),
@@ -421,16 +418,16 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         child: Row(
           children: [
             if (emoji != null) ...[
-              Text(emoji, style: const TextStyle(fontSize: 18)),
+              Text(emoji, style: AppTypography.body.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.w400,
+              ),),
               const SizedBox(width: 10),
             ],
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.4,
+                style: AppTypography.sectionTitle.copyWith(
                   color: color,
                 ),
               ),
@@ -445,10 +442,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 ),
                 child: Text(
                   '$count',
-                  style: TextStyle(
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w700,
                     color: color,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
@@ -851,13 +847,10 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                                     : t.shoppingEmptyFirstLineBought,
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  color:
-                                                      context.theme.textPrimary,
+                                                style: AppTypography.cardTitle.copyWith(
                                                   fontSize: 15.5,
                                                   height: 1.2,
-                                                  fontWeight: FontWeight.w800,
-                                                  letterSpacing: -0.35,
+                                                  color: context.theme.textPrimary,
                                                 ),
                                               ),
                                               const SizedBox(height: 3),
@@ -865,12 +858,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                                 t.shoppingEmptyHint,
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
+                                                style: AppTypography.caption.copyWith(
+                                                  fontSize: 12.5,
+                                                  height: 1.3,
                                                   color: context
                                                       .theme.textSecondary,
-                                                  fontSize: 12.5,
-                                                  fontWeight: FontWeight.w600,
-                                                  height: 1.3,
                                                 ),
                                               ),
                                             ],
@@ -1116,8 +1108,7 @@ class _PredefinedItemTile extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
+                style: AppTypography.caption.copyWith(
                   fontSize: 11,
                   height: 1.1,
                   color: isPending

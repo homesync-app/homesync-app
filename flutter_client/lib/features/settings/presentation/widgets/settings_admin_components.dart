@@ -74,9 +74,7 @@ class SettingsAdminTestingCard extends StatelessWidget {
                         admin.isAdminUser
                             ? 'QA Admin Dashboard'
                             : 'Modo QA disponible',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                        style: AppTypography.cardTitle.copyWith(
                           color: theme.textPrimary,
                         ),
                       ),
@@ -84,10 +82,10 @@ class SettingsAdminTestingCard extends StatelessWidget {
                         admin.isAdminUser
                             ? 'Admin QA separado de tu cuenta real. Elige un hogar de prueba y luego cambia la vista por avatar.'
                             : 'Ingresa con la cuenta de testing para habilitar los 4 hogares QA.',
-                        style: TextStyle(
-                          color: theme.textSecondary,
-                          fontSize: 12,
+                        style: AppTypography.caption.copyWith(
+                          fontWeight: FontWeight.w500,
                           height: 1.35,
+                          color: theme.textSecondary,
                         ),
                       ),
                     ],
@@ -142,11 +140,10 @@ class SettingsAdminTestingCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   'Tip: eliminá miembros desde la sección "Miembros" de este mismo hogar QA.',
-                  style: TextStyle(
-                    color: theme.textSecondary,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 11,
                     height: 1.35,
-                    fontWeight: FontWeight.w600,
+                    color: theme.textSecondary,
                   ),
                 ),
               ],
@@ -219,19 +216,17 @@ class SettingsAdminScenarioTile extends StatelessWidget {
                   children: [
                     Text(
                       scenario.title,
-                      style: TextStyle(
+                      style: AppTypography.bodyStrong.copyWith(
                         color: theme.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       scenario.description,
-                      style: TextStyle(
-                        color: theme.textSecondary,
-                        fontSize: 12,
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w500,
                         height: 1.3,
+                        color: theme.textSecondary,
                       ),
                     ),
                   ],

@@ -37,21 +37,19 @@ class ContributionBalanceCard extends ConsumerWidget {
         children: [
           Text(
             t.contributionBalanceTitle,
-            style: TextStyle(
+            style: AppTypography.cardTitle.copyWith(
               fontSize: 18,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
               color: theme.textPrimary,
-              letterSpacing: -0.35,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             t.contributionBalanceSubtitle,
-            style: TextStyle(
+            style: AppTypography.body.copyWith(
               fontSize: 13.5,
-              fontWeight: FontWeight.w500,
-              color: theme.textSecondary,
               height: 1.35,
+              color: theme.textSecondary,
             ),
           ),
           const SizedBox(height: 16),
@@ -82,9 +80,7 @@ class ContributionBalanceCard extends ConsumerWidget {
         Text(
           t.contributionBalanceEmptyTitle,
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
+          style: AppTypography.bodyStrong.copyWith(
             color: theme.textPrimary,
           ),
         ),
@@ -92,10 +88,11 @@ class ContributionBalanceCard extends ConsumerWidget {
         Text(
           t.contributionBalanceEmptyBody,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: AppTypography.caption.copyWith(
             fontSize: 13,
-            color: theme.textSecondary,
+            fontWeight: FontWeight.w500,
             height: 1.35,
+            color: theme.textSecondary,
           ),
         ),
       ],
@@ -137,11 +134,10 @@ class ContributionBalanceCard extends ConsumerWidget {
             Expanded(
               child: Text(
                 t.contributionBalanceFootnote,
-                style: TextStyle(
+                style: AppTypography.caption.copyWith(
                   fontSize: 11.5,
-                  color: theme.textMuted,
-                  fontWeight: FontWeight.w600,
                   height: 1.3,
+                  color: theme.textMuted,
                 ),
               ),
             ),
@@ -184,9 +180,8 @@ class _MemberRow extends StatelessWidget {
             children: [
               Text(
                 member.displayName,
-                style: TextStyle(
+                style: AppTypography.bodyStrong.copyWith(
                   fontSize: 14.5,
-                  fontWeight: FontWeight.w800,
                   color: theme.textPrimary,
                 ),
               ),
@@ -250,8 +245,7 @@ class _ShareBar extends StatelessWidget {
           child: Text(
             label,
             textAlign: TextAlign.end,
-            style: TextStyle(
-              fontSize: 12,
+            style: AppTypography.caption.copyWith(
               fontWeight: FontWeight.w700,
               color: theme.textSecondary,
             ),

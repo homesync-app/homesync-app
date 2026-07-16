@@ -184,10 +184,8 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                             children: [
                               Text(
                                 currency.inputPrefix(),
-                                style: TextStyle(
+                                style: AppTypography.cardTitle.copyWith(
                                   color: theme.textPrimary,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
                                 ),
                               ),
                               AnimatedAmount(
@@ -290,11 +288,10 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                           const SizedBox(width: AppSpacing.xs),
                           Text(
                             t.balanceCardSettleButton,
-                            style: TextStyle(
-                              color: statusColor,
-                              fontWeight: FontWeight.w800,
+                            style: AppTypography.caption.copyWith(
                               fontSize: 13,
-                              letterSpacing: 0,
+                              fontWeight: FontWeight.w700,
+                              color: statusColor,
                             ),
                           ),
                         ],
@@ -345,7 +342,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                       label: 'XP',
                       value: widget.xp,
                       beginValue: _xpAnimationStart,
-                      color: const Color(0xFFE8943A),
+                      color: AppColors.xpGold,
                       subdued: isBalanced && widget.xp == 0,
                     ),
                   ),
@@ -362,7 +359,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                       label: 'coins',
                       value: widget.coins,
                       beginValue: _coinsAnimationStart,
-                      color: AppColors.sage,
+                      color: AppColors.coinGreen,
                       subdued: isBalanced && widget.coins == 0,
                     ),
                   ),
@@ -460,13 +457,11 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                       text: label == 'XP'
                           ? ' ${t.balanceCardXpLabel}'
                           : ' ${t.balanceCardCoinsLabel}',
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w700,
                         color: subdued
                             ? theme.textSecondary.withValues(alpha: 0.82)
                             : theme.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0,
                       ),
                     ),
                   ],

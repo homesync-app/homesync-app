@@ -43,10 +43,9 @@ extension _ExpenseFormBuilders on _ExpenseFormSheetState {
             Expanded(
               child: Text(
                 t.allowanceEntryTitle,
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w800,
+                style: AppTypography.bodyStrong.copyWith(
                   fontSize: 13.5,
+                  color: AppColors.primary,
                 ),
               ),
             ),
@@ -127,19 +126,18 @@ extension _ExpenseFormBuilders on _ExpenseFormSheetState {
           Expanded(
             child: TextField(
               controller: _titleController,
-              style: TextStyle(
-                color: theme.textPrimary,
+              style: AppTypography.body.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
+                color: theme.textPrimary,
               ),
               decoration: InputDecoration(
                 hintText: _isIncome
                     ? t.expensesFormTitleHintIncome
                     : t.expensesFormTitleHintExpense,
-                hintStyle: TextStyle(
-                  color: theme.textMuted,
+                hintStyle: AppTypography.body.copyWith(
                   fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                  color: theme.textMuted,
                 ),
                 filled: false,
                 fillColor: Colors.transparent,
@@ -302,10 +300,9 @@ extension _ExpenseFormBuilders on _ExpenseFormSheetState {
                 children: [
                   Text(
                     t.expensesFormFieldCategory,
-                    style: TextStyle(
-                      color: theme.textSecondary,
-                      fontSize: 12,
+                    style: AppTypography.caption.copyWith(
                       fontWeight: FontWeight.w500,
+                      color: theme.textSecondary,
                     ),
                   ),
                   Text(
@@ -318,10 +315,8 @@ extension _ExpenseFormBuilders on _ExpenseFormSheetState {
                             t,
                             _selectedCategory!['id'] as String,
                           ),
-                    style: TextStyle(
+                    style: AppTypography.cardTitle.copyWith(
                       color: theme.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ],
@@ -435,10 +430,9 @@ extension _ExpenseFormBuilders on _ExpenseFormSheetState {
                                 : (_isIncome
                                     ? t.expensesFormSavedIncome
                                     : t.expensesFormSavedExpense),
-                            style: const TextStyle(
+                            style: AppTypography.cardTitle.copyWith(
                               fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.5,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ],
@@ -451,10 +445,9 @@ extension _ExpenseFormBuilders on _ExpenseFormSheetState {
                           const SizedBox(width: 8),
                           Text(
                             _isIncome ? 'Guardar Ingreso' : 'Guardar Gasto',
-                            style: const TextStyle(
+                            style: AppTypography.cardTitle.copyWith(
                               fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.5,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ],

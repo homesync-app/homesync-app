@@ -255,21 +255,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 children: [
                   Text(
                     t.calendarWeekOf,
-                    style: TextStyle(
+                    style: AppTypography.eyebrow.copyWith(
                       fontSize: 12,
-                      fontWeight: FontWeight.w800,
                       color: theme.textMuted,
-                      letterSpacing: 1.2,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     monthYear,
-                    style: TextStyle(
+                    style: AppTypography.sectionTitle.copyWith(
                       fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: theme.textPrimary,
                       letterSpacing: -0.8,
+                      color: theme.textPrimary,
                     ),
                   ),
                 ],
@@ -332,11 +329,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             children: [
               Text(
                 isToday ? 'Hoy, $dayName' : dayName,
-                style: TextStyle(
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 14,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w800,
                   color: isToday ? AppColors.primary : theme.textPrimary,
-                  letterSpacing: -0.2,
                 ),
               ),
               const SizedBox(width: 12),
@@ -388,10 +384,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 const SizedBox(width: 16),
                 Text(
                   t.calendarNoTasksScheduled,
-                  style: TextStyle(
-                    color: theme.textMuted,
-                    fontSize: 14,
+                  style: AppTypography.body.copyWith(
                     fontWeight: FontWeight.w600,
+                    color: theme.textMuted,
                   ),
                 ),
               ],
@@ -539,9 +534,9 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                           children: [
                             Text(
                               '+$xp XP',
-                              style: const TextStyle(
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 11,
-                                fontWeight: FontWeight.w900,
+                                fontWeight: FontWeight.w700,
                                 color: AppColors.accentGold,
                               ),
                             ),
@@ -559,9 +554,9 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                                 ),
                                 child: Text(
                                   task.recurrenceType!.toUpperCase(),
-                                  style: const TextStyle(
+                                  style: AppTypography.caption.copyWith(
                                     fontSize: 8,
-                                    fontWeight: FontWeight.w900,
+                                    fontWeight: FontWeight.w700,
                                     color: AppColors.accentTeal,
                                   ),
                                 ),
@@ -655,9 +650,9 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
             const SizedBox(width: 8),
             Text(
               label,
-              style: TextStyle(
+              style: AppTypography.caption.copyWith(
                 fontSize: 13,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: color,
               ),
             ),

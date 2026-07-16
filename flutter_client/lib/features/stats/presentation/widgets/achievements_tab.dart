@@ -283,18 +283,18 @@ class AchievementsTab extends StatelessWidget {
               children: [
                 Text(
                   title.toUpperCase(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
+                  style: AppTypography.cardTitle.copyWith(
                     fontSize: 14,
-                    color: titleColor,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
+                    color: titleColor,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w500,
                     color: bodyColor,
                   ),
                 ),
@@ -310,9 +310,9 @@ class AchievementsTab extends StatelessWidget {
           const SizedBox(width: 12),
           Text(
             progressText,
-            style: TextStyle(
+            style: AppTypography.caption.copyWith(
               fontSize: 11,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
               color: valueColor,
             ),
           ),
@@ -402,17 +402,16 @@ class AchievementsTab extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
+                  style: AppTypography.bodyStrong.copyWith(
                     color: isUnlocked ? theme.textPrimary : theme.textMuted,
                   ),
                 ),
                 if (isUnlocked)
                   Text(
                     description,
-                    style: TextStyle(
+                    style: AppTypography.caption.copyWith(
                       fontSize: 11,
+                      fontWeight: FontWeight.w500,
                       color: theme.textSecondary,
                     ),
                   ),

@@ -98,11 +98,9 @@ class SpentBentoTile extends ConsumerWidget {
                   children: [
                     Text(
                       label.toUpperCase(),
-                      style: TextStyle(
-                        color: theme.textSecondary,
+                      style: AppTypography.eyebrow.copyWith(
                         fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.1,
+                        color: theme.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -115,10 +113,10 @@ class SpentBentoTile extends ConsumerWidget {
                             footerLabel,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: theme.textSecondary,
+                            style: AppTypography.caption.copyWith(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w700,
+                              color: theme.textSecondary,
                             ),
                           ),
                         ),
@@ -175,11 +173,9 @@ class SpentBentoTile extends ConsumerWidget {
         padding: const EdgeInsets.only(top: 4),
         child: Text(
           t.homeSoloSpentEmpty,
-          style: TextStyle(
-            color: theme.textSecondary,
+          style: AppTypography.cardTitle.copyWith(
             fontSize: 17,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.3,
+            color: theme.textSecondary,
           ),
         ),
       );

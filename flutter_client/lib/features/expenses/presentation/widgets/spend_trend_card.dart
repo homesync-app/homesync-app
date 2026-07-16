@@ -84,11 +84,9 @@ class SpendTrendCard extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     t.trendTitle,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
+                    style: AppTypography.eyebrow.copyWith(
                       fontSize: 10.5,
                       color: theme.textSecondary.withValues(alpha: 0.7),
-                      letterSpacing: 1.2,
                     ),
                   ),
                 ),
@@ -100,9 +98,9 @@ class SpendTrendCard extends ConsumerWidget {
                       deltaText,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
                         fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         color: deltaColor,
                       ),
                     ),
@@ -135,9 +133,8 @@ class SpendTrendCard extends ConsumerWidget {
               children: [
                 Text(
                   t.trendCurrentMonthLabel,
-                  style: TextStyle(
+                  style: AppTypography.caption.copyWith(
                     fontSize: 11,
-                    fontWeight: FontWeight.w600,
                     color: theme.textMuted,
                   ),
                 ),

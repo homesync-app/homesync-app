@@ -83,11 +83,8 @@ class RecurrentesTab extends ConsumerWidget {
                           const SizedBox(height: 24),
                           Text(
                             t.expensesRecurringEmptyTitle,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
+                            style: AppTypography.sectionTitle.copyWith(
                               color: AppColors.textPrimary,
-                              letterSpacing: -0.5,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -98,10 +95,8 @@ class RecurrentesTab extends ConsumerWidget {
                             child: Text(
                               t.expensesRecurringEmptySubtitle,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: AppTypography.body.copyWith(
                                 color: AppColors.textSecondary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -201,10 +196,7 @@ class RecurrentesTab extends ConsumerWidget {
             const SizedBox(width: 8),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.2,
+              style: AppTypography.eyebrow.copyWith(
                 color: color.withValues(alpha: 0.85),
               ),
             ),
@@ -283,9 +275,7 @@ class RecurrentesTab extends ConsumerWidget {
                         category: template.category,
                         transactionType: template.type,
                       ),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
+                      style: AppTypography.cardTitle.copyWith(
                         color: AppColors.textPrimary,
                       ),
                     ),
@@ -293,10 +283,9 @@ class RecurrentesTab extends ConsumerWidget {
                     Text(
                       AppLocalizations.of(context)
                           .expensesRecurrentesDayOfMonth(template.dayOfMonth),
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -307,9 +296,9 @@ class RecurrentesTab extends ConsumerWidget {
                 children: [
                   Text(
                     formatCurrency(template.defaultAmount),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
+                    style: AppTypography.cardTitle.copyWith(
                       fontSize: 18,
+                      fontWeight: FontWeight.w800,
                       color: template.isIncome
                           ? AppColors.success
                           : AppColors.textPrimary,
@@ -328,9 +317,9 @@ class RecurrentesTab extends ConsumerWidget {
                       ),
                       child: Text(
                         _templateSplitLabel(context, template.splitType),
-                        style: const TextStyle(
+                        style: AppTypography.caption.copyWith(
                           fontSize: 10,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.sage,
                         ),
                       ),
@@ -352,9 +341,14 @@ class RecurrentesTab extends ConsumerWidget {
     return Center(
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xl,
-          vertical: AppSpacing.lg,
+        // El padding explícito descarta el inset automático de MediaQuery, así
+        // que hay que sumar a mano el alto de la nav flotante (extendBody):
+        // sin esto el CTA queda pegado/tapado por la pill de navegación.
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.xl,
+          AppSpacing.lg,
+          AppSpacing.xl,
+          MediaQuery.paddingOf(context).bottom + AppSpacing.lg,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -375,22 +369,19 @@ class RecurrentesTab extends ConsumerWidget {
             Text(
               t.expensesRecurrentesPremiumTitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: AppTypography.heroAmount.copyWith(
                 fontSize: 24,
-                fontWeight: FontWeight.w900,
                 color: AppColors.textPrimary,
-                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 10),
             Text(
               t.expensesRecurrentesPremiumSubtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: AppTypography.body.copyWith(
                 fontSize: 14.5,
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
                 height: 1.4,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -445,9 +436,8 @@ class RecurrentesTab extends ConsumerWidget {
                 ),
                 child: Text(
                   t.expensesRecurrentesPremiumCta,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 16,
+                  style: AppTypography.cardTitle.copyWith(
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -481,9 +471,8 @@ class RecurrentesTab extends ConsumerWidget {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
+              style: AppTypography.caption.copyWith(
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
                 height: 1.3,
                 color: theme.textPrimary,
               ),
@@ -498,7 +487,7 @@ class RecurrentesTab extends ConsumerWidget {
     return Container(
       height: 1,
       margin: const EdgeInsets.only(left: 46),
-      color: theme.divider.withValues(alpha: 0.25),
+      color: theme.isDarkMode ? theme.divider : AppColors.divider,
     );
   }
 }

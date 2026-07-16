@@ -32,9 +32,9 @@ Future<void> showExpenseMemberSelectorSheet({
             children: [
               Text(
                 t.expensesFormFieldPayer,
-                style: const TextStyle(
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 18,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -90,9 +90,9 @@ Future<void> showExpenseCategorySelectorSheet({
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Text(
                 t.expensesFormSelectCategoryTitle,
-                style: const TextStyle(
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 18,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
                 ),
               ),

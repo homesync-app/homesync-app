@@ -44,12 +44,20 @@ class _HouseholdSettingsScreenState
     extends ConsumerState<HouseholdSettingsScreen> {
   bool _isLoading = true;
   bool _hasLoadedOnce = false;
+  bool _loadFailed = false;
   String? _householdId;
   String? _invitationCode;
   List<Map<String, dynamic>> _members = [];
   String? _householdName;
   String? _householdType;
   bool _tasksEnabled = true;
+
+  /// Tipo normalizado para las claves ICU ('roommates' es legacy de friends).
+  String get _normalizedHouseholdType => switch (_householdType) {
+        'roommates' => 'friends',
+        null => 'solo',
+        final String type => type,
+      };
 
   @override
   void initState() {
@@ -59,7 +67,10 @@ class _HouseholdSettingsScreenState
 
   Future<void> _loadData() async {
     if (mounted) {
-      setState(() => _isLoading = true);
+      setState(() {
+        _isLoading = true;
+        _loadFailed = false;
+      });
     }
 
     try {
@@ -137,6 +148,9 @@ class _HouseholdSettingsScreenState
         setState(() {
           _isLoading = false;
           _hasLoadedOnce = true;
+          // Sin esta marca, un fallo de red caía en la card de "no tenés
+          // hogar" e invitaba a unirse con código a alguien que SÍ tiene.
+          _loadFailed = true;
         });
       }
     }
@@ -154,10 +168,7 @@ class _HouseholdSettingsScreenState
         scrolledUnderElevation: 0,
         title: Text(
           t.settingsSectionHouseholdTitle,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.4,
+          style: AppTypography.sectionTitle.copyWith(
             color: theme.textPrimary,
           ),
         ),
@@ -178,6 +189,8 @@ class _HouseholdSettingsScreenState
                 _buildCombinedHouseholdCard()
               else if (!_hasLoadedOnce && _isLoading)
                 const SettingsLoadingCard(height: 220)
+              else if (_loadFailed)
+                _buildLoadErrorCard()
               else
                 _buildNoHouseholdCard(),
             ],
@@ -188,6 +201,7 @@ class _HouseholdSettingsScreenState
   }
 
   Future<void> _generateNewCode() async {
+    final t = AppLocalizations.of(context);
     try {
       final result =
           await ref.read(householdRepositoryProvider).generateInvitationCode();
@@ -197,7 +211,7 @@ class _HouseholdSettingsScreenState
           (failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Error: ${failure.message}'),
+                content: Text(t.commonErrorWithDetails(failure.message)),
                 backgroundColor: AppColors.error,
               ),
             );
@@ -205,8 +219,8 @@ class _HouseholdSettingsScreenState
           (code) {
             setState(() => _invitationCode = code);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Codigo generado'),
+              SnackBar(
+                content: Text(t.settingsHouseholdCodeGenerated),
                 backgroundColor: AppColors.success,
               ),
             );
@@ -218,7 +232,9 @@ class _HouseholdSettingsScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Error: ${e.toString().replaceFirst("Exception: ", "")}',
+              t.commonErrorWithDetails(
+                e.toString().replaceFirst('Exception: ', ''),
+              ),
             ),
             backgroundColor: AppColors.error,
           ),
@@ -232,52 +248,35 @@ class _HouseholdSettingsScreenState
     if (code == null) return;
     Clipboard.setData(ClipboardData(text: code));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Codigo copiado al portapapeles'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context).settingsHouseholdCodeCopied),
         backgroundColor: AppColors.success,
       ),
     );
   }
 
   Future<void> _shareViaWhatsApp() async {
-    if (_invitationCode == null) {
+    final t = AppLocalizations.of(context);
+    final code = _invitationCode;
+    if (code == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Genera un codigo primero')),
+        SnackBar(content: Text(t.settingsHouseholdCodeGenerateFirst)),
       );
       return;
     }
-    String intro = '¡Hola! Te invito a unirte a nuestro hogar en HomeSync.';
-    if (_householdType == 'couple') {
-      intro =
-          '¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.';
-    } else if (_householdType == 'family') {
-      intro = '¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.';
-    } else if (_householdType == 'friends') {
-      intro =
-          '¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.';
-    }
 
-    final text =
-        '$intro\n\nDescarga la app e ingresa este código: *$_invitationCode*\n\n¡Organicemos nuestro hogar juntos!';
+    final text = t.settingsInviteWhatsAppMessage(_normalizedHouseholdType, code);
     final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
 
     try {
       if (await canLaunchUrl(url)) {
-        await launchUrl(url);
+        await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
-        final webUrl =
-            Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
-        if (await canLaunchUrl(webUrl)) {
-          await launchUrl(webUrl, mode: LaunchMode.externalApplication);
-        } else {
-          _copyCode();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('No se pudo abrir WhatsApp. Codigo copiado.'),
-              ),
-            );
-          }
+        _copyCode();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(t.settingsHouseholdWhatsAppFallback)),
+          );
         }
       }
     } catch (e) {
@@ -298,8 +297,10 @@ class _HouseholdSettingsScreenState
             (_) async {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Te uniste al hogar exitosamente'),
+                  SnackBar(
+                    content: Text(
+                      AppLocalizations.of(context).settingsHouseholdJoinSuccess,
+                    ),
                     backgroundColor: AppColors.success,
                   ),
                 );
@@ -316,13 +317,16 @@ class _HouseholdSettingsScreenState
   }
 
   Widget _buildCombinedHouseholdCard() {
-    final typeLabels = {
-      'couple': '💑 Pareja',
-      'family': '👨‍👩‍👧‍👦 Familia',
-      'friends': '🏠 Convivencia',
-      'roommates': '🏠 Compañeros',
-      'solo': '👤 Solo',
+    final t = AppLocalizations.of(context);
+    const typeEmojis = {
+      'couple': '💑',
+      'family': '👨‍👩‍👧‍👦',
+      'friends': '🏠',
+      'solo': '👤',
     };
+    final normalizedType = _normalizedHouseholdType;
+    final typeLabel =
+        '${typeEmojis[normalizedType] ?? '🏠'} ${t.setupModeName(normalizedType)}';
     final memberCount = _members.length;
     final currentUserId = ref.read(currentUserIdProvider);
     final isOwner = _members.any(
@@ -355,8 +359,8 @@ class _HouseholdSettingsScreenState
 
     return buildSettingsCombinedHouseholdCard(
       context,
-      householdName: _householdName ?? 'Mi hogar',
-      householdTypeLabel: typeLabels[_householdType] ?? 'Hogar',
+      householdName: _householdName ?? t.settingsHouseholdFallbackName,
+      householdTypeLabel: typeLabel,
       onEdit: _showEditHouseholdMenu,
       memberCount: memberCount,
       members: members,
@@ -403,6 +407,7 @@ class _HouseholdSettingsScreenState
     final householdId = _householdId;
     if (householdId == null || _tasksEnabled == enabled) return;
 
+    final t = AppLocalizations.of(context);
     setState(() => _isLoading = true);
     try {
       final result = await ref
@@ -431,8 +436,8 @@ class _HouseholdSettingsScreenState
         SnackBar(
           content: Text(
             enabled
-                ? '✅ Tareas del hogar activadas'
-                : '✅ Modo finanzas y compras activado',
+                ? t.settingsHouseholdTasksEnabledSnack
+                : t.settingsHouseholdFinanceModeSnack,
           ),
           backgroundColor: AppColors.success,
         ),
@@ -446,7 +451,7 @@ class _HouseholdSettingsScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('No se pudo actualizar la configuracion: $error'),
+          content: Text(t.settingsHouseholdUpdateError('$error')),
           backgroundColor: AppColors.error,
         ),
       );
@@ -460,37 +465,9 @@ class _HouseholdSettingsScreenState
   Future<void> _confirmRemoveMember(String userId, String name) async {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: theme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.xl),
-        ),
-        title: Text(
-          t.settingsRemoveMemberTitle,
-          style: const TextStyle(fontWeight: FontWeight.w900),
-        ),
-        content: Text(t.settingsRemoveMemberBody(name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(t.commonCancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-              ),
-              minimumSize: const Size(100, 48), // Prevents infinite width error
-            ),
-            child: Text(t.settingsRemoveMemberAction),
-          ),
-        ],
-      ),
+    final confirm = await showSettingsRemoveMemberDialog(
+      context,
+      memberName: name,
     );
 
     if (confirm == true) {
@@ -522,43 +499,12 @@ class _HouseholdSettingsScreenState
   }
 
   Future<void> _confirmDeleteDummyMember(String userId, String name) async {
-    final theme = context.theme;
     final householdId = _householdId;
     if (householdId == null) return;
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: theme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.xl),
-        ),
-        title: const Text(
-          '¿Eliminar dummy QA?',
-          style: TextStyle(fontWeight: FontWeight.w900),
-        ),
-        content: Text(
-          'Esto eliminará a $name como usuario dummy QA. Si no pertenece a otro hogar QA, también se borrará su identidad técnica.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-              ),
-              minimumSize: const Size(128, 48),
-            ),
-            child: const Text('Eliminar dummy'),
-          ),
-        ],
-      ),
+    final confirm = await showSettingsDeleteDummyMemberDialog(
+      context,
+      memberName: name,
     );
 
     if (confirm != true) return;
@@ -601,48 +547,10 @@ class _HouseholdSettingsScreenState
   }
 
   Future<void> _showRenameHouseholdDialog() async {
-    final ctrl = TextEditingController(text: _householdName);
-    final theme = context.theme;
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: theme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.lg),
-        ),
-        title: const Text(
-          'Nombre del hogar',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: InputDecoration(
-            labelText: 'Tu nombre',
-            filled: true,
-            fillColor: theme.primary.withValues(alpha: 0.05),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadii.sm),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primary,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(100, 48), // Prevents infinite width error
-            ),
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
+    final t = AppLocalizations.of(context);
+    final newName = await showSettingsRenameHouseholdDialog(
+      context,
+      initialName: _householdName,
     );
 
     if (newName == null || newName.isEmpty || newName == _householdName) return;
@@ -659,8 +567,8 @@ class _HouseholdSettingsScreenState
       if (mounted) {
         setState(() => _householdName = newName);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Hogar renombrado'),
+          SnackBar(
+            content: Text(t.settingsHouseholdRenamed),
             backgroundColor: AppColors.success,
           ),
         );
@@ -669,7 +577,7 @@ class _HouseholdSettingsScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(t.commonErrorWithDetails('$e')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -690,17 +598,12 @@ class _HouseholdSettingsScreenState
     if (displayRole != null && displayRole.isNotEmpty) {
       return displayRole;
     }
-    if (role == 'owner') return 'Propietario';
-    switch (_householdType) {
-      case 'couple':
-        return 'Pareja';
-      case 'family':
-        return 'Integrante';
-      case 'friends':
-        return 'Compañero';
-      default:
-        return 'Miembro';
-    }
+    if (role == 'owner') return t.settingsMemberRoleOwner;
+    return switch (_householdType) {
+      'couple' => t.settingsMemberRoleCouple,
+      'friends' => t.settingsMemberRoleFriends,
+      _ => t.settingsMemberRoleDefault,
+    };
   }
 
   Future<void> _updateMemberRole(Map<String, dynamic> member) async {
@@ -710,23 +613,15 @@ class _HouseholdSettingsScreenState
     }
 
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final userId = member['user_id'];
     final currentLabel = member['display_role'] ?? '';
-    final suggestions = <String>[];
-    if (_householdType == 'family') {
-      suggestions.addAll([
-        'Padre',
-        'Madre',
-        'Tutor/a',
-        'Adolescente',
-        'Hijo/a',
-        'Abuelo/a',
-      ]);
-    } else if (_householdType == 'couple') {
-      suggestions.addAll(['Pareja', 'Novio', 'Novia', 'Esposo', 'Esposa']);
-    } else if (_householdType == 'friends') {
-      suggestions.addAll(['Compañero', 'Roommate', 'Invitado', 'Responsable']);
-    }
+    // La rama family no llega acá (va por _updateFamilyMemberType arriba).
+    final suggestions = switch (_householdType) {
+      'couple' => t.settingsRoleSuggestionsCouple.split(','),
+      'friends' => t.settingsRoleSuggestionsFriends.split(','),
+      _ => const <String>[],
+    };
 
     final ctrl = TextEditingController(text: currentLabel);
 
@@ -736,9 +631,9 @@ class _HouseholdSettingsScreenState
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadii.lg),
         ),
-        title: const Text(
-          'Asignar Rol / Apodo',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          t.settingsAssignRoleTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -748,11 +643,8 @@ class _HouseholdSettingsScreenState
               autofocus: true,
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
-                labelText: _householdType == 'family'
-                    ? 'Nombre del rol (ej: Madre)'
-                    : _householdType == 'friends'
-                        ? 'Nombre del rol (ej: Compañero)'
-                        : 'Nombre del rol (ej: Padre)',
+                labelText:
+                    t.settingsAssignRoleFieldLabel(_normalizedHouseholdType),
                 filled: true,
                 fillColor: theme.primary.withValues(alpha: 0.05),
                 border: OutlineInputBorder(
@@ -762,9 +654,11 @@ class _HouseholdSettingsScreenState
             ),
             if (suggestions.isNotEmpty) ...[
               const SizedBox(height: 16),
-              const Text(
-                'Sugerencias:',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              Text(
+                t.settingsAssignRoleSuggestionsLabel,
+                style: AppTypography.caption.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -772,7 +666,12 @@ class _HouseholdSettingsScreenState
                 children: suggestions
                     .map(
                       (s) => ActionChip(
-                        label: Text(s, style: const TextStyle(fontSize: 12)),
+                        label: Text(
+                          s,
+                          style: AppTypography.caption.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                         onPressed: () => ctrl.text = s,
                       ),
                     )
@@ -784,11 +683,11 @@ class _HouseholdSettingsScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
+            child: Text(t.commonCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-            child: const Text('Confirmar'),
+            child: Text(t.commonConfirm),
           ),
         ],
       ),
@@ -808,9 +707,12 @@ class _HouseholdSettingsScreenState
             setState(() {
               member['display_role'] = newRole;
             });
+            // El resto de la app (home, sheets de detalle) lee el rol desde
+            // householdMembersProvider; sin esto quedaba el rol viejo.
+            ref.invalidate(householdMembersProvider);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('✅ Rol actualizado'),
+              SnackBar(
+                content: Text(t.settingsHouseholdRoleUpdated),
                 backgroundColor: AppColors.success,
               ),
             );
@@ -821,7 +723,7 @@ class _HouseholdSettingsScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(t.commonErrorWithDetails('$e')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -869,19 +771,18 @@ class _HouseholdSettingsScreenState
             children: [
               Text(
                 t.membersRolePickerTitle(name),
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
+                style: AppTypography.sectionTitle.copyWith(
                   color: theme.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 t.membersRolePickerSubtitle,
-                style: TextStyle(
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
-                  color: theme.textSecondary,
+                  fontWeight: FontWeight.w500,
                   height: 1.35,
+                  color: theme.textSecondary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -1002,8 +903,7 @@ class _HouseholdSettingsScreenState
                 children: [
                   Text(
                     option.label(t),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
+                    style: AppTypography.cardTitle.copyWith(
                       fontSize: 15,
                       color: theme.textPrimary,
                     ),
@@ -1011,8 +911,8 @@ class _HouseholdSettingsScreenState
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w500,
                       color: theme.textSecondary,
                     ),
                   ),
@@ -1039,7 +939,8 @@ class _HouseholdSettingsScreenState
   void _showEditHouseholdMenu() {
     showSettingsEditHouseholdMenu(
       context,
-      householdName: _householdName ?? 'Mi hogar',
+      householdName: _householdName ??
+          AppLocalizations.of(context).settingsHouseholdFallbackName,
       invitationCode: _invitationCode,
       householdType: _householdType,
       onEditName: _showRenameHouseholdDialog,
@@ -1072,6 +973,50 @@ class _HouseholdSettingsScreenState
   Widget _buildNoHouseholdCard() {
     return SettingsNoHouseholdCard(
       onJoin: _showJoinDialog,
+    );
+  }
+
+  /// Card de error con retry: un fallo de red no debe mostrar el empty state
+  /// de "unite con un código" a alguien que sí tiene hogar.
+  Widget _buildLoadErrorCard() {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.wifi_off_rounded,
+            size: 40,
+            color: theme.textMuted,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            t.settingsHouseholdLoadError,
+            textAlign: TextAlign.center,
+            style: AppTypography.body.copyWith(
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+              color: theme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 20),
+          OutlinedButton.icon(
+            onPressed: _loadData,
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: Text(t.commonRetry),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: theme.primary,
+              side: BorderSide(color: theme.primary),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

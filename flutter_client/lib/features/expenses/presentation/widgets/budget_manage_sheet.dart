@@ -90,11 +90,9 @@ class BudgetManageSheet extends ConsumerWidget {
                 const SizedBox(height: 16),
                 Text(
                   t.budgetsManageTitle,
-                  style: TextStyle(
+                  style: AppTypography.sectionTitle.copyWith(
                     fontSize: 22,
-                    fontWeight: FontWeight.w900,
                     color: theme.textPrimary,
-                    letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -201,14 +199,16 @@ class _BudgetRow extends StatelessWidget {
             children: [
               Text(
                 category['icon'] as String,
-                style: const TextStyle(fontSize: 18),
+                style: AppTypography.body.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   localizedExpenseCategoryName(t, budget.category),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
+                  style: AppTypography.bodyStrong.copyWith(
                     fontSize: 14.5,
                     color: theme.textPrimary,
                   ),
@@ -216,9 +216,9 @@ class _BudgetRow extends StatelessWidget {
               ),
               Text(
                 currencyLabel,
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 14.5,
+                  fontWeight: FontWeight.w800,
                   color: theme.textPrimary,
                 ),
               ),
@@ -448,22 +448,17 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
             const SizedBox(height: 16),
             Text(
               _isEdit ? t.budgetsEditTitle : t.budgetsNewTitle,
-              style: TextStyle(
+              style: AppTypography.sectionTitle.copyWith(
                 fontSize: 22,
-                fontWeight: FontWeight.w900,
                 color: theme.textPrimary,
-                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 20),
             if (!_isEdit) ...[
               Text(
                 t.budgetsCategoryEyebrow,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
+                style: AppTypography.eyebrow.copyWith(
                   color: theme.textMuted,
-                  letterSpacing: 1,
                 ),
               ),
               const SizedBox(height: 10),
@@ -482,11 +477,10 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
                       '${category['icon']} '
                       '${localizedExpenseCategoryName(t, id)}',
                     ),
-                    labelStyle: TextStyle(
+                    labelStyle: AppTypography.caption.copyWith(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
-                      color:
-                          isSelected ? Colors.white : theme.textPrimary,
+                      color: isSelected ? Colors.white : theme.textPrimary,
                     ),
                     selectedColor: theme.primary,
                     backgroundColor: theme.surface,
@@ -505,11 +499,8 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
             ],
             Text(
               t.budgetsLimitEyebrow,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
+              style: AppTypography.eyebrow.copyWith(
                 color: theme.textMuted,
-                letterSpacing: 1,
               ),
             ),
             const SizedBox(height: 8),
@@ -518,9 +509,8 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
               controller: _amountController,
               onChanged: _onAmountChanged,
               keyboardType: TextInputType.number,
-              style: TextStyle(
+              style: AppTypography.heroAmount.copyWith(
                 fontSize: 28,
-                fontWeight: FontWeight.w900,
                 color: theme.textPrimary,
               ),
               decoration: InputDecoration(
@@ -601,9 +591,9 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
                             )
                           : Text(
                               t.commonSave,
-                              style: const TextStyle(
+                              style: AppTypography.cardTitle.copyWith(
                                 fontSize: 15,
-                                fontWeight: FontWeight.w900,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                     ),

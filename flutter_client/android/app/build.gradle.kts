@@ -28,11 +28,10 @@ if (localPropertiesFile.exists()) {
 val flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "1"
 val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0.0"
 
-// NOTA: BillingClient 7.1.1 (traído por in_app_purchase_android) tiene un NPE
+// NOTA: BillingClient (traído por purchases_flutter/RevenueCat) tuvo un NPE
 // conocido en ProxyBillingActivity.onCreate (Crashlytics issue a0b58a19, 2
-// eventos / 2 users en 7d). No existe 7.1.2 en Maven y 8.x rompe API del
-// plugin. Si los eventos se vuelven significativos, bumpear in_app_purchase
-// en pubspec.yaml a una versión que use billing 8.x.
+// eventos / 2 users en 7d). Si los eventos se vuelven significativos,
+// bumpear purchases_flutter en pubspec.yaml a una versión con billing más nuevo.
 
 android {
     namespace = "com.blas.homesync"

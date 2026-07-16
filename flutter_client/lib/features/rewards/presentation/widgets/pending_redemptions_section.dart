@@ -95,20 +95,17 @@ class _PendingRedemptionsSectionState
             children: [
               Text(
                 t.rewardsPendingRedemptionsTitle,
-                style: TextStyle(
+                style: AppTypography.sectionTitle.copyWith(
                   color: theme.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 t.rewardsPendingRedemptionsSubtitle,
-                style: TextStyle(
-                  color: theme.textSecondary,
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
-                  fontWeight: FontWeight.w600,
                   height: 1.35,
+                  color: theme.textSecondary,
                 ),
               ),
             ],
@@ -123,10 +120,10 @@ class _PendingRedemptionsSectionState
           ),
           child: Text(
             '$count',
-            style: const TextStyle(
-              color: AppColors.accentGold,
+            style: AppTypography.caption.copyWith(
               fontSize: 11,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
+              color: AppColors.accentGold,
             ),
           ),
         ),
@@ -179,11 +176,11 @@ class _PendingRedemptionsSectionState
                   title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: theme.textPrimary,
+                  style: AppTypography.cardTitle.copyWith(
                     fontSize: 15,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w800,
                     height: 1.15,
+                    color: theme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -193,10 +190,8 @@ class _PendingRedemptionsSectionState
                       : t.rewardsRedeemedByOn(redeemerName, dateLabel),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: AppTypography.caption.copyWith(
                     color: theme.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -245,9 +240,8 @@ class _PendingRedemptionsSectionState
             )
           : Text(
               t.rewardsMarkFulfilled,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
+              style: AppTypography.caption.copyWith(
+                fontWeight: FontWeight.w700,
               ),
             ),
     );
@@ -274,10 +268,10 @@ class _PendingRedemptionsSectionState
           const SizedBox(width: 6),
           Text(
             t.rewardsWaitingFulfillment,
-            style: const TextStyle(
-              color: AppColors.accentGold,
+            style: AppTypography.caption.copyWith(
               fontSize: 11,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
+              color: AppColors.accentGold,
             ),
           ),
         ],

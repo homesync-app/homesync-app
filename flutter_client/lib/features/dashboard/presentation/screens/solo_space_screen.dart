@@ -130,11 +130,9 @@ class _StageHero extends StatelessWidget {
                   children: [
                     Text(
                       t.soloSpaceEyebrow.toUpperCase(),
-                      style: TextStyle(
-                        color: theme.textSecondary,
+                      style: AppTypography.eyebrow.copyWith(
                         fontSize: 10.5,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1,
+                        color: theme.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -160,11 +158,10 @@ class _StageHero extends StatelessWidget {
             snapshot.stageSubtitle(t),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: theme.textSecondary,
+            style: AppTypography.caption.copyWith(
               fontSize: 13,
-              fontWeight: FontWeight.w600,
               height: 1.3,
+              color: theme.textSecondary,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -180,10 +177,9 @@ class _StageHero extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             t.soloSpaceXpToNext(snapshot.xpToNextLevel),
-            style: TextStyle(
-              color: theme.textMuted,
-              fontSize: 12,
+            style: AppTypography.caption.copyWith(
               fontWeight: FontWeight.w700,
+              color: theme.textMuted,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -239,10 +235,9 @@ class _LevelPill extends StatelessWidget {
       ),
       child: Text(
         t.soloSpaceLevel(snapshot.level),
-        style: TextStyle(
+        style: AppTypography.caption.copyWith(
+          fontWeight: FontWeight.w700,
           color: theme.textPrimary,
-          fontSize: 12,
-          fontWeight: FontWeight.w900,
         ),
       ),
     );
@@ -278,19 +273,19 @@ class _ScorePill extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: theme.textSecondary,
+            style: AppTypography.caption.copyWith(
               fontSize: 10,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
+              color: theme.textSecondary,
             ),
           ),
           const SizedBox(height: 3),
           Text(
             '$score%',
-            style: TextStyle(
-              color: color,
+            style: AppTypography.cardTitle.copyWith(
               fontSize: 15,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
+              color: color,
             ),
           ),
         ],
@@ -347,11 +342,9 @@ class _NextActionCard extends StatelessWidget {
                   children: [
                     Text(
                       t.soloSpaceNextTitle.toUpperCase(),
-                      style: TextStyle(
-                        color: theme.textMuted,
+                      style: AppTypography.eyebrow.copyWith(
                         fontSize: 10.5,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.9,
+                        color: theme.textMuted,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -359,10 +352,9 @@ class _NextActionCard extends StatelessWidget {
                       snapshot.nextActionTitle(t),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: AppTypography.cardTitle.copyWith(
+                        fontWeight: FontWeight.w800,
                         color: theme.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -370,11 +362,10 @@ class _NextActionCard extends StatelessWidget {
                       snapshot.nextActionSubtitle(t),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: theme.textSecondary,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
                         height: 1.25,
+                        color: theme.textSecondary,
                       ),
                     ),
                   ],
@@ -435,11 +426,10 @@ class _WeeklySignalsCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               t.soloSpaceSignalsSyncing,
-              style: TextStyle(
-                color: theme.textMuted,
+              style: AppTypography.caption.copyWith(
                 fontSize: 11.5,
-                fontWeight: FontWeight.w600,
                 height: 1.25,
+                color: theme.textMuted,
               ),
             ),
           ],
@@ -475,10 +465,10 @@ class _MetricItem extends StatelessWidget {
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: theme.textPrimary,
+          style: AppTypography.cardTitle.copyWith(
             fontSize: 17,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w800,
+            color: theme.textPrimary,
           ),
         ),
         const SizedBox(height: 2),
@@ -487,10 +477,10 @@ class _MetricItem extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
-          style: TextStyle(
-            color: theme.textMuted,
+          style: AppTypography.caption.copyWith(
             fontSize: 10.5,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
+            color: theme.textMuted,
           ),
         ),
       ],
@@ -518,10 +508,9 @@ class _WeeklyRitualCard extends StatelessWidget {
       title: t.soloSpaceRitualTitle,
       trailing: Text(
         t.soloSpaceRitualProgress(completedSteps.length, total),
-        style: TextStyle(
+        style: AppTypography.caption.copyWith(
+          fontWeight: FontWeight.w700,
           color: theme.textSecondary,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
         ),
       ),
       child: Column(
@@ -609,10 +598,10 @@ class _RitualStepChip extends StatelessWidget {
                   step.title(t),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: checked ? theme.textPrimary : theme.textSecondary,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
+                    color: checked ? theme.textPrimary : theme.textSecondary,
                   ),
                 ),
               ),
@@ -650,20 +639,19 @@ class _InsightPreview extends StatelessWidget {
               children: [
                 Text(
                   insight.title(t),
-                  style: TextStyle(
-                    color: theme.textPrimary,
+                  style: AppTypography.cardTitle.copyWith(
                     fontSize: 14,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w800,
+                    color: theme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   insight.description(t, snapshot),
-                  style: TextStyle(
-                    color: theme.textSecondary,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
                     height: 1.3,
+                    color: theme.textSecondary,
                   ),
                 ),
               ],
@@ -740,10 +728,10 @@ class _MilestoneChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(
-              color: unlocked ? theme.textPrimary : theme.textSecondary,
+            style: AppTypography.caption.copyWith(
               fontSize: 11.5,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
+              color: unlocked ? theme.textPrimary : theme.textSecondary,
             ),
           ),
         ],
@@ -782,10 +770,9 @@ class _SectionCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(
+                  style: AppTypography.cardTitle.copyWith(
+                    fontWeight: FontWeight.w800,
                     color: theme.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ),

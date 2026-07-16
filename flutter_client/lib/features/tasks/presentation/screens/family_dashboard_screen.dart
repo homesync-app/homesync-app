@@ -215,19 +215,18 @@ class _MemberCard extends StatelessWidget {
                   children: [
                     Text(
                       snapshot.fullName,
-                      style: TextStyle(
+                      style: AppTypography.cardTitle.copyWith(
+                        fontWeight: FontWeight.w800,
                         color: theme.textPrimary,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       _roleLabel(t, snapshot),
-                      style: TextStyle(
-                        color: theme.textSecondary,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700,
+                        color: theme.textSecondary,
                       ),
                     ),
                   ],
@@ -249,10 +248,9 @@ class _MemberCard extends StatelessWidget {
                     const SizedBox(width: 5),
                     Text(
                       statusLabel,
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w700,
                         color: statusColor,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -278,10 +276,10 @@ class _MemberCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   progressText,
-                  style: TextStyle(
-                    color: hasTasks ? theme.textPrimary : theme.textSecondary,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 12.5,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
+                    color: hasTasks ? theme.textPrimary : theme.textSecondary,
                   ),
                 ),
               ),
@@ -299,7 +297,7 @@ class _MemberCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 _MiniMetric(
                   icon: Icons.monetization_on_rounded,
-                  color: AppColors.accentYellow,
+                  color: AppColors.coinGreen,
                   label: coinDelta == 0
                       ? '0 coins'
                       : '${coinDelta > 0 ? '+' : ''}$coinDelta',
@@ -342,11 +340,11 @@ class _MemberCard extends StatelessWidget {
               period == DashboardPeriod.week
                   ? t.familyDashboardTopCategoriesWeek
                   : t.familyDashboardTopCategoriesMonth,
-              style: TextStyle(
-                color: theme.textSecondary,
+              style: AppTypography.caption.copyWith(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.4,
+                color: theme.textSecondary,
               ),
             ),
             const SizedBox(height: 6),
@@ -366,10 +364,10 @@ class _MemberCard extends StatelessWidget {
                     ),
                     child: Text(
                       '${c.category} · ${c.count}',
-                      style: const TextStyle(
-                        color: AppColors.primary,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -500,21 +498,20 @@ class _DashboardSummary extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
-                        color: theme.textPrimary,
-                        fontWeight: FontWeight.w900,
+                      style: AppTypography.cardTitle.copyWith(
                         fontSize: 18,
-                        letterSpacing: -0.25,
+                        fontWeight: FontWeight.w800,
+                        color: theme.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: TextStyle(
-                        color: theme.textSecondary,
-                        fontWeight: FontWeight.w700,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
                         height: 1.2,
+                        color: theme.textSecondary,
                       ),
                     ),
                   ],
@@ -532,10 +529,9 @@ class _DashboardSummary extends StatelessWidget {
                   ),
                   child: Text(
                     '${(rate * 100).round()}%',
-                    style: const TextStyle(
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w700,
                       color: AppColors.accentGreen,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 12,
                     ),
                   ),
                 ),
@@ -628,20 +624,18 @@ class _SummaryMetric extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: TextStyle(
-                    color: theme.textSecondary,
-                    fontWeight: FontWeight.w800,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: theme.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontWeight: FontWeight.w900,
+                  style: AppTypography.sectionTitle.copyWith(
                     fontSize: 19,
-                    letterSpacing: -0.3,
+                    color: theme.textPrimary,
                   ),
                 ),
               ],
@@ -673,10 +667,9 @@ class _MiniMetric extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(
+          style: AppTypography.caption.copyWith(
+            fontWeight: FontWeight.w700,
             color: color,
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
           ),
         ),
       ],
@@ -709,10 +702,9 @@ class _Stat extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(
+            style: AppTypography.caption.copyWith(
+              fontWeight: FontWeight.w700,
               color: color,
-              fontWeight: FontWeight.w800,
-              fontSize: 12,
             ),
           ),
         ],
@@ -742,17 +734,20 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               t.familyDashboardEmptyTitle,
-              style: TextStyle(
-                color: theme.textPrimary,
+              style: AppTypography.cardTitle.copyWith(
                 fontSize: 18,
-                fontWeight: FontWeight.w800,
+                color: theme.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               t.familyDashboardEmptyBody,
               textAlign: TextAlign.center,
-              style: TextStyle(color: theme.textSecondary, fontSize: 13),
+              style: AppTypography.caption.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: theme.textSecondary,
+              ),
             ),
           ],
         ),
@@ -782,10 +777,8 @@ class _LockedHero extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               t.familyDashboardLockedTitle,
-              style: TextStyle(
+              style: AppTypography.sectionTitle.copyWith(
                 color: theme.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: 10),

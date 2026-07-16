@@ -68,10 +68,35 @@ class LoggerService {
 
   /// Log an error message (something failed but the app keeps running).
   /// Reported to Crashlytics as NON-fatal. Only `log.f(...)` marks fatal.
+  ///
+  /// Errores de pura conectividad (sin red, DNS caído, timeout) se degradan
+  /// a warning local: no son bugs de la app y eran el issue #2 de Crashlytics
+  /// por volumen (SocketException en cada RPC con el teléfono offline),
+  /// enterrando los errores reales.
   void e(dynamic message, {Object? error, StackTrace? stackTrace}) {
+    if (_isConnectivityNoise(error) || _isConnectivityNoise(message)) {
+      _logger.w(message, error: error, stackTrace: stackTrace);
+      return;
+    }
     _logger.e(message, error: error, stackTrace: stackTrace);
     _reportToCrashlytics(message, error, stackTrace, isFatal: false);
     _forwardToRemote(message, error, stackTrace, fatal: false);
+  }
+
+  /// Detecta fallos de red esperables por string (sin importar dart:io, que
+  /// rompería web). Mantener patrones inequívocos: un error que solo "menciona"
+  /// la red en otro contexto no debería matchear estos textos.
+  static bool _isConnectivityNoise(Object? value) {
+    if (value == null) return false;
+    final s = value.toString();
+    return s.contains('SocketException') ||
+        s.contains('Failed host lookup') ||
+        s.contains('Connection refused') ||
+        s.contains('Connection reset by peer') ||
+        s.contains('Connection closed before full header was received') ||
+        s.contains('Network is unreachable') ||
+        s.contains('Software caused connection abort') ||
+        s.contains('HandshakeException');
   }
 
   /// Log a fatal error (the app is about to crash and we know it).

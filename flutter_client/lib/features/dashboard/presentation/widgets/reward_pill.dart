@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -20,13 +21,13 @@ class RewardPill extends StatelessWidget {
   /// Convenience constructor for XP rewards.
   const RewardPill.xp({super.key, required int xp})
       : label = '$xp XP',
-        color = const Color(0xFFF97316),
+        color = AppColors.xpGold,
         icon = Icons.star_rounded;
 
   /// Convenience constructor for coin rewards.
   const RewardPill.coins({super.key, required int coins})
       : label = '$coins coins',
-        color = const Color(0xFF64748B),
+        color = AppColors.coinGreen,
         icon = Icons.monetization_on_rounded;
 
   @override
@@ -49,9 +50,9 @@ class RewardPill extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
+            style: AppTypography.caption.copyWith(
               fontSize: 10,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               color: color,
             ),
           ),

@@ -66,11 +66,9 @@ class ExpenseFormHeader extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: AppTypography.heroAmount.copyWith(
               fontSize: 24,
-              fontWeight: FontWeight.w900,
               color: theme.textPrimary,
-              letterSpacing: -0.7,
             ),
           ),
         ],
@@ -96,21 +94,17 @@ class ExpenseSectionIntro extends StatelessWidget {
       children: [
         Text(
           eyebrow.toUpperCase(),
-          style: const TextStyle(
+          style: AppTypography.eyebrow.copyWith(
             color: AppColors.textSecondary,
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.0,
           ),
         ),
         const SizedBox(height: 6),
         Text(
           title,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: AppTypography.cardTitle.copyWith(
             fontSize: 18,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.4,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
           ),
         ),
       ],
@@ -195,10 +189,9 @@ class ExpenseActionTile extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TextStyle(
-                color: theme.textSecondary,
-                fontSize: 12,
+              style: AppTypography.caption.copyWith(
                 fontWeight: FontWeight.w500,
+                color: theme.textSecondary,
               ),
             ),
             const SizedBox(height: 4),
@@ -248,12 +241,12 @@ class ExpenseInfoBox extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(
+        style: AppTypography.caption.copyWith(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
           color: color == theme.textSecondary
               ? theme.textSecondary
               : color.withValues(alpha: 0.82),
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -425,10 +418,9 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
             children: [
               Text(
                 'Monto total',
-                style: TextStyle(
-                  color: theme.textSecondary,
-                  fontWeight: FontWeight.w600,
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
+                  color: theme.textSecondary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -458,10 +450,10 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
                           padding: const EdgeInsets.only(right: 10, top: 2),
                           child: Text(
                             '\$',
-                            style: TextStyle(
-                              color: theme.textMuted,
+                            style: AppTypography.sectionTitle.copyWith(
                               fontSize: 26,
                               fontWeight: FontWeight.w700,
+                              color: theme.textMuted,
                             ),
                           ),
                         ),
@@ -472,11 +464,9 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
                             controller: widget.controller,
                             onChanged: widget.onChanged,
                             keyboardType: TextInputType.number,
-                            style: TextStyle(
-                              color: theme.textPrimary,
-                              fontSize: 34,
-                              fontWeight: FontWeight.w900,
+                            style: AppTypography.heroAmount.copyWith(
                               letterSpacing: -1.2,
+                              color: theme.textPrimary,
                             ),
                             textAlign: TextAlign.start,
                             decoration: InputDecoration(
@@ -778,9 +768,8 @@ class ExpenseScanButton extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               label,
-              style: const TextStyle(
+              style: AppTypography.caption.copyWith(
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
                 color: AppColors.accentBlue,
               ),
             ),
@@ -825,19 +814,18 @@ class ExpenseTitleField extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
-              style: TextStyle(
-                color: theme.textPrimary,
+              style: AppTypography.body.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
+                color: theme.textPrimary,
               ),
               decoration: InputDecoration(
                 hintText: isIncome
                     ? '¿De qué es el ingreso? (Opcional)'
                     : '¿Qué compraste? (Opcional)',
-                hintStyle: TextStyle(
-                  color: theme.textMuted,
+                hintStyle: AppTypography.body.copyWith(
                   fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                  color: theme.textMuted,
                 ),
                 filled: false,
                 fillColor: Colors.transparent,

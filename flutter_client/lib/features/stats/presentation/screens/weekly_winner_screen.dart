@@ -223,22 +223,19 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
               Text(
                 t.weeklyWinnerEmptyTitle,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: AppTypography.sectionTitle.copyWith(
                   fontSize: 22,
-                  fontWeight: FontWeight.w900,
                   color: theme.textPrimary,
-                  letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 t.weeklyWinnerEmptyBody,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
+                style: AppTypography.body.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: theme.textSecondary,
                   height: 1.35,
+                  color: theme.textSecondary,
                 ),
               ),
               const SizedBox(height: 22),
@@ -294,9 +291,8 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
             const Spacer(),
             Text(
               _getWeekRange(),
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
+              style: AppTypography.caption.copyWith(
+                fontWeight: FontWeight.w700,
                 color: theme.textMuted,
               ),
             ),
@@ -366,23 +362,20 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
         Text(
           t.weeklyWinnerHeadline(winnerName),
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: AppTypography.heroAmount.copyWith(
             fontSize: 29,
-            fontWeight: FontWeight.w900,
-            color: theme.textPrimary,
-            letterSpacing: -0.8,
             height: 1.05,
+            color: theme.textPrimary,
           ),
         ).animateEntrance(delay: 260),
         const SizedBox(height: 8),
         Text(
           t.weeklyWinnerSubtitle,
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
+          style: AppTypography.body.copyWith(
             fontWeight: FontWeight.w600,
-            color: theme.textSecondary,
             height: 1.35,
+            color: theme.textSecondary,
           ),
         ).animateEntrance(delay: 340),
         const SizedBox(height: 18),
@@ -394,13 +387,13 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
             _buildInfoPill(
               icon: Icons.auto_awesome_rounded,
               label: '$winnerXp XP',
-              color: AppColors.accentGold,
+              color: AppColors.xpGold,
               selected: true,
             ),
             _buildInfoPill(
               icon: Icons.monetization_on_rounded,
               label: t.weeklyWinnerCoinsAwarded(_coinsAwarded),
-              color: AppColors.sage,
+              color: AppColors.coinGreen,
               selected: true,
             ),
           ],
@@ -414,11 +407,11 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
           Text(
             t.weeklyWinnerCardSubtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: AppTypography.caption.copyWith(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
-              color: theme.textSecondary,
               height: 1.3,
+              color: theme.textSecondary,
             ),
           ).animateEntrance(delay: 560),
         ],
@@ -451,10 +444,8 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
         children: [
           Text(
             t.weeklyWinnerFinalScore.toUpperCase(),
-            style: TextStyle(
+            style: AppTypography.eyebrow.copyWith(
               fontSize: 10.5,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.2,
               color: theme.textMuted,
             ),
           ),
@@ -476,10 +467,9 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
                   'VS',
-                  style: TextStyle(
+                  style: AppTypography.caption.copyWith(
                     fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.2,
+                    fontWeight: FontWeight.w700,
                     color: theme.textMuted,
                   ),
                 ),
@@ -557,19 +547,18 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
           name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
+          style: AppTypography.caption.copyWith(
             fontSize: 12.5,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: theme.textPrimary,
           ),
         ),
         const SizedBox(height: 2),
         Text(
           '$xp XP',
-          style: TextStyle(
+          style: AppTypography.cardTitle.copyWith(
             fontSize: 18,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.4,
+            fontWeight: FontWeight.w800,
             color: isWinner ? color : theme.textSecondary,
           ),
         ),
@@ -607,9 +596,8 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
         ),
         child: Text(
           label,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w900,
+          style: AppTypography.cardTitle.copyWith(
+            fontWeight: FontWeight.w800,
           ),
         ),
       ),

@@ -873,9 +873,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                     ? AppLocalizations.of(context).tasksSearchActiveLabel
                     : AppLocalizations.of(context).tasksSearchIdleLabel,
                 maxLines: 1,
-                style: TextStyle(
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: isSelected ? theme.primary : theme.textPrimary,
                 ),
               ),

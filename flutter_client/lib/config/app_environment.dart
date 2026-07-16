@@ -8,8 +8,10 @@ class AppEnvironment {
 
   static const String _kDefaultSupabaseUrl =
       'https://tfavamqszdkoeabpyxms.supabase.co';
-  static const String _kDefaultSupabaseAnonKey =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmYXZhbXFzemRrb2VhYnB5eG1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMjU5MTYsImV4cCI6MjA4NjkwMTkxNn0.AifBdMFJH14E-JisRcdjWPNpjAOuj6z3J4aYYRxBCSI';
+  // Publishable key (formato nuevo, reemplaza al anon key legacy JWT).
+  // Es pública por diseño; la seguridad real la dan RLS y los guards de RPC.
+  static const String _kDefaultSupabasePublishableKey =
+      'sb_publishable_iPBxxteTzC_jHtDQCi5TOg_Hm4qb-m8';
 
   static Environment get current {
     switch (_environmentName) {
@@ -41,10 +43,14 @@ class AppEnvironment {
     );
   }
 
-  static String get supabaseAnonKey {
+  static String get supabasePublishableKey {
+    // Override nuevo primero; SUPABASE_ANON_KEY se respeta como legacy para
+    // scripts/.env existentes (la SDK acepta ambos formatos de key).
+    const overridden = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+    if (overridden.isNotEmpty) return overridden;
     return const String.fromEnvironment(
       'SUPABASE_ANON_KEY',
-      defaultValue: _kDefaultSupabaseAnonKey,
+      defaultValue: _kDefaultSupabasePublishableKey,
     );
   }
 
@@ -187,14 +193,14 @@ class AppEnvironment {
     if (!supabaseUrl.startsWith('https://') || !supabaseUrl.contains('.supabase.co')) {
       violations.add('SUPABASE_URL');
     }
-    if (supabaseAnonKey.length < 40) {
-      violations.add('SUPABASE_ANON_KEY');
+    if (supabasePublishableKey.length < 40) {
+      violations.add('SUPABASE_PUBLISHABLE_KEY');
     }
     if (violations.isNotEmpty) {
       throw StateError(
         'Production build has invalid Supabase config for: ${violations.join(", ")}. '
         'Provide --dart-define-from-file=.env.production or valid '
-        '--dart-define=SUPABASE_URL / SUPABASE_ANON_KEY values.',
+        '--dart-define=SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY values.',
       );
     }
   }

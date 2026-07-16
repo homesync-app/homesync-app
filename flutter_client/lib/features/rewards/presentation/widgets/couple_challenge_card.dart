@@ -127,12 +127,11 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                         title,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: theme.textPrimary,
+                        style: AppTypography.sectionTitle.copyWith(
                           fontSize: 23,
-                          fontWeight: FontWeight.w900,
-                          height: 1.08,
                           letterSpacing: -0.8,
+                          height: 1.08,
+                          color: theme.textPrimary,
                         ),
                       ),
                     ),
@@ -141,11 +140,10 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                 const SizedBox(height: 12),
                 Text(
                   description,
-                  style: TextStyle(
-                    color: theme.textSecondary,
-                    fontSize: 14,
+                  style: AppTypography.body.copyWith(
                     fontWeight: FontWeight.w600,
                     height: 1.45,
+                    color: theme.textSecondary,
                   ),
                 ),
               ],
@@ -173,12 +171,10 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                         title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: theme.textPrimary,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          height: 1.08,
+                        style: AppTypography.sectionTitle.copyWith(
                           letterSpacing: -0.8,
+                          height: 1.08,
+                          color: theme.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -186,11 +182,10 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                         _collapsedSummary(description),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: theme.textSecondary,
-                          fontSize: 14,
+                        style: AppTypography.body.copyWith(
                           fontWeight: FontWeight.w600,
                           height: 1.4,
+                          color: theme.textSecondary,
                         ),
                       ),
                     ],
@@ -216,9 +211,8 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
               _isExpanded
                   ? t.coupleChallengeShowLess
                   : t.coupleChallengeShowMore,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
+              style: AppTypography.caption.copyWith(
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -268,11 +262,11 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                   const SizedBox(height: 12),
                   Text(
                     motivation,
-                    style: TextStyle(
-                      color: theme.textPrimary,
+                    style: AppTypography.caption.copyWith(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       height: 1.4,
+                      color: theme.textPrimary,
                     ),
                   ),
                 ],
@@ -341,20 +335,20 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
       children: [
         Text(
           t.coupleChallengeSharedReward,
-          style: TextStyle(
-            color: theme.textSecondary,
+          style: AppTypography.caption.copyWith(
             fontSize: 11,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
+            color: theme.textSecondary,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           t.coupleChallengeSharedRewardBody(widget.challenge.coinReward),
-          style: TextStyle(
-            color: theme.textPrimary,
+          style: AppTypography.cardTitle.copyWith(
             fontSize: 14,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w800,
             height: 1.3,
+            color: theme.textPrimary,
           ),
         ),
       ],
@@ -391,11 +385,11 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
               t.coupleChallengeDoneThisWeek,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.sage,
-                fontWeight: FontWeight.w900,
+              style: AppTypography.caption.copyWith(
                 fontSize: 13,
+                fontWeight: FontWeight.w700,
                 height: 1.15,
+                color: AppColors.sage,
               ),
             ),
           ),
@@ -419,9 +413,9 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
       ),
       child: Text(
         t.coupleChallengeWeDidIt,
-        style: const TextStyle(
-          fontWeight: FontWeight.w900,
+        style: AppTypography.caption.copyWith(
           fontSize: 12.5,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -448,11 +442,10 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
             child: Text(
               label,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: textColor,
+              style: AppTypography.caption.copyWith(
                 fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.1,
+                fontWeight: FontWeight.w700,
+                color: textColor,
               ),
             ),
           ),

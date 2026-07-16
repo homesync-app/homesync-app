@@ -221,9 +221,13 @@ class SupabaseExpenseRepository
           return Map<String, dynamic>.from(response as Map);
         }
 
+        // El join del pagador es imprescindible: sin él, el refresh del detalle
+        // pisa el payerFullName que venía del feed y el chip "Pagó X"
+        // desaparece delante del usuario.
         return await _client.from('expenses').select('''
             *,
-            expense_splits(*, users(email, full_name, avatar_url))
+            users:users!expenses_paid_by_fkey(email, full_name, avatar_url),
+            expense_splits(*, users:users!expense_splits_user_id_fkey(email, full_name, avatar_url))
           ''').eq('id', expenseId).single();
       },
       context: 'SupabaseExpenseRepository.getExpenseWithSplits',

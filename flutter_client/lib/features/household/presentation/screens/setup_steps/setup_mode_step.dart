@@ -121,11 +121,10 @@ class SetupModeStep extends ConsumerWidget {
                               ),
                               Text(
                                 '·',
-                                style: TextStyle(
+                                style: AppTypography.cardTitle.copyWith(
+                                  fontWeight: FontWeight.w800,
                                   color: theme.textSecondary
                                       .withValues(alpha: 0.38),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w900,
                                 ),
                               ),
                               TextButton(

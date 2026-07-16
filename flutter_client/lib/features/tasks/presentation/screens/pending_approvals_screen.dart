@@ -156,11 +156,10 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
                       a.taskTitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: theme.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
+                      style: AppTypography.cardTitle.copyWith(
+                        fontWeight: FontWeight.w800,
                         height: 1.14,
+                        color: theme.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -170,10 +169,9 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
                       ).pendingApprovalsSubmittedBy(a.submittedByName),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: theme.textSecondary,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        color: theme.textSecondary,
                       ),
                     ),
                   ],
@@ -186,13 +184,13 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
             children: [
               _RewardChip(
                 icon: Icons.star_rounded,
-                color: AppColors.accentGold,
+                color: AppColors.xpGold,
                 label: '${a.xpReward} XP',
               ),
               const SizedBox(width: 8),
               _RewardChip(
                 icon: Icons.monetization_on_rounded,
-                color: AppColors.accentYellow,
+                color: AppColors.coinGreen,
                 label: '${a.coinReward} coins',
               ),
             ],
@@ -223,9 +221,9 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
-                    textStyle: const TextStyle(
+                    textStyle: AppTypography.caption.copyWith(
                       fontSize: 13.5,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -250,9 +248,9 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
-                    textStyle: const TextStyle(
+                    textStyle: AppTypography.cardTitle.copyWith(
                       fontSize: 14.5,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
@@ -393,10 +391,10 @@ class _RewardChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w800,
+            style: AppTypography.caption.copyWith(
               fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: color,
             ),
           ),
         ],
@@ -426,17 +424,20 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               t.pendingApprovalsEmptyTitle,
-              style: TextStyle(
-                color: theme.textPrimary,
+              style: AppTypography.cardTitle.copyWith(
                 fontSize: 18,
-                fontWeight: FontWeight.w800,
+                color: theme.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               t.pendingApprovalsEmptyBody,
               textAlign: TextAlign.center,
-              style: TextStyle(color: theme.textSecondary, fontSize: 13),
+              style: AppTypography.caption.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: theme.textSecondary,
+              ),
             ),
           ],
         ),
@@ -466,10 +467,8 @@ class _LockedHero extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               t.pendingApprovalsLockedTitle,
-              style: TextStyle(
+              style: AppTypography.sectionTitle.copyWith(
                 color: theme.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: 10),

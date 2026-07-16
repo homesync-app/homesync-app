@@ -210,11 +210,10 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       child: Text(
                         t.allowanceNoRecipients,
-                        style: TextStyle(
-                          color: theme.textSecondary,
-                          fontSize: 14,
+                        style: AppTypography.body.copyWith(
                           fontWeight: FontWeight.w600,
                           height: 1.35,
+                          color: theme.textSecondary,
                         ),
                       ),
                     )
@@ -237,9 +236,8 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                       ],
-                      style: TextStyle(
+                      style: AppTypography.sectionTitle.copyWith(
                         fontSize: 22,
-                        fontWeight: FontWeight.w800,
                         color: theme.textPrimary,
                       ),
                       decoration: InputDecoration(
@@ -330,11 +328,11 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
                       '\$${activeForRecipient.amount.round()}',
                       activeForRecipient.dayOfMonth,
                     ),
-                    style: TextStyle(
+                    style: AppTypography.caption.copyWith(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
-                      color: theme.textPrimary,
                       height: 1.3,
+                      color: theme.textPrimary,
                     ),
                   ),
                 ),
@@ -366,9 +364,8 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
                   ),
                   child: Text(
                     t.allowanceScheduleDisable,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -382,9 +379,8 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
             Expanded(
               child: Text(
                 t.allowanceRepeatToggle,
-                style: TextStyle(
+                style: AppTypography.bodyStrong.copyWith(
                   fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
                   color: theme.textPrimary,
                 ),
               ),
@@ -487,8 +483,7 @@ class _Label extends StatelessWidget {
     final theme = context.theme;
     return Text(
       text,
-      style: TextStyle(
-        fontSize: 12,
+      style: AppTypography.caption.copyWith(
         fontWeight: FontWeight.w700,
         color: theme.textSecondary,
       ),

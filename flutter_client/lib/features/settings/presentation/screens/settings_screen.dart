@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
@@ -61,7 +63,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ref.invalidate(userProfileProvider);
     ref.invalidate(currentHouseholdProvider);
     ref.invalidate(householdMembersProvider);
-    ref.invalidate(householdMembersProvider);
     ref.invalidate(expenseBalancesProvider);
     ref.invalidate(userBalanceProvider);
     ref.invalidate(todayTasksProvider);
@@ -96,6 +97,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: [
             RefreshIndicator(
               onRefresh: () async {
+                ref.invalidate(userProfileProvider);
                 ref.invalidate(currentHouseholdProvider);
                 ref.invalidate(householdMembersProvider);
               },
@@ -193,6 +195,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 icon: Icons.notifications_outlined,
                                 iconColor: AppColors.accentRed,
                                 title: t.settingsNotificationsTitle,
+                                // Toda la fila togglea, no solo el switch.
+                                onTap: () => _toggleNotifications(
+                                  !ref.read(notificationEnabledProvider),
+                                ),
                                 trailing: Switch.adaptive(
                                   value: ref.watch(notificationEnabledProvider),
                                   onChanged: _toggleNotifications,
@@ -274,7 +280,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 iconColor: AppColors.textSecondary,
                                 title: t.settingsLegalTermsOfUse,
                                 onTap: () => _openUrl(
-                                  'https://homesync-app.github.io/homesync-privacy/',
+                                  'https://homesync-app.github.io/homesync-privacy/terms.html',
                                 ),
                               ),
                             ],
@@ -311,14 +317,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Navigator.pop(context);
   }
 
-  // Profile Card
-
-  // Profile Card
-
   Widget _buildProfileCard() {
+    final t = AppLocalizations.of(context);
     final profileAsync = ref.watch(userProfileProvider);
     final profile = profileAsync.whenOrNull(data: (p) => p);
-    final name = (profile?['full_name'] as String?) ?? 'Usuario';
+    final name =
+        (profile?['full_name'] as String?) ?? t.settingsProfileNameFallback;
     final email = (profile?['email'] as String?) ?? '';
     final avatar = profile?['avatar_url'] as String?;
     return SettingsProfileCard(
@@ -351,20 +355,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildAppearanceCard(WidgetRef ref, {bool isMinor = false}) {
-    final isPremium = ref.watch(premiumProvider).value ?? false;
+    final premiumStatus = ref.watch(premiumProvider);
+    final isPremium = premiumStatus.value ?? false;
     final currentColor = ref.watch(primaryColorProvider);
-    final defaultPalette = ThemePalette.all.firstWhere(
-      (palette) => palette.name == 'Naranja (Original)',
-      orElse: () => ThemePalette.all.first,
-    );
-    final selectedPalette = ThemePalette.all.cast<ThemePalette?>().firstWhere(
-          (palette) => palette?.primary.toARGB32() == currentColor.toARGB32(),
-          orElse: () => null,
-        );
-    final isFreeSelected = selectedPalette != null &&
-        const {'Naranja (Original)'}.contains(selectedPalette.name);
-    final effectiveColor =
-        (!isPremium && !isFreeSelected) ? defaultPalette.primary : currentColor;
+    // Mismo gate que aplica MaterialApp (main.dart): el picker marca la
+    // paleta que realmente se está renderizando, sin fingir.
+    final effectiveColor = switch (premiumStatus) {
+      AsyncData(value: false)
+          when !ThemePalette.isFreePrimary(currentColor) =>
+        ThemePalette.fallback.primary,
+      _ => currentColor,
+    };
 
     return SettingsAppearanceCard(
       effectiveColor: effectiveColor,
@@ -389,9 +390,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _showMinorPremiumSnackbar() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text(
-          'Esta funcion es premium 🌟 Pedi a tus papas que activen el plan.',
-        ),
+        content: Text(AppLocalizations.of(context).settingsMinorPremiumSnack),
         backgroundColor: const Color(0xFFF59E0B),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -402,55 +401,57 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   // ── Selectores de preferencias como sheets (list-detail) ──────────────────
   // Cada fila del home abre el card existente en un sheet. El Consumer da un
-  // ref válido para los ref.watch internos del card.
+  // ref válido para los ref.watch internos del card. El theme se lee ADENTRO
+  // del builder: si el usuario cambia claro/oscuro desde el propio sheet
+  // (Apariencia), el fondo y el título acompañan en vez de quedar en el tema
+  // viejo hasta reabrir.
   void _openPreferenceSheet(String title, Widget Function(WidgetRef ref) body) {
-    final theme = context.theme;
     AppSheet.show(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackground,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppRadii.modal),
+      builder: (sheetCtx) {
+        final theme = sheetCtx.theme;
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.scaffoldBackground,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadii.modal),
+            ),
           ),
-        ),
-        padding: EdgeInsets.fromLTRB(
-          20,
-          12,
-          20,
-          20 + MediaQuery.of(context).viewPadding.bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.textMuted.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            12,
+            20,
+            20 + MediaQuery.of(sheetCtx).viewPadding.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.textMuted.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.4,
-                color: theme.textPrimary,
+              const SizedBox(height: 18),
+              Text(
+                title,
+                style: AppTypography.sectionTitle.copyWith(
+                  color: theme.textPrimary,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Consumer(builder: (_, ref, __) => body(ref)),
-          ],
-        ),
-      ),
+              const SizedBox(height: 16),
+              Consumer(builder: (_, ref, __) => body(ref)),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -482,7 +483,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _doLogout() async {
-    AppHaptics.success();
+    // Abrir el confirm no es un "éxito": haptic neutro acá, la semántica
+    // fuerte queda para el resultado de la acción.
+    AppHaptics.tap();
     final confirm = await showSettingsLogoutDialog(context);
     if (confirm != true) return;
     await ref.read(authControllerProvider.notifier).signOut();
@@ -494,14 +497,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _openUrl(String url) async {
     AppHaptics.tap();
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final opened = await canLaunchUrl(uri) &&
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).settingsLinkOpenError),
+        ),
+      );
     }
   }
 
   void _toggleNotifications(bool value) {
     AppHaptics.tap();
-    ref.read(notificationEnabledProvider.notifier).toggle(value);
+    // Además de persistir la preferencia, aplica el efecto real: alta de
+    // permisos/token FCM al activar, borrado del token al desactivar.
+    unawaited(ref.read(notificationEnabledProvider.notifier).toggle(value));
     final t = AppLocalizations.of(context);
     final theme = context.theme;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -524,10 +535,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
       child: Text(
         text,
-        style: TextStyle(
+        style: AppTypography.caption.copyWith(
           fontSize: 12.5,
           fontWeight: FontWeight.w700,
-          letterSpacing: 0.1,
           color: theme.textMuted,
         ),
       ),
@@ -586,22 +596,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ref.invalidate(householdMembersProvider);
 
       if (mounted) {
-        final messenger = ScaffoldMessenger.of(context);
         final t = AppLocalizations.of(context);
-        if (mounted) {
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text(t.settingsProfileNameUpdated),
-              backgroundColor: AppColors.success,
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.settingsProfileNameUpdated),
+            backgroundColor: AppColors.success,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
+        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(t.commonErrorWithDetails('$e')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -743,6 +751,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _resetAccount() async {
     final theme = context.theme;
     final confirm = await showSettingsResetAccountDialog(context);
+    if (!mounted) return;
 
     if (confirm == true) {
       setState(() => _isLoading = true);
@@ -754,9 +763,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         res.fold(
           (failure) {
             if (mounted) {
+              final t = AppLocalizations.of(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Error: ${failure.message}'),
+                  content: Text(t.commonErrorWithDetails(failure.message)),
                   backgroundColor: theme.error,
                 ),
               );
@@ -781,13 +791,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 );
                 Navigator.pop(context);
               }
+            } else if (mounted) {
+              // Antes un success=false moría en silencio: overlay afuera y
+              // ninguna señal de que el reset no ocurrió.
+              final t = AppLocalizations.of(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    (data['message'] as String?) ??
+                        t.settingsAccountResetError,
+                  ),
+                  backgroundColor: theme.error,
+                ),
+              );
             }
           },
         );
       } catch (e) {
         if (mounted) {
+          final t = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: theme.error),
+            SnackBar(
+              content: Text(t.commonErrorWithDetails('$e')),
+              backgroundColor: theme.error,
+            ),
           );
         }
       } finally {
@@ -799,7 +826,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _deleteAccount() async {
     final theme = context.theme;
     final confirm = await showSettingsDeleteAccountDialog(context);
-    if (confirm != true) return;
+    if (confirm != true || !mounted) return;
 
     setState(() => _isLoading = true);
     try {
@@ -847,16 +874,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: theme.error),
+          SnackBar(
+            content: Text(t.commonErrorWithDetails('$e')),
+            backgroundColor: theme.error,
+          ),
         );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-
-  // Premium Card
 }
 
 class _SettingsHeader extends StatelessWidget {
@@ -901,11 +930,9 @@ class _SettingsHeader extends StatelessWidget {
                 padding: const EdgeInsets.only(left: AppSpacing.sm),
                 child: Text(
                   t.settingsAppBarTitle,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 34,
+                  style: AppTypography.heroAmount.copyWith(
                     height: 0.95,
+                    color: theme.textPrimary,
                   ),
                 ),
               ),

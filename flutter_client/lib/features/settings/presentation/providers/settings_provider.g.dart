@@ -53,50 +53,6 @@ final class SettingsRepositoryProvider extends $FunctionalProvider<
 String _$settingsRepositoryHash() =>
     r'bc6023891d7bc0990e7cadf8222450b6caa559b4';
 
-@ProviderFor(resetAccountUseCase)
-final resetAccountUseCaseProvider = ResetAccountUseCaseProvider._();
-
-final class ResetAccountUseCaseProvider extends $FunctionalProvider<
-    ResetAccountUseCase,
-    ResetAccountUseCase,
-    ResetAccountUseCase> with $Provider<ResetAccountUseCase> {
-  ResetAccountUseCaseProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'resetAccountUseCaseProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
-
-  @override
-  String debugGetCreateSourceHash() => _$resetAccountUseCaseHash();
-
-  @$internal
-  @override
-  $ProviderElement<ResetAccountUseCase> $createElement(
-          $ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  ResetAccountUseCase create(Ref ref) {
-    return resetAccountUseCase(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(ResetAccountUseCase value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<ResetAccountUseCase>(value),
-    );
-  }
-}
-
-String _$resetAccountUseCaseHash() =>
-    r'a00a5c169f3e4cb4d5e1e20bc9131e02f59ff537';
-
 @ProviderFor(deleteAccountUseCase)
 final deleteAccountUseCaseProvider = DeleteAccountUseCaseProvider._();
 
@@ -141,55 +97,21 @@ final class DeleteAccountUseCaseProvider extends $FunctionalProvider<
 String _$deleteAccountUseCaseHash() =>
     r'3206b4aafca491afa492c0cf9d25bed922dbf093';
 
-@ProviderFor(updateAvatarUseCase)
-final updateAvatarUseCaseProvider = UpdateAvatarUseCaseProvider._();
-
-final class UpdateAvatarUseCaseProvider extends $FunctionalProvider<
-    UpdateAvatarUseCase,
-    UpdateAvatarUseCase,
-    UpdateAvatarUseCase> with $Provider<UpdateAvatarUseCase> {
-  UpdateAvatarUseCaseProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'updateAvatarUseCaseProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
-
-  @override
-  String debugGetCreateSourceHash() => _$updateAvatarUseCaseHash();
-
-  @$internal
-  @override
-  $ProviderElement<UpdateAvatarUseCase> $createElement(
-          $ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  UpdateAvatarUseCase create(Ref ref) {
-    return updateAvatarUseCase(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(UpdateAvatarUseCase value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<UpdateAvatarUseCase>(value),
-    );
-  }
-}
-
-String _$updateAvatarUseCaseHash() =>
-    r'230cdeaef63a7b56a9053cb94e217b116e485e37';
+/// Preferencia de notificaciones. Lee el estado persistido (misma clave que
+/// usa NotificationService al inicializar) y al togglear aplica el efecto
+/// real: alta de permisos/token FCM al activar, borrado del token al apagar.
 
 @ProviderFor(NotificationEnabled)
 final notificationEnabledProvider = NotificationEnabledProvider._();
 
+/// Preferencia de notificaciones. Lee el estado persistido (misma clave que
+/// usa NotificationService al inicializar) y al togglear aplica el efecto
+/// real: alta de permisos/token FCM al activar, borrado del token al apagar.
 final class NotificationEnabledProvider
     extends $NotifierProvider<NotificationEnabled, bool> {
+  /// Preferencia de notificaciones. Lee el estado persistido (misma clave que
+  /// usa NotificationService al inicializar) y al togglear aplica el efecto
+  /// real: alta de permisos/token FCM al activar, borrado del token al apagar.
   NotificationEnabledProvider._()
       : super(
           from: null,
@@ -218,7 +140,11 @@ final class NotificationEnabledProvider
 }
 
 String _$notificationEnabledHash() =>
-    r'ee6e9c6286cbf1305c5e370a85d4ebc6252b2fd2';
+    r'6b5dd462e06b598eec763dca258723d25724e76e';
+
+/// Preferencia de notificaciones. Lee el estado persistido (misma clave que
+/// usa NotificationService al inicializar) y al togglear aplica el efecto
+/// real: alta de permisos/token FCM al activar, borrado del token al apagar.
 
 abstract class _$NotificationEnabled extends $Notifier<bool> {
   bool build();

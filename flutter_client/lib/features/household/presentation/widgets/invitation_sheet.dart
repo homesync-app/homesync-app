@@ -156,11 +156,9 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
           const SizedBox(height: 24),
           Text(
             t.invitationTitle,
-            style: TextStyle(
+            style: AppTypography.sectionTitle.copyWith(
               fontSize: 22,
-              fontWeight: FontWeight.w900,
               color: theme.textPrimary,
-              letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 8),
@@ -171,8 +169,8 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
                     ? t.invitationSubtitleFriends
                     : t.invitationSubtitleDefault,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
+            style: AppTypography.body.copyWith(
+              fontWeight: FontWeight.w400,
               color: theme.textSecondary,
             ),
           ),
@@ -191,15 +189,13 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
               backgroundColor: theme.primary.withValues(alpha: 0.05),
               borderColor: theme.primary.withValues(alpha: 0.2),
               borderRadius: 20,
-              textStyle: TextStyle(
+              textStyle: AppTypography.heroAmount.copyWith(
                 fontSize: 28,
-                fontWeight: FontWeight.w900,
                 letterSpacing: 4,
                 color: theme.primary,
               ),
-              maskedTextStyle: TextStyle(
+              maskedTextStyle: AppTypography.heroAmount.copyWith(
                 fontSize: 28,
-                fontWeight: FontWeight.w900,
                 letterSpacing: 4,
                 color: theme.primary.withValues(alpha: 0.45),
               ),
@@ -208,9 +204,7 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
             const SizedBox(height: 12),
             Text(
               t.invitationTapToCopy,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.caption.copyWith(
                 color: theme.textMuted,
               ),
             ),
@@ -230,10 +224,7 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
                 icon: const Icon(Icons.share_rounded),
                 label: Text(
                   t.invitationShareWhatsApp,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: AppTypography.cardTitle,
                 ),
               ),
             ),

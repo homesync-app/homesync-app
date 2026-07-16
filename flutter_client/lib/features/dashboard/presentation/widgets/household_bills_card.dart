@@ -54,21 +54,19 @@ class HouseholdBillsCard extends ConsumerWidget {
                   children: [
                     Text(
                       t.householdBillsTitle,
-                      style: TextStyle(
+                      style: AppTypography.cardTitle.copyWith(
                         fontSize: 18,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
                         color: theme.textPrimary,
-                        letterSpacing: -0.35,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       t.householdBillsSubtitle,
-                      style: TextStyle(
+                      style: AppTypography.body.copyWith(
                         fontSize: 13.5,
-                        fontWeight: FontWeight.w500,
-                        color: theme.textSecondary,
                         height: 1.35,
+                        color: theme.textSecondary,
                       ),
                     ),
                   ],
@@ -107,10 +105,11 @@ class HouseholdBillsCard extends ConsumerWidget {
         Text(
           t.householdBillsPremiumBody,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: AppTypography.caption.copyWith(
             fontSize: 13,
-            color: theme.textSecondary,
+            fontWeight: FontWeight.w500,
             height: 1.35,
+            color: theme.textSecondary,
           ),
         ),
         const SizedBox(height: 14),
@@ -127,10 +126,7 @@ class HouseholdBillsCard extends ConsumerWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadii.md),
               ),
-              textStyle: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-              ),
+              textStyle: AppTypography.bodyStrong,
             ),
           ),
         ),
@@ -150,9 +146,7 @@ class HouseholdBillsCard extends ConsumerWidget {
         Text(
           t.householdBillsEmptyTitle,
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
+          style: AppTypography.bodyStrong.copyWith(
             color: theme.textPrimary,
           ),
         ),
@@ -160,10 +154,11 @@ class HouseholdBillsCard extends ConsumerWidget {
         Text(
           t.householdBillsEmptyBody,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: AppTypography.caption.copyWith(
             fontSize: 13,
-            color: theme.textSecondary,
+            fontWeight: FontWeight.w500,
             height: 1.35,
+            color: theme.textSecondary,
           ),
         ),
       ],
@@ -192,7 +187,10 @@ class HouseholdBillsCard extends ConsumerWidget {
                 color: theme.surfaceVariant,
                 borderRadius: BorderRadius.circular(13),
               ),
-              child: Text(emoji, style: const TextStyle(fontSize: 19)),
+              child: Text(emoji, style: AppTypography.body.copyWith(
+                fontSize: 19,
+                fontWeight: FontWeight.w400,
+              ),),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -201,19 +199,16 @@ class HouseholdBillsCard extends ConsumerWidget {
                 children: [
                   Text(
                     bill.title,
-                    style: TextStyle(
+                    style: AppTypography.bodyStrong.copyWith(
                       fontSize: 14.5,
-                      fontWeight: FontWeight.w800,
                       color: theme.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     t.householdBillsDayOfMonth(bill.dayOfMonth),
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: AppTypography.caption.copyWith(
                       color: theme.textMuted,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -221,9 +216,7 @@ class HouseholdBillsCard extends ConsumerWidget {
             ),
             Text(
               t.householdBillsPerMonth(_formatCurrency(bill.defaultAmount)),
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
+              style: AppTypography.bodyStrong.copyWith(
                 color: theme.textPrimary,
               ),
             ),
@@ -247,10 +240,7 @@ class HouseholdBillsCard extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.md),
           ),
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-          ),
+          textStyle: AppTypography.bodyStrong,
         ),
       ),
     );

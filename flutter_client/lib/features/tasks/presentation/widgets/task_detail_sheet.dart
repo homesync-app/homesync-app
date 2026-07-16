@@ -278,19 +278,17 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                   children: [
                     Text(
                       t.taskDetailHeaderTitle,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       dateStr,
-                      style: TextStyle(
+                      style: AppTypography.cardTitle.copyWith(
                         color: appTheme.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ],
@@ -309,10 +307,9 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                       const SizedBox(width: 6),
                       Text(
                         statusLabel,
-                        style: TextStyle(
+                        style: AppTypography.caption.copyWith(
+                          fontWeight: FontWeight.w700,
                           color: statusColor,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -386,12 +383,10 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                     localizedTaskTitle(t, _task),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
+                                    style: AppTypography.cardTitle.copyWith(
                                       fontSize: 18,
-                                      fontWeight: FontWeight.w800,
-                                      color: appTheme.textPrimary,
-                                      letterSpacing: -0.2,
                                       height: 1.12,
+                                      color: appTheme.textPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -403,7 +398,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                       _buildChip(
                                         icon: Icons.star_rounded,
                                         label: '+$_xpReward XP',
-                                        color: AppColors.accentGold,
+                                        color: AppColors.xpGold,
                                         textColor: appTheme.textPrimary,
                                         background: AppColors.accentGold
                                             .withValues(alpha: 0.10),
@@ -413,9 +408,9 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                         label: t.taskDetailCoinsAwarded(
                                           _coinReward,
                                         ),
-                                        color: AppColors.sage,
+                                        color: AppColors.coinGreen,
                                         textColor: appTheme.textPrimary,
-                                        background: AppColors.sage
+                                        background: AppColors.coinGreen
                                             .withValues(alpha: 0.12),
                                       ),
                                       if (_task.isRecurring)
@@ -462,11 +457,11 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   text: TextSpan(
-                                    style: TextStyle(
-                                      color: appTheme.textSecondary,
+                                    style: AppTypography.caption.copyWith(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
                                       height: 1.2,
+                                      color: appTheme.textSecondary,
                                     ),
                                     children: [
                                       TextSpan(
@@ -499,11 +494,10 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                   ),
                                   child: Text(
                                     DateFormat('HH:mm').format(completedAt),
-                                    style: TextStyle(
-                                      color: appTheme.textSecondary,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w800,
+                                    style: AppTypography.caption.copyWith(
+                                      fontWeight: FontWeight.w700,
                                       height: 1,
+                                      color: appTheme.textSecondary,
                                     ),
                                   ),
                                 ),
@@ -530,19 +524,19 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                         children: [
                           Text(
                             t.taskDetailComment,
-                            style: TextStyle(
-                              color: appTheme.textPrimary,
+                            style: AppTypography.caption.copyWith(
                               fontSize: 13,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w700,
+                              color: appTheme.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             _comment!,
-                            style: TextStyle(
-                              color: theme.colorScheme.onSurface,
-                              fontSize: 14,
+                            style: AppTypography.body.copyWith(
+                              fontWeight: FontWeight.w400,
                               height: 1.45,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                         ],
@@ -609,7 +603,9 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
           icon: const Icon(Icons.undo_rounded, size: 18),
           label: Text(
             AppLocalizations.of(context).taskDetailUndoButton,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+            style: AppTypography.cardTitle.copyWith(
+              fontSize: 15,
+            ),
           ),
           style: OutlinedButton.styleFrom(
             foregroundColor: appTheme.textPrimary,

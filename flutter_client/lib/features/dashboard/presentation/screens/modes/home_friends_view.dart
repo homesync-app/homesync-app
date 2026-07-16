@@ -226,10 +226,10 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                       _unreadNotificationCount > 9
                           ? '9+'
                           : '$_unreadNotificationCount',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 8,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -279,7 +279,10 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: Text(t.commonRetry, style: const TextStyle(fontSize: 13)),
+            child: Text(t.commonRetry, style: AppTypography.caption.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),),
           ),
         ],
       ),

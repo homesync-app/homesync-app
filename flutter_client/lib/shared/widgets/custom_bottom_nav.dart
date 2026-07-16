@@ -161,7 +161,7 @@ class _CustomBottomNavTile extends StatelessWidget {
                 ? theme.primary
                     .withValues(alpha: theme.isDarkMode ? 0.18 : 0.10)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppRadii.lg),
+            borderRadius: AppRadii.inner(AppRadii.xl, AppSpacing.xs),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,

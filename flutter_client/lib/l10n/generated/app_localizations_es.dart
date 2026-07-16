@@ -316,15 +316,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsPremiumFeatureExclusiveAvatars => 'Avatares Exclusivos';
 
   @override
-  String get settingsMinorPremiumTitle => 'Funciones Premium';
-
-  @override
-  String get settingsMinorPremiumChildBody =>
-      'Pedi a tus papas que activen el plan para desbloquear avatares exclusivos, colores y mas 🌟';
-
-  @override
-  String get settingsMinorPremiumAdultBody =>
-      'Los adultos del hogar pueden activar el plan premium para desbloquear funciones adicionales.';
+  String get settingsMinorPremiumSnack =>
+      'Esta función es premium 🌟 Pedile a un adulto del hogar que active el plan.';
 
   @override
   String get settingsReplayTourTitle => 'Ver guia de nuevo';
@@ -357,17 +350,31 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsAccountReset => '✅ Datos reiniciados y hogar liberado';
 
   @override
+  String get settingsAccountResetError => 'No se pudo reiniciar la cuenta.';
+
+  @override
+  String get settingsLinkOpenError => 'No se pudo abrir el enlace';
+
+  @override
+  String get settingsProfileNameFallback => 'Usuario';
+
+  @override
+  String get settingsProfileAvatarAction => 'Avatar';
+
+  @override
+  String get settingsProfileNameAction => 'Nombre';
+
+  @override
+  String get settingsRenameProfileTitle => 'Cambiar nombre';
+
+  @override
+  String get settingsRenameProfileLabel => 'Nombre';
+
+  @override
   String get settingsNotificationsTitle => 'Notificaciones';
 
   @override
-  String get settingsNotificationsSubtitle =>
-      'Recibe avisos de gastos y tareas';
-
-  @override
   String get settingsFaqTitle => 'Preguntas Frecuentes';
-
-  @override
-  String get settingsFaqSubtitle => 'Aprende como funciona HomeSync';
 
   @override
   String get settingsLogoutButton => 'Cerrar Sesion';
@@ -377,19 +384,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsResetAccountButton => 'Reiniciar Datos de Cuenta';
-
-  @override
-  String get settingsFeedbackBugTitle => 'Reportar un error';
-
-  @override
-  String get settingsFeedbackBugSubtitle => 'Algo no funciona bien? Avisanos';
-
-  @override
-  String get settingsFeedbackSuggestionTitle => 'Sugerir una mejora';
-
-  @override
-  String get settingsFeedbackSuggestionSubtitle =>
-      'Tenes una idea? Nos encanta escucharte';
 
   @override
   String get settingsLogoutDialogTitle => 'Cerrar sesión?';
@@ -2186,7 +2180,109 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsHouseholdRenameDialogTitle => 'Nombre del hogar';
 
   @override
-  String get settingsHouseholdRenameDialogLabel => 'Tu nombre';
+  String get settingsHouseholdRenameDialogLabel => 'Nombre';
+
+  @override
+  String get settingsHouseholdFallbackName => 'Mi hogar';
+
+  @override
+  String get settingsHouseholdCodeGenerated => 'Código generado';
+
+  @override
+  String get settingsHouseholdCodeCopied => 'Código copiado al portapapeles';
+
+  @override
+  String get settingsHouseholdCodeGenerateFirst => 'Generá un código primero';
+
+  @override
+  String get settingsHouseholdWhatsAppFallback =>
+      'No se pudo abrir WhatsApp. Código copiado.';
+
+  @override
+  String get settingsHouseholdJoinSuccess => 'Te uniste al hogar exitosamente';
+
+  @override
+  String get settingsHouseholdJoinCodeLength =>
+      'El código debe tener 6 caracteres';
+
+  @override
+  String settingsInviteWhatsAppMessage(String mode, String code) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'couple':
+            '¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.',
+        'family':
+            '¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.',
+        'friends':
+            '¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.',
+        'other': '¡Hola! Te invito a unirte a nuestro hogar en HomeSync.',
+      },
+    );
+    return '$_temp0\n\nDescarga la app e ingresa este código: *$code*\n\n¡Organicemos nuestro hogar juntos!';
+  }
+
+  @override
+  String get settingsHouseholdRoleUpdated => '✅ Rol actualizado';
+
+  @override
+  String get settingsHouseholdRenamed => '✅ Hogar renombrado';
+
+  @override
+  String get settingsHouseholdTasksEnabledSnack =>
+      '✅ Tareas del hogar activadas';
+
+  @override
+  String get settingsHouseholdFinanceModeSnack =>
+      '✅ Modo finanzas y compras activado';
+
+  @override
+  String settingsHouseholdUpdateError(String error) {
+    return 'No se pudo actualizar la configuración: $error';
+  }
+
+  @override
+  String get settingsAssignRoleTitle => 'Asignar rol o apodo';
+
+  @override
+  String settingsAssignRoleFieldLabel(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'couple': 'Nombre del rol (ej: Pareja)',
+        'friends': 'Nombre del rol (ej: Compañero)',
+        'other': 'Nombre del rol (ej: Madre)',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsAssignRoleSuggestionsLabel => 'Sugerencias:';
+
+  @override
+  String get settingsRoleSuggestionsCouple =>
+      'Pareja,Novio,Novia,Esposo,Esposa';
+
+  @override
+  String get settingsRoleSuggestionsFriends =>
+      'Compañero,Roommate,Invitado,Responsable';
+
+  @override
+  String get settingsMemberRoleOwner => 'Propietario';
+
+  @override
+  String get settingsMemberRoleCouple => 'Pareja';
+
+  @override
+  String get settingsMemberRoleFriends => 'Compañero';
+
+  @override
+  String get settingsMemberRoleDefault => 'Miembro';
+
+  @override
+  String get settingsHouseholdLoadError =>
+      'No pudimos cargar tu hogar. Revisá tu conexión e intentá de nuevo.';
 
   @override
   String get settingsParentModeTitle => 'Modo Padres';
@@ -7150,17 +7246,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get avatarPickerCreatingSubtitle => 'Puede tardar unos segundos.';
-
-  @override
-  String get settingsRemoveMemberTitle => '¿Quitar miembro?';
-
-  @override
-  String settingsRemoveMemberBody(String name) {
-    return '¿Estás seguro de que quieres quitar a $name de este hogar?';
-  }
-
-  @override
-  String get settingsRemoveMemberAction => 'Quitar';
 
   @override
   String settingsMemberRemoved(String name) {

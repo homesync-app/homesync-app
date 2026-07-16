@@ -236,11 +236,10 @@ class _HeroHeader extends StatelessWidget {
               const SizedBox(width: 5),
               Text(
                 t.premiumPaywallEyebrow,
-                style: TextStyle(
-                  color: theme.textPrimary,
+                style: AppTypography.caption.copyWith(
                   fontSize: 11.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.2,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary,
                 ),
               ),
             ],
@@ -250,12 +249,10 @@ class _HeroHeader extends StatelessWidget {
         Text(
           t.premiumPaywallTitle,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: AppTypography.heroAmount.copyWith(
             fontSize: 24,
-            fontWeight: FontWeight.w900,
-            color: theme.textPrimary,
-            letterSpacing: -0.7,
             height: 1.1,
+            color: theme.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -264,11 +261,11 @@ class _HeroHeader extends StatelessWidget {
           child: Text(
             t.premiumPaywallSubtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: AppTypography.body.copyWith(
               fontSize: 13.5,
               fontWeight: FontWeight.w600,
-              color: theme.textSecondary,
               height: 1.32,
+              color: theme.textSecondary,
             ),
           ),
         ),
@@ -382,21 +379,18 @@ class _BenefitRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: AppTypography.bodyStrong.copyWith(
                     fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: theme.textPrimary,
                     height: 1.2,
+                    color: theme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   desc,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: theme.textSecondary,
+                  style: AppTypography.caption.copyWith(
                     height: 1.3,
+                    color: theme.textSecondary,
                   ),
                 ),
               ],
@@ -556,10 +550,9 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
               const SizedBox(height: 8),
               Text(
                 t.premiumTestingModeLabel,
-                style: TextStyle(
-                  color: theme.textMuted,
+                style: AppTypography.caption.copyWith(
                   fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  color: theme.textMuted,
                 ),
               ),
             ],
@@ -631,11 +624,9 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
               ),
               child: Text(
                 t.premiumContinueWithPlan,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 16.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.1,
+                  color: Colors.white,
                 ),
               ),
             ),
@@ -646,15 +637,18 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
             children: [
               Text(
                 t.premiumCancelAnytime,
-                style: TextStyle(
-                  color: theme.textMuted,
+                style: AppTypography.caption.copyWith(
                   fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
+                  color: theme.textMuted,
                 ),
               ),
               Text(
                 '  ·  ',
-                style: TextStyle(color: theme.textMuted, fontSize: 11.5),
+                style: AppTypography.caption.copyWith(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                  color: theme.textMuted,
+                ),
               ),
               TextButton(
                 style: TextButton.styleFrom(
@@ -668,10 +662,10 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
                 onPressed: _restore,
                 child: Text(
                   t.premiumRestorePurchases,
-                  style: TextStyle(
-                    color: theme.textSecondary,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
+                    color: theme.textSecondary,
                   ),
                 ),
               ),
@@ -739,10 +733,9 @@ class _PlanCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         isAnnual ? t.premiumAnnualPlan : t.premiumMonthlyPlan,
-                        style: TextStyle(
-                          color: theme.textPrimary,
+                        style: AppTypography.bodyStrong.copyWith(
                           fontSize: 13.5,
-                          fontWeight: FontWeight.w800,
+                          color: theme.textPrimary,
                         ),
                       ),
                     ),
@@ -773,10 +766,10 @@ class _PlanCard extends StatelessWidget {
                   subtitle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: theme.textSecondary,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
+                    color: theme.textSecondary,
                   ),
                 ),
               ],
@@ -797,10 +790,10 @@ class _PlanCard extends StatelessWidget {
                 ),
                 child: Text(
                   t.premiumSavePercent,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 10,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -831,10 +824,10 @@ class _PremiumActiveContent extends StatelessWidget {
         const SizedBox(height: 18),
         Text(
           t.premiumActiveBenefitsTitle,
-          style: TextStyle(
-            color: context.theme.textPrimary,
+          style: AppTypography.cardTitle.copyWith(
             fontSize: 18,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w800,
+            color: context.theme.textPrimary,
           ),
         ),
         const SizedBox(height: 10),
@@ -858,10 +851,9 @@ class _PremiumActiveContent extends StatelessWidget {
             ),
             child: Text(
               t.premiumContinueButton,
-              style: const TextStyle(
+              style: AppTypography.cardTitle.copyWith(
+                fontWeight: FontWeight.w800,
                 color: AppColors.primary,
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
               ),
             ),
           ),
@@ -950,10 +942,9 @@ class _PremiumActiveHero extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       t.premiumActiveStatusPill,
-                      style: const TextStyle(
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w700,
                         color: AppColors.sage,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ],
@@ -964,22 +955,19 @@ class _PremiumActiveHero extends StatelessWidget {
           const SizedBox(height: 18),
           Text(
             t.premiumAlreadyActiveTitle,
-            style: TextStyle(
-              color: theme.textPrimary,
+            style: AppTypography.heroAmount.copyWith(
               fontSize: 28,
-              fontWeight: FontWeight.w900,
               height: 1.05,
-              letterSpacing: -0.6,
+              color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 10),
           Text(
             t.premiumAlreadyActiveBody,
-            style: TextStyle(
-              color: theme.textSecondary,
+            style: AppTypography.bodyStrong.copyWith(
               fontSize: 14.5,
-              fontWeight: FontWeight.w700,
               height: 1.32,
+              color: theme.textSecondary,
             ),
           ),
         ],
@@ -1013,7 +1001,11 @@ class _StoreError extends ConsumerWidget {
         ),
         Text(
           error,
-          style: TextStyle(color: theme.textMuted, fontSize: 10),
+          style: AppTypography.caption.copyWith(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: theme.textMuted,
+          ),
         ),
         const SizedBox(height: 24),
         if (!AppEnvironment.isProduction)

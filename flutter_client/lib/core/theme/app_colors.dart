@@ -38,6 +38,13 @@ class AppColors {
   static const Color iconRed = Color(0xFFE57373);
   static const Color iconGreen = Color(0xFF22C55E);
 
+  // Gamificación: origen único del color de recompensas en toda la app.
+  // XP siempre en este ámbar (el histórico del widget de balance del Home,
+  // elegido por el owner sobre el dorado oscuro) y coins siempre en este
+  // verde — no introducir tonos ad-hoc en pills, badges ni formularios.
+  static const Color xpGold = Color(0xFFE8943A);
+  static const Color coinGreen = Color(0xFF7CB08B);
+
   // Neutral Colors
   static const Color textPrimary = Color(0xFF4A4443);
   static const Color textSecondary = Color(0xFF8E8480);

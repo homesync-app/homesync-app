@@ -113,11 +113,9 @@ class SavingsTab extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     t.savingsCompletedGoalsHistoryTitle.toUpperCase(),
-                    style: TextStyle(
-                      color: context.theme.textMuted,
+                    style: AppTypography.eyebrow.copyWith(
                       fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1,
+                      color: context.theme.textMuted,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -159,17 +157,18 @@ class SavingsTab extends ConsumerWidget {
               shape: BoxShape.circle,
             ),
             child:
-                Text(icon, style: const TextStyle(fontSize: 48)).animatePulse(),
+                Text(icon, style: AppTypography.body.copyWith(
+                  fontSize: 48,
+                  fontWeight: FontWeight.w400,
+                ),).animatePulse(),
           ),
           const SizedBox(height: 24),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: AppTypography.cardTitle.copyWith(
               fontSize: 18,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -178,10 +177,8 @@ class SavingsTab extends ConsumerWidget {
             child: Text(
               subtitle ?? fallbackSubtitle ?? '',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: AppTypography.body.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -202,9 +199,8 @@ class SavingsTab extends ConsumerWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadii.pill),
                   ),
-                  textStyle: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
+                  textStyle: AppTypography.cardTitle.copyWith(
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -236,6 +232,11 @@ class SavingsTab extends ConsumerWidget {
     return AnimatedPress(
       onTap: perms.canContribute && !reached
           ? () => _showContributionDialog(context, goal, ref)
+          : null,
+      // Gestión (editar/auto/archivar/borrar) vive en el long-press: el
+      // corner de la card queda libre para la acción principal (aportar).
+      onLongPress: perms.canManage
+          ? () => _showGoalActionsSheet(context, ref, goal, reached)
           : null,
       child: Container(
         padding: const EdgeInsets.fromLTRB(
@@ -276,20 +277,17 @@ class SavingsTab extends ConsumerWidget {
                         goal.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: theme.textPrimary,
-                          fontWeight: FontWeight.w900,
+                        style: AppTypography.sectionTitle.copyWith(
                           fontSize: 22,
                           height: 1.02,
+                          color: theme.textPrimary,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xxs),
                       Text(
                         t.savingsGoalTarget(targetAmount),
-                        style: TextStyle(
+                        style: AppTypography.bodyStrong.copyWith(
                           color: theme.textSecondary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
                         ),
                       ),
                       if (goal.targetDate != null)
@@ -300,17 +298,39 @@ class SavingsTab extends ConsumerWidget {
                               DateFormat('dd MMM yyyy')
                                   .format(goal.targetDate!),
                             ),
-                            style: TextStyle(
-                              color: theme.textMuted,
-                              fontSize: 12,
+                            style: AppTypography.caption.copyWith(
                               fontWeight: FontWeight.w700,
+                              color: theme.textMuted,
                             ),
                           ),
                         ),
                     ],
                   ),
                 ),
-                if (perms.canManage) _GoalMenu(goal: goal, reached: reached),
+                // Acción principal en el corner: "+" abre el aporte. El menú
+                // de gestión se abre manteniendo pulsada la card; solo cae al
+                // kebab cuando no hay aporte posible (meta cumplida / perms).
+                if (perms.canContribute && !reached)
+                  AnimatedPress(
+                    scale: 0.9,
+                    haptic: AppPressHaptic.light,
+                    onTap: () => _showContributionDialog(context, goal, ref),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.add_rounded,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
+                  )
+                else if (perms.canManage)
+                  _GoalMenu(goal: goal, reached: reached),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -328,11 +348,10 @@ class SavingsTab extends ConsumerWidget {
                       value: goal.currentAmount.toDouble(),
                       locale: currency.locale,
                       format: currency.format,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        color: theme.textPrimary,
+                      style: AppTypography.heroAmount.copyWith(
                         fontSize: 24,
                         height: 0.98,
+                        color: theme.textPrimary,
                       ),
                     ),
                   ),
@@ -362,11 +381,11 @@ class SavingsTab extends ConsumerWidget {
                 else
                   Text(
                     progressLabel,
-                    style: TextStyle(
-                      color: goalColor,
+                    style: AppTypography.cardTitle.copyWith(
                       fontSize: 18,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
                       height: 1,
+                      color: goalColor,
                     ),
                   ),
               ],
@@ -384,52 +403,7 @@ class SavingsTab extends ConsumerWidget {
                 color: goalColor,
               ),
             ),
-            if (perms.canContribute && !reached) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Align(
-                alignment: Alignment.centerRight,
-                // Botón propio con press-morph M3E (pill → redondeado sobre
-                // el spring del squash), además del tap general de la card.
-                child: AnimatedPress(
-                  scale: 0.96,
-                  haptic: AppPressHaptic.light,
-                  onTap: () => _showContributionDialog(context, goal, ref),
-                  pressBuilder: (context, morphT, child) => Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.xs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.11),
-                      borderRadius: BorderRadius.circular(
-                        15 + (10 - 15) * morphT.clamp(0.0, 1.2),
-                      ),
-                    ),
-                    child: child,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.add_circle_outline_rounded,
-                        color: AppColors.primary,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        t.savingsGoalContributeAction,
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-            _ContributionHistory(goalId: goal.id),
+            _ContributionHistory(goalId: goal.id, accentColor: goalColor),
           ],
         ),
       ),
@@ -481,10 +455,10 @@ class SavingsTab extends ConsumerWidget {
                           goal.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: theme.textPrimary,
+                          style: AppTypography.cardTitle.copyWith(
                             fontSize: 15,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w800,
+                            color: theme.textPrimary,
                           ),
                         ),
                       ),
@@ -500,10 +474,9 @@ class SavingsTab extends ConsumerWidget {
                     t.savingsGoalSaved(currency.format(goal.currentAmount)),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: theme.textSecondary,
-                      fontSize: 12,
+                    style: AppTypography.caption.copyWith(
                       fontWeight: FontWeight.w700,
+                      color: theme.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -565,6 +538,33 @@ class SavingsTab extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => _CompletedGoalDetailSheet(goal: goal),
     );
+  }
+
+  /// Menú de gestión de la meta (long-press en la card). El sheet solo
+  /// devuelve la acción elegida y se resuelve acá, con el context de la card
+  /// todavía vivo (el del sheet muere al hacer pop).
+  static Future<void> _showGoalActionsSheet(
+    BuildContext context,
+    WidgetRef ref,
+    SavingsGoalModel goal,
+    bool reached,
+  ) async {
+    final action = await AppSheet.show<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _GoalActionsSheet(goal: goal, reached: reached),
+    );
+    if (action == null || !context.mounted) return;
+    switch (action) {
+      case 'edit':
+        showGoalSheet(context, ref, existing: goal);
+      case 'auto':
+        await GoalAutoContributionSheet.show(context, ref, goal);
+      case 'archive':
+        await _confirmArchiveGoal(context, ref, goal);
+      case 'delete':
+        await _confirmDeleteGoal(context, ref, goal);
+    }
   }
 }
 

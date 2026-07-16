@@ -12,6 +12,8 @@ import 'package:homesync_client/features/expenses/domain/models/expense_model.da
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/presentation/widgets/shopping_icon.dart';
 import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -73,7 +75,12 @@ class _ExpenseDetailSheetContentState
             .w('Expense detail fallback kept partial data: ${failure.message}'),
         (fullData) {
           if (!mounted) return;
-          setState(() => _expense = ExpenseModel.fromJson(fullData));
+          setState(
+            () => _expense = _mergeKeepingKnownDetails(
+              _expense,
+              ExpenseModel.fromJson(fullData),
+            ),
+          );
         },
       );
     } catch (e) {
@@ -85,11 +92,122 @@ class _ExpenseDetailSheetContentState
     }
   }
 
+  /// El refresh enriquece, nunca degrada: si al resultado fresco le falta un
+  /// dato que ya teníamos (pagador, descripción, nombre/avatar de un split),
+  /// se conserva el conocido. Evita el flicker de "Pagó X" o los avatares
+  /// desapareciendo al llegar la respuesta del servidor.
+  static ExpenseModel _mergeKeepingKnownDetails(
+    ExpenseModel prev,
+    ExpenseModel full,
+  ) {
+    final prevSplitsById = {
+      for (final split in prev.splits ?? const <ExpenseSplitModel>[])
+        split.userId: split,
+    };
+    final mergedSplits = (full.splits == null || full.splits!.isEmpty)
+        ? prev.splits
+        : full.splits!.map((split) {
+            final known = prevSplitsById[split.userId];
+            if (known == null) return split;
+            return ExpenseSplitModel(
+              userId: split.userId,
+              amount: split.amount,
+              email: split.email ?? known.email,
+              fullName: split.fullName ?? known.fullName,
+              avatarUrl: split.avatarUrl ?? known.avatarUrl,
+            );
+          }).toList();
+
+    return ExpenseModel(
+      id: full.id,
+      title: full.title,
+      titleKey: full.titleKey ?? prev.titleKey,
+      amount: full.amount,
+      category: full.category ?? prev.category,
+      householdId:
+          full.householdId.isNotEmpty ? full.householdId : prev.householdId,
+      paidBy: full.paidBy.isNotEmpty ? full.paidBy : prev.paidBy,
+      paidAt: full.paidAt,
+      createdAt: full.createdAt,
+      payerEmail: full.payerEmail ?? prev.payerEmail,
+      payerFullName: full.payerFullName ?? prev.payerFullName,
+      payerAvatarUrl: full.payerAvatarUrl ?? prev.payerAvatarUrl,
+      isShared: full.isShared,
+      type: full.type,
+      splitType: full.splitType ?? prev.splitType,
+      description: full.description ?? prev.description,
+      splits: mergedSplits,
+      receiptPath: full.receiptPath ?? prev.receiptPath,
+      poolId: full.poolId ?? prev.poolId,
+    );
+  }
+
+  /// Completa nombre/avatar de pagador y splits desde los miembros del hogar,
+  /// que ya están cacheados app-wide. Así el PRIMER frame muestra los avatares
+  /// reales sin esperar al fetch de red (que solo aporta descripción/splits
+  /// faltantes) — sin esto se veía un avatar genérico un instante.
+  static ExpenseModel _fillFromMembers(
+    ExpenseModel expense,
+    List<MemberModel> members,
+  ) {
+    if (members.isEmpty) return expense;
+    final byId = {for (final m in members) m.userId: m};
+
+    ExpenseSplitModel fill(ExpenseSplitModel split) {
+      final member = byId[split.userId];
+      if (member == null) return split;
+      final needsName = split.fullName == null || split.fullName!.isEmpty;
+      final needsAvatar = split.avatarUrl == null || split.avatarUrl!.isEmpty;
+      if (!needsName && !needsAvatar) return split;
+      return ExpenseSplitModel(
+        userId: split.userId,
+        amount: split.amount,
+        email: split.email,
+        fullName: needsName ? member.displayName : split.fullName,
+        avatarUrl: needsAvatar ? member.avatarUrl : split.avatarUrl,
+      );
+    }
+
+    final payer = byId[expense.paidBy];
+    final needsPayerName =
+        expense.payerFullName == null || expense.payerFullName!.isEmpty;
+    final needsPayerAvatar =
+        expense.payerAvatarUrl == null || expense.payerAvatarUrl!.isEmpty;
+
+    return ExpenseModel(
+      id: expense.id,
+      title: expense.title,
+      titleKey: expense.titleKey,
+      amount: expense.amount,
+      category: expense.category,
+      householdId: expense.householdId,
+      paidBy: expense.paidBy,
+      paidAt: expense.paidAt,
+      createdAt: expense.createdAt,
+      payerEmail: expense.payerEmail,
+      payerFullName: needsPayerName && payer != null
+          ? payer.displayName
+          : expense.payerFullName,
+      payerAvatarUrl: needsPayerAvatar && payer != null
+          ? payer.avatarUrl
+          : expense.payerAvatarUrl,
+      isShared: expense.isShared,
+      type: expense.type,
+      splitType: expense.splitType,
+      description: expense.description,
+      splits: expense.splits?.map(fill).toList(),
+      receiptPath: expense.receiptPath,
+      poolId: expense.poolId,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
-    final expense = _expense;
+    final members =
+        ref.watch(householdMembersProvider).value ?? const <MemberModel>[];
+    final expense = _fillFromMembers(_expense, members);
     final accentColor = CategoryMapping.getSmartExpenseDisplayColor(
       expense.category,
       title: expense.title,

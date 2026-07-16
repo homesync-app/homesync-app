@@ -172,9 +172,7 @@ class WeeklyProgressTab extends ConsumerWidget {
                       children: [
                         Text(
                           t.loveNoteSendTitle,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
+                          style: AppTypography.cardTitle.copyWith(
                             color: isPremium
                                 ? (theme.isDarkMode
                                     ? const Color(0xFFFFD6D6)
@@ -187,9 +185,8 @@ class WeeklyProgressTab extends ConsumerWidget {
                           isPremium
                               ? t.loveNoteSendSubtitle
                               : t.loveNotePremiumFeature,
-                          style: TextStyle(
+                          style: AppTypography.caption.copyWith(
                             fontSize: 13,
-                            fontWeight: FontWeight.w600,
                             color: isPremium
                                 ? (theme.isDarkMode
                                         ? const Color(0xFFFECACA)
@@ -271,21 +268,18 @@ class _WeeklyHeaderCard extends StatelessWidget {
         children: [
           Text(
             t.statsWeeklyProgressTitle,
-            style: TextStyle(
-              color: theme.textPrimary,
+            style: AppTypography.heroAmount.copyWith(
               fontSize: 24,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.7,
+              color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             t.statsWeeklyProgressSubtitle,
-            style: TextStyle(
-              color: theme.textSecondary,
-              fontSize: 14,
+            style: AppTypography.body.copyWith(
               fontWeight: FontWeight.w600,
               height: 1.35,
+              color: theme.textSecondary,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -302,10 +296,9 @@ class _WeeklyHeaderCard extends StatelessWidget {
             ),
             child: Text(
               '${t.statsCurrentWeek} · $weekRange',
-              style: TextStyle(
+              style: AppTypography.caption.copyWith(
+                fontWeight: FontWeight.w700,
                 color: theme.textPrimary,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
               ),
             ),
           ),
@@ -333,26 +326,28 @@ class _SummaryMetric extends StatelessWidget {
     final theme = context.theme;
     return Column(
       children: [
-        Text(icon, style: const TextStyle(fontSize: 18)),
+        Text(icon, style: AppTypography.body.copyWith(
+          fontSize: 18,
+          fontWeight: FontWeight.w400,
+        ),),
         const SizedBox(height: AppSpacing.xs),
         Text(
           value,
-          style: TextStyle(
+          style: AppTypography.sectionTitle.copyWith(
             fontSize: 22,
-            fontWeight: FontWeight.w900,
-            color: theme.textPrimary,
             letterSpacing: -0.8,
             height: 1,
+            color: theme.textPrimary,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           label.toUpperCase(),
-          style: TextStyle(
-            color: color.withValues(alpha: 0.8),
+          style: AppTypography.caption.copyWith(
             fontSize: 10,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             letterSpacing: 0.6,
+            color: color.withValues(alpha: 0.8),
           ),
         ),
       ],

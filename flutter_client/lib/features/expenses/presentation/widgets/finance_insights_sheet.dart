@@ -66,11 +66,9 @@ class FinanceInsightsSheet extends StatelessWidget {
                   children: [
                     Text(
                       t.financeInsightsTitle,
-                      style: TextStyle(
+                      style: AppTypography.sectionTitle.copyWith(
                         fontSize: 22,
-                        fontWeight: FontWeight.w900,
                         color: theme.textPrimary,
-                        letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: 4),

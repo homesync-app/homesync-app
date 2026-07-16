@@ -50,20 +50,19 @@ class SettingsNoHouseholdCard extends StatelessWidget {
           Text(
             t.settingsHouseholdEmptyTitle,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: AppTypography.sectionTitle.copyWith(
               fontSize: 22,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
               color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
           Text(
             t.settingsHouseholdEmptyBody,
-            style: TextStyle(
-              color: theme.textSecondary,
+            style: AppTypography.body.copyWith(
               fontSize: 15,
+              fontWeight: FontWeight.w400,
               height: 1.5,
+              color: theme.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -175,9 +174,9 @@ class SettingsHouseholdCard extends StatelessWidget {
                     children: [
                       Text(
                         householdName,
-                        style: TextStyle(
+                        style: AppTypography.cardTitle.copyWith(
                           fontSize: 18,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w800,
                           color: theme.textPrimary,
                         ),
                       ),
@@ -193,11 +192,11 @@ class SettingsHouseholdCard extends StatelessWidget {
                         ),
                         child: Text(
                           householdTypeLabel.toUpperCase(),
-                          style: TextStyle(
-                            color: theme.primary,
+                          style: AppTypography.caption.copyWith(
                             fontSize: 10,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             letterSpacing: 0.5,
+                            color: theme.primary,
                           ),
                         ),
                       ),
@@ -276,8 +275,8 @@ class SettingsHouseholdCard extends StatelessWidget {
                                 tasksEnabled
                                     ? t.settingsHouseholdTasksToggleOnSubtitle
                                     : t.settingsHouseholdTasksToggleOffSubtitle,
-                                style: TextStyle(
-                                  fontSize: 12,
+                                style: AppTypography.caption.copyWith(
+                                  fontWeight: FontWeight.w500,
                                   height: 1.35,
                                   color: theme.textSecondary,
                                 ),
@@ -325,19 +324,16 @@ class SettingsHouseholdMembersSection extends StatelessWidget {
           children: [
             Text(
               t.settingsHouseholdMembersEyebrow,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
+              style: AppTypography.eyebrow.copyWith(
                 color: theme.textMuted,
-                letterSpacing: 1.2,
               ),
             ),
             Text(
               t.settingsHouseholdMembersCount(memberCount),
-              style: TextStyle(
-                color: theme.textMuted,
+              style: AppTypography.caption.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
+                color: theme.textMuted,
               ),
             ),
           ],
@@ -432,10 +428,9 @@ class SettingsHouseholdMemberRow extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     roleLabel,
-                    style: TextStyle(
-                      color: theme.textSecondary,
+                    style: AppTypography.caption.copyWith(
                       fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      color: theme.textSecondary,
                     ),
                   ),
                 ],
@@ -511,10 +506,10 @@ class _SettingsMemberTinyChip extends StatelessWidget {
           ],
           Text(
             label,
-            style: TextStyle(
-              color: color,
+            style: AppTypography.caption.copyWith(
               fontSize: 10,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
+              color: color,
             ),
           ),
         ],
@@ -638,19 +633,22 @@ Future<void> showSettingsJoinHouseholdDialog(
 }) async {
   final codeController = TextEditingController();
   String? errorText;
+  // Vive FUERA del builder del StatefulBuilder: declarado adentro, cada
+  // setDialogState lo reseteaba a false y el spinner/deshabilitado del botón
+  // nunca llegaba a renderizarse (permitía doble submit del join).
+  var isLoading = false;
 
   await showDialog<void>(
     context: context,
     barrierDismissible: false,
     builder: (dialogCtx) => StatefulBuilder(
       builder: (dialogCtx, setDialogState) {
-        bool isLoading = false;
-
         Future<void> doJoin() async {
           final code = codeController.text.trim().toUpperCase();
           if (code.length != 6) {
             setDialogState(
-              () => errorText = 'El codigo debe tener 6 caracteres',
+              () => errorText = AppLocalizations.of(context)
+                  .settingsHouseholdJoinCodeLength,
             );
             return;
           }
@@ -698,9 +696,9 @@ Future<void> showSettingsJoinHouseholdDialog(
             children: [
               Text(
                 AppLocalizations.of(context).settingsHouseholdJoinDialogBody,
-                style: TextStyle(
+                style: AppTypography.body.copyWith(
+                  fontWeight: FontWeight.w400,
                   color: context.theme.textSecondary,
-                  fontSize: 14,
                 ),
               ),
               const SizedBox(height: 16),
@@ -708,10 +706,9 @@ Future<void> showSettingsJoinHouseholdDialog(
                 controller: codeController,
                 textAlign: TextAlign.center,
                 enabled: !isLoading,
-                style: TextStyle(
+                style: AppTypography.screenTitle.copyWith(
                   fontSize: 28,
                   letterSpacing: 10,
-                  fontWeight: FontWeight.w800,
                   color: context.theme.primary,
                 ),
                 maxLength: 6,
@@ -720,10 +717,11 @@ Future<void> showSettingsJoinHouseholdDialog(
                 decoration: InputDecoration(
                   counterText: '',
                   hintText: 'ABC123',
-                  hintStyle: TextStyle(
+                  hintStyle: AppTypography.body.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w400,
                     letterSpacing: 4,
                     color: context.theme.textMuted,
-                    fontSize: 22,
                   ),
                   filled: true,
                   fillColor: context.theme.primary.withValues(alpha: 0.05),
@@ -814,9 +812,9 @@ void showSettingsEditHouseholdMenu(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: Text(
                 householdName,
-                style: TextStyle(
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 18,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w800,
                   color: theme.textPrimary,
                 ),
               ),
@@ -838,29 +836,31 @@ void showSettingsEditHouseholdMenu(
                 onEditName();
               },
             ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.accentBlue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppRadii.sm),
+            // Un hogar "solo" no tiene a quién invitar: sin entrada de código.
+            if (householdType != 'solo')
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentBlue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
+                  ),
+                  child: const Icon(
+                    Icons.share_rounded,
+                    color: AppColors.accentBlue,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.share_rounded,
-                  color: AppColors.accentBlue,
+                title: Text(t.settingsHouseholdEditMenuInviteTitle),
+                subtitle: Text(
+                  invitationCode != null
+                      ? t.settingsHouseholdEditMenuInviteSubtitleExisting
+                      : t.settingsHouseholdEditMenuInviteSubtitleNone,
                 ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onInvitationCode();
+                },
               ),
-              title: Text(t.settingsHouseholdEditMenuInviteTitle),
-              subtitle: Text(
-                invitationCode != null
-                    ? t.settingsHouseholdEditMenuInviteSubtitleExisting
-                    : t.settingsHouseholdEditMenuInviteSubtitleNone,
-              ),
-              onTap: () {
-                Navigator.pop(ctx);
-                onInvitationCode();
-              },
-            ),
             if (householdType == 'couple' || householdType == 'family')
               ListTile(
                 leading: Container(
@@ -941,9 +941,7 @@ void showSettingsInvitationCodeSheet(
                   Text(
                     AppLocalizations.of(context)
                         .settingsHouseholdInviteSheetTitle,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
+                    style: AppTypography.sectionTitle.copyWith(
                       color: theme.textPrimary,
                     ),
                   ),
@@ -953,9 +951,10 @@ void showSettingsInvitationCodeSheet(
               Text(
                 AppLocalizations.of(context)
                     .settingsHouseholdInviteSheetSubtitle,
-                style: TextStyle(
-                  color: theme.textSecondary,
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: theme.textSecondary,
                 ),
               ),
               const SizedBox(height: 24),
@@ -978,9 +977,8 @@ void showSettingsInvitationCodeSheet(
                           alignment: Alignment.center,
                           child: Text(
                             invitationCode,
-                            style: TextStyle(
+                            style: AppTypography.heroAmount.copyWith(
                               fontSize: 32,
-                              fontWeight: FontWeight.w900,
                               letterSpacing: 4,
                               color: theme.primary,
                             ),

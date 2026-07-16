@@ -368,9 +368,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                             Text(
                               AppLocalizations.of(context)
                                   .createTaskHeaderTitle,
-                              style: const TextStyle(
+                              style: AppTypography.sectionTitle.copyWith(
                                 fontSize: 22,
-                                fontWeight: FontWeight.w900,
                               ),
                             ),
                           ],
@@ -733,10 +732,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                               Text(
                                                 AppLocalizations.of(context)
                                                     .createTaskSnackCreated,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w800,
+                                                style: AppTypography.cardTitle.copyWith(
                                                   color: Colors.white,
-                                                  fontSize: 16,
                                                 ),
                                               ),
                                             ],
@@ -745,10 +742,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                             key: const ValueKey('idle'),
                                             AppLocalizations.of(context)
                                                 .createTaskCreateButton,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w800,
+                                            style: AppTypography.cardTitle.copyWith(
                                               color: Colors.white,
-                                              fontSize: 16,
                                             ),
                                           ),
                               ),
@@ -774,19 +769,16 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       children: [
         Text(
           eyebrow,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.1,
+          style: AppTypography.eyebrow.copyWith(
             color: AppColors.primary.withValues(alpha: 0.72),
           ),
         ),
         const SizedBox(height: 6),
         Text(
           title,
-          style: TextStyle(
+          style: AppTypography.cardTitle.copyWith(
             fontSize: 18,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w800,
             color: theme.textPrimary,
           ),
         ),
@@ -1008,10 +1000,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                 width: 30,
                 child: Text(
                   _recurrenceInterval.toString(),
-                  style: TextStyle(
+                  style: AppTypography.cardTitle.copyWith(
                     color: theme.textPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
                   ),
                 ),
               ),
@@ -1048,7 +1038,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       children: [
         Text(
           t.createTaskCustomMonthDaysHelp,
-          style: TextStyle(fontSize: 12, color: theme.textMuted),
+          style: AppTypography.caption.copyWith(
+            fontWeight: FontWeight.w500,
+            color: theme.textMuted,
+          ),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -1166,22 +1159,22 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                           : const Color(0xFFCBD5E1),
                       child: Text(
                         initial,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: AppTypography.caption.copyWith(
                           fontSize: 11,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                     const SizedBox(width: 6),
                     Text(
                       name.toString(),
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
                         color: selected
                             ? AppColors.accentBlue
                             : theme.textSecondary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12.5,
                       ),
                     ),
                   ],
@@ -1191,14 +1184,14 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           }).toList(),
         ),
         if (_rotationPool.length == 1)
-          const Padding(
-            padding: EdgeInsets.only(top: AppSpacing.xs),
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
             child: Text(
               'Necesitas al menos 2 personas en el pool.',
-              style: TextStyle(
-                color: AppColors.accentOrange,
+              style: AppTypography.caption.copyWith(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w700,
+                color: AppColors.accentOrange,
               ),
             ),
           ),
@@ -1247,9 +1240,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                   isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
               child: Text(
                 initial,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
+                style: AppTypography.caption.copyWith(
+                  fontWeight: FontWeight.w700,
                   color: Colors.white,
                 ),
               ),
@@ -1318,17 +1310,19 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                     children: [
                       Text(
                         '${difficulty['xp']} XP / ${difficulty['coins']}',
-                        style: TextStyle(
+                        style: AppTypography.caption.copyWith(
                           fontSize: 11,
-                          color:
-                              isSelected ? AppColors.primary : theme.textMuted,
+                          fontWeight: FontWeight.w500,
+                          color: isSelected ? AppColors.primary : theme.textMuted,
                         ),
                       ),
                       const SizedBox(width: 4),
                       Icon(
                         Icons.monetization_on_rounded,
                         size: 11,
-                        color: isSelected ? AppColors.primary : AppColors.sage,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.coinGreen,
                       ),
                     ],
                   ),
@@ -1382,8 +1376,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                     const SizedBox(width: 4),
                     Text(
                       AppLocalizations.of(context).createTaskCustomizeRewards,
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w500,
                         color: _customRewards
                             ? AppColors.primary
                             : theme.textMuted,
@@ -1406,7 +1400,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                     labelText: 'XP',
                     prefixIcon: Icon(
                       Icons.star_rounded,
-                      color: AppColors.accent,
+                      color: AppColors.xpGold,
                       size: 20,
                     ),
                     contentPadding: EdgeInsets.symmetric(
@@ -1440,7 +1434,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         AppLocalizations.of(context).createTaskFieldCoinsLabel,
                     prefixIcon: const Icon(
                       Icons.monetization_on_rounded,
-                      color: AppColors.sage,
+                      color: AppColors.coinGreen,
                       size: 20,
                     ),
                     contentPadding: const EdgeInsets.symmetric(

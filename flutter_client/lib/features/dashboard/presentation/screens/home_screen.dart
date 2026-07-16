@@ -383,12 +383,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.clip,
-                      style: TextStyle(
-                        color: theme.textPrimary,
-                        fontWeight: FontWeight.w900,
+                      style: AppTypography.sectionTitle.copyWith(
                         fontSize: 19,
                         letterSpacing: 0,
                         height: 1,
+                        color: theme.textPrimary,
                       ),
                     ),
                   ),

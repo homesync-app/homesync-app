@@ -84,22 +84,19 @@ class FamilyBalanceCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(
+              style: AppTypography.eyebrow.copyWith(
                 fontSize: 12,
-                fontWeight: FontWeight.w800,
                 color: theme.textSecondary,
-                letterSpacing: 1.05,
               ),
             ),
             if (statusLabel.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
                 statusLabel,
-                style: TextStyle(
-                  color: statusColor,
+                style: AppTypography.caption.copyWith(
                   fontSize: 12.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.15,
+                  fontWeight: FontWeight.w700,
+                  color: statusColor,
                 ),
               ),
               const SizedBox(height: 6),
@@ -149,10 +146,10 @@ class FamilyBalanceCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         statusBadge,
-                        style: TextStyle(
-                          color: statusColor,
+                        style: AppTypography.caption.copyWith(
                           fontSize: 11,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
+                          color: statusColor,
                         ),
                       ),
                     ],
@@ -263,10 +260,9 @@ class FamilyBalanceCard extends StatelessWidget {
           Expanded(
             child: Text(
               t.balanceCardSingleMemberHint,
-              style: TextStyle(
+              style: AppTypography.caption.copyWith(
                 fontSize: 13,
                 height: 1.3,
-                fontWeight: FontWeight.w600,
                 color: theme.textSecondary,
               ),
             ),
@@ -305,19 +301,19 @@ class FamilyBalanceCard extends StatelessWidget {
             children: [
               TextSpan(
                 text: '$value\n',
-                style: TextStyle(
-                  color: theme.textPrimary,
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 14,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w800,
                   height: 1.15,
+                  color: theme.textPrimary,
                 ),
               ),
               TextSpan(
                 text: label,
-                style: TextStyle(
-                  color: theme.textSecondary,
+                style: AppTypography.caption.copyWith(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
+                  color: theme.textSecondary,
                 ),
               ),
             ],
@@ -360,11 +356,9 @@ class FamilyBalanceCard extends StatelessWidget {
           Expanded(
             child: Text(
               balance.displayName,
-              style: TextStyle(
+              style: AppTypography.bodyStrong.copyWith(
                 fontSize: 14.5,
-                fontWeight: FontWeight.w700,
                 color: theme.textPrimary,
-                letterSpacing: -0.2,
               ),
             ),
           ),
@@ -373,13 +367,11 @@ class FamilyBalanceCard extends StatelessWidget {
             children: [
               Text(
                 '${isPositive ? '+' : ''}\$${balance.balance.abs().toStringAsFixed(2)}',
-                style: TextStyle(
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 15.5,
-                  fontWeight: FontWeight.w800,
                   color: isNegative
                       ? AppColors.error
                       : (isPositive ? AppColors.success : theme.textPrimary),
-                  letterSpacing: -0.25,
                 ),
               ),
               Text(
@@ -388,9 +380,8 @@ class FamilyBalanceCard extends StatelessWidget {
                     : (isPositive
                         ? t.balanceCardMemberFavor
                         : t.balanceCardMemberSettled),
-                style: TextStyle(
+                style: AppTypography.caption.copyWith(
                   fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
                   color: theme.textSecondary,
                 ),
               ),

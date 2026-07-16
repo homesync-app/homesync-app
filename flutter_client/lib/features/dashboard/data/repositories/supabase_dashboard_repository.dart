@@ -62,6 +62,22 @@ class SupabaseDashboardRepository implements DashboardRepository {
     }
 
     Timer? pollTimer;
+    var realtimeHealthy = false;
+
+    // Safety net: aunque Realtime no entregue eventos (Causa B histórica
+    // con Firebase Third-Party Auth + RLS), el feed se mantiene fresco con
+    // un refetch periódico. Con el canal confirmado el poll se relaja a 60s
+    // (los cambios llegan por realtime); si el canal se cae vuelve a 15s.
+    void restartPoll() {
+      pollTimer?.cancel();
+      pollTimer = Timer.periodic(
+        Duration(seconds: realtimeHealthy ? 60 : 15),
+        (_) {
+          if (disposed) return;
+          scheduleRefresh();
+        },
+      );
+    }
 
     controller = StreamController<List<Map<String, dynamic>>>(
       onListen: () {
@@ -90,18 +106,16 @@ class SupabaseDashboardRepository implements DashboardRepository {
               ),
               callback: (_) => scheduleRefresh(),
             )
-            .subscribe();
+            .subscribe((status, error) {
+          if (disposed) return;
+          final healthy = status == RealtimeSubscribeStatus.subscribed;
+          if (healthy != realtimeHealthy) {
+            realtimeHealthy = healthy;
+            restartPoll();
+          }
+        });
 
-        // Safety net: aunque Realtime no entregue eventos (Causa B histórica
-        // con Firebase Third-Party Auth + RLS), el feed se mantiene fresco
-        // con un refetch periódico. Se cancela en onCancel.
-        pollTimer = Timer.periodic(
-          const Duration(seconds: 15),
-          (_) {
-            if (disposed) return;
-            scheduleRefresh();
-          },
-        );
+        restartPoll();
       },
       onCancel: () {
         disposed = true;

@@ -461,11 +461,9 @@ class _RecurringExpenseFormSheetState
                         : (isIncome
                             ? t.recurringExpenseHeaderNewIncome
                             : t.recurringExpenseHeaderNewSubscription),
-                    style: const TextStyle(
+                    style: AppTypography.heroAmount.copyWith(
                       fontSize: 28,
-                      fontWeight: FontWeight.w900,
                       color: AppColors.textPrimary,
-                      letterSpacing: -0.9,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -475,10 +473,10 @@ class _RecurringExpenseFormSheetState
                         : (isIncome
                             ? t.recurringExpenseHeaderNewIncomeSubtitle
                             : t.recurringExpenseHeaderNewSubscriptionSubtitle),
-                    style: const TextStyle(
+                    style: AppTypography.body.copyWith(
                       fontSize: 14.5,
-                      height: 1.45,
                       fontWeight: FontWeight.w600,
+                      height: 1.45,
                       color: AppColors.textSecondary,
                     ),
                   ),
@@ -608,29 +606,25 @@ class _RecurringExpenseFormSheetState
       children: [
         Text(
           eyebrow,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.1,
+          style: AppTypography.eyebrow.copyWith(
             color: AppColors.primary.withValues(alpha: 0.72),
           ),
         ),
         const SizedBox(height: 6),
         Text(
           title,
-          style: const TextStyle(
+          style: AppTypography.cardTitle.copyWith(
             fontSize: 18,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           subtitle,
-          style: const TextStyle(
+          style: AppTypography.body.copyWith(
             fontSize: 14.5,
             height: 1.45,
-            fontWeight: FontWeight.w500,
             color: AppColors.textSecondary,
           ),
         ),
@@ -721,9 +715,9 @@ class _RecurringExpenseFormSheetState
       children: [
         Text(
           AppLocalizations.of(context).recurringExpenseDayLabel,
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
+          style: AppTypography.caption.copyWith(
             fontSize: 13,
+            fontWeight: FontWeight.w700,
             color: AppColors.textSecondary,
           ),
         ),
@@ -786,9 +780,9 @@ class _RecurringExpenseFormSheetState
       children: [
         Text(
           t.recurringExpenseCategoryLabel,
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
+          style: AppTypography.caption.copyWith(
             fontSize: 13,
+            fontWeight: FontWeight.w700,
             color: AppColors.textSecondary,
           ),
         ),
@@ -854,9 +848,9 @@ class _RecurringExpenseFormSheetState
       children: [
         Text(
           t.recurringExpenseSplitLabel,
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
+          style: AppTypography.caption.copyWith(
             fontSize: 13,
+            fontWeight: FontWeight.w700,
             color: AppColors.textSecondary,
           ),
         ),
@@ -936,9 +930,9 @@ class _RecurringExpenseFormSheetState
       children: [
         Text(
           AppLocalizations.of(context).recurringExpenseRegularPayerLabel,
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
+          style: AppTypography.caption.copyWith(
             fontSize: 13,
+            fontWeight: FontWeight.w700,
             color: AppColors.textSecondary,
           ),
         ),
@@ -1024,9 +1018,9 @@ class _RecurringExpenseFormSheetState
                     child: Text(
                       label,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
+                      style: AppTypography.cardTitle.copyWith(
                         fontSize: 17,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
@@ -1062,7 +1056,7 @@ class _RecurringExpenseFormSheetState
             ),
             child: Text(
               AppLocalizations.of(context).commonCancel,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              style: AppTypography.cardTitle,
             ),
           ),
           const SizedBox(width: 16),

@@ -153,11 +153,10 @@ class _SettlementConfirmDialogState extends State<SettlementConfirmDialog> {
                     Expanded(
                       child: Text(
                         widget.titleText,
-                        style: TextStyle(
-                          color: theme.textPrimary,
+                        style: AppTypography.heroAmount.copyWith(
                           fontSize: 25,
-                          fontWeight: FontWeight.w900,
                           height: 1.08,
+                          color: theme.textPrimary,
                         ),
                       ),
                     ),
@@ -168,11 +167,10 @@ class _SettlementConfirmDialogState extends State<SettlementConfirmDialog> {
                   child: Text(
                     widget.amountText,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: theme.textPrimary,
+                    style: AppTypography.heroAmount.copyWith(
                       fontSize: 42,
-                      fontWeight: FontWeight.w900,
                       height: 1,
+                      color: theme.textPrimary,
                     ),
                   ),
                 ),
@@ -205,10 +203,8 @@ class _SettlementConfirmDialogState extends State<SettlementConfirmDialog> {
                             widget.directionText,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: AppTypography.bodyStrong.copyWith(
                               color: theme.textPrimary,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
@@ -222,11 +218,11 @@ class _SettlementConfirmDialogState extends State<SettlementConfirmDialog> {
                   child: Text(
                     widget.bodyText,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: theme.textSecondary,
+                    style: AppTypography.body.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       height: 1.35,
+                      color: theme.textSecondary,
                     ),
                   ),
                 ),

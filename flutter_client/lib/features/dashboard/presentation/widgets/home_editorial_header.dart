@@ -38,21 +38,16 @@ class HomeEditorialHeader extends StatelessWidget {
             children: [
               Text(
                 dateLabel.toUpperCase(),
-                style: TextStyle(
+                style: AppTypography.eyebrow.copyWith(
                   color: theme.textMuted,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.4,
                 ),
               ).animateEntrance(),
               const SizedBox(height: 8),
               Text(
                 _greetingForHour(now.hour, t),
-                style: TextStyle(
-                  color: theme.textSecondary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
+                style: AppTypography.cardTitle.copyWith(
                   height: 1.1,
+                  color: theme.textSecondary,
                 ),
               ).animateEntrance(delay: 40),
               const SizedBox(height: 2),

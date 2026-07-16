@@ -110,11 +110,10 @@ class SetupInviteCodeStep extends ConsumerWidget {
                                     FittedBox(
                                       child: Text(
                                         inviteCode ?? '------',
-                                        style: TextStyle(
-                                          color: accent,
+                                        style: AppTypography.heroAmount.copyWith(
                                           fontSize: 56,
-                                          fontWeight: FontWeight.w900,
                                           letterSpacing: 8,
+                                          color: accent,
                                         ),
                                       ),
                                     ),

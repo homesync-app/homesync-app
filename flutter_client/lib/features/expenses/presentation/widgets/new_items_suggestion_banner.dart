@@ -191,11 +191,10 @@ class _NewItemsSuggestionBannerState
                               t.expensesNewItemsDetectedTitle,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
+                              style: AppTypography.cardTitle.copyWith(
                                 fontSize: 15,
-                                color: theme.textPrimary,
                                 height: 1.18,
+                                color: theme.textPrimary,
                               ),
                             ),
                           ),
@@ -214,11 +213,11 @@ class _NewItemsSuggestionBannerState
                             ),
                             child: Text(
                               '${_selected.length}/${widget.items.length}',
-                              style: const TextStyle(
-                                color: AppColors.primary,
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 11,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w700,
                                 height: 1,
+                                color: AppColors.primary,
                               ),
                             ),
                           ),
@@ -227,11 +226,11 @@ class _NewItemsSuggestionBannerState
                       const SizedBox(height: 4),
                       Text(
                         t.expensesNewItemsDetectedSubtitle,
-                        style: TextStyle(
-                          color: theme.textSecondary,
+                        style: AppTypography.caption.copyWith(
                           fontSize: 12.5,
-                          height: 1.35,
                           fontWeight: FontWeight.w500,
+                          height: 1.35,
+                          color: theme.textSecondary,
                         ),
                       ),
                     ],
@@ -311,8 +310,7 @@ class _NewItemsSuggestionBannerState
                     onPressed: _isAdding ? null : widget.onDismiss,
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.primary,
-                      textStyle: const TextStyle(
-                        fontWeight: FontWeight.w700,
+                      textStyle: AppTypography.bodyStrong.copyWith(
                         fontSize: 13.5,
                       ),
                       shape: RoundedRectangleBorder(
@@ -465,11 +463,10 @@ class _SoftAddButton extends StatelessWidget {
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: foreground,
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.cardTitle.copyWith(
                         fontSize: 15,
                         height: 1,
+                        color: foreground,
                       ),
                     ),
                   ),

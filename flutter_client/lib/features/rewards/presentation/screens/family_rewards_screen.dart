@@ -286,10 +286,9 @@ class FamilyRewardsScreen extends ConsumerWidget {
                     const SizedBox(height: 20),
                     Text(
                       isEditing ? t.rewardsEditPrize : t.rewardsNewFamilyPrize,
-                      style: TextStyle(
-                        color: theme.textPrimary,
+                      style: AppTypography.sectionTitle.copyWith(
                         fontSize: 22,
-                        fontWeight: FontWeight.w900,
+                        color: theme.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -392,10 +391,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
                                     : theme.divider.withValues(alpha: 0.4),
                               ),
                             ),
-                            child: Text(
-                              icon,
-                              style: const TextStyle(fontSize: 24),
-                            ),
+                            child: ConceptIcon(emoji: icon, size: 30),
                           ),
                         );
                       }).toList(),
@@ -613,10 +609,10 @@ class FamilyRewardsScreen extends ConsumerWidget {
                           localizedRewardTitle(t, reward),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: theme.textPrimary,
+                          style: AppTypography.cardTitle.copyWith(
                             fontSize: 18,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w800,
+                            color: theme.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -818,11 +814,10 @@ class _BalanceHero extends StatelessWidget {
                   const SizedBox(height: 5),
                   Text(
                     t.rewardsChildBalanceHint,
-                    style: TextStyle(
-                      color: theme.textSecondary,
-                      fontSize: 12,
+                    style: AppTypography.caption.copyWith(
                       fontWeight: FontWeight.w700,
                       height: 1.25,
+                      color: theme.textSecondary,
                     ),
                   ),
                 ],
@@ -858,19 +853,16 @@ class _SectionTitle extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: TextStyle(
+                style: AppTypography.sectionTitle.copyWith(
                   color: theme.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: TextStyle(
-                  color: theme.textSecondary,
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  color: theme.textSecondary,
                 ),
               ),
             ],
@@ -897,10 +889,10 @@ class _CountPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: AppColors.primary,
+        style: AppTypography.caption.copyWith(
           fontSize: 11,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
+          color: AppColors.primary,
         ),
       ),
     );
@@ -980,10 +972,8 @@ class _EmptyBoutique extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             t.rewardsEmptyBoutique,
-            style: TextStyle(
+            style: AppTypography.sectionTitle.copyWith(
               color: theme.textPrimary,
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 8),
@@ -1166,11 +1156,11 @@ class _RewardGrid extends ConsumerWidget {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: theme.textPrimary,
+                                    style: AppTypography.caption.copyWith(
                                       fontSize: 13,
-                                      fontWeight: FontWeight.w900,
+                                      fontWeight: FontWeight.w700,
                                       height: 1.14,
+                                      color: theme.textPrimary,
                                     ),
                                   ),
                                 ),
@@ -1202,10 +1192,10 @@ class _RewardGrid extends ConsumerWidget {
                                     const SizedBox(width: 4),
                                     Text(
                                       t.rewardsPrizeCostCoins(reward.cost),
-                                      style: TextStyle(
-                                        color: accent,
+                                      style: AppTypography.caption.copyWith(
                                         fontSize: 10,
-                                        fontWeight: FontWeight.w900,
+                                        fontWeight: FontWeight.w700,
+                                        color: accent,
                                       ),
                                     ),
                                   ],
@@ -1285,10 +1275,9 @@ class _PendingRewardCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       audience,
-                      style: TextStyle(
-                        color: theme.textSecondary,
-                        fontSize: 12,
+                      style: AppTypography.caption.copyWith(
                         fontWeight: FontWeight.w700,
+                        color: theme.textSecondary,
                       ),
                     ),
                   ],
@@ -1301,10 +1290,11 @@ class _PendingRewardCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               description,
-              style: TextStyle(
-                color: theme.textSecondary,
+              style: AppTypography.caption.copyWith(
                 fontSize: 13,
+                fontWeight: FontWeight.w500,
                 height: 1.35,
+                color: theme.textSecondary,
               ),
             ),
           ],

@@ -290,20 +290,17 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
             children: [
               Text(
                 'Admin QA',
-                style: TextStyle(
+                style: AppTypography.heroAmount.copyWith(
                   fontSize: 30,
-                  fontWeight: FontWeight.w900,
                   color: theme.textPrimary,
-                  letterSpacing: -0.6,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Este espacio es separado de tu cuenta real. Elegí un hogar QA, configurá miembros, probá el onboarding y después cambiá la vista por avatar para inspeccionar cada miembro.',
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.45,
+                style: AppTypography.body.copyWith(
                   fontWeight: FontWeight.w600,
+                  height: 1.45,
                   color: theme.textSecondary,
                 ),
               ),
@@ -322,19 +319,17 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                   children: [
                     Text(
                       'Hogares QA',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.cardTitle.copyWith(
                         color: theme.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       'Cada escenario tiene su propio seed y se puede resetear sin tocar tus datos reales.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: theme.textSecondary,
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w500,
                         height: 1.35,
+                        color: theme.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -366,9 +361,7 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                   children: [
                     Text(
                       'Acciones QA',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.cardTitle.copyWith(
                         color: theme.textPrimary,
                       ),
                     ),
@@ -377,11 +370,10 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                       selectedScenario == null
                           ? 'Elegí un escenario para habilitar reset, onboarding preview y alta de miembros dummy.'
                           : 'Escenario activo: ${selectedScenario.title}. Podés volverlo al seed inicial, sumar miembros o abrir el flujo de configuración desde cero.',
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
                         fontSize: 13,
                         height: 1.45,
                         color: theme.textSecondary,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -455,9 +447,9 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                                 Expanded(
                                   child: Text(
                                     'Cuentas QA reales',
-                                    style: TextStyle(
+                                    style: AppTypography.caption.copyWith(
                                       fontSize: 13,
-                                      fontWeight: FontWeight.w800,
+                                      fontWeight: FontWeight.w700,
                                       color: theme.textPrimary,
                                     ),
                                   ),
@@ -478,9 +470,9 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                                       admin.realQaUserLabel ??
                                           admin.realQaUserEmail ??
                                           'Sesión QA',
-                                      style: const TextStyle(
+                                      style: AppTypography.caption.copyWith(
                                         fontSize: 11,
-                                        fontWeight: FontWeight.w800,
+                                        fontWeight: FontWeight.w700,
                                         color: AppColors.success,
                                       ),
                                     ),
@@ -500,18 +492,16 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                                         children: [
                                           Text(
                                             qaUser.label,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w800,
+                                            style: AppTypography.caption.copyWith(
+                                              fontWeight: FontWeight.w700,
                                               color: theme.textPrimary,
                                             ),
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
                                             qaUser.email,
-                                            style: TextStyle(
+                                            style: AppTypography.caption.copyWith(
                                               fontSize: 11,
-                                              fontWeight: FontWeight.w600,
                                               color: theme.textSecondary,
                                             ),
                                           ),
@@ -564,9 +554,9 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                             children: [
                               Text(
                                 'Miembros del escenario',
-                                style: TextStyle(
+                                style: AppTypography.caption.copyWith(
                                   fontSize: 13,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w700,
                                   color: theme.textPrimary,
                                 ),
                               ),
@@ -580,16 +570,17 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                                     children: [
                                       Text(
                                         member.avatarUrl ?? '🙂',
-                                        style: const TextStyle(fontSize: 18),
+                                        style: AppTypography.body.copyWith(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w400,
+                                        ),
                                       ),
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: Text(
                                           '${member.displayName} · ${member.displayRole ?? member.role}',
-                                          style: TextStyle(
+                                          style: AppTypography.caption.copyWith(
                                             color: theme.textSecondary,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
                                       ),
@@ -607,7 +598,10 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                         ),
                         error: (error, _) => Text(
                           'No pudimos leer los miembros: $error',
-                          style: TextStyle(color: theme.error, fontSize: 12),
+                          style: AppTypography.caption.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: theme.error,
+                          ),
                         ),
                       ),
                     ],
@@ -634,9 +628,7 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                       children: [
                         Text(
                           'Bitácora QA',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
+                          style: AppTypography.cardTitle.copyWith(
                             color: theme.textPrimary,
                           ),
                         ),
@@ -655,10 +647,10 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                     const SizedBox(height: 6),
                     Text(
                       'Últimas acciones de testing sobre los escenarios QA.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: theme.textSecondary,
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w500,
                         height: 1.35,
+                        color: theme.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -667,10 +659,8 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                         if (events.isEmpty) {
                           return Text(
                             'Todavía no hay acciones QA registradas.',
-                            style: TextStyle(
+                            style: AppTypography.caption.copyWith(
                               color: theme.textSecondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
                             ),
                           );
                         }
@@ -718,19 +708,17 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                                             children: [
                                               Text(
                                                 event.title,
-                                                style: TextStyle(
+                                                style: AppTypography.caption.copyWith(
                                                   fontSize: 13,
-                                                  fontWeight: FontWeight.w800,
+                                                  fontWeight: FontWeight.w700,
                                                   color: theme.textPrimary,
                                                 ),
                                               ),
                                               const SizedBox(height: 3),
                                               Text(
                                                 event.subtitle,
-                                                style: TextStyle(
-                                                  fontSize: 12,
+                                                style: AppTypography.caption.copyWith(
                                                   height: 1.35,
-                                                  fontWeight: FontWeight.w600,
                                                   color: theme.textSecondary,
                                                 ),
                                               ),
@@ -740,7 +728,7 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                                         const SizedBox(width: 10),
                                         Text(
                                           _formatAuditTime(event.occurredAt),
-                                          style: TextStyle(
+                                          style: AppTypography.caption.copyWith(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w700,
                                             color: theme.textMuted,
@@ -758,7 +746,10 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                           const LinearProgressIndicator(minHeight: 3),
                       error: (error, _) => Text(
                         'No pudimos cargar la bitácora: $error',
-                        style: TextStyle(color: theme.error, fontSize: 12),
+                        style: AppTypography.caption.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: theme.error,
+                        ),
                       ),
                     ),
                   ],
@@ -804,7 +795,10 @@ class _CatalogRequestsSection extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Text('📦', style: TextStyle(fontSize: 20)),
+              Text('📦', style: AppTypography.body.copyWith(
+                fontSize: 20,
+                fontWeight: FontWeight.w400,
+              ),),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -812,16 +806,14 @@ class _CatalogRequestsSection extends ConsumerWidget {
                   children: [
                     Text(
                       'Catálogo Pendiente',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.cardTitle.copyWith(
                         color: theme.textPrimary,
                       ),
                     ),
                     Text(
                       'Productos que los usuarios agregan y no están en el catálogo',
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w500,
                         color: theme.textSecondary,
                       ),
                     ),
@@ -860,7 +852,10 @@ class _CatalogRequestsSection extends ConsumerWidget {
                     padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                     child: Row(
                       children: [
-                        Text(emoji, style: const TextStyle(fontSize: 22)),
+                        Text(emoji, style: AppTypography.body.copyWith(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w400,
+                        ),),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -868,17 +863,16 @@ class _CatalogRequestsSection extends ConsumerWidget {
                             children: [
                               Text(
                                 name,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14,
+                                style: AppTypography.bodyStrong.copyWith(
                                   color: theme.textPrimary,
                                 ),
                               ),
                               if (lastSeen != null)
                                 Text(
                                   'Última vez: ${lastSeen.day}/${lastSeen.month}/${lastSeen.year}',
-                                  style: TextStyle(
+                                  style: AppTypography.caption.copyWith(
                                     fontSize: 11,
+                                    fontWeight: FontWeight.w500,
                                     color: theme.textSecondary,
                                   ),
                                 ),
@@ -898,8 +892,7 @@ class _CatalogRequestsSection extends ConsumerWidget {
                           ),
                           child: Text(
                             '$count veces',
-                            style: TextStyle(
-                              fontSize: 12,
+                            style: AppTypography.caption.copyWith(
                               fontWeight: FontWeight.w700,
                               color: count >= 5
                                   ? AppColors.primary
@@ -916,7 +909,10 @@ class _CatalogRequestsSection extends ConsumerWidget {
             loading: () => const LinearProgressIndicator(minHeight: 3),
             error: (e, _) => Text(
               'Error cargando catálogo: $e',
-              style: TextStyle(color: theme.error, fontSize: 12),
+              style: AppTypography.caption.copyWith(
+                fontWeight: FontWeight.w500,
+                color: theme.error,
+              ),
             ),
           ),
         ],
@@ -994,17 +990,16 @@ class _ScenarioCard extends StatelessWidget {
                   children: [
                     Text(
                       scenario.title,
-                      style: TextStyle(
+                      style: AppTypography.cardTitle.copyWith(
                         fontSize: 15,
-                        fontWeight: FontWeight.w800,
                         color: theme.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       scenario.description,
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w500,
                         height: 1.35,
                         color: theme.textSecondary,
                       ),
@@ -1089,16 +1084,17 @@ class _UserFeedbackSectionState extends ConsumerState<_UserFeedbackSection> {
                   children: [
                     Text(
                       'Feedback de usuarios',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.cardTitle.copyWith(
                         color: theme.textPrimary,
                       ),
                     ),
                     Text(
                       'Reportes y sugerencias enviados desde la app',
                       style:
-                          TextStyle(fontSize: 12, color: theme.textSecondary),
+                          AppTypography.caption.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: theme.textSecondary,
+                          ),
                     ),
                   ],
                 ),
@@ -1158,7 +1154,10 @@ class _UserFeedbackSectionState extends ConsumerState<_UserFeedbackSection> {
             loading: () => const LinearProgressIndicator(minHeight: 3),
             error: (e, _) => Text(
               'Error cargando feedback: $e',
-              style: TextStyle(color: theme.error, fontSize: 12),
+              style: AppTypography.caption.copyWith(
+                fontWeight: FontWeight.w500,
+                color: theme.error,
+              ),
             ),
           ),
         ],
@@ -1241,9 +1240,9 @@ class _FeedbackTileState extends State<_FeedbackTile> {
                     ),
                     child: Text(
                       isBug ? 'BUG' : 'IDEA',
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
                         fontSize: 9,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         color: color,
                       ),
                     ),
@@ -1254,7 +1253,7 @@ class _FeedbackTileState extends State<_FeedbackTile> {
                       title,
                       maxLines: _expanded ? null : 1,
                       overflow: _expanded ? null : TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: theme.textPrimary,
@@ -1265,7 +1264,11 @@ class _FeedbackTileState extends State<_FeedbackTile> {
                     const SizedBox(width: 8),
                     Text(
                       _formatDate(createdAt),
-                      style: TextStyle(fontSize: 10, color: theme.textMuted),
+                      style: AppTypography.caption.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: theme.textMuted,
+                      ),
                     ),
                   ],
                 ],
@@ -1275,8 +1278,8 @@ class _FeedbackTileState extends State<_FeedbackTile> {
                   const SizedBox(height: 8),
                   Text(
                     description,
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w500,
                       height: 1.4,
                       color: theme.textSecondary,
                     ),
@@ -1324,7 +1327,11 @@ class _FeedbackTileState extends State<_FeedbackTile> {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 10, color: theme.textSecondary),
+            style: AppTypography.caption.copyWith(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: theme.textSecondary,
+            ),
           ),
         ],
       ),
@@ -1404,16 +1411,14 @@ class _ErrorLogsSectionState extends ConsumerState<_ErrorLogsSection> {
                   children: [
                     Text(
                       'Logs de Error',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.cardTitle.copyWith(
                         color: theme.textPrimary,
                       ),
                     ),
                     Text(
                       'Errores capturados por la app en tiempo real',
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w500,
                         color: theme.textSecondary,
                       ),
                     ),
@@ -1456,10 +1461,9 @@ class _ErrorLogsSectionState extends ConsumerState<_ErrorLogsSection> {
                       _levelFilter == 'all'
                           ? 'Sin errores registrados'
                           : 'Sin errores de nivel $_levelFilter',
-                      style: TextStyle(
-                        color: theme.textSecondary,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        color: theme.textSecondary,
                       ),
                     ),
                   ),
@@ -1482,7 +1486,10 @@ class _ErrorLogsSectionState extends ConsumerState<_ErrorLogsSection> {
             loading: () => const LinearProgressIndicator(minHeight: 3),
             error: (e, _) => Text(
               'Error cargando logs: $e',
-              style: TextStyle(color: theme.error, fontSize: 12),
+              style: AppTypography.caption.copyWith(
+                fontWeight: FontWeight.w500,
+                color: theme.error,
+              ),
             ),
           ),
         ],
@@ -1589,9 +1596,9 @@ class _ErrorLogTile extends StatelessWidget {
                         ),
                         child: Text(
                           level.toUpperCase(),
-                          style: TextStyle(
+                          style: AppTypography.caption.copyWith(
                             fontSize: 9,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                             color: levelColor,
                           ),
                         ),
@@ -1609,9 +1616,8 @@ class _ErrorLogTile extends StatelessWidget {
                           ),
                           child: Text(
                             library,
-                            style: TextStyle(
+                            style: AppTypography.caption.copyWith(
                               fontSize: 9,
-                              fontWeight: FontWeight.w600,
                               color: theme.textSecondary,
                             ),
                           ),
@@ -1622,8 +1628,9 @@ class _ErrorLogTile extends StatelessWidget {
                         const Spacer(),
                         Text(
                           email,
-                          style: TextStyle(
+                          style: AppTypography.caption.copyWith(
                             fontSize: 10,
+                            fontWeight: FontWeight.w500,
                             color: theme.textMuted,
                           ),
                         ),
@@ -1635,19 +1642,19 @@ class _ErrorLogTile extends StatelessWidget {
                     message,
                     maxLines: isExpanded ? null : 2,
                     overflow: isExpanded ? null : TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: AppTypography.caption.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: theme.textPrimary,
                       height: 1.35,
+                      color: theme.textPrimary,
                     ),
                   ),
                   if (createdAt != null) ...[
                     const SizedBox(height: 4),
                     Text(
                       _formatLogTime(createdAt),
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
                         fontSize: 10,
+                        fontWeight: FontWeight.w500,
                         color: theme.textMuted,
                       ),
                     ),
@@ -1723,9 +1730,9 @@ class _ErrorLogTile extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: AppTypography.caption.copyWith(
             fontSize: 10,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: theme.primary,
           ),
         ),

@@ -147,11 +147,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                   Expanded(
                     child: Text(
                       AppLocalizations.of(context).editTaskDeleteTitle,
-                      style: TextStyle(
+                      style: AppTypography.sectionTitle.copyWith(
                         fontSize: 21,
-                        fontWeight: FontWeight.w900,
                         color: theme.textPrimary,
-                        letterSpacing: -0.5,
                       ),
                     ),
                   ),
@@ -162,11 +160,11 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                 AppLocalizations.of(context).editTaskDeleteBody(
                   widget.task.title,
                 ),
-                style: TextStyle(
+                style: AppTypography.body.copyWith(
                   fontSize: 15,
+                  fontWeight: FontWeight.w600,
                   height: 1.4,
                   color: theme.textSecondary,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 24),
@@ -184,10 +182,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                       ),
                       child: Text(
                         AppLocalizations.of(context).commonCancel,
-                        style: TextStyle(
+                        style: AppTypography.cardTitle.copyWith(
                           color: theme.textMuted,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
                         ),
                       ),
                     ),
@@ -210,10 +206,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                       ),
                       child: Text(
                         AppLocalizations.of(context).editTaskDeleteConfirm,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: AppTypography.cardTitle,
                       ),
                     ),
                   ),
@@ -390,11 +383,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
                         ),
-                        style: TextStyle(
+                        style: AppTypography.cardTitle.copyWith(
                           color: theme.textPrimary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
                         ),
                       ),
                     ),
@@ -507,7 +497,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                           child: _buildInputCard(
                             theme,
                             icon: Icons.star_rounded,
-                            iconColor: AppColors.accentGold,
+                            iconColor: AppColors.xpGold,
                             child: TextField(
                               controller: _xpController,
                               keyboardType: TextInputType.number,
@@ -527,10 +517,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                                 isDense: true,
                                 contentPadding: EdgeInsets.zero,
                               ),
-                              style: TextStyle(
+                              style: AppTypography.cardTitle.copyWith(
                                 color: theme.textPrimary,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ),
@@ -540,7 +528,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                           child: _buildInputCard(
                             theme,
                             icon: Icons.monetization_on_rounded,
-                            iconColor: AppColors.sage,
+                            iconColor: AppColors.coinGreen,
                             child: TextField(
                               controller: _coinController,
                               keyboardType: TextInputType.number,
@@ -561,10 +549,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                                 isDense: true,
                                 contentPadding: EdgeInsets.zero,
                               ),
-                              style: TextStyle(
+                              style: AppTypography.cardTitle.copyWith(
                                 color: theme.textPrimary,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ),
@@ -601,10 +587,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                       ),
                       child: Text(
                         AppLocalizations.of(context).commonCancel,
-                        style: TextStyle(
+                        style: AppTypography.cardTitle.copyWith(
                           color: theme.textMuted,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
                         ),
                       ),
                     ),
@@ -646,10 +630,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                             : Text(
                                 AppLocalizations.of(context)
                                     .editTaskSaveChanges,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 16,
-                                ),
+                                style: AppTypography.cardTitle,
                               ),
                       ),
                     ),
@@ -697,21 +678,18 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
             children: [
               Text(
                 AppLocalizations.of(context).editTaskHeaderTitle,
-                style: TextStyle(
+                style: AppTypography.sectionTitle.copyWith(
                   fontSize: 21,
-                  fontWeight: FontWeight.w900,
                   color: theme.textPrimary,
-                  letterSpacing: -0.6,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 AppLocalizations.of(context).editTaskHeaderSubtitle,
-                style: TextStyle(
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
-                  color: theme.textSecondary,
-                  fontWeight: FontWeight.w600,
                   height: 1.35,
+                  color: theme.textSecondary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -745,8 +723,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                         ? AppLocalizations.of(context)
                             .editTaskSubmitForReviewButton
                         : AppLocalizations.of(context).editTaskCompleteButton,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
+                    style: AppTypography.bodyStrong.copyWith(
                       fontSize: 13.5,
                     ),
                   ),
@@ -772,8 +749,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                 icon: const Icon(Icons.delete_outline_rounded, size: 18),
                 label: Text(
                   AppLocalizations.of(context).editTaskDeleteTitle,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
+                  style: AppTypography.bodyStrong.copyWith(
                     fontSize: 13.5,
                   ),
                 ),
@@ -798,11 +774,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
   Widget _buildSectionLabel(String label) {
     return Text(
       label,
-      style: const TextStyle(
+      style: AppTypography.eyebrow.copyWith(
         fontSize: 12,
-        fontWeight: FontWeight.w800,
         color: AppColors.textMuted,
-        letterSpacing: 1.15,
       ),
     );
   }

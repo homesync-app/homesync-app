@@ -347,10 +347,8 @@ class _FAQSheetState extends ConsumerState<FAQSheet> {
                 Expanded(
                   child: Text(
                     t.faqSheetTitle,
-                    style: const TextStyle(
+                    style: AppTypography.heroAmount.copyWith(
                       fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
                     ),
                   ),
                 ),
@@ -365,10 +363,8 @@ class _FAQSheetState extends ConsumerState<FAQSheet> {
                 Expanded(
                   child: Text(
                     t.faqSheetSubtitle,
-                    style: TextStyle(
+                    style: AppTypography.body.copyWith(
                       color: theme.textSecondary.withValues(alpha: 0.7),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -383,10 +379,10 @@ class _FAQSheetState extends ConsumerState<FAQSheet> {
                   ),
                   child: Text(
                     t.faqContextPill(contextLabel),
-                    style: const TextStyle(
-                      color: AppColors.primary,
+                    style: AppTypography.caption.copyWith(
                       fontSize: 11,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -398,7 +394,9 @@ class _FAQSheetState extends ConsumerState<FAQSheet> {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: TextField(
               onChanged: (value) => setState(() => _query = value),
-              style: const TextStyle(fontSize: 14),
+              style: AppTypography.body.copyWith(
+                fontWeight: FontWeight.w400,
+              ),
               decoration: InputDecoration(
                 hintText: t.faqSearchHint,
                 prefixIcon: Icon(
@@ -479,11 +477,10 @@ class _FAQSheetState extends ConsumerState<FAQSheet> {
             Text(
               t.faqSearchEmpty,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: theme.textSecondary,
-                fontSize: 14,
-                height: 1.5,
+              style: AppTypography.body.copyWith(
                 fontWeight: FontWeight.w600,
+                height: 1.5,
+                color: theme.textSecondary,
               ),
             ),
           ],
@@ -505,11 +502,9 @@ class _FAQSheetState extends ConsumerState<FAQSheet> {
           const SizedBox(width: 8),
           Text(
             category.title(t).toUpperCase(),
-            style: TextStyle(
-              color: theme.textSecondary,
+            style: AppTypography.eyebrow.copyWith(
               fontSize: 12,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.1,
+              color: theme.textSecondary,
             ),
           ),
         ],
@@ -567,10 +562,8 @@ class _FAQSheetState extends ConsumerState<FAQSheet> {
                     Expanded(
                       child: Text(
                         entry.question(t),
-                        style: const TextStyle(
+                        style: AppTypography.cardTitle.copyWith(
                           fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.3,
                         ),
                       ),
                     ),
@@ -594,11 +587,9 @@ class _FAQSheetState extends ConsumerState<FAQSheet> {
                           padding: const EdgeInsets.only(top: 12),
                           child: Text(
                             entry.answer(t, mode, role),
-                            style: TextStyle(
-                              fontSize: 14,
+                            style: AppTypography.body.copyWith(
                               height: 1.5,
                               color: theme.textSecondary.withValues(alpha: 0.9),
-                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         )

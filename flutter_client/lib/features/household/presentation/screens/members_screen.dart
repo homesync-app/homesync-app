@@ -83,18 +83,19 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
       children: [
         Text(
           t.membersTitle,
-          style: TextStyle(
+          style: AppTypography.sectionTitle.copyWith(
             fontSize: 28,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
             color: theme.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           t.membersSubtitle(count),
-          style: TextStyle(
-            color: theme.textSecondary,
+          style: AppTypography.body.copyWith(
             fontSize: 15,
+            fontWeight: FontWeight.w400,
+            color: theme.textSecondary,
           ),
         ),
       ],
@@ -157,19 +158,16 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                 children: [
                   Text(
                     member.fullDisplayName,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                    style: AppTypography.cardTitle.copyWith(
                       color: theme.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     member.visibleRoleLabel,
-                    style: TextStyle(
-                      color: theme.textSecondary,
+                    style: AppTypography.caption.copyWith(
                       fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      color: theme.textSecondary,
                     ),
                   ),
                 ],
@@ -185,10 +183,10 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                 ),
                 child: Text(
                   t.membersAdminBadge,
-                  style: TextStyle(
-                    color: theme.primary,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
+                    color: theme.primary,
                   ),
                 ),
               ),
@@ -223,19 +221,18 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
             children: [
               Text(
                 t.membersRolePickerTitle(member.displayName),
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
+                style: AppTypography.sectionTitle.copyWith(
                   color: theme.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 t.membersRolePickerSubtitle,
-                style: TextStyle(
+                style: AppTypography.caption.copyWith(
                   fontSize: 13,
-                  color: theme.textSecondary,
+                  fontWeight: FontWeight.w500,
                   height: 1.35,
+                  color: theme.textSecondary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -312,8 +309,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
+                    style: AppTypography.cardTitle.copyWith(
                       fontSize: 15,
                       color: theme.textPrimary,
                     ),
@@ -321,8 +317,8 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w500,
                       color: theme.textSecondary,
                     ),
                   ),
@@ -370,18 +366,17 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                 children: [
                   Text(
                     t.membersInviteTitle,
-                    style: TextStyle(
+                    style: AppTypography.cardTitle.copyWith(
                       color: theme.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     t.membersInviteSubtitle,
-                    style: TextStyle(
-                      color: theme.textSecondary,
+                    style: AppTypography.caption.copyWith(
                       fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: theme.textSecondary,
                     ),
                   ),
                 ],

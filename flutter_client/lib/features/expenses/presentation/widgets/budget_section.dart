@@ -104,11 +104,9 @@ class BudgetSection extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       t.budgetsSectionTitle,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
+                      style: AppTypography.eyebrow.copyWith(
                         fontSize: 12,
                         color: theme.textSecondary.withValues(alpha: 0.7),
-                        letterSpacing: 1.2,
                       ),
                     ),
                   ),
@@ -122,9 +120,8 @@ class BudgetSection extends ConsumerWidget {
                     ),
                     child: Text(
                       t.budgetsManageAction,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -205,7 +202,10 @@ class _BudgetCard extends ConsumerWidget {
               children: [
                 Text(
                   category['icon'] as String,
-                  style: const TextStyle(fontSize: 16),
+                  style: AppTypography.body.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -213,9 +213,9 @@ class _BudgetCard extends ConsumerWidget {
                     localizedExpenseCategoryName(t, status.budget.category),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                    style: AppTypography.caption.copyWith(
                       fontSize: 12.5,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       color: theme.textPrimary,
                     ),
                   ),
@@ -239,7 +239,7 @@ class _BudgetCard extends ConsumerWidget {
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: AppTypography.caption.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: theme.textSecondary,
@@ -250,9 +250,9 @@ class _BudgetCard extends ConsumerWidget {
               footer,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: AppTypography.caption.copyWith(
                 fontSize: 11.5,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
                 color: status.isOverLimit || status.isNearLimit
                     ? accent
                     : theme.textPrimary.withValues(alpha: 0.75),
@@ -312,9 +312,8 @@ class _TeaserCard extends StatelessWidget {
                 children: [
                   Text(
                     t.budgetsTeaserTitle,
-                    style: TextStyle(
+                    style: AppTypography.bodyStrong.copyWith(
                       fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
                       color: theme.textPrimary,
                     ),
                   ),
@@ -322,8 +321,7 @@ class _TeaserCard extends StatelessWidget {
                     t.budgetsTeaserSubtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: AppTypography.caption.copyWith(
                       fontWeight: FontWeight.w500,
                       color: theme.textSecondary,
                     ),
@@ -372,9 +370,8 @@ class _EmptyCta extends StatelessWidget {
             Expanded(
               child: Text(
                 t.budgetsEmptyCta,
-                style: TextStyle(
+                style: AppTypography.bodyStrong.copyWith(
                   fontSize: 13.5,
-                  fontWeight: FontWeight.w800,
                   color: theme.primary,
                 ),
               ),

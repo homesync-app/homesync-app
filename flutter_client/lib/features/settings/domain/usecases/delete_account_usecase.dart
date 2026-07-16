@@ -47,17 +47,15 @@ class DeleteAccountUseCase {
       response = await _repository.deleteAccount();
     } catch (e, stack) {
       log.e('delete_account RPC failed', error: e, stackTrace: stack);
-      return const DeleteAccountResult(
-        DeleteAccountStatus.backendFailed,
-        message: 'No se pudo eliminar la cuenta. Intentá de nuevo.',
-      );
+      // Sin mensaje: la UI muestra su copy localizado
+      // (t.settingsDeleteAccountError) cuando message es null.
+      return const DeleteAccountResult(DeleteAccountStatus.backendFailed);
     }
 
     if (response['success'] != true) {
       return DeleteAccountResult(
         DeleteAccountStatus.backendFailed,
-        message:
-            response['message']?.toString() ?? 'No se pudo eliminar la cuenta.',
+        message: response['message']?.toString(),
       );
     }
 

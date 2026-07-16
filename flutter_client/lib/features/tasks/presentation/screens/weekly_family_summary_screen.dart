@@ -201,22 +201,19 @@ class _WeeklyReadoutHero extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 20,
-                    letterSpacing: -0.3,
+                  style: AppTypography.sectionTitle.copyWith(
                     height: 1.05,
+                    color: theme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    color: theme.textSecondary,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     height: 1.25,
+                    color: theme.textSecondary,
                   ),
                 ),
               ],
@@ -306,20 +303,18 @@ class _MetricTile extends StatelessWidget {
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: AppTypography.cardTitle.copyWith(
+              fontWeight: FontWeight.w800,
               color: theme.textPrimary,
-              fontWeight: FontWeight.w900,
-              fontSize: 16,
-              letterSpacing: -0.3,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
-              color: theme.textSecondary,
-              fontWeight: FontWeight.w800,
+            style: AppTypography.caption.copyWith(
               fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: theme.textSecondary,
             ),
           ),
         ],
@@ -373,26 +368,28 @@ class _StoryCard extends StatelessWidget {
               children: [
                 Text(
                   eyebrow.toUpperCase(),
-                  style: TextStyle(
-                    color: accent,
-                    fontWeight: FontWeight.w900,
+                  style: AppTypography.eyebrow.copyWith(
                     fontSize: 10.5,
-                    letterSpacing: 1,
+                    color: accent,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   title,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontWeight: FontWeight.w900,
+                  style: AppTypography.cardTitle.copyWith(
                     fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: theme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   subtitle,
-                  style: TextStyle(color: theme.textSecondary, fontSize: 13),
+                  style: AppTypography.caption.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: theme.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -453,10 +450,9 @@ class _CompletionCard extends StatelessWidget {
                   ),
                   Text(
                     '$pct%',
-                    style: TextStyle(
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w700,
                       color: accent,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 12,
                     ),
                   ),
                 ],
@@ -607,17 +603,20 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               t.weeklySummaryEmptyTitle,
-              style: TextStyle(
-                color: theme.textPrimary,
+              style: AppTypography.cardTitle.copyWith(
                 fontSize: 18,
-                fontWeight: FontWeight.w800,
+                color: theme.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               t.weeklySummaryEmptyBody,
               textAlign: TextAlign.center,
-              style: TextStyle(color: theme.textSecondary, fontSize: 13),
+              style: AppTypography.caption.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: theme.textSecondary,
+              ),
             ),
           ],
         ),
@@ -647,10 +646,8 @@ class _LockedHero extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               t.weeklySummaryLockedTitle,
-              style: TextStyle(
+              style: AppTypography.sectionTitle.copyWith(
                 color: theme.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: 10),

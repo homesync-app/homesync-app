@@ -94,9 +94,8 @@ class CoupleFinanceConfigBody extends StatelessWidget {
           ],
           Text(
             t.coupleSplitStrategiesTitle,
-            style: TextStyle(
+            style: AppTypography.cardTitle.copyWith(
               fontSize: 18,
-              fontWeight: FontWeight.w800,
               color: theme.textPrimary,
             ),
           ),
@@ -122,18 +121,17 @@ class CoupleFinanceConfigBody extends StatelessWidget {
           const SizedBox(height: 32),
           Text(
             t.coupleSplitCustomTitle,
-            style: TextStyle(
+            style: AppTypography.cardTitle.copyWith(
               fontSize: 18,
-              fontWeight: FontWeight.w800,
               color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             t.coupleSplitCustomBody,
-            style: TextStyle(
+            style: AppTypography.body.copyWith(
+              fontWeight: FontWeight.w400,
               color: theme.textSecondary,
-              fontSize: 14,
             ),
           ),
           const SizedBox(height: 28),
@@ -277,8 +275,8 @@ class CoupleFinanceConfigBody extends StatelessWidget {
                   ),
                   Text(
                     desc,
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w500,
                       color: theme.textSecondary,
                     ),
                   ),
@@ -311,18 +309,15 @@ class CoupleFinanceConfigBody extends StatelessWidget {
               children: [
                 Text(
                   t.coupleSplitVisualizerYou,
-                  style: TextStyle(
+                  style: AppTypography.eyebrow.copyWith(
                     fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1,
                     color: tone,
                   ),
                 ),
                 Text(
                   '$youPercent%',
-                  style: TextStyle(
+                  style: AppTypography.heroAmount.copyWith(
                     fontSize: 32,
-                    fontWeight: FontWeight.w900,
                     color: theme.textPrimary,
                   ),
                 ),
@@ -333,18 +328,15 @@ class CoupleFinanceConfigBody extends StatelessWidget {
               children: [
                 Text(
                   t.coupleSplitVisualizerPartner,
-                  style: const TextStyle(
+                  style: AppTypography.eyebrow.copyWith(
                     fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1,
                     color: AppColors.error,
                   ),
                 ),
                 Text(
                   '$partnerPercent%',
-                  style: TextStyle(
+                  style: AppTypography.heroAmount.copyWith(
                     fontSize: 32,
-                    fontWeight: FontWeight.w900,
                     color: theme.textPrimary,
                   ),
                 ),

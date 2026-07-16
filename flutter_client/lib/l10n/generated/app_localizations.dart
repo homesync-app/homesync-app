@@ -512,23 +512,11 @@ abstract class AppLocalizations {
   /// **'Avatares Exclusivos'**
   String get settingsPremiumFeatureExclusiveAvatars;
 
-  /// No description provided for @settingsMinorPremiumTitle.
+  /// Snackbar shown to minors when they tap a premium-locked theme palette. Argentine voseo.
   ///
   /// In es, this message translates to:
-  /// **'Funciones Premium'**
-  String get settingsMinorPremiumTitle;
-
-  /// Body text shown to a CHILD member: tells them to ask their parents to activate the premium plan. Uses 'pedi' (Argentine voseo).
-  ///
-  /// In es, this message translates to:
-  /// **'Pedi a tus papas que activen el plan para desbloquear avatares exclusivos, colores y mas 🌟'**
-  String get settingsMinorPremiumChildBody;
-
-  /// Body text shown to a non-owner adult: tells them other adults in the household can activate premium.
-  ///
-  /// In es, this message translates to:
-  /// **'Los adultos del hogar pueden activar el plan premium para desbloquear funciones adicionales.'**
-  String get settingsMinorPremiumAdultBody;
+  /// **'Esta función es premium 🌟 Pedile a un adulto del hogar que active el plan.'**
+  String get settingsMinorPremiumSnack;
 
   /// No description provided for @settingsReplayTourTitle.
   ///
@@ -590,29 +578,59 @@ abstract class AppLocalizations {
   /// **'✅ Datos reiniciados y hogar liberado'**
   String get settingsAccountReset;
 
+  /// No description provided for @settingsAccountResetError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo reiniciar la cuenta.'**
+  String get settingsAccountResetError;
+
+  /// No description provided for @settingsLinkOpenError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir el enlace'**
+  String get settingsLinkOpenError;
+
+  /// No description provided for @settingsProfileNameFallback.
+  ///
+  /// In es, this message translates to:
+  /// **'Usuario'**
+  String get settingsProfileNameFallback;
+
+  /// No description provided for @settingsProfileAvatarAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Avatar'**
+  String get settingsProfileAvatarAction;
+
+  /// No description provided for @settingsProfileNameAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get settingsProfileNameAction;
+
+  /// No description provided for @settingsRenameProfileTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar nombre'**
+  String get settingsRenameProfileTitle;
+
+  /// No description provided for @settingsRenameProfileLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get settingsRenameProfileLabel;
+
   /// No description provided for @settingsNotificationsTitle.
   ///
   /// In es, this message translates to:
   /// **'Notificaciones'**
   String get settingsNotificationsTitle;
 
-  /// No description provided for @settingsNotificationsSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Recibe avisos de gastos y tareas'**
-  String get settingsNotificationsSubtitle;
-
   /// No description provided for @settingsFaqTitle.
   ///
   /// In es, this message translates to:
   /// **'Preguntas Frecuentes'**
   String get settingsFaqTitle;
-
-  /// No description provided for @settingsFaqSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Aprende como funciona HomeSync'**
-  String get settingsFaqSubtitle;
 
   /// Big outlined button at the bottom of Settings to sign the user out of the app.
   ///
@@ -631,30 +649,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Reiniciar Datos de Cuenta'**
   String get settingsResetAccountButton;
-
-  /// No description provided for @settingsFeedbackBugTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Reportar un error'**
-  String get settingsFeedbackBugTitle;
-
-  /// No description provided for @settingsFeedbackBugSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Algo no funciona bien? Avisanos'**
-  String get settingsFeedbackBugSubtitle;
-
-  /// No description provided for @settingsFeedbackSuggestionTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Sugerir una mejora'**
-  String get settingsFeedbackSuggestionTitle;
-
-  /// No description provided for @settingsFeedbackSuggestionSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Tenes una idea? Nos encanta escucharte'**
-  String get settingsFeedbackSuggestionSubtitle;
 
   /// No description provided for @settingsLogoutDialogTitle.
   ///
@@ -3387,11 +3381,149 @@ abstract class AppLocalizations {
   /// **'Nombre del hogar'**
   String get settingsHouseholdRenameDialogTitle;
 
-  /// Input label inside the rename-household dialog. Source uses 'Tu nombre' (your name) — confusing UX since it renames the household, but kept verbatim.
+  /// Input label inside the rename-household dialog. It renames the HOUSEHOLD, not the user (the old 'Tu nombre' copy was a bug).
   ///
   /// In es, this message translates to:
-  /// **'Tu nombre'**
+  /// **'Nombre'**
   String get settingsHouseholdRenameDialogLabel;
+
+  /// No description provided for @settingsHouseholdFallbackName.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi hogar'**
+  String get settingsHouseholdFallbackName;
+
+  /// No description provided for @settingsHouseholdCodeGenerated.
+  ///
+  /// In es, this message translates to:
+  /// **'Código generado'**
+  String get settingsHouseholdCodeGenerated;
+
+  /// No description provided for @settingsHouseholdCodeCopied.
+  ///
+  /// In es, this message translates to:
+  /// **'Código copiado al portapapeles'**
+  String get settingsHouseholdCodeCopied;
+
+  /// No description provided for @settingsHouseholdCodeGenerateFirst.
+  ///
+  /// In es, this message translates to:
+  /// **'Generá un código primero'**
+  String get settingsHouseholdCodeGenerateFirst;
+
+  /// No description provided for @settingsHouseholdWhatsAppFallback.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir WhatsApp. Código copiado.'**
+  String get settingsHouseholdWhatsAppFallback;
+
+  /// No description provided for @settingsHouseholdJoinSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Te uniste al hogar exitosamente'**
+  String get settingsHouseholdJoinSuccess;
+
+  /// No description provided for @settingsHouseholdJoinCodeLength.
+  ///
+  /// In es, this message translates to:
+  /// **'El código debe tener 6 caracteres'**
+  String get settingsHouseholdJoinCodeLength;
+
+  /// Full WhatsApp invite message. mode = couple|family|friends|solo (solo falls into other).
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, couple{¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.} family{¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.} friends{¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.} other{¡Hola! Te invito a unirte a nuestro hogar en HomeSync.}}\n\nDescarga la app e ingresa este código: *{code}*\n\n¡Organicemos nuestro hogar juntos!'**
+  String settingsInviteWhatsAppMessage(String mode, String code);
+
+  /// No description provided for @settingsHouseholdRoleUpdated.
+  ///
+  /// In es, this message translates to:
+  /// **'✅ Rol actualizado'**
+  String get settingsHouseholdRoleUpdated;
+
+  /// No description provided for @settingsHouseholdRenamed.
+  ///
+  /// In es, this message translates to:
+  /// **'✅ Hogar renombrado'**
+  String get settingsHouseholdRenamed;
+
+  /// No description provided for @settingsHouseholdTasksEnabledSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'✅ Tareas del hogar activadas'**
+  String get settingsHouseholdTasksEnabledSnack;
+
+  /// No description provided for @settingsHouseholdFinanceModeSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'✅ Modo finanzas y compras activado'**
+  String get settingsHouseholdFinanceModeSnack;
+
+  /// No description provided for @settingsHouseholdUpdateError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo actualizar la configuración: {error}'**
+  String settingsHouseholdUpdateError(String error);
+
+  /// No description provided for @settingsAssignRoleTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Asignar rol o apodo'**
+  String get settingsAssignRoleTitle;
+
+  /// Input label of the assign-role dialog, with a mode-aware example.
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, couple{Nombre del rol (ej: Pareja)} friends{Nombre del rol (ej: Compañero)} other{Nombre del rol (ej: Madre)}}'**
+  String settingsAssignRoleFieldLabel(String mode);
+
+  /// No description provided for @settingsAssignRoleSuggestionsLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Sugerencias:'**
+  String get settingsAssignRoleSuggestionsLabel;
+
+  /// Comma-separated suggestion chips for the couple role dialog. No spaces after commas — the code splits on ','.
+  ///
+  /// In es, this message translates to:
+  /// **'Pareja,Novio,Novia,Esposo,Esposa'**
+  String get settingsRoleSuggestionsCouple;
+
+  /// Comma-separated suggestion chips for the friends role dialog. No spaces after commas — the code splits on ','.
+  ///
+  /// In es, this message translates to:
+  /// **'Compañero,Roommate,Invitado,Responsable'**
+  String get settingsRoleSuggestionsFriends;
+
+  /// No description provided for @settingsMemberRoleOwner.
+  ///
+  /// In es, this message translates to:
+  /// **'Propietario'**
+  String get settingsMemberRoleOwner;
+
+  /// No description provided for @settingsMemberRoleCouple.
+  ///
+  /// In es, this message translates to:
+  /// **'Pareja'**
+  String get settingsMemberRoleCouple;
+
+  /// No description provided for @settingsMemberRoleFriends.
+  ///
+  /// In es, this message translates to:
+  /// **'Compañero'**
+  String get settingsMemberRoleFriends;
+
+  /// No description provided for @settingsMemberRoleDefault.
+  ///
+  /// In es, this message translates to:
+  /// **'Miembro'**
+  String get settingsMemberRoleDefault;
+
+  /// No description provided for @settingsHouseholdLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar tu hogar. Revisá tu conexión e intentá de nuevo.'**
+  String get settingsHouseholdLoadError;
 
   /// Card title for the Parent Mode premium feature. Family-only.
   ///
@@ -11558,24 +11690,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Puede tardar unos segundos.'**
   String get avatarPickerCreatingSubtitle;
-
-  /// Title of the confirm dialog to remove a household member.
-  ///
-  /// In es, this message translates to:
-  /// **'¿Quitar miembro?'**
-  String get settingsRemoveMemberTitle;
-
-  /// Body of the confirm dialog to remove a household member.
-  ///
-  /// In es, this message translates to:
-  /// **'¿Estás seguro de que quieres quitar a {name} de este hogar?'**
-  String settingsRemoveMemberBody(String name);
-
-  /// Confirm button to remove a household member.
-  ///
-  /// In es, this message translates to:
-  /// **'Quitar'**
-  String get settingsRemoveMemberAction;
 
   /// Snackbar confirming a member was removed from the household.
   ///

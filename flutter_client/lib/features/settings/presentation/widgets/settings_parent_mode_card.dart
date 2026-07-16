@@ -89,19 +89,17 @@ class _SettingsParentModeCardState
                   children: [
                     Text(
                       t.settingsParentModeTitle,
-                      style: TextStyle(
-                        color: theme.textPrimary,
-                        fontWeight: FontWeight.w900,
+                      style: AppTypography.sectionTitle.copyWith(
                         fontSize: 19,
+                        color: theme.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       t.settingsParentModeSubtitle,
-                      style: TextStyle(
-                        color: theme.textSecondary,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        color: theme.textSecondary,
                       ),
                     ),
                   ],
@@ -122,11 +120,11 @@ class _SettingsParentModeCardState
                   ),
                   child: Text(
                     t.settingsPremiumBadge,
-                    style: const TextStyle(
-                      color: AppColors.accentGold,
-                      fontWeight: FontWeight.w900,
+                    style: AppTypography.caption.copyWith(
                       fontSize: 11,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
+                      color: AppColors.accentGold,
                     ),
                   ),
                 ),
@@ -240,9 +238,9 @@ class _LockedBody extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadii.pill),
               ),
-              textStyle: const TextStyle(
-                fontWeight: FontWeight.w900,
+              textStyle: AppTypography.cardTitle.copyWith(
                 fontSize: 15,
+                fontWeight: FontWeight.w800,
               ),
             ),
             child: Row(
@@ -306,11 +304,10 @@ class _LockedFeatureRow extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
-                color: theme.textPrimary.withValues(alpha: 0.82),
+              style: AppTypography.bodyStrong.copyWith(
                 fontSize: 13.5,
-                fontWeight: FontWeight.w700,
                 height: 1.25,
+                color: theme.textPrimary.withValues(alpha: 0.82),
               ),
             ),
           ),
@@ -349,16 +346,17 @@ class _UnlockedBody extends ConsumerWidget {
       children: [
         Text(
           t.settingsParentModeApprovalSectionTitle,
-          style: TextStyle(
+          style: AppTypography.bodyStrong.copyWith(
             color: theme.textPrimary,
-            fontWeight: FontWeight.w800,
-            fontSize: 14,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           t.settingsParentModeApprovalSectionSubtitle,
-          style: TextStyle(color: theme.textSecondary, fontSize: 12),
+          style: AppTypography.caption.copyWith(
+            fontWeight: FontWeight.w500,
+            color: theme.textSecondary,
+          ),
         ),
         const SizedBox(height: 12),
         _ModeOption(
@@ -416,10 +414,10 @@ class _UnlockedBody extends ConsumerWidget {
                     pending.isEmpty
                         ? t.settingsParentModeInboxIdle
                         : t.settingsParentModeInboxWithCount(pending.length),
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w800,
+                    style: AppTypography.caption.copyWith(
                       fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -452,10 +450,10 @@ class _UnlockedBody extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     t.settingsParentModeMemberView,
-                    style: const TextStyle(
-                      color: AppColors.accentBlue,
-                      fontWeight: FontWeight.w800,
+                    style: AppTypography.caption.copyWith(
                       fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.accentBlue,
                     ),
                   ),
                 ),
@@ -488,10 +486,10 @@ class _UnlockedBody extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     t.settingsParentModeWeeklySummary,
-                    style: const TextStyle(
-                      color: AppColors.accentPurple,
-                      fontWeight: FontWeight.w800,
+                    style: AppTypography.caption.copyWith(
                       fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.accentPurple,
                     ),
                   ),
                 ),
@@ -563,18 +561,19 @@ class _ModeOption extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      color: theme.textPrimary,
-                      fontWeight: FontWeight.w800,
+                    style: AppTypography.caption.copyWith(
                       fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: theme.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      color: theme.textSecondary,
+                    style: AppTypography.caption.copyWith(
                       fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      color: theme.textSecondary,
                     ),
                   ),
                 ],
@@ -694,7 +693,10 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
             child: Text(
               AppLocalizations.of(context).settingsParentModePerMemberEmpty,
-              style: TextStyle(color: theme.textSecondary, fontSize: 12),
+              style: AppTypography.caption.copyWith(
+                fontWeight: FontWeight.w500,
+                color: theme.textSecondary,
+              ),
             ),
           );
         }
@@ -720,10 +722,10 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
                         children: [
                           Text(
                             row.fullName,
-                            style: TextStyle(
-                              color: theme.textPrimary,
-                              fontWeight: FontWeight.w800,
+                            style: AppTypography.caption.copyWith(
                               fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: theme.textPrimary,
                             ),
                           ),
                           Builder(
@@ -733,9 +735,10 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
                               if (label == null) return const SizedBox.shrink();
                               return Text(
                                 label,
-                                style: TextStyle(
-                                  color: theme.textSecondary,
+                                style: AppTypography.caption.copyWith(
                                   fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: theme.textSecondary,
                                 ),
                               );
                             },
@@ -874,16 +877,17 @@ class _AllowanceToggleState extends ConsumerState<_AllowanceToggle> {
                 children: [
                   Text(
                     t.settingsParentModeAllowanceTitle,
-                    style: TextStyle(
+                    style: AppTypography.bodyStrong.copyWith(
                       color: theme.textPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     t.settingsParentModeAllowanceSubtitle,
-                    style: TextStyle(color: theme.textSecondary, fontSize: 12),
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: theme.textSecondary,
+                    ),
                   ),
                 ],
               ),

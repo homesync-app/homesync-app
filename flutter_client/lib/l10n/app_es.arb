@@ -211,14 +211,9 @@
   "@settingsPremiumFeatureExclusiveAvatars": {
     "description": "Premium feature label: exclusive avatar set."
   },
-  "settingsMinorPremiumTitle": "Funciones Premium",
-  "settingsMinorPremiumChildBody": "Pedi a tus papas que activen el plan para desbloquear avatares exclusivos, colores y mas 🌟",
-  "@settingsMinorPremiumChildBody": {
-    "description": "Body text shown to a CHILD member: tells them to ask their parents to activate the premium plan. Uses 'pedi' (Argentine voseo)."
-  },
-  "settingsMinorPremiumAdultBody": "Los adultos del hogar pueden activar el plan premium para desbloquear funciones adicionales.",
-  "@settingsMinorPremiumAdultBody": {
-    "description": "Body text shown to a non-owner adult: tells them other adults in the household can activate premium."
+  "settingsMinorPremiumSnack": "Esta función es premium 🌟 Pedile a un adulto del hogar que active el plan.",
+  "@settingsMinorPremiumSnack": {
+    "description": "Snackbar shown to minors when they tap a premium-locked theme palette. Argentine voseo."
   },
   "settingsReplayTourTitle": "Ver guia de nuevo",
   "settingsReplayTourSubtitle": "Repasa la introduccion del hogar",
@@ -230,10 +225,15 @@
   "settingsNotificationsDisabled": "🔕 Notificaciones desactivadas",
   "settingsProfileNameUpdated": "✅ Nombre actualizado",
   "settingsAccountReset": "✅ Datos reiniciados y hogar liberado",
+  "settingsAccountResetError": "No se pudo reiniciar la cuenta.",
+  "settingsLinkOpenError": "No se pudo abrir el enlace",
+  "settingsProfileNameFallback": "Usuario",
+  "settingsProfileAvatarAction": "Avatar",
+  "settingsProfileNameAction": "Nombre",
+  "settingsRenameProfileTitle": "Cambiar nombre",
+  "settingsRenameProfileLabel": "Nombre",
   "settingsNotificationsTitle": "Notificaciones",
-  "settingsNotificationsSubtitle": "Recibe avisos de gastos y tareas",
   "settingsFaqTitle": "Preguntas Frecuentes",
-  "settingsFaqSubtitle": "Aprende como funciona HomeSync",
   "settingsLogoutButton": "Cerrar Sesion",
   "@settingsLogoutButton": {
     "description": "Big outlined button at the bottom of Settings to sign the user out of the app."
@@ -246,10 +246,6 @@
   "@settingsResetAccountButton": {
     "description": "Destructive button label: wipes all the user's data and removes them from the current household."
   },
-  "settingsFeedbackBugTitle": "Reportar un error",
-  "settingsFeedbackBugSubtitle": "Algo no funciona bien? Avisanos",
-  "settingsFeedbackSuggestionTitle": "Sugerir una mejora",
-  "settingsFeedbackSuggestionSubtitle": "Tenes una idea? Nos encanta escucharte",
   "settingsLogoutDialogTitle": "Cerrar sesión?",
   "settingsLogoutDialogBody": "Vas a tener que iniciar sesión de nuevo para acceder a tu hogar.",
   "settingsLogoutDialogConfirm": "Salir",
@@ -1611,10 +1607,65 @@
   },
   "settingsHouseholdDeleteDummyConfirm": "Eliminar dummy",
   "settingsHouseholdRenameDialogTitle": "Nombre del hogar",
-  "settingsHouseholdRenameDialogLabel": "Tu nombre",
+  "settingsHouseholdRenameDialogLabel": "Nombre",
   "@settingsHouseholdRenameDialogLabel": {
-    "description": "Input label inside the rename-household dialog. Source uses 'Tu nombre' (your name) — confusing UX since it renames the household, but kept verbatim."
+    "description": "Input label inside the rename-household dialog. It renames the HOUSEHOLD, not the user (the old 'Tu nombre' copy was a bug)."
   },
+  "settingsHouseholdFallbackName": "Mi hogar",
+  "settingsHouseholdCodeGenerated": "Código generado",
+  "settingsHouseholdCodeCopied": "Código copiado al portapapeles",
+  "settingsHouseholdCodeGenerateFirst": "Generá un código primero",
+  "settingsHouseholdWhatsAppFallback": "No se pudo abrir WhatsApp. Código copiado.",
+  "settingsHouseholdJoinSuccess": "Te uniste al hogar exitosamente",
+  "settingsHouseholdJoinCodeLength": "El código debe tener 6 caracteres",
+  "settingsInviteWhatsAppMessage": "{mode, select, couple{¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.} family{¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.} friends{¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.} other{¡Hola! Te invito a unirte a nuestro hogar en HomeSync.}}\n\nDescarga la app e ingresa este código: *{code}*\n\n¡Organicemos nuestro hogar juntos!",
+  "@settingsInviteWhatsAppMessage": {
+    "description": "Full WhatsApp invite message. mode = couple|family|friends|solo (solo falls into other).",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsHouseholdRoleUpdated": "✅ Rol actualizado",
+  "settingsHouseholdRenamed": "✅ Hogar renombrado",
+  "settingsHouseholdTasksEnabledSnack": "✅ Tareas del hogar activadas",
+  "settingsHouseholdFinanceModeSnack": "✅ Modo finanzas y compras activado",
+  "settingsHouseholdUpdateError": "No se pudo actualizar la configuración: {error}",
+  "@settingsHouseholdUpdateError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAssignRoleTitle": "Asignar rol o apodo",
+  "settingsAssignRoleFieldLabel": "{mode, select, couple{Nombre del rol (ej: Pareja)} friends{Nombre del rol (ej: Compañero)} other{Nombre del rol (ej: Madre)}}",
+  "@settingsAssignRoleFieldLabel": {
+    "description": "Input label of the assign-role dialog, with a mode-aware example.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAssignRoleSuggestionsLabel": "Sugerencias:",
+  "settingsRoleSuggestionsCouple": "Pareja,Novio,Novia,Esposo,Esposa",
+  "@settingsRoleSuggestionsCouple": {
+    "description": "Comma-separated suggestion chips for the couple role dialog. No spaces after commas — the code splits on ','."
+  },
+  "settingsRoleSuggestionsFriends": "Compañero,Roommate,Invitado,Responsable",
+  "@settingsRoleSuggestionsFriends": {
+    "description": "Comma-separated suggestion chips for the friends role dialog. No spaces after commas — the code splits on ','."
+  },
+  "settingsMemberRoleOwner": "Propietario",
+  "settingsMemberRoleCouple": "Pareja",
+  "settingsMemberRoleFriends": "Compañero",
+  "settingsMemberRoleDefault": "Miembro",
+  "settingsHouseholdLoadError": "No pudimos cargar tu hogar. Revisá tu conexión e intentá de nuevo.",
   "settingsParentModeTitle": "Modo Padres",
   "@settingsParentModeTitle": {
     "description": "Card title for the Parent Mode premium feature. Family-only."
@@ -4965,23 +5016,6 @@
   "avatarPickerCreatingSubtitle": "Puede tardar unos segundos.",
   "@avatarPickerCreatingSubtitle": {
     "description": "Loading dialog subtitle while generating a custom avatar."
-  },
-  "settingsRemoveMemberTitle": "¿Quitar miembro?",
-  "@settingsRemoveMemberTitle": {
-    "description": "Title of the confirm dialog to remove a household member."
-  },
-  "settingsRemoveMemberBody": "¿Estás seguro de que quieres quitar a {name} de este hogar?",
-  "@settingsRemoveMemberBody": {
-    "description": "Body of the confirm dialog to remove a household member.",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "settingsRemoveMemberAction": "Quitar",
-  "@settingsRemoveMemberAction": {
-    "description": "Confirm button to remove a household member."
   },
   "settingsMemberRemoved": "✅ {name} ha sido quitado del hogar",
   "@settingsMemberRemoved": {

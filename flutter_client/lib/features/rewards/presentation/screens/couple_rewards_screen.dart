@@ -416,10 +416,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
           const SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(
-              color: color,
+            style: AppTypography.caption.copyWith(
               fontSize: 11,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
+              color: color,
             ),
           ),
         ],
@@ -436,10 +436,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: AppColors.primary,
+        style: AppTypography.caption.copyWith(
           fontSize: 11,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
+          color: AppColors.primary,
         ),
       ),
     );
@@ -497,22 +497,19 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             children: [
               Text(
                 title,
-                style: TextStyle(
+                style: AppTypography.sectionTitle.copyWith(
                   fontSize: 22,
-                  fontWeight: FontWeight.w900,
                   color: theme.textPrimary,
-                  letterSpacing: -0.6,
                 ),
               ),
               if (subtitle != null) ...[
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    color: theme.textSecondary,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
                     height: 1.35,
+                    color: theme.textSecondary,
                   ),
                 ),
               ],
@@ -571,10 +568,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     Expanded(
                       child: Text(
                         localizedRewardCategoryByKey(t, null, category),
-                        style: TextStyle(
-                          color: theme.textPrimary,
+                        style: AppTypography.cardTitle.copyWith(
                           fontSize: 15,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w800,
+                          color: theme.textPrimary,
                         ),
                       ),
                     ),
@@ -673,11 +670,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                       title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: theme.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
+                      style: AppTypography.cardTitle.copyWith(
+                        fontWeight: FontWeight.w800,
                         height: 1.15,
+                        color: theme.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -685,11 +681,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                       description.trim(),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: theme.textSecondary,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
                         height: 1.3,
+                        color: theme.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -703,10 +698,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                         const SizedBox(width: 4),
                         Text(
                           '${reward.cost}',
-                          style: TextStyle(
-                            color: accent,
+                          style: AppTypography.caption.copyWith(
                             fontSize: 13,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
+                            color: accent,
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -717,10 +712,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                                 : t.rewardsStatusReview,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: theme.textSecondary,
+                            style: AppTypography.caption.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
+                              color: theme.textSecondary,
                             ),
                           ),
                         ),
@@ -815,10 +810,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 const SizedBox(height: 2),
                 Text(
                   t.rewardsCoinsAvailableToRedeem,
-                  style: TextStyle(
-                    color: theme.textSecondary,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
+                    color: theme.textSecondary,
                   ),
                 ),
               ],
@@ -832,11 +827,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             ),
             child: Text(
               t.rewardsBalance,
-              style: const TextStyle(
-                color: AppColors.accentGold,
+              style: AppTypography.caption.copyWith(
                 fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.2,
+                fontWeight: FontWeight.w700,
+                color: AppColors.accentGold,
               ),
             ),
           ),
@@ -944,12 +938,11 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: theme.textPrimary,
+                          style: AppTypography.caption.copyWith(
                             fontSize: 13,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             height: 1.14,
-                            letterSpacing: -0.3,
+                            color: theme.textPrimary,
                           ),
                         ),
                       ),
@@ -983,11 +976,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                           Text(
                             t.rewardsPrizeCostCoins(reward.cost),
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: buttonAccent,
+                            style: AppTypography.caption.copyWith(
                               fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.15,
+                              fontWeight: FontWeight.w700,
+                              color: buttonAccent,
                             ),
                           ),
                         ],
@@ -1105,21 +1097,19 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         children: [
           Text(
             t.rewardsAddNewDesirePrompt,
-            style: TextStyle(
-              color: theme.textPrimary,
+            style: AppTypography.cardTitle.copyWith(
               fontSize: 18,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.3,
+              fontWeight: FontWeight.w800,
+              color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             t.rewardsAddNewDesireHint,
-            style: TextStyle(
-              color: theme.textSecondary,
+            style: AppTypography.caption.copyWith(
               fontSize: 13,
-              fontWeight: FontWeight.w600,
               height: 1.35,
+              color: theme.textSecondary,
             ),
           ),
           const SizedBox(height: 18),
@@ -1130,24 +1120,16 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
               icon: const Icon(Icons.auto_awesome_rounded, size: 20),
               label: Text(
                 t.rewardsSuggestNewDesire,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 15,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: theme.isDarkMode
-                    ? theme.primary
-                    : AppColors.sage.withValues(alpha: 0.16),
-                foregroundColor:
-                    theme.isDarkMode ? Colors.white : AppColors.textPrimary,
+                backgroundColor: theme.primary,
+                foregroundColor: Colors.white,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 17),
-                side: BorderSide(
-                  color: theme.isDarkMode
-                      ? theme.primary.withValues(alpha: 0.42)
-                      : AppColors.sage.withValues(alpha: 0.22),
-                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadii.lg),
                 ),
@@ -1351,11 +1333,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     Expanded(
                       child: Text(
                         title,
-                        style: TextStyle(
-                          color: theme.textPrimary,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
+                        style: AppTypography.sectionTitle.copyWith(
                           height: 1.1,
+                          color: theme.textPrimary,
                         ),
                       ),
                     ),
@@ -1364,30 +1344,28 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 const SizedBox(height: 14),
                 Text(
                   t.rewardsApprovalReason,
-                  style: TextStyle(
-                    color: theme.textSecondary,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.2,
+                    fontWeight: FontWeight.w700,
+                    color: theme.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   description.trim(),
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontSize: 14,
+                  style: AppTypography.body.copyWith(
                     fontWeight: FontWeight.w600,
                     height: 1.4,
+                    color: theme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   t.rewardsCostLabel(reward.cost),
-                  style: TextStyle(
-                    color: theme.textSecondary,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
+                    color: theme.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -1552,20 +1530,16 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                           ? t.rewardsSuggestTitle
                           : t.rewardsNewHouseReward,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: theme.textPrimary,
+                      style: AppTypography.sectionTitle.copyWith(
                         fontSize: 22,
-                        fontWeight: FontWeight.w900,
+                        color: theme.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 28),
                     Text(
                       t.rewardsTitleLabel,
-                      style: TextStyle(
+                      style: AppTypography.eyebrow.copyWith(
                         color: theme.textSecondary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -1599,11 +1573,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                       isSuggestion
                           ? t.rewardsNoteOptionalLabel
                           : t.rewardsDescriptionLabel,
-                      style: TextStyle(
+                      style: AppTypography.eyebrow.copyWith(
                         color: theme.textSecondary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -1628,11 +1599,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     const SizedBox(height: 20),
                     Text(
                       t.rewardsCostFieldLabel,
-                      style: TextStyle(
+                      style: AppTypography.eyebrow.copyWith(
                         color: theme.textSecondary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -1665,11 +1633,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     const SizedBox(height: 24),
                     Text(
                       t.rewardsCategoryFieldLabel,
-                      style: TextStyle(
+                      style: AppTypography.eyebrow.copyWith(
                         color: theme.textSecondary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1711,11 +1676,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     const SizedBox(height: 24),
                     Text(
                       t.rewardsIconLabel.toUpperCase(),
-                      style: TextStyle(
+                      style: AppTypography.eyebrow.copyWith(
                         color: theme.textSecondary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1746,10 +1708,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                                   width: 2,
                                 ),
                               ),
-                              child: Text(
-                                icon,
-                                style: const TextStyle(fontSize: 30),
-                              ),
+                              child: ConceptIcon(emoji: icon, size: 34),
                             ),
                           );
                         }).toList(),
@@ -1822,9 +1781,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                               isSuggestion
                                   ? t.rewardsSendProposal
                                   : t.rewardsCreatePrize,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
+                              style: AppTypography.cardTitle.copyWith(
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                     ),

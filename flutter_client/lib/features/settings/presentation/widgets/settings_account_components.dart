@@ -2,205 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/utils/app_haptics.dart';
-import 'package:homesync_client/features/settings/presentation/widgets/feedback_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-
-class SettingsNotificationsCard extends StatelessWidget {
-  final bool isEnabled;
-  final ValueChanged<bool> onChanged;
-
-  const SettingsNotificationsCard({
-    super.key,
-    required this.isEnabled,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadow.withValues(alpha: 0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: theme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppRadii.sm),
-                ),
-                child: Icon(
-                  Icons.notifications_active_rounded,
-                  color: theme.primary,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      t.settingsNotificationsTitle,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: theme.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      t.settingsNotificationsSubtitle,
-                      style: TextStyle(
-                        color: theme.textSecondary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Switch.adaptive(
-                value: isEnabled,
-                activeTrackColor: theme.primary,
-                onChanged: onChanged,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class SettingsFaqCard extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const SettingsFaqCard({
-    super.key,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadow.withValues(alpha: 0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        clipBehavior: Clip.antiAlias,
-        child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-          leading: Container(
-            padding: const EdgeInsets.all(9),
-            decoration: BoxDecoration(
-              color: theme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppRadii.sm),
-            ),
-            child: Icon(
-              Icons.help_outline_rounded,
-              color: theme.primary,
-              size: 20,
-            ),
-          ),
-          title: Text(
-            t.settingsFaqTitle,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: theme.textPrimary,
-            ),
-          ),
-          subtitle: Text(
-            t.settingsFaqSubtitle,
-            style: TextStyle(color: theme.textSecondary, fontSize: 12),
-          ),
-          trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
-          onTap: onTap,
-        ),
-      ),
-    );
-  }
-}
-
-class SettingsLogoutButton extends StatelessWidget {
-  final VoidCallback onPressed;
-
-  const SettingsLogoutButton({
-    super.key,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-
-    return SizedBox(
-      width: double.infinity,
-      height: 62,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(
-            color: theme.error.withValues(alpha: 0.2),
-            width: 1.5,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.lg),
-          ),
-          foregroundColor: theme.error,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.logout_rounded, size: 22),
-            const SizedBox(width: 12),
-            Text(
-              t.settingsLogoutButton,
-              style: const TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 16,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class SettingsDangerZone extends StatelessWidget {
   final VoidCallback onResetPressed;
@@ -225,11 +28,9 @@ class SettingsDangerZone extends StatelessWidget {
               const EdgeInsets.only(left: AppSpacing.xs, bottom: AppSpacing.sm),
           child: Text(
             t.settingsDangerZoneEyebrow,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              color: theme.error,
+            style: AppTypography.eyebrow.copyWith(
               letterSpacing: 1.5,
+              color: theme.error,
             ),
           ),
         ),
@@ -255,9 +56,8 @@ class SettingsDangerZone extends StatelessWidget {
                 const SizedBox(width: 12),
                 Text(
                   t.settingsResetAccountButton,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 16,
+                  style: AppTypography.cardTitle.copyWith(
+                    fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -285,8 +85,7 @@ class SettingsDangerZone extends StatelessWidget {
                   const SizedBox(width: 10),
                   Text(
                     t.settingsDeleteAccountButton,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
+                    style: AppTypography.cardTitle.copyWith(
                       fontSize: 15,
                       letterSpacing: 0.3,
                     ),
@@ -323,9 +122,8 @@ class SettingsVersionFooter extends StatelessWidget {
           children: [
             Text(
               'HOMESYNC',
-              style: TextStyle(
+              style: AppTypography.eyebrow.copyWith(
                 fontSize: 10,
-                fontWeight: FontWeight.w900,
                 letterSpacing: 2,
                 color: theme.textPrimary,
               ),
@@ -339,8 +137,9 @@ class SettingsVersionFooter extends StatelessWidget {
                   info == null
                       ? ''
                       : 'Version ${info.version}+${info.buildNumber}',
-                  style: TextStyle(
+                  style: AppTypography.caption.copyWith(
                     fontSize: 11,
+                    fontWeight: FontWeight.w500,
                     color: theme.textSecondary,
                   ),
                 );
@@ -353,121 +152,22 @@ class SettingsVersionFooter extends StatelessWidget {
   }
 }
 
-class SettingsFeedbackCard extends StatelessWidget {
-  const SettingsFeedbackCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadow.withValues(alpha: 0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          children: [
-            ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-              leading: Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: theme.error.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(AppRadii.sm),
-                ),
-                child: Icon(
-                  Icons.bug_report_outlined,
-                  color: theme.error,
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                t.settingsFeedbackBugTitle,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: theme.textPrimary,
-                ),
-              ),
-              subtitle: Text(
-                t.settingsFeedbackBugSubtitle,
-                style: TextStyle(color: theme.textSecondary, fontSize: 12),
-              ),
-              trailing:
-                  Icon(Icons.chevron_right_rounded, color: theme.textMuted),
-              onTap: () {
-                AppHaptics.tap();
-                FeedbackSheet.show(context, type: FeedbackType.bug);
-              },
-            ),
-            Divider(
-              height: 1,
-              color: theme.divider.withValues(alpha: 0.1),
-              indent: 16,
-              endIndent: 16,
-            ),
-            ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-              leading: Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: theme.primary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(AppRadii.sm),
-                ),
-                child: Icon(
-                  Icons.lightbulb_outline_rounded,
-                  color: theme.primary,
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                t.settingsFeedbackSuggestionTitle,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: theme.textPrimary,
-                ),
-              ),
-              subtitle: Text(
-                t.settingsFeedbackSuggestionSubtitle,
-                style: TextStyle(color: theme.textSecondary, fontSize: 12),
-              ),
-              trailing:
-                  Icon(Icons.chevron_right_rounded, color: theme.textMuted),
-              onTap: () {
-                AppHaptics.tap();
-                FeedbackSheet.show(context, type: FeedbackType.suggestion);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-Future<bool?> showSettingsLogoutDialog(BuildContext context) {
-  final theme = context.theme;
+/// Dialog de confirmación destructiva compartido por logout, reset y borrado
+/// de cuenta: un solo estilo (el de logout) en vez de tres AlertDialogs
+/// distintos conviviendo en la misma pantalla.
+Future<bool?> _showDestructiveConfirmDialog(
+  BuildContext context, {
+  required IconData icon,
+  required String title,
+  required String body,
+  required String confirmLabel,
+}) {
   final t = AppLocalizations.of(context);
 
   return showDialog<bool>(
     context: context,
     builder: (dialogContext) {
+      final theme = dialogContext.theme;
       return Dialog(
         elevation: 0,
         insetPadding: const EdgeInsets.symmetric(horizontal: 30),
@@ -500,11 +200,7 @@ Future<bool?> showSettingsLogoutDialog(BuildContext context) {
                       color: theme.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppRadii.md),
                     ),
-                    child: Icon(
-                      Icons.logout_rounded,
-                      color: theme.error,
-                      size: 23,
-                    ),
+                    child: Icon(icon, color: theme.error, size: 23),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -512,23 +208,20 @@ Future<bool?> showSettingsLogoutDialog(BuildContext context) {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          t.settingsLogoutDialogTitle,
-                          style: TextStyle(
-                            color: theme.textPrimary,
+                          title,
+                          style: AppTypography.heroAmount.copyWith(
                             fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.7,
+                            color: theme.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          t.settingsLogoutDialogBody,
-                          style: TextStyle(
-                            color: theme.textSecondary,
+                          body,
+                          style: AppTypography.body.copyWith(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             height: 1.38,
-                            letterSpacing: -0.1,
+                            color: theme.textSecondary,
                           ),
                         ),
                       ],
@@ -555,9 +248,8 @@ Future<bool?> showSettingsLogoutDialog(BuildContext context) {
                         ),
                         child: Text(
                           t.commonCancel,
-                          style: const TextStyle(
+                          style: AppTypography.cardTitle.copyWith(
                             fontSize: 15,
-                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
@@ -573,15 +265,22 @@ Future<bool?> showSettingsLogoutDialog(BuildContext context) {
                           backgroundColor: theme.error.withValues(alpha: 0.9),
                           foregroundColor: Colors.white,
                           elevation: 0,
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 10),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),
                         ),
-                        child: Text(
-                          t.settingsLogoutDialogConfirm,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            confirmLabel,
+                            maxLines: 1,
+                            style: AppTypography.cardTitle.copyWith(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -597,116 +296,35 @@ Future<bool?> showSettingsLogoutDialog(BuildContext context) {
   );
 }
 
-Future<bool?> showSettingsResetAccountDialog(BuildContext context) {
-  final theme = context.theme;
+Future<bool?> showSettingsLogoutDialog(BuildContext context) {
   final t = AppLocalizations.of(context);
+  return _showDestructiveConfirmDialog(
+    context,
+    icon: Icons.logout_rounded,
+    title: t.settingsLogoutDialogTitle,
+    body: t.settingsLogoutDialogBody,
+    confirmLabel: t.settingsLogoutDialogConfirm,
+  );
+}
 
-  return showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      backgroundColor: theme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-      ),
-      title: Row(
-        children: [
-          Icon(Icons.warning_amber_rounded, color: theme.error),
-          const SizedBox(width: 12),
-          Text(
-            t.settingsResetDialogTitle,
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              color: theme.error,
-            ),
-          ),
-        ],
-      ),
-      content: Text(t.settingsResetDialogBody),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, false),
-          child: Text(
-            t.commonCancel,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: AppSpacing.xs),
-          child: ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.error,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-              ),
-            ),
-            child: Text(
-              t.settingsResetDialogConfirm,
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-          ),
-        ),
-      ],
-    ),
+Future<bool?> showSettingsResetAccountDialog(BuildContext context) {
+  final t = AppLocalizations.of(context);
+  return _showDestructiveConfirmDialog(
+    context,
+    icon: Icons.delete_forever_rounded,
+    title: t.settingsResetDialogTitle,
+    body: t.settingsResetDialogBody,
+    confirmLabel: t.settingsResetDialogConfirm,
   );
 }
 
 Future<bool?> showSettingsDeleteAccountDialog(BuildContext context) {
-  final theme = context.theme;
   final t = AppLocalizations.of(context);
-
-  return showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      backgroundColor: theme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-      ),
-      title: Row(
-        children: [
-          Icon(Icons.person_off_rounded, color: theme.error),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              t.settingsDeleteAccountDialogTitle,
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                color: theme.error,
-              ),
-            ),
-          ),
-        ],
-      ),
-      content: Text(t.settingsDeleteAccountDialogBody),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, false),
-          child: Text(
-            t.commonCancel,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: AppSpacing.xs),
-          child: ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.error,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-              ),
-            ),
-            child: Text(
-              t.settingsDeleteAccountConfirm,
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-          ),
-        ),
-      ],
-    ),
+  return _showDestructiveConfirmDialog(
+    context,
+    icon: Icons.person_off_rounded,
+    title: t.settingsDeleteAccountDialogTitle,
+    body: t.settingsDeleteAccountDialogBody,
+    confirmLabel: t.settingsDeleteAccountConfirm,
   );
 }

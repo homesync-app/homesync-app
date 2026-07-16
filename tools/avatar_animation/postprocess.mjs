@@ -146,28 +146,39 @@ function processTake(file) {
     : '';
 
   // Cadena base hasta el alfa limpio y escalado.
-  // despill de ffmpeg solo soporta green/blue; con magenta el borde blanco
-  // tipo sticker de los avatares evita el spill, asi que se omite.
+  // despill de ffmpeg solo soporta green/blue; para magenta se hace a mano
+  // con geq: donde min(r,b) supera a g por mas de 24 (exceso magenta), se
+  // resta ese exceso de r y b. El umbral 24 protege los rosas legitimos del
+  // arte (nariz, cachetes, corazon de la bandana: exceso ~12-20) y neutraliza
+  // el fringe del borde (exceso 80-200), que sin esto queda como halo rosado.
+  // Ademas, donde el exceso magenta es FUERTE (>60: motas y lavados del
+  // fondo que el chromakey exacto no alcanza) se mata el alfa directamente.
+  // NO usar hsvkey para esto: su metrica trata al blanco (sat 0) como
+  // "cercano" al rosa palido y semi-transparenta pecho/hocico/bolsa
+  // (efecto fantasma reportado por el owner 2026-07-16).
+  const magentaDespill =
+    `geq=r='r(X,Y)-max(min(r(X,Y)\\,b(X,Y))-g(X,Y)-24\\,0)'` +
+    `:b='b(X,Y)-max(min(r(X,Y)\\,b(X,Y))-g(X,Y)-24\\,0)'` +
+    `:g='g(X,Y)'` +
+    `:a='if(gt(min(r(X,Y)\\,b(X,Y))-g(X,Y),60),0,if(lt(alpha(X,Y),48),0,alpha(X,Y)))'`;
   const pre = [
     // Normaliza la matriz de color de entrada para evitar corrimientos 601/709.
     `scale=in_color_matrix=auto:out_color_matrix=bt601,setparams=colorspace=bt470bg`,
     ...(trimSeconds ? [`trim=duration=${trimSeconds}`, `setpts=PTS-STARTPTS`] : []),
     `crop=ih:ih`,
     `chromakey=${KEY_OVERRIDE ?? key.ffmpeg}:${SIMILARITY}:${BLEND}`,
-    // Segunda pasada por MATIZ (hue 300 = magenta): limpia lavados rosa
-    // acuarela que Kling a veces pinta en el fondo (el chromakey exacto no
-    // los alcanza) y de paso las motas magenta sueltas. similarity 0.30 es
-    // el limite: 0.35 ya desatura el arte (bandana/corazon). Verificado que
-    // nariz/cachetes rosados (hue ~350) sobreviven.
-    ...(avatar.keyColor === 'magenta'
-      ? [`hsvkey=hue=300:sat=0.35:val=0.7:similarity=0.30:blend=0.1`]
-      : []),
+    // NOTA: aca hubo una pasada hsvkey (hue 300) para lavados rosa de Kling;
+    // se ELIMINO porque semi-transparentaba los blancos del arte (fantasma).
+    // Los lavados fuertes ahora los mata el geq del despill (exceso > 60).
     ...(avatar.keyColor === 'green' && avatar.despill !== false ? ['despill=type=green'] : []),
     `fps=${FPS}`,
     `format=rgba`,
     // Clampa alfas debiles a 0: los restos casi-invisibles del keying varian
-    // frame a frame y inflan el WebP ~40% sin aporte visual.
-    `geq=a='if(lt(alpha(X,Y),48),0,alpha(X,Y))':r='r(X,Y)':g='g(X,Y)':b='b(X,Y)'`,
+    // frame a frame y inflan el WebP ~40% sin aporte visual. Para magenta el
+    // mismo geq aplica ademas el despill de r/b.
+    avatar.keyColor === 'magenta'
+      ? magentaDespill
+      : `geq=a='if(lt(alpha(X,Y),48),0,alpha(X,Y))':r='r(X,Y)':g='g(X,Y)':b='b(X,Y)'`,
     normalize.replace(/,$/, ''),
     `scale=${SIZE}:${SIZE}:flags=lanczos`,
   ].filter(Boolean).join(',');
@@ -183,7 +194,10 @@ function processTake(file) {
         : 'split[fwd][tmp];[tmp]reverse[rev];[fwd][rev]concat=n=2:v=1:a=0';
 
   // Erosion opcional del alfa para comer un borde sticker blanco (ver config).
-  const erode = avatar.erodeBorder || 0;
+  // Con magenta se erosiona 1px por defecto: el anillo de mezcla del borde
+  // queda neutro tras el despill pero sigue sucio; 1 pasada lo come sin
+  // perder el contorno oscuro del arte (2 ya lo adelgaza visiblemente).
+  const erode = avatar.erodeBorder ?? (avatar.keyColor === 'magenta' ? 1 : 0);
   let filter;
   if (erode > 0) {
     const chain = Array(erode).fill('erosion').join(',');

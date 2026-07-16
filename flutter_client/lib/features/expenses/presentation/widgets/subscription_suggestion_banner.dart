@@ -69,11 +69,9 @@ class SubscriptionSuggestionBanner extends ConsumerWidget {
                     children: [
                       Text(
                         t.subsSuggestionTitle(suggestion.title),
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: theme.textPrimary,
+                        style: AppTypography.bodyStrong.copyWith(
                           height: 1.25,
+                          color: theme.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 3),
@@ -81,11 +79,11 @@ class SubscriptionSuggestionBanner extends ConsumerWidget {
                         t.subsSuggestionBody(
                           currency.format(suggestion.avgAmount.round()),
                         ),
-                        style: TextStyle(
+                        style: AppTypography.caption.copyWith(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w500,
-                          color: theme.textSecondary,
                           height: 1.3,
+                          color: theme.textSecondary,
                         ),
                       ),
                     ],
@@ -110,7 +108,7 @@ class SubscriptionSuggestionBanner extends ConsumerWidget {
                   ),
                   child: Text(
                     t.subsSuggestionDismiss,
-                    style: const TextStyle(
+                    style: AppTypography.caption.copyWith(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
                     ),
@@ -143,9 +141,9 @@ class SubscriptionSuggestionBanner extends ConsumerWidget {
                   ),
                   child: Text(
                     t.subsSuggestionCreate,
-                    style: const TextStyle(
+                    style: AppTypography.caption.copyWith(
                       fontSize: 12.5,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),

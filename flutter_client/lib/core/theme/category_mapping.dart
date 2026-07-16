@@ -24,7 +24,7 @@ class CategoryMapping {
       case 'comida':
       case 'kitchen':
       case 'cocina':
-        return const Color(0xFFC6503B);
+        return const Color(0xFFE15540);
       case 'jardin':
       case 'jardín':
       case 'exterior':
@@ -67,7 +67,7 @@ class CategoryMapping {
       case 'ropa':
       case 'clothing':
       case 'indumentaria':
-        return const Color(0xFFA05795);
+        return const Color(0xFFBC5BAA);
       case 'electronics':
       case 'tecnología':
       case 'tecnologia':

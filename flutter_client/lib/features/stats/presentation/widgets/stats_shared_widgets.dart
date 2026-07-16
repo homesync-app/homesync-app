@@ -88,11 +88,11 @@ class PrivacyBadge extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
-                color: theme.textSecondary,
+              style: AppTypography.caption.copyWith(
                 fontSize: 13,
-                height: 1.5,
                 fontWeight: FontWeight.w500,
+                height: 1.5,
+                color: theme.textSecondary,
               ),
             ),
           ),
@@ -114,11 +114,10 @@ class SectionLabel extends StatelessWidget {
           const EdgeInsets.only(left: AppSpacing.xxs, bottom: AppSpacing.xxs),
       child: Text(
         label,
-        style: TextStyle(
+        style: AppTypography.cardTitle.copyWith(
           fontSize: 18,
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w800,
           color: AppColors.textPrimary.withValues(alpha: 0.9),
-          letterSpacing: -0.2,
         ),
       ),
     );
@@ -157,22 +156,20 @@ class MiniStatCard extends StatelessWidget {
         children: [
           Text(
             value,
-            style: TextStyle(
+            style: AppTypography.heroAmount.copyWith(
               fontSize: 26,
-              fontWeight: FontWeight.w900,
-              color: theme.textPrimary,
-              letterSpacing: -1,
               height: 1,
+              color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             label.toUpperCase(),
-            style: TextStyle(
-              color: color.withValues(alpha: 0.8),
+            style: AppTypography.caption.copyWith(
               fontSize: 10,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
+              color: color.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -182,7 +179,10 @@ class MiniStatCard extends StatelessWidget {
               color: color.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: Text(icon, style: const TextStyle(fontSize: 16)),
+            child: Text(icon, style: AppTypography.body.copyWith(
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+            ),),
           ),
         ],
       ),
@@ -255,10 +255,9 @@ class DuelHistoryWidget extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         text: TextSpan(
-                          style: TextStyle(
-                            color: theme.textPrimary,
+                          style: AppTypography.bodyStrong.copyWith(
                             fontSize: 14.5,
-                            fontWeight: FontWeight.w800,
+                            color: theme.textPrimary,
                           ),
                           children: [
                             TextSpan(
@@ -270,10 +269,10 @@ class DuelHistoryWidget extends StatelessWidget {
                             ),
                             TextSpan(
                               text: ' vs ',
-                              style: TextStyle(
-                                color: theme.textMuted,
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
+                                color: theme.textMuted,
                               ),
                             ),
                             TextSpan(
@@ -297,10 +296,10 @@ class DuelHistoryWidget extends StatelessWidget {
                           const SizedBox(width: 5),
                           Text(
                             weekLabel,
-                            style: TextStyle(
+                            style: AppTypography.caption.copyWith(
                               fontSize: 11.5,
-                              color: theme.textMuted,
                               fontWeight: FontWeight.w700,
+                              color: theme.textMuted,
                             ),
                           ),
                         ],
@@ -332,9 +331,9 @@ class DuelHistoryWidget extends StatelessWidget {
                       const SizedBox(width: 6),
                       Text(
                         '$winnerXp - $loserXp',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
+                        style: AppTypography.caption.copyWith(
                           fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
                           color: theme.textPrimary,
                         ),
                       ),

@@ -112,11 +112,9 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
             children: [
               Text(
                 sectionTitle,
-                style: TextStyle(
+                style: AppTypography.sectionTitle.copyWith(
                   fontSize: 22,
-                  fontWeight: FontWeight.w900,
                   color: theme.textPrimary,
-                  letterSpacing: -0.7,
                 ),
               ),
               TextButton(
@@ -200,7 +198,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
                             remainingOverdueCount == 1
                                 ? 'Hay 1 tarea atrasada más pendiente.'
                                 : 'Hay $remainingOverdueCount tareas atrasadas más pendientes.',
-                            style: TextStyle(
+                            style: AppTypography.caption.copyWith(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                               color: theme.textSecondary,
@@ -601,19 +599,17 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
               children: [
                 Text(
                   t.familyTasksReviewTitle,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
+                  style: AppTypography.sectionTitle.copyWith(
                     color: theme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   t.familyTasksReviewBody(performerName, localizedTitle),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: theme.textSecondary,
+                  style: AppTypography.body.copyWith(
+                    fontWeight: FontWeight.w400,
                     height: 1.35,
+                    color: theme.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -863,11 +859,10 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
               children: [
                 Text(
                   t.familyTasksEmptyTitle,
-                  style: TextStyle(
+                  style: AppTypography.cardTitle.copyWith(
                     fontSize: 14.5,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w800,
                     color: theme.textPrimary,
-                    letterSpacing: -0.2,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -875,10 +870,9 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
                   subtitle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: AppTypography.caption.copyWith(
                     fontSize: 12.5,
                     height: 1.2,
-                    fontWeight: FontWeight.w600,
                     color: theme.textSecondary,
                   ),
                 ),

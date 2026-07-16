@@ -260,9 +260,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
           Center(
             child: Text(
               t.memberOnboardingWelcomeTitle,
-              style: const TextStyle(
-                fontSize: 34,
-                fontWeight: FontWeight.w900,
+              style: AppTypography.heroAmount.copyWith(
                 letterSpacing: -1.4,
                 height: 0.95,
                 color: AppColors.textPrimary,
@@ -274,11 +272,10 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
             child: Text(
               t.memberOnboardingWelcomeSubtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: AppTypography.body.copyWith(
                 fontSize: 16,
                 height: 1.4,
                 color: context.theme.textSecondary.withValues(alpha: 0.9),
-                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -374,9 +371,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
           const SizedBox(height: 10),
           Text(
             t.memberOnboardingTitle,
-            style: const TextStyle(
-              fontSize: 34,
-              fontWeight: FontWeight.w900,
+            style: AppTypography.heroAmount.copyWith(
               letterSpacing: -1.4,
               height: 0.95,
               color: AppColors.textPrimary,
@@ -385,11 +380,10 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
           const SizedBox(height: 12),
           Text(
             t.memberOnboardingSubtitle,
-            style: TextStyle(
+            style: AppTypography.body.copyWith(
               fontSize: 15.5,
               height: 1.28,
               color: context.theme.textSecondary.withValues(alpha: 0.9),
-              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 28),
@@ -440,11 +434,10 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
       ),
       child: Text(
         text,
-        style: const TextStyle(
+        style: AppTypography.caption.copyWith(
           fontSize: 13,
           fontWeight: FontWeight.w700,
           color: AppColors.primary,
-          letterSpacing: 0.3,
         ),
       ),
     );
@@ -500,19 +493,17 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: AppTypography.sectionTitle.copyWith(
                       fontSize: 19,
-                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     desc,
-                    style: TextStyle(
-                      color:
-                          context.theme.textSecondary.withValues(alpha: 0.84),
-                      fontSize: 14,
+                    style: AppTypography.body.copyWith(
+                      fontWeight: FontWeight.w400,
                       height: 1.35,
+                      color: context.theme.textSecondary.withValues(alpha: 0.84),
                     ),
                   ),
                 ],
@@ -565,9 +556,8 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
         ),
         child: Text(
           text,
-          style: const TextStyle(
+          style: AppTypography.cardTitle.copyWith(
             fontSize: 17,
-            fontWeight: FontWeight.w700,
             letterSpacing: 0.2,
           ),
         ),

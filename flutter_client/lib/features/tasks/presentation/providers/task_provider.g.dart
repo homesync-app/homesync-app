@@ -169,7 +169,7 @@ final class TaskCategoryFilterProvider
 }
 
 String _$taskCategoryFilterHash() =>
-    r'cfb2706997f9c31a24af8668e7ca7239d7dff5f0';
+    r'84f331d2a6742654645977cc883f6e78066cff67';
 
 abstract class _$TaskCategoryFilter extends $Notifier<Set<String>> {
   Set<String> build();
@@ -315,13 +315,27 @@ abstract class _$Tasks extends $AsyncNotifier<List<TaskModel>> {
   }
 }
 
+/// Tareas filtradas por categoría. La búsqueda de texto NO vive acá: se
+/// aplica en la pantalla contra el título localizado (titleKey → ARB), que es
+/// lo que el usuario realmente ve — matchear `title` crudo rompía la búsqueda
+/// en cualquier locale distinto del español.
+
 @ProviderFor(filteredTasks)
 final filteredTasksProvider = FilteredTasksProvider._();
+
+/// Tareas filtradas por categoría. La búsqueda de texto NO vive acá: se
+/// aplica en la pantalla contra el título localizado (titleKey → ARB), que es
+/// lo que el usuario realmente ve — matchear `title` crudo rompía la búsqueda
+/// en cualquier locale distinto del español.
 
 final class FilteredTasksProvider extends $FunctionalProvider<
     AsyncValue<List<TaskModel>>,
     AsyncValue<List<TaskModel>>,
     AsyncValue<List<TaskModel>>> with $Provider<AsyncValue<List<TaskModel>>> {
+  /// Tareas filtradas por categoría. La búsqueda de texto NO vive acá: se
+  /// aplica en la pantalla contra el título localizado (titleKey → ARB), que es
+  /// lo que el usuario realmente ve — matchear `title` crudo rompía la búsqueda
+  /// en cualquier locale distinto del español.
   FilteredTasksProvider._()
       : super(
           from: null,
@@ -356,7 +370,7 @@ final class FilteredTasksProvider extends $FunctionalProvider<
   }
 }
 
-String _$filteredTasksHash() => r'07b0cf2cbbd5dd576513fdb45d7f8846d5c1daaf';
+String _$filteredTasksHash() => r'58bd8b04f88b446a9309b55aa402a07ff27d5c0f';
 
 @ProviderFor(activeCategories)
 final activeCategoriesProvider = ActiveCategoriesProvider._();

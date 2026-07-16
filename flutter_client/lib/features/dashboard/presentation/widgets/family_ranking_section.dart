@@ -169,10 +169,8 @@ class _RankingContent extends StatelessWidget {
             Expanded(
               child: Text(
                 t.familyWeeklyRankingTitle,
-                style: const TextStyle(
+                style: AppTypography.sectionTitle.copyWith(
                   fontSize: 21,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.2,
                 ),
               ),
             ),
@@ -191,11 +189,10 @@ class _RankingContent extends StatelessWidget {
               : leaderName == null || totalPoints == 0
                   ? t.familyWeeklyRankingSubtitle
                   : t.householdSocialHubRankingLeader(leaderName),
-          style: TextStyle(
-            color: theme.textSecondary,
+          style: AppTypography.caption.copyWith(
             fontSize: 13,
-            fontWeight: FontWeight.w600,
             height: 1.35,
+            color: theme.textSecondary,
           ),
         ),
         const SizedBox(height: 14),
@@ -305,8 +302,9 @@ class _RankingContent extends StatelessWidget {
                             : t.householdSocialHubRankingEmptyTab(
                                 tabs[selectedTab],
                               ),
-                        style: TextStyle(
+                        style: AppTypography.caption.copyWith(
                           fontSize: 13,
+                          fontWeight: FontWeight.w500,
                           color: theme.textSecondary,
                         ),
                       ),
@@ -465,11 +463,11 @@ class _RankingRow extends ConsumerWidget {
                       ),
                       child: Text(
                         role,
-                        style: TextStyle(
+                        style: AppTypography.caption.copyWith(
                           fontSize: 10.5,
-                          fontWeight: FontWeight.w800,
-                          color: _roleColor(memberType),
+                          fontWeight: FontWeight.w700,
                           height: 1,
+                          color: _roleColor(memberType),
                         ),
                       ),
                     ),
@@ -526,9 +524,8 @@ class _RankingRow extends ConsumerWidget {
                           ? AppLocalizations.of(context)
                               .householdSocialHubRankingPoints(xp)
                           : '0 pts'),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w700,
                     color: hideLiveScores
                         ? AppColors.accentPurple
                         : xp > 0
@@ -542,9 +539,8 @@ class _RankingRow extends ConsumerWidget {
                 Text(
                   AppLocalizations.of(context)
                       .householdSocialHubRankingTasksCount(tasks),
-                  style: TextStyle(
+                  style: AppTypography.caption.copyWith(
                     fontSize: 10,
-                    fontWeight: FontWeight.w600,
                     color: theme.textMuted,
                   ),
                 ),
@@ -659,7 +655,7 @@ class _RankBadge extends StatelessWidget {
       child: Center(
         child: Text(
           rank.toString(),
-          style: TextStyle(
+          style: AppTypography.caption.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w700,
             color: theme.textSecondary,
@@ -688,11 +684,10 @@ class _HeaderPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: AppColors.primary,
-          fontSize: 12,
-          fontWeight: FontWeight.w900,
+        style: AppTypography.caption.copyWith(
+          fontWeight: FontWeight.w700,
           height: 1,
+          color: AppColors.primary,
         ),
       ),
     );

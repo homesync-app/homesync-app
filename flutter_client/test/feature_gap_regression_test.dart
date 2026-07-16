@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/theme_provider.dart';
+import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/household_model.dart';
@@ -13,34 +15,26 @@ import 'package:homesync_client/features/savings/domain/repositories/savings_rep
 import 'package:homesync_client/features/savings/domain/usecases/add_contribution_usecase.dart';
 import 'package:homesync_client/features/savings/domain/usecases/create_savings_goal_usecase.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
-import 'package:homesync_client/features/settings/domain/repositories/settings_repository.dart';
-import 'package:homesync_client/features/settings/domain/usecases/update_avatar_usecase.dart';
 import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
 import 'package:homesync_client/features/shopping/domain/repositories/shopping_repository.dart';
 import 'package:homesync_client/features/shopping/domain/usecases/add_shopping_item_usecase.dart';
 import 'package:homesync_client/features/shopping/domain/usecases/get_shopping_items_usecase.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class FakeSettingsRepository implements SettingsRepository {
-  String? lastAvatarUrl;
+/// Fake que registra la última llamada a setEnabled sin tocar Firebase/FCM.
+class _RecordingNotificationService extends NotificationService {
+  _RecordingNotificationService()
+      : super(supabaseClient: SupabaseClient('https://qa.local', 'anon'));
+
+  bool? lastSetEnabled;
 
   @override
-  Future<Map<String, dynamic>> resetUserAccount() async => {'success': true};
-
-  @override
-  Future<Map<String, dynamic>> deleteAccount() async => {'success': true};
-
-  @override
-  Future<void> updateAvatar(String avatarUrl) async {
-    lastAvatarUrl = avatarUrl;
+  Future<void> setEnabled(bool enabled) async {
+    lastSetEnabled = enabled;
   }
-
-  @override
-  Future<void> updateFullName(String name) async {}
-
-  @override
-  Future<void> updateNotificationSettings(bool enabled) async {}
 }
 
 class FakeShoppingRepository implements ShoppingRepository {
@@ -237,10 +231,6 @@ class FakeHouseholdRepository implements HouseholdRepository {
       resetAndClearHousehold() async => const Right({});
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> resetUserAccount() async =>
-      const Right({});
-
-  @override
   Future<Either<Failure, void>> updateDefaultSplitRatio(
     String householdId,
     double ratio,
@@ -286,26 +276,33 @@ class FakeHouseholdRepository implements HouseholdRepository {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('Settings', () {
-    test('notificationEnabledProvider toggles state', () {
-      final container = ProviderContainer();
+    test(
+        'notificationEnabledProvider lee el estado persistido y delega '
+        'el toggle en NotificationService', () async {
+      // Regresión: el toggle era un booleano en memoria que arrancaba
+      // siempre en true y jamás llamaba a NotificationService (los push
+      // seguían llegando con el switch apagado).
+      SharedPreferences.setMockInitialValues(
+        {kNotificationsEnabledPrefsKey: false},
+      );
+      final prefs = await SharedPreferences.getInstance();
+      final service = _RecordingNotificationService();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          notificationServiceProvider.overrideWithValue(service),
+        ],
+      );
       addTearDown(container.dispose);
 
-      expect(container.read(notificationEnabledProvider), isTrue);
-
-      container.read(notificationEnabledProvider.notifier).toggle(false);
       expect(container.read(notificationEnabledProvider), isFalse);
-    });
 
-    test('UpdateAvatarUseCase validates empty avatar and delegates valid one',
-        () async {
-      final repository = FakeSettingsRepository();
-      final useCase = UpdateAvatarUseCase(repository);
-
-      expect(() => useCase.execute(''), throwsException);
-
-      await useCase.execute('avatar://premium');
-      expect(repository.lastAvatarUrl, equals('avatar://premium'));
+      await container.read(notificationEnabledProvider.notifier).toggle(true);
+      expect(container.read(notificationEnabledProvider), isTrue);
+      expect(service.lastSetEnabled, isTrue);
     });
   });
 

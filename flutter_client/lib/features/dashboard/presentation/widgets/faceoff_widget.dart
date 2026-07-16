@@ -101,10 +101,10 @@ class AIFaceoffWidget extends ConsumerWidget {
                     const SizedBox(width: 6),
                     Text(
                       t.faceoffWeeklyDuelLabel,
-                      style: const TextStyle(
-                        color: AppColors.iconSage,
+                      style: AppTypography.caption.copyWith(
                         fontSize: 11,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.iconSage,
                       ),
                     ),
                   ],
@@ -113,10 +113,10 @@ class AIFaceoffWidget extends ConsumerWidget {
               const Spacer(),
               Text(
                 _daysRemainingLabel(t),
-                style: TextStyle(
-                  color: theme.textSecondary,
+                style: AppTypography.caption.copyWith(
                   fontSize: 11,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textSecondary,
                 ),
               ),
             ],
@@ -124,12 +124,10 @@ class AIFaceoffWidget extends ConsumerWidget {
           const SizedBox(height: 14),
           Text(
             t.faceoffHiddenScoreTitle,
-            style: TextStyle(
-              color: theme.textPrimary,
+            style: AppTypography.sectionTitle.copyWith(
               fontSize: 23,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.7,
               height: 1.1,
+              color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 20),
@@ -220,10 +218,9 @@ class AIFaceoffWidget extends ConsumerWidget {
       child: Center(
         child: Text(
           'VS',
-          style: TextStyle(
+          style: AppTypography.caption.copyWith(
             fontSize: 11,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.2,
+            fontWeight: FontWeight.w700,
             color: theme.textSecondary,
           ),
         ),
@@ -268,19 +265,19 @@ class AIFaceoffWidget extends ConsumerWidget {
             name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
+            style: AppTypography.cardTitle.copyWith(
               fontSize: 14,
+              fontWeight: FontWeight.w800,
               color: theme.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             isCurrentUser ? t.faceoffYouLabel : t.faceoffPartnerLabel,
-            style: TextStyle(
-              color: isCurrentUser ? accent : theme.textMuted,
+            style: AppTypography.caption.copyWith(
               fontSize: 11,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
+              color: isCurrentUser ? accent : theme.textMuted,
             ),
           ),
           const SizedBox(height: 10),
@@ -303,10 +300,9 @@ class AIFaceoffWidget extends ConsumerWidget {
                 ],
                 Text(
                   showExactXp ? t.faceoffXpValue(xp) : t.faceoffHiddenXp,
-                  style: TextStyle(
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w700,
                     color: accent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ],
@@ -339,10 +335,10 @@ class AIFaceoffWidget extends ConsumerWidget {
           children: [
             Text(
               t.faceoffMyWeekLabel,
-              style: TextStyle(
-                color: theme.textSecondary,
+              style: AppTypography.caption.copyWith(
                 fontSize: 11,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
+                color: theme.textSecondary,
               ),
             ),
             const Spacer(),
@@ -350,10 +346,10 @@ class AIFaceoffWidget extends ConsumerWidget {
               personalRecord > 0
                   ? t.faceoffPersonalRecordChip(personalRecord)
                   : t.faceoffStarterGoalChip(_starterGoalXp),
-              style: TextStyle(
-                color: theme.textMuted,
+              style: AppTypography.caption.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
+                color: theme.textMuted,
               ),
             ),
           ],
@@ -435,10 +431,10 @@ class AIFaceoffWidget extends ConsumerWidget {
       children: [
         Text(
           t.faceoffWeeklyRhythm,
-          style: TextStyle(
-            color: theme.textSecondary,
+          style: AppTypography.caption.copyWith(
             fontSize: 11,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
+            color: theme.textSecondary,
           ),
         ),
         const SizedBox(height: 10),

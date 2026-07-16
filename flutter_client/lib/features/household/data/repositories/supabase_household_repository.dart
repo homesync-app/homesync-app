@@ -300,18 +300,6 @@ class SupabaseHouseholdRepository
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> resetUserAccount() async {
-    return executeWithHandling(
-      () async {
-        final response = await _client.rpc('reset_user_account');
-        return Map<String, dynamic>.from(response);
-      },
-      context: 'SupabaseHouseholdRepository.resetUserAccount',
-      isOnline: _isOnline,
-    );
-  }
-
-  @override
   Future<Either<Failure, void>> removeMember(String userId) async {
     return executeWithHandling(
       () async {

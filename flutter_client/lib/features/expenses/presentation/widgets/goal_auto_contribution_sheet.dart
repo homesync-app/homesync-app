@@ -244,17 +244,18 @@ class _GoalAutoContributionSheetState
                   children: [
                     Text(
                       widget.goal.icon,
-                      style: const TextStyle(fontSize: 24),
+                      style: AppTypography.body.copyWith(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         t.goalAutoTitle,
-                        style: TextStyle(
+                        style: AppTypography.sectionTitle.copyWith(
                           fontSize: 22,
-                          fontWeight: FontWeight.w900,
                           color: theme.textPrimary,
-                          letterSpacing: -0.5,
                         ),
                       ),
                     ),
@@ -272,11 +273,8 @@ class _GoalAutoContributionSheetState
                 const SizedBox(height: 24),
                 Text(
                   t.goalAutoAmountEyebrow,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
+                  style: AppTypography.eyebrow.copyWith(
                     color: theme.textMuted,
-                    letterSpacing: 1,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -285,9 +283,8 @@ class _GoalAutoContributionSheetState
                   controller: _amountController,
                   onChanged: _onAmountChanged,
                   keyboardType: TextInputType.number,
-                  style: TextStyle(
+                  style: AppTypography.heroAmount.copyWith(
                     fontSize: 28,
-                    fontWeight: FontWeight.w900,
                     color: theme.textPrimary,
                   ),
                   decoration: InputDecoration(
@@ -319,11 +316,8 @@ class _GoalAutoContributionSheetState
                 const SizedBox(height: 20),
                 Text(
                   t.goalAutoDayEyebrow,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
+                  style: AppTypography.eyebrow.copyWith(
                     color: theme.textMuted,
-                    letterSpacing: 1,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -382,9 +376,9 @@ class _GoalAutoContributionSheetState
                             ),
                             child: Text(
                               t.goalAutoDisable,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 13,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
@@ -418,9 +412,9 @@ class _GoalAutoContributionSheetState
                                 )
                               : Text(
                                   t.commonSave,
-                                  style: const TextStyle(
+                                  style: AppTypography.cardTitle.copyWith(
                                     fontSize: 15,
-                                    fontWeight: FontWeight.w900,
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
                         ),

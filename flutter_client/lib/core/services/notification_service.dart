@@ -7,6 +7,11 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Clave de SharedPreferences con la preferencia de notificaciones.
+/// La lee este servicio al inicializar y el toggle de Configuración
+/// (notificationEnabledProvider) para reflejar el estado real.
+const String kNotificationsEnabledPrefsKey = 'notifications_enabled';
+
 class NotificationService {
   NotificationService({required SupabaseClient supabaseClient})
       : _supabase = supabaseClient;
@@ -22,7 +27,7 @@ class NotificationService {
     _onNotification = onNotification;
 
     final prefs = await SharedPreferences.getInstance();
-    _isEnabled = prefs.getBool('notifications_enabled') ?? true;
+    _isEnabled = prefs.getBool(kNotificationsEnabledPrefsKey) ?? true;
 
     await _setupRealtimeListener();
     if (!kIsWeb && _isEnabled) {
@@ -35,7 +40,7 @@ class NotificationService {
   Future<void> setEnabled(bool enabled) async {
     _isEnabled = enabled;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('notifications_enabled', enabled);
+    await prefs.setBool(kNotificationsEnabledPrefsKey, enabled);
 
     if (enabled) {
       if (!kIsWeb) {

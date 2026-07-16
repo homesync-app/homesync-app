@@ -118,19 +118,17 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
                 children: [
                   Text(
                     'Ingreso mensual estimado',
-                    style: TextStyle(
+                    style: AppTypography.cardTitle.copyWith(
                       fontSize: 18,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
                       color: theme.textPrimary,
-                      letterSpacing: -0.4,
                     ),
                   ),
                   Text(
                     'Solo para calcular tu balance. No crea movimientos.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: theme.textMuted,
+                    style: AppTypography.caption.copyWith(
                       fontWeight: FontWeight.w500,
+                      color: theme.textMuted,
                     ),
                   ),
                 ],
@@ -140,11 +138,8 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
           const SizedBox(height: 28),
           Text(
             'MONTO NETO MENSUAL',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
+            style: AppTypography.eyebrow.copyWith(
               color: theme.textMuted,
-              letterSpacing: 1.2,
             ),
           ),
           const SizedBox(height: 8),
@@ -154,17 +149,14 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
             ],
-            style: TextStyle(
+            style: AppTypography.heroAmount.copyWith(
               fontSize: 32,
-              fontWeight: FontWeight.w900,
               color: theme.textPrimary,
-              letterSpacing: -1,
             ),
             decoration: InputDecoration(
               prefixText: ref.watch(currencyProvider).inputPrefix(),
-              prefixStyle: TextStyle(
+              prefixStyle: AppTypography.heroAmount.copyWith(
                 fontSize: 32,
-                fontWeight: FontWeight.w900,
                 color: theme.textMuted,
               ),
               hintText: '0',
@@ -175,11 +167,8 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
           const SizedBox(height: 20),
           Text(
             'DÍA DE COBRO',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
+            style: AppTypography.eyebrow.copyWith(
               color: theme.textMuted,
-              letterSpacing: 1.2,
             ),
           ),
           const SizedBox(height: 8),
@@ -210,11 +199,10 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text(
+                  : Text(
                       'Guardar',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
+                      style: AppTypography.cardTitle.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
             ),
@@ -227,10 +215,8 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
                 onPressed: _clear,
                 child: Text(
                   'Quitar ingreso estimado',
-                  style: TextStyle(
+                  style: AppTypography.bodyStrong.copyWith(
                     color: theme.textMuted,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
                   ),
                 ),
               ),
@@ -273,8 +259,7 @@ class _DayPicker extends StatelessWidget {
               ),
               child: Text(
                 '$day',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
+                style: AppTypography.cardTitle.copyWith(
                   fontSize: 15,
                   color: isSelected ? Colors.white : AppColors.success,
                 ),

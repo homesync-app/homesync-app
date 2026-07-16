@@ -224,7 +224,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ),
         title: Text(
           t.authForgotDialogTitle,
-          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 22),
+          style: AppTypography.sectionTitle.copyWith(
+            fontSize: 22,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -232,13 +234,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           children: [
             Text(
               t.authForgotDialogBody,
-              style: TextStyle(
+              style: AppTypography.body.copyWith(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                height: 1.5,
                 color: Theme.of(context)
                     .colorScheme
                     .onSurface
                     .withValues(alpha: 0.7),
-                fontSize: 15,
-                height: 1.5,
               ),
             ),
             const SizedBox(height: 24),
@@ -423,9 +426,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         Text(
           _isSignUpMode ? t.authSignUpTitle : t.authWelcomeTitle,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: AppTypography.heroAmount.copyWith(
             fontSize: 33,
-            fontWeight: FontWeight.w900,
             letterSpacing: -1.3,
             height: 1.05,
             color: theme.colorScheme.onSurface,
@@ -437,11 +439,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           child: Text(
             _isSignUpMode ? t.authSignUpSubtitle : t.authWelcomeSubtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
+            style: AppTypography.body.copyWith(
               fontSize: 14.5,
               fontWeight: FontWeight.w600,
               height: 1.28,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
             ),
           ),
         ),
@@ -569,10 +571,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 padding: const EdgeInsets.fromLTRB(6, 4, 6, 2),
                 child: Text(
                   t.authForgotPasswordLink,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
+                  style: AppTypography.caption.copyWith(
                     fontSize: 13,
-                    color: Color(0xEDEE652B),
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xEDEE652B),
                   ),
                 ),
               ),
@@ -656,11 +658,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           Text(
             t.authTermsAcceptance,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.42),
+            style: AppTypography.caption.copyWith(
               height: 1.5,
-              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.42),
             ),
           ),
         ],
@@ -684,14 +684,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       obscureText: isPassword && _obscurePassword,
       keyboardType: keyboardType,
       textCapitalization: textCapitalization,
-      style: TextStyle(
+      style: AppTypography.cardTitle.copyWith(
         fontSize: 18,
-        fontWeight: FontWeight.w700,
         color: appTheme.textPrimary,
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(
+        hintStyle: AppTypography.body.copyWith(
           fontSize: 16.5,
           fontWeight: FontWeight.w600,
           color: appTheme.textMuted,
@@ -785,10 +784,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             )
           : Text(
               label,
-              style: const TextStyle(
+              style: AppTypography.cardTitle.copyWith(
                 fontSize: 16.2,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.15,
               ),
             ),
     );
@@ -820,11 +817,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           const SizedBox(width: 12),
           Text(
             'Google',
-            style: TextStyle(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+            style: AppTypography.cardTitle.copyWith(
               fontSize: 15.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.1,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
             ),
           ),
         ],
@@ -841,10 +836,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Text(
             AppLocalizations.of(context).authOrContinueWith,
-            style: TextStyle(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
+            style: AppTypography.caption.copyWith(
               fontSize: 12.5,
-              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
             ),
           ),
         ),
@@ -863,10 +857,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       children: [
         Text(
           _isSignUpMode ? t.authToggleHasAccount : t.authToggleNewToApp,
-          style: TextStyle(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.56),
+          style: AppTypography.body.copyWith(
             fontSize: 15,
             fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.56),
           ),
         ),
         InkWell(
@@ -879,10 +873,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             ),
             child: Text(
               _isSignUpMode ? t.authToggleSignInLink : t.authToggleSignUpLink,
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w800,
+              style: AppTypography.cardTitle.copyWith(
                 fontSize: 15,
+                color: AppColors.primary,
               ),
             ),
           ),
@@ -965,9 +958,8 @@ class _PremiumLoadingOverlay extends StatelessWidget {
                         Text(
                           message,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: AppTypography.cardTitle.copyWith(
                             fontSize: 15,
-                            fontWeight: FontWeight.w700,
                             color: theme.colorScheme.onSurface,
                           ),
                         ),

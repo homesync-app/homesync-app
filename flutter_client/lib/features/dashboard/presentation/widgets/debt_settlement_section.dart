@@ -68,17 +68,14 @@ class DebtSettlementSection extends ConsumerWidget {
                   children: [
                     Text(
                       t.settleSectionTitle,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                      style: AppTypography.cardTitle.copyWith(
                         color: theme.textPrimary,
                       ),
                     ),
                     Text(
                       _subtitleText(debts, t),
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
                         fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
                         color: theme.textSecondary,
                       ),
                     ),
@@ -121,9 +118,7 @@ class DebtSettlementSection extends ConsumerWidget {
           Expanded(
             child: Text(
               t.settleAllSettled,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
+              style: AppTypography.bodyStrong.copyWith(
                 color: theme.textPrimary,
               ),
             ),
@@ -187,17 +182,16 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
                       debt.fromName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
                         fontSize: 13,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         color: theme.textPrimary,
                       ),
                     ),
                     Text(
                       t.settlePaysTo(debt.toName),
-                      style: TextStyle(
+                      style: AppTypography.caption.copyWith(
                         fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
                         color: theme.textSecondary,
                       ),
                     ),

@@ -159,11 +159,10 @@ class ActivityChatBubble extends ConsumerWidget {
                         padding: const EdgeInsets.only(bottom: 6),
                         child: Text(
                           isSettlement ? 'Equilibrio' : 'Gasto del hogar',
-                          style: TextStyle(
-                            color: accent.withValues(alpha: 0.85),
-                            fontWeight: FontWeight.w700,
+                          style: AppTypography.caption.copyWith(
                             fontSize: 11,
-                            letterSpacing: -0.1,
+                            fontWeight: FontWeight.w700,
+                            color: accent.withValues(alpha: 0.85),
                           ),
                         ),
                       ),
@@ -172,11 +171,10 @@ class ActivityChatBubble extends ConsumerWidget {
                         padding: const EdgeInsets.only(bottom: 6),
                         child: Text(
                           'Premio canjeado',
-                          style: TextStyle(
-                            color: rewardAccent,
-                            fontWeight: FontWeight.w800,
+                          style: AppTypography.caption.copyWith(
                             fontSize: 11,
-                            letterSpacing: 0.1,
+                            fontWeight: FontWeight.w700,
+                            color: rewardAccent,
                           ),
                         ),
                       ),
@@ -199,12 +197,10 @@ class ActivityChatBubble extends ConsumerWidget {
                             title,
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: theme.textPrimary.withValues(alpha: 0.92),
-                              fontWeight: FontWeight.w800,
+                            style: AppTypography.bodyStrong.copyWith(
                               fontSize: 14.5,
-                              letterSpacing: -0.3,
                               height: 1.2,
+                              color: theme.textPrimary.withValues(alpha: 0.92),
                             ),
                           ),
                         ),
@@ -227,9 +223,8 @@ class ActivityChatBubble extends ConsumerWidget {
                             const SizedBox(width: 4),
                             Text(
                               timeLabel,
-                              style: TextStyle(
+                              style: AppTypography.caption.copyWith(
                                 fontSize: 10,
-                                fontWeight: FontWeight.w600,
                                 color: theme.textMuted,
                               ),
                             ),
@@ -245,7 +240,7 @@ class ActivityChatBubble extends ConsumerWidget {
                         if (xpReward != null && xpReward > 0)
                           _activityMetaPill(
                             label: '$xpReward XP',
-                            color: const Color(0xFFE8943A),
+                            color: AppColors.xpGold,
                             icon: Icons.star_rounded,
                             theme: theme,
                           ),
@@ -253,7 +248,7 @@ class ActivityChatBubble extends ConsumerWidget {
                           _activityMetaPill(
                             label: AppLocalizations.of(context)
                                 .activityCoinsPlus(coinsReward),
-                            color: AppColors.sage,
+                            color: AppColors.coinGreen,
                             icon: Icons.monetization_on_rounded,
                             theme: theme,
                           ),
@@ -313,11 +308,10 @@ class ActivityChatBubble extends ConsumerWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
-              color: color,
+            style: AppTypography.caption.copyWith(
               fontSize: 9.2,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.1,
+              fontWeight: FontWeight.w700,
+              color: color,
             ),
           ),
         ],
