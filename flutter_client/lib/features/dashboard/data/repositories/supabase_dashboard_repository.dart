@@ -311,11 +311,16 @@ class SupabaseDashboardRepository implements DashboardRepository {
       metadata['merchant'],
       metadata['store_name'],
       metadata['place_name'],
+      // El título de la activity ES el título del gasto (lo escriben los RPCs)
+      // y debe ganarle al fallback de categoría: si queda último, un "Netflix"
+      // se muestra como "Ocio y planes" en el feed y en el primer frame del
+      // detalle (que después "salta" al título/color real al enriquecerse).
+      // Los títulos genéricos ('un gasto') ya los descarta el guard de abajo.
+      item['title'],
       metadata['description'],
       item['description'],
       metadata['category_name'],
       metadata['category'],
-      item['title'],
     ];
 
     for (final candidate in candidates) {
