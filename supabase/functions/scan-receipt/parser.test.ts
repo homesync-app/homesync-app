@@ -1,3 +1,5 @@
+// deno-lint-ignore-file no-import-prefix -- el std assert va por URL a proposito:
+// un deno.json en supabase/functions cambiaria el import map de TODAS las funciones desplegadas.
 // Unit tests for the scan-receipt pure parsing layer.
 //
 // Run with:  deno test supabase/functions/scan-receipt/parser.test.ts
