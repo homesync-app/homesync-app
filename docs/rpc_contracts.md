@@ -663,6 +663,43 @@ Ninguno de forma directa (el cliente recibe la notificacion por push/realtime y 
 
 ---
 
+## `save_weekly_duel_result(p_household_id, p_week_start_date, p_winner_user_id, p_winner_name, p_loser_user_id, p_loser_name, p_winner_xp, p_loser_xp)`
+
+Guarda el resultado del duelo semanal en `weekly_duel_history`. Endurecido el 2026-07-19
+(migracion `20260719123000_harden_save_weekly_duel_result`): el server valida y **recalcula**;
+los parametros de ganador/perdedor/XP/nombres que manda el cliente son solo informativos y
+NO se persisten (se mantienen en la firma por compatibilidad con APKs desplegados).
+
+**Inputs**
+
+- `p_household_id uuid`: hogar del duelo. El caller debe ser miembro.
+- `p_week_start_date date`: lunes ISO de la semana. Solo se acepta la semana actual o las 2 previas.
+- Resto de parametros: ignorados (compatibilidad de firma).
+
+**Output**
+
+`jsonb`: `{ success, message }`. Mensajes de rechazo: `No autorizado`, `Semana invalida`
+(no es lunes), `Semana fuera de rango`, `Se necesitan dos miembros para el duelo`.
+
+**Tablas / RPCs**
+
+| objeto | R/W | nota |
+|---|---|---|
+| `public.household_members` | R | validacion de membresia + ranking |
+| `public.users` | R | nombres reales para el historial |
+| `public.ledger_entries` | R | XP semanal (`type='xp_earned'`, `currency='XP'`), misma fuente que `get_weekly_ranking_for_week` |
+| `public.weekly_duel_history` | W | upsert por `(household_id, week_start_date)` |
+
+**Idempotencia**
+
+Si: upsert por `(household_id, week_start_date)`; repetir la llamada re-persiste el mismo
+ranking recalculado.
+
+**Providers a invalidar**
+
+Ninguno obligatorio (el historial se lee via `getWeeklyDuelHistory` on-demand desde
+`weekly_winner_screen` / la card del duelo).
+
 ## Apendice: como agregar una entrada nueva
 
 1. Crear la migration con el RPC (`security definer`, `set search_path = public`, validar `current_app_user_id()`).
