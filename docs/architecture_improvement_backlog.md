@@ -5,7 +5,7 @@ La idea no es hacer todo junto, sino elegir cortes chicos, testeables y con impa
 
 ## Estado actual del backlog
 
-Ultima actualizacion: 2026-06-30 (ver seccion 12 para la sesion de mantenimiento mas reciente).
+Ultima actualizacion: 2026-07-19 (ver seccion 13 para la sesion de produccion mas reciente).
 
 - Hecho: `delete_expense_v1`, `complete_task_v1`, `approve_task_v1`, `reject_task_v1`, `undo_task_completion_v1`.
 - Hecho: `settle_debt_v1` (idempotente por `p_request_id`, titulo UTF-8 corregido, smoke-gateado, contrato en `docs/rpc_contracts.md`).
@@ -332,3 +332,55 @@ analisis en segundos). Todo lo "hecho" quedo en verde por MCP (`No errors`).
   correcto es un `SetupWizardController` (Notifier que sea dueno de `_currentStep` + navegacion),
   refactor deliberado con tests. Otros god files monoliticos: `expenses_screen.dart` (~1959),
   `couple_rewards_screen.dart` (~1828), `admin_workspace_screen.dart` (~1704).
+
+## 13. Sesion de produccion 2026-07-19 (hecho + pendiente supervisado)
+
+Sesion de cierre pre-produccion con verificacion por SQL contra prod (MCP de Supabase).
+
+### Hecho (verificado)
+
+- **Backup**: `develop` pusheado a `origin/develop` (venia 59 commits adelante) + commit
+  del trabajo OCR pendiente (matcher deterministico, parser con tests, OcrInsights admin).
+- **DB / indices**: migracion `20260719120000_fk_covering_indexes` — 34 FKs sin indice
+  cubiertas (advisor `unindexed_foreign_keys`: 34 -> 0). Los indices "unused" NO se
+  borraron a proposito: varios son de features recien lanzadas (dedup OCR, pools,
+  plan_tier) y el advisor no tiene trafico suficiente para ser evidencia.
+- **DB / RLS**: migraciones `20260719120500` + `20260719121500` — politicas SELECT
+  permissive duplicadas consolidadas en 15 tablas (OR literal de las quals, scope
+  `TO authenticated`). Advisor `multiple_permissive_policies`: 26 -> 1 (queda el UPDATE
+  de `household_members`, ver pendientes). Verificado con snapshots por rol
+  (usuario real / admin / anon) byte-identicos antes y despues.
+- **RPC duelo semanal**: `save_weekly_duel_result` endurecido en el lugar
+  (`20260719123000`): membresia obligatoria, semana ISO acotada, ganador/perdedor/XP
+  recalculados del ledger. El payload del cliente ya no se persiste. Contrato agregado
+  a `docs/rpc_contracts.md`. Antes cualquier authenticated podia escribir el historial
+  de cualquier hogar.
+- **flutter analyze**: limpio (0 issues). Los warnings de riverpod_lint (hasMore,
+  keepAlive) NO salen en `flutter analyze`; se miden con `dart run custom_lint`.
+
+### Pendiente que requiere decision/supervision del owner
+
+- **`application_logs` legible por cualquier authenticated** (`qual=true`, ~101k filas).
+  Decidir si debe ser solo-admin. Cambiarlo altera comportamiento: primero confirmar
+  que la app nunca lee esta tabla desde el cliente (grep `application_logs` en
+  `flutter_client/lib`); si solo la lee el panel admin, restringir a
+  `is_current_app_admin()`.
+- **`household_members` UPDATE con 2 politicas permissive**: el unico overlap restante.
+  El OR-merge de UPDATE requiere mergear `USING` y `WITH CHECK` por separado; hacerlo
+  con smoke desde la app (editar rol de un miembro como adulto y como no-admin).
+- **Leaked password protection** (Auth -> Settings en el dashboard de Supabase): 1 click
+  del owner. Tambien mover la extension `pg_net` fuera de `public` cuando haya ventana.
+- **Cuentas QA en prod**: `admin@homesync.qa` (`5ac9da1b-...`) existe en prod con
+  `is_admin=true` y las contrasenias QA viajan como constantes en el binario
+  (`admin_testing_config.dart`). El gate `enableAdminTesting` exige `!isProduction`,
+  asi que no es backdoor, pero conviene rotar esas credenciales y/o deshabilitar las
+  cuentas QA en Firebase prod.
+- **CI de Flutter apagada**: `flutter_ci.yml.disabled`. Reactivar cuando el tiempo de
+  build sea aceptable; hoy solo corren `tests.yml` y `edge_functions.yml`.
+- **Auditoria SECURITY DEFINER**: 124 funciones ejecutables por authenticated (patron
+  de diseno). Auditar por lotes que todas validen `current_app_user_id()`; el caso
+  `save_weekly_duel_result` demostro que puede haber huecos.
+- **Drenaje l10n**: 322 strings en `test/hardcoded_spanish_baseline.txt` + 102 en el
+  baseline de encoding. Cortes de 20-30 strings por sesion.
+- **`strict-casts: true`**: tarea dedicada (cascada de errores en modelos, requiere
+  restart del analysis server para medir).
