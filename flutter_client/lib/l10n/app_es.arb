@@ -2504,6 +2504,10 @@
       }
     }
   },
+  "expensesFormOcrDuplicate": "Este ticket ya fue escaneado hace poco. Revisá que no cargues el gasto dos veces.",
+  "@expensesFormOcrDuplicate": {
+    "description": "Aviso cuando el servidor detecta que la misma imagen de ticket ya se escaneó con éxito recientemente"
+  },
   "expensesFormOcrLowConfidence": "Ticket difícil de leer; revisá los datos antes de guardar",
   "@expensesFormOcrLowConfidence": {
     "description": "Snackbar warning when OCR confidence is low — user should double-check the prefilled data."

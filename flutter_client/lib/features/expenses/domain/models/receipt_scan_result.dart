@@ -38,6 +38,10 @@ class ReceiptScanResult {
   /// del matcher y la acción final del usuario (confirmed/cancelled).
   final String? logId;
 
+  /// El servidor detectó (por hash de imagen) que este mismo ticket ya se
+  /// escaneó con éxito hace poco en el household. Solo aviso, no bloqueo.
+  final bool isDuplicate;
+
   const ReceiptScanResult({
     this.merchant,
     this.amount,
@@ -48,12 +52,14 @@ class ReceiptScanResult {
     required this.localImagePath,
     required this.confidence,
     this.logId,
+    this.isDuplicate = false,
   });
 
   factory ReceiptScanResult.fromJson(
     Map<String, dynamic> json,
     String localImagePath, {
     String? logId,
+    bool isDuplicate = false,
   }) {
     final raw = (json['items'] as List<dynamic>?)
             ?.map((e) => e.toString().trim())
@@ -73,6 +79,7 @@ class ReceiptScanResult {
       localImagePath: localImagePath,
       confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
       logId: logId,
+      isDuplicate: isDuplicate,
     );
   }
 

@@ -65,6 +65,94 @@ void main() {
       expect(ReceiptMatcher.findPredefined(r'$1.250,00'), isNull);
       expect(ReceiptMatcher.findPredefined(''), isNull);
     });
+
+    // ── Regresiones de falsos positivos vistos en ocr_scan_logs (jul 2026) ──
+    // El Levenshtein laxo (2 ediciones desde 7 chars, sin exigir inicial)
+    // convertía productos bien leídos en sugerencias absurdas.
+
+    test('BANANA matchea Banana, no Manzana (exacto gana a fuzzy)', () {
+      expect(ReceiptMatcher.findPredefined('BANANA')?.name, 'Banana');
+    });
+
+    test('MARGARINA no matchea Mandarina (2 ediciones en 9 chars)', () {
+      expect(
+        ReceiptMatcher.findPredefined('MARGARINA DANICA EQUIL')?.name,
+        isNot('Mandarina'),
+      );
+    });
+
+    test('REPOLLO BLANCO no matchea Pollo (inicial distinta)', () {
+      expect(
+        ReceiptMatcher.findPredefined('REPOLLO BLANCO')?.name,
+        isNot('Pollo'),
+      );
+    });
+
+    test('NUEZ MOSCADA no matchea Tostadas (inicial distinta)', () {
+      expect(
+        ReceiptMatcher.findPredefined('Nuez moscada Alicante molida')?.name,
+        isNot('Tostadas'),
+      );
+    });
+
+    test('yogur MANZ/FR no matchea Manzana (prefijo acotado a diff ≤2)', () {
+      expect(
+        ReceiptMatcher.findPredefined('ACTIVIA SACHET MANZ/FR')?.name,
+        isNot('Manzana'),
+      );
+    });
+
+    test('UVA singular matchea Uvas del catálogo (stem plural de 4 letras)',
+        () {
+      expect(
+        ReceiptMatcher.findPredefined('UVA RED GLOBE X KG (T)')?.name,
+        'Uvas',
+      );
+    });
+
+    test('abreviaturas de ticket se expanden (QSO, GALL, CERV, ANTITRANS)',
+        () {
+      expect(
+        ReceiptMatcher.findPredefined('CERV MICHELOB ULTRA 473')?.name,
+        'Cerveza',
+      );
+      expect(
+        ReceiptMatcher.findPredefined('ANTITRANS DOVE M POMEL 150Cm3')?.name,
+        'Antitranspirante',
+      );
+      expect(
+        ReceiptMatcher.findPredefined('GALL ECOOP DE ARROZ C/ 100Grs')?.name,
+        contains('Galle'),
+      );
+    });
+
+    test('SUAV VIVERE matchea Suavizante vía abreviatura', () {
+      expect(
+        ReceiptMatcher.findPredefined('SUAV VIVERE CLAS MAS I 900Cm3')?.name,
+        'Suavizante',
+      );
+    });
+
+    test('el primer token de la línea manda: premezcla no es Pan lactal', () {
+      // "PREMEZCLA S TACC S LACT PAN REP SANTA MA" contiene "pan"+"lact"
+      // pero es una premezcla; el tie-break por primer token evita ofrecer
+      // "Pan lactal".
+      expect(
+        ReceiptMatcher.findPredefined(
+          'PREMEZCLA S TACC S LACT PAN REP SANTA MA',
+        )?.name,
+        isNot('Pan lactal'),
+      );
+    });
+
+    test('garble de OCR con 1 edición y misma inicial sigue matcheando', () {
+      // "SOPAPO COCINA PLASTICO" (garble real de "SOPAPA", visto en logs):
+      // misma inicial, 1 edición → el Levenshtein conservador lo acepta.
+      expect(
+        ReceiptMatcher.findPredefined('SOPAPO COCINA PLASTICO 1Uni')?.name,
+        'Sopapa',
+      );
+    });
   });
 
   group('cleanName', () {
@@ -196,16 +284,27 @@ void main() {
       );
     });
 
-    test('queso específico fuera de catálogo se ofrece, no se descarta', () {
-      // Antes "queso" era genérico ambiguo y "QUESO PORT SALUT" caía en
-      // dropped. Ahora se ofrece como sugerencia ("Queso").
+    test('queso específico resuelve al genérico Queso del catálogo', () {
+      // Historia: "queso" fue genérico ambiguo (caía en dropped), después
+      // pasó a unrecognized, y ahora "Queso" está en el catálogo → los
+      // quesos específicos del ticket se ofrecen como "Queso" directamente.
       final result = resolveScanItems(
         ocrItems: ['QUESO PORT SALUT LA SERENISIMA SIN LACTO'],
         pendingShoppingItems: const [],
         householdId: 'h1',
       );
       expect(result.dropped, isEmpty);
-      expect(result.unrecognized, ['QUESO PORT SALUT LA SERENISIMA SIN LACTO']);
+      expect(result.unrecognized, isEmpty);
+      expect(result.toAddAndMark.map((i) => i.name), ['Queso']);
+    });
+
+    test('abreviatura QSO BARRA resuelve a Queso (14x en logs reales)', () {
+      final result = resolveScanItems(
+        ocrItems: ['QSO BARRA L3N FET FFL 200Grs'],
+        pendingShoppingItems: const [],
+        householdId: 'h1',
+      );
+      expect(result.toAddAndMark.map((i) => i.name), ['Queso']);
     });
 
     test('leche 0% lactosa se detecta como Leche (no se dropea)', () {

@@ -99,6 +99,10 @@ extension _ExpenseFormBuilders on _ExpenseFormSheetState {
       onOcrRevealComplete: _onAmountRevealComplete,
       onScanReceipt:
           _isScanningReceipt ? null : () => _scanReceipt(ImageSource.camera),
+      // Long-press: escanear un ticket ya guardado en la galería.
+      onScanReceiptLongPress:
+          _isScanningReceipt ? null : () => _scanReceipt(ImageSource.gallery),
+      uncertainAmount: _ocrAmountUncertain,
     );
   }
 

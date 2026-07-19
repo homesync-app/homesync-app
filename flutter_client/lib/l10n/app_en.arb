@@ -2472,6 +2472,10 @@
       }
     }
   },
+  "expensesFormOcrDuplicate": "This receipt was already scanned recently. Make sure you're not adding the expense twice.",
+  "@expensesFormOcrDuplicate": {
+    "description": "Warning when the server detects the exact same receipt image was successfully scanned recently"
+  },
   "expensesFormOcrLowConfidence": "Receipt hard to read — check the data before saving",
   "@expensesFormOcrLowConfidence": {
     "description": "Snackbar warning when OCR confidence is low — user should double-check the prefilled data."

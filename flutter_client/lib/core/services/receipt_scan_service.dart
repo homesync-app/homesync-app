@@ -165,6 +165,7 @@ class ReceiptScanService {
       data,
       imageFile.path,
       logId: responseData['logId'] as String?,
+      isDuplicate: responseData['duplicateScan'] as bool? ?? false,
     );
   }
 

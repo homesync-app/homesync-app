@@ -151,6 +151,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   // Telemetría OCR: id de la fila de log para asociar matcher_result + user_action.
   String? _ocrLogId;
   bool _ocrConfirmed = false;
+  // El OCR leyó con baja confianza → borde ámbar en el monto hasta que el
+  // usuario lo edite/revise.
+  bool _ocrAmountUncertain = false;
   // El matcher corre apenas llega el scan, pero el id del log se inserta en
   // paralelo y puede no estar listo todavía. Guardamos el resultado del matcher
   // acá y lo flusheamos en cuanto ambos (id + resultado) estén disponibles, sin
@@ -373,6 +376,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   void _prefillFromScan(ReceiptScanResult result) {
     setState(() {
       _scanResult = result;
+      _ocrAmountUncertain = result.hasLowConfidence && result.amount != null;
 
       final merchant = result.merchant;
       if ((merchant ?? '').isNotEmpty) {
@@ -403,6 +407,18 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         message: t.expensesFormOcrLowConfidence,
         type: AppSnackBarType.warning,
         duration: const Duration(milliseconds: 2400),
+      );
+    }
+
+    // El servidor detectó (hash de imagen) que este ticket exacto ya se
+    // escaneó hace poco: avisar para evitar el gasto duplicado. No bloquea.
+    if (result.isDuplicate && mounted) {
+      final t = AppLocalizations.of(context);
+      AppSnackBar.show(
+        context,
+        message: t.expensesFormOcrDuplicate,
+        type: AppSnackBarType.warning,
+        duration: const Duration(milliseconds: 3200),
       );
     }
   }
@@ -703,12 +719,20 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(userBalanceProvider);
 
-      // Telemetría OCR: el usuario confirmó el gasto.
+      // Telemetría OCR: el usuario confirmó el gasto. Registramos también lo
+      // que quedó guardado (monto/categoría) para medir precisión del OCR
+      // contra ai_amount/ai_category desde el panel admin.
       if (_ocrLogId != null) {
         _ocrConfirmed = true;
+        final ocrAmount = _scanResult?.amount;
         OcrLogService(Supabase.instance.client).updateUserAction(
           logId: _ocrLogId!,
           action: 'confirmed',
+          finalAmount: amountParsed,
+          finalCategory: _selectedCategory?['id'] as String?,
+          amountEdited: ocrAmount != null
+              ? (amountParsed - ocrAmount).abs() > 0.009
+              : null,
         );
       }
 
@@ -1094,6 +1118,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   void _onAmountChanged(String val) {
+    // El usuario tocó el monto: si estaba resaltado por baja confianza del
+    // OCR, ya lo revisó — apagar el ámbar.
+    if (_ocrAmountUncertain) {
+      setState(() => _ocrAmountUncertain = false);
+    }
     String clean = val.replaceAll('.', '').replaceAll(',', '');
     if (clean.isEmpty) {
       _amountController.text = '';

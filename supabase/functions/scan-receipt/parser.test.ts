@@ -116,9 +116,47 @@ Deno.test("normalizeOcrResult: items trimmed, de-duplicated, capped at 30", () =
     items: ["  Leche ", "Leche", "", "   ", "Pan"],
   });
   assertEquals(r.items, ["Leche", "Pan"]);
+  // Path legado (strings): rawItems espeja items.
+  assertEquals(r.rawItems, ["Leche", "Pan"]);
 
   const many = Array.from({ length: 50 }, (_, i) => `item-${i}`);
   assertEquals(normalizeOcrResult({ items: many }).items.length, 30);
+});
+
+Deno.test("normalizeOcrResult: items {raw, name} separan línea impresa y nombre limpio", () => {
+  const r = normalizeOcrResult({
+    items: [
+      { raw: "QSO BARRA L3N FET FFL", name: "Queso en barra" },
+      { raw: "CERV MICHELOB ULTRA", name: "Cerveza" },
+    ],
+  });
+  assertEquals(r.items, ["Queso en barra", "Cerveza"]);
+  assertEquals(r.rawItems, ["QSO BARRA L3N FET FFL", "CERV MICHELOB ULTRA"]);
+});
+
+Deno.test("normalizeOcrResult: items objeto deduplican por nombre limpio", () => {
+  // Dos líneas distintas del ticket que la IA resuelve al mismo producto.
+  const r = normalizeOcrResult({
+    items: [
+      { raw: "ANTITRANS DOVE M POMEL", name: "Antitranspirante" },
+      { raw: "ANTITRAN DOVE M ROMA", name: "antitranspirante" },
+    ],
+  });
+  assertEquals(r.items, ["Antitranspirante"]);
+  assertEquals(r.rawItems, ["ANTITRANS DOVE M POMEL"]);
+});
+
+Deno.test("normalizeOcrResult: items objeto incompletos caen al campo presente", () => {
+  const r = normalizeOcrResult({
+    items: [
+      { raw: "GALL ECOOP DE ARROZ" }, // sin name → usa raw
+      { name: "Pan lactal" }, // sin raw → usa name
+      { raw: "", name: "" }, // vacío → se descarta
+      42 as unknown as string, // basura → se descarta
+    ],
+  });
+  assertEquals(r.items, ["GALL ECOOP DE ARROZ", "Pan lactal"]);
+  assertEquals(r.rawItems, ["GALL ECOOP DE ARROZ", "Pan lactal"]);
 });
 
 Deno.test("normalizeOcrResult: merchant trimmed and capped at 100 chars", () => {

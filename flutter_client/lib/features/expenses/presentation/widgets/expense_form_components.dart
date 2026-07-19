@@ -263,6 +263,13 @@ class ExpenseAmountField extends StatefulWidget {
   final VoidCallback? onOcrRevealComplete;
   final VoidCallback? onScanReceipt;
 
+  /// Long-press en el botón de scan: escanear desde la galería.
+  final VoidCallback? onScanReceiptLongPress;
+
+  /// El OCR leyó el ticket con baja confianza: resaltar el campo en ámbar
+  /// hasta que el usuario revise/edite el monto.
+  final bool uncertainAmount;
+
   const ExpenseAmountField({
     super.key,
     required this.controller,
@@ -273,6 +280,8 @@ class ExpenseAmountField extends StatefulWidget {
     this.ocrRevealTrigger = 0,
     this.onOcrRevealComplete,
     this.onScanReceipt,
+    this.onScanReceiptLongPress,
+    this.uncertainAmount = false,
   });
 
   @override
@@ -282,6 +291,7 @@ class ExpenseAmountField extends StatefulWidget {
 class _ExpenseAmountFieldState extends State<ExpenseAmountField>
     with SingleTickerProviderStateMixin {
   late final AnimationController _revealController;
+  final FocusNode _amountFocusNode = FocusNode();
   double _ocrStartAmount = 0;
   double _ocrTargetAmount = 0;
   String _ocrTargetText = '';
@@ -331,6 +341,7 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
   void dispose() {
     _revealController.removeListener(_syncAnimatedOcrAmount);
     _revealController.dispose();
+    _amountFocusNode.dispose();
     super.dispose();
   }
 
@@ -396,7 +407,9 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
         color: theme.surface,
         borderRadius: BorderRadius.circular(AppRadii.xxl),
         border: Border.all(
-          color: theme.border.withValues(alpha: 0.82),
+          color: widget.uncertainAmount
+              ? AppColors.warning.withValues(alpha: 0.55)
+              : theme.border.withValues(alpha: 0.82),
           width: 1,
         ),
         boxShadow: theme.cardShadow,
@@ -404,16 +417,6 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
       child: Stack(
         alignment: Alignment.center,
         children: [
-          if (widget.showScanAction)
-            Positioned(
-              left: 0,
-              top: 34,
-              child: _ReceiptScanButton(
-                isScanningReceipt: widget.isScanningReceipt,
-                hasScanResult: widget.hasScanResult,
-                onTap: widget.onScanReceipt,
-              ),
-            ),
           Column(
             children: [
               Text(
@@ -424,76 +427,103 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
                 ),
               ),
               const SizedBox(height: 8),
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  const SizedBox(width: double.infinity, height: 42),
-                  AnimatedBuilder(
-                    animation: _revealController,
-                    builder: (context, child) {
-                      final curved = Curves.easeOutCubic.transform(
-                        _revealController.value,
-                      );
-                      return Transform.translate(
-                        offset: Offset(0, (1 - curved) * 4),
-                        child: Transform.scale(
-                          scale: 0.985 + curved * 0.015,
-                          child: child,
+              GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: _amountFocusNode.requestFocus,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const SizedBox(width: double.infinity, height: 42),
+                    // Sin top fijo: al posicionar solo `left`, el eje vertical
+                    // hereda el alignment center del Stack de 42px → el botón
+                    // queda siempre a la altura de la línea del monto.
+                    if (widget.showScanAction)
+                      Positioned(
+                        left: 0,
+                        child: _ReceiptScanButton(
+                          isScanningReceipt: widget.isScanningReceipt,
+                          hasScanResult: widget.hasScanResult,
+                          onTap: widget.onScanReceipt,
+                          onLongPress: widget.onScanReceiptLongPress,
                         ),
-                      );
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 10, top: 2),
-                          child: Text(
-                            '\$',
-                            style: AppTypography.sectionTitle.copyWith(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w700,
-                              color: theme.textMuted,
-                            ),
+                      ),
+                    AnimatedBuilder(
+                      animation: _revealController,
+                      builder: (context, child) {
+                        final curved = Curves.easeOutCubic.transform(
+                          _revealController.value,
+                        );
+                        return Transform.translate(
+                          offset: Offset(0, (1 - curved) * 4),
+                          child: Transform.scale(
+                            scale: 0.985 + curved * 0.015,
+                            child: child,
                           ),
-                        ),
-                        SizedBox(
-                          width: 150,
-                          child: TextFormField(
-                            autofocus: true,
-                            controller: widget.controller,
-                            onChanged: widget.onChanged,
-                            keyboardType: TextInputType.number,
-                            style: AppTypography.heroAmount.copyWith(
-                              letterSpacing: -1.2,
-                              color: theme.textPrimary,
-                            ),
-                            textAlign: TextAlign.start,
-                            decoration: InputDecoration(
-                              hintText: '0',
-                              hintStyle: TextStyle(
-                                color: theme.textMuted,
+                        );
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 10, top: 2),
+                            child: Text(
+                              '\$',
+                              style: AppTypography.sectionTitle.copyWith(
+                                fontSize: 26,
                                 fontWeight: FontWeight.w700,
+                                color: theme.textMuted,
                               ),
-                              filled: false,
-                              fillColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              disabledBorder: InputBorder.none,
-                              errorBorder: InputBorder.none,
-                              focusedErrorBorder: InputBorder.none,
-                              isCollapsed: true,
-                              contentPadding: EdgeInsets.zero,
                             ),
                           ),
-                        ),
-                      ],
+                          // IntrinsicWidth: el campo abraza los dígitos, así el
+                          // grupo "$ 123" queda realmente centrado (con ancho
+                          // fijo el hueco vacío del campo corría todo a la
+                          // izquierda y el subrayado quedaba descentrado).
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              minWidth: 28,
+                              maxWidth: 150,
+                            ),
+                            child: IntrinsicWidth(
+                              child: TextFormField(
+                                autofocus: true,
+                                focusNode: _amountFocusNode,
+                                controller: widget.controller,
+                                onChanged: widget.onChanged,
+                                keyboardType: TextInputType.number,
+                                style: AppTypography.heroAmount.copyWith(
+                                  letterSpacing: -1.2,
+                                  color: theme.textPrimary,
+                                ),
+                                textAlign: TextAlign.start,
+                                decoration: InputDecoration(
+                                  hintText: '0',
+                                  hintStyle: TextStyle(
+                                    color: theme.textMuted,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  filled: false,
+                                  fillColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  disabledBorder: InputBorder.none,
+                                  errorBorder: InputBorder.none,
+                                  focusedErrorBorder: InputBorder.none,
+                                  isCollapsed: true,
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 2),
               AnimatedBuilder(
@@ -527,10 +557,14 @@ class _ReceiptScanButton extends StatefulWidget {
   final bool hasScanResult;
   final VoidCallback? onTap;
 
+  /// Long-press: escanear desde la galería (tap = cámara).
+  final VoidCallback? onLongPress;
+
   const _ReceiptScanButton({
     required this.isScanningReceipt,
     required this.hasScanResult,
     required this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -576,6 +610,7 @@ class _ReceiptScanButtonState extends State<_ReceiptScanButton>
 
     return GestureDetector(
       onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,

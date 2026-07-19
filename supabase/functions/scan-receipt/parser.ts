@@ -10,8 +10,26 @@ export interface OcrResult {
   amount: number | null;
   date: string | null;
   category: string | null;
+  /// Nombres limpios de producto (abreviaturas expandidas, sin marca).
+  /// Mismo campo `items` que siempre → los clientes viejos siguen andando,
+  /// solo que ahora reciben nombres mejores para su matcher local.
   items: string[];
+  /// Líneas del ticket tal cual impresas, alineadas 1:1 con `items`.
+  /// Van a ai_raw_items para telemetría/panel admin.
+  rawItems: string[];
   confidence: number;
+}
+
+/// Forma cruda de lo que puede devolver Gemini antes de normalizar.
+/// `items` puede venir como strings (formato viejo / defensivo) o como
+/// objetos {raw, name} (schema actual).
+export interface OcrParsedInput {
+  merchant?: unknown;
+  amount?: unknown;
+  date?: unknown;
+  category?: unknown;
+  items?: unknown;
+  confidence?: unknown;
 }
 
 export const VALID_CATEGORIES = [
@@ -46,7 +64,22 @@ export const RESPONSE_SCHEMA = {
     amount: { type: "number", nullable: true },
     date: { type: "string", nullable: true },
     category: { type: "string", enum: [...VALID_CATEGORIES] },
-    items: { type: "array", items: { type: "string" } },
+    // Cada item trae la línea impresa (raw) Y el nombre limpio (name).
+    // Antes pedíamos solo "nombres limpios" y Gemini a veces devolvía la
+    // abreviatura del ticket tal cual ("GALL ECOOP DE ARROZ") y a veces la
+    // expandía ("Galletas de arroz") — una lotería que el matcher pagaba.
+    items: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          raw: { type: "string" },
+          name: { type: "string" },
+        },
+        required: ["raw", "name"],
+        propertyOrdering: ["raw", "name"],
+      },
+    },
     confidence: { type: "number" },
   },
   required: ["amount", "category", "items", "confidence"],
@@ -92,12 +125,14 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
  * - date: only YYYY-MM-DD strings survive; when `today` is given, future or
  *   absurdly-old dates are also dropped to null
  * - category: must be in VALID_CATEGORIES, else "other"
- * - items: trimmed, de-duplicated, non-empty, capped at 30
+ * - items: accepts strings (legacy) or {raw, name} objects (current schema);
+ *   trimmed, de-duplicated by clean name, non-empty, capped at 30. `items`
+ *   carries the clean names, `rawItems` the printed ticket lines (1:1).
  * - merchant: trimmed, capped at 100 chars, else null
  * - confidence: clamped to [0, 1], defaults to 0
  */
 export function normalizeOcrResult(
-  parsed: Partial<OcrResult>,
+  parsed: OcrParsedInput,
   options: NormalizeOptions = {},
 ): OcrResult {
   const rawAmount = parsed.amount;
@@ -141,14 +176,31 @@ export function normalizeOcrResult(
       ? rawCat
       : "other";
 
-  const rawItems = Array.isArray(parsed.items) ? parsed.items : [];
-  const items = [
-    ...new Set(
-      rawItems
-        .filter((i) => typeof i === "string" && i.trim().length > 0)
-        .map((i) => (i as string).trim()),
-    ),
-  ].slice(0, 30);
+  const itemsIn = Array.isArray(parsed.items) ? parsed.items : [];
+  const items: string[] = [];
+  const rawItems: string[] = [];
+  const seenNames = new Set<string>();
+  for (const it of itemsIn) {
+    let name = "";
+    let raw = "";
+    if (typeof it === "string") {
+      name = it.trim();
+      raw = name;
+    } else if (it && typeof it === "object") {
+      const o = it as { raw?: unknown; name?: unknown };
+      name = typeof o.name === "string" ? o.name.trim() : "";
+      raw = typeof o.raw === "string" ? o.raw.trim() : "";
+      if (!name) name = raw;
+      if (!raw) raw = name;
+    }
+    if (!name) continue;
+    const key = name.toLowerCase();
+    if (seenNames.has(key)) continue;
+    seenNames.add(key);
+    items.push(name);
+    rawItems.push(raw);
+    if (items.length >= 30) break;
+  }
 
   const merchant =
     typeof parsed.merchant === "string" && parsed.merchant.trim().length > 0
@@ -160,5 +212,5 @@ export function normalizeOcrResult(
       ? Math.min(1, Math.max(0, parsed.confidence))
       : 0;
 
-  return { merchant, amount, date, category, items, confidence };
+  return { merchant, amount, date, category, items, rawItems, confidence };
 }

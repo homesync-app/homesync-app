@@ -3874,6 +3874,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get expensesFormOcrDuplicate =>
+      'Este ticket ya fue escaneado hace poco. Revisá que no cargues el gasto dos veces.';
+
+  @override
   String get expensesFormOcrLowConfidence =>
       'Ticket difícil de leer; revisá los datos antes de guardar';
 

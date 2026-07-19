@@ -62,7 +62,19 @@ interface ScanLog {
   matcher_result: MatcherResult | null;
   user_action: string | null;
   tier: string | null;
+  // Precisión del OCR: lo que leyó la IA vs. lo que el usuario guardó.
+  ai_amount: number | null;
+  ai_category: string | null;
+  final_amount: number | null;
+  final_category: string | null;
+  amount_edited: boolean | null;
+  duplicate_of: string | null;
 }
+
+const SCANS_PAGE_SIZE = 50;
+
+const SCAN_COLUMNS =
+  'id, created_at, ai_merchant, ai_confidence, ai_raw_items, matcher_result, user_action, tier, ai_amount, ai_category, final_amount, final_category, amount_edited, duplicate_of';
 
 type Tab = 'scans' | 'unmatched' | 'dropped' | 'manual' | 'stats';
 
@@ -78,6 +90,9 @@ const fmtDate = (iso: string) => {
     return iso;
   }
 };
+
+const fmtMoney = (n: number) =>
+  `$${n.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
 
 const buildPromptUnmatched = (rows: UnmatchedRow[], n: number) => {
   const top = rows.slice(0, n);
@@ -138,6 +153,8 @@ export const OcrInsights = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [copyCount, setCopyCount] = useState(20);
   const [copied, setCopied] = useState(false);
+  const [scansHasMore, setScansHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const loadAll = useCallback(async () => {
     setRefreshing(true);
@@ -146,11 +163,9 @@ export const OcrInsights = () => {
       const [sc, u, d, m, s] = await Promise.all([
         supabase
           .from('ocr_scan_logs')
-          .select(
-            'id, created_at, ai_merchant, ai_confidence, ai_raw_items, matcher_result, user_action, tier',
-          )
+          .select(SCAN_COLUMNS)
           .order('created_at', { ascending: false })
-          .limit(50),
+          .limit(SCANS_PAGE_SIZE),
         supabase.from('v_ocr_unmatched_items').select('*').limit(200),
         supabase.from('v_ocr_dropped_items').select('*').limit(200),
         supabase.from('v_manual_items_no_icon').select('*').limit(200),
@@ -163,7 +178,9 @@ export const OcrInsights = () => {
       if (m.error) throw m.error;
       if (s.error) throw s.error;
 
-      setScans((sc.data ?? []) as ScanLog[]);
+      const scanRows = (sc.data ?? []) as ScanLog[];
+      setScans(scanRows);
+      setScansHasMore(scanRows.length === SCANS_PAGE_SIZE);
       setUnmatched((u.data ?? []) as UnmatchedRow[]);
       setDropped((d.data ?? []) as UnmatchedRow[]);
       setManual((m.data ?? []) as ManualRow[]);
@@ -176,6 +193,28 @@ export const OcrInsights = () => {
       setRefreshing(false);
     }
   }, []);
+
+  // Paginación de scans: trae la página siguiente y la anexa.
+  const loadMoreScans = useCallback(async () => {
+    if (!scans || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const from = scans.length;
+      const { data, error: err } = await supabase
+        .from('ocr_scan_logs')
+        .select(SCAN_COLUMNS)
+        .order('created_at', { ascending: false })
+        .range(from, from + SCANS_PAGE_SIZE - 1);
+      if (err) throw err;
+      const rows = (data ?? []) as ScanLog[];
+      setScans([...scans, ...rows]);
+      setScansHasMore(rows.length === SCANS_PAGE_SIZE);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error desconocido');
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [scans, loadingMore]);
 
   useEffect(() => {
     loadAll();
@@ -345,7 +384,14 @@ ${top.map((r, i) => `${i + 1}. "${r.raw_text}" (${r.occurrences}x)`).join('\n')}
 
         {/* Contenido */}
         <div className="p-5">
-          {tab === 'scans' && <ScansList rows={scans} />}
+          {tab === 'scans' && (
+            <ScansList
+              rows={scans}
+              hasMore={scansHasMore}
+              loadingMore={loadingMore}
+              onLoadMore={loadMoreScans}
+            />
+          )}
           {tab === 'unmatched' && (
             <RawTable rows={unmatched} emptyTitle="No hay items sin catálogo todavía" />
           )}
@@ -539,7 +585,17 @@ const ManualTable = ({
 };
 
 // Lista de scans individuales — muestra la cadena completa: AI raw → matcher.
-const ScansList = ({ rows }: { rows: ScanLog[] | null }) => {
+const ScansList = ({
+  rows,
+  hasMore,
+  loadingMore,
+  onLoadMore,
+}: {
+  rows: ScanLog[] | null;
+  hasMore: boolean;
+  loadingMore: boolean;
+  onLoadMore: () => void;
+}) => {
   if (!rows || rows.length === 0) {
     return (
       <EmptyState
@@ -553,6 +609,15 @@ const ScansList = ({ rows }: { rows: ScanLog[] | null }) => {
       {rows.map((scan) => (
         <ScanCard key={scan.id} scan={scan} />
       ))}
+      {hasMore && (
+        <button
+          onClick={onLoadMore}
+          disabled={loadingMore}
+          className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-sm font-bold text-gray-300 disabled:opacity-50 transition-colors"
+        >
+          {loadingMore ? 'Cargando…' : 'Cargar más scans'}
+        </button>
+      )}
     </div>
   );
 };
@@ -598,6 +663,39 @@ const ScanCard = ({ scan }: { scan: ScanLog }) => {
           <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${actionTone}`}>
             {actionLabel}
           </span>
+          {scan.duplicate_of && (
+            <span
+              className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 font-bold"
+              title="Misma imagen que un scan exitoso previo (48h)"
+            >
+              dup
+            </span>
+          )}
+          {scan.ai_amount != null && (
+            <span
+              className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 font-bold"
+              title="Monto detectado por la IA"
+            >
+              IA {fmtMoney(scan.ai_amount)}
+            </span>
+          )}
+          {/* Precisión del monto: qué guardó el usuario vs. qué leyó la IA */}
+          {scan.final_amount != null &&
+            (scan.amount_edited ? (
+              <span
+                className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-300 font-bold"
+                title="El usuario corrigió el monto que pre-llenó el OCR"
+              >
+                ✎ {fmtMoney(scan.final_amount)}
+              </span>
+            ) : (
+              <span
+                className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 font-bold"
+                title="El usuario guardó el monto tal como lo leyó la IA"
+              >
+                ✓ monto ok
+              </span>
+            ))}
           {scan.tier && (
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-gray-300 font-bold">
               {scan.tier}

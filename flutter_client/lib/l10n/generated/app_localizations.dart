@@ -6183,6 +6183,12 @@ abstract class AppLocalizations {
   /// **'No se pudo leer el ticket: {error}'**
   String expensesFormOcrError(String error);
 
+  /// Aviso cuando el servidor detecta que la misma imagen de ticket ya se escaneó con éxito recientemente
+  ///
+  /// In es, this message translates to:
+  /// **'Este ticket ya fue escaneado hace poco. Revisá que no cargues el gasto dos veces.'**
+  String get expensesFormOcrDuplicate;
+
   /// Snackbar warning when OCR confidence is low — user should double-check the prefilled data.
   ///
   /// In es, this message translates to:

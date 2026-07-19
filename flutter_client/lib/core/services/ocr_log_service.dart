@@ -31,14 +31,25 @@ class OcrLogService {
     }
   }
 
+  /// Registra la acción final del usuario y, al confirmar, los valores que
+  /// realmente guardó en el gasto. Comparar final_amount contra ai_amount
+  /// desde el panel admin mide la precisión real del OCR en el campo que
+  /// más importa: un usuario que corrige el monto a mano en cada scan es un
+  /// scan fallido aunque figure 'confirmed'.
   Future<void> updateUserAction({
     required String logId,
     required String action, // 'confirmed' | 'cancelled'
+    double? finalAmount,
+    String? finalCategory,
+    bool? amountEdited,
   }) async {
     try {
-      await _client
-          .from('ocr_scan_logs')
-          .update({'user_action': action}).eq('id', logId);
+      await _client.from('ocr_scan_logs').update({
+        'user_action': action,
+        if (finalAmount != null) 'final_amount': finalAmount,
+        if (finalCategory != null) 'final_category': finalCategory,
+        if (amountEdited != null) 'amount_edited': amountEdited,
+      }).eq('id', logId);
     } catch (e, st) {
       log.e('[OcrLog] update action failed', error: e, stackTrace: st);
     }

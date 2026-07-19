@@ -5,6 +5,7 @@ import {
   extractJsonString,
   normalizeOcrResult,
   RESPONSE_SCHEMA,
+  type OcrParsedInput,
   type OcrResult,
 } from "./parser.ts";
 
@@ -87,7 +88,10 @@ Reglas para category:
 Otras reglas:
 - amount: el total FINAL efectivamente pagado, después de descuentos y promociones (ej: "2do al 50%"). Si el ticket incluye propina o cargo de servicio en el total impreso, incluilos. Sin signo $, punto como decimal
 - date: formato YYYY-MM-DD. La fecha de HOY es ${todayIso}. La fecha del ticket nunca puede ser futura ni de hace más de un año; si no se ve claramente o es inconsistente, dejá date en null
-- items: nombres limpios de productos, sin precios, cantidades ni códigos
+- items: un objeto por producto del ticket, con dos campos:
+  - raw: la línea del producto TAL CUAL está impresa, sin el precio ni la cantidad (ej: "QSO BARRA L3N FET FFL")
+  - name: el nombre limpio del producto en español, con las abreviaturas del ticket expandidas (QSO → Queso, GALL → Galletitas, CERV → Cerveza, HAMBUR → Hamburguesas, ANTITRANS → Antitranspirante, SUAV → Suavizante), sin marca, sin tamaño, sin códigos (ej: "Queso en barra")
+  - NO incluyas líneas que no sean productos: totales, subtotales, IVA, descuentos, promociones, medios de pago
 - confidence: 0.0 a 1.0 según qué tan legible está el ticket
 - NUNCA inventes datos`;
 }
@@ -318,6 +322,7 @@ Deno.serve(async (req: Request) => {
     let imageBase64: string;
     let mimeType: string;
     let todayLocal: string | null;
+    let binaryBytes: Uint8Array | null = null;
 
     if (contentType.includes("application/json")) {
       const body = await req.json();
@@ -358,6 +363,7 @@ Deno.serve(async (req: Request) => {
       imageBase64 = encodeBase64(bytes);
       mimeType = req.headers.get("x-mime-type") ?? "image/webp";
       todayLocal = req.headers.get("x-today-local");
+      binaryBytes = bytes;
     }
 
     const geminiKey = Deno.env.get("GEMINI_API_KEY");
@@ -366,6 +372,39 @@ Deno.serve(async (req: Request) => {
         JSON.stringify({ error: "GEMINI_API_KEY no configurada" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // ── Detección de ticket duplicado ────────────────────────────────────────
+    // SHA-256 de los bytes recibidos (solo path binario: los legados mandan
+    // base64 y no vale la pena decodificar para esto). Si el mismo household
+    // ya escaneó esta imagen exacta con éxito en las últimas 48h, avisamos al
+    // cliente (duplicateScan) — el 2026-06-07 un mismo ticket se procesó 6
+    // veces contra el endpoint pago de Gemini. Solo aviso, no bloqueo: el
+    // usuario puede tener un motivo legítimo para re-escanear.
+    let imageHash: string | null = null;
+    let duplicateOf: string | null = null;
+    if (binaryBytes != null) {
+      try {
+        const digest = await crypto.subtle.digest("SHA-256", binaryBytes);
+        imageHash = [...new Uint8Array(digest)]
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+        const since = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+        const { data: dup } = await supabase
+          .from("ocr_scan_logs")
+          .select("id")
+          .eq("household_id", householdId)
+          .eq("image_hash", imageHash)
+          .eq("status", "success")
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        duplicateOf = (dup?.id as string | null) ?? null;
+      } catch (e) {
+        // Best-effort: sin hash el scan sigue igual.
+        console.warn("hash/dedup falló (fail-open):", e);
+      }
     }
 
     // ── Registrar el intento ANTES de llamar a Gemini ────────────────────────
@@ -382,6 +421,8 @@ Deno.serve(async (req: Request) => {
           tier,
           status: "pending",
           model: GEMINI_MODEL,
+          image_hash: imageHash,
+          duplicate_of: duplicateOf,
         })
         .select("id")
         .single();
@@ -448,7 +489,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    let parsed: Partial<OcrResult>;
+    let parsed: OcrParsedInput;
     try {
       parsed = JSON.parse(jsonStr);
     } catch (e) {
@@ -465,12 +506,19 @@ Deno.serve(async (req: Request) => {
     });
 
     // Path binario: esta fila es LA fila del scan → completar datos de IA.
+    // ai_raw_items guarda las líneas del ticket tal cual (rawItems); los
+    // nombres limpios viajan en data.items y quedan en matcher_result.
+    // ai_amount/ai_date/ai_category permiten medir precisión contra los
+    // final_* que escribe el cliente al confirmar.
     // Path legado: dejarla como marcador (el cliente inserta la suya con ai_*).
     const aiFields = isBinaryClient
       ? {
           ai_merchant: result.merchant,
           ai_confidence: result.confidence,
-          ai_raw_items: result.items,
+          ai_raw_items: result.rawItems.length > 0 ? result.rawItems : result.items,
+          ai_amount: result.amount,
+          ai_date: result.date,
+          ai_category: result.category,
         }
       : {};
     await finalizeLog(supabase, logId, {
@@ -480,7 +528,14 @@ Deno.serve(async (req: Request) => {
     });
 
     return new Response(
-      JSON.stringify({ data: result, tier, logId: isBinaryClient ? logId : null }),
+      JSON.stringify({
+        data: result,
+        tier,
+        logId: isBinaryClient ? logId : null,
+        // Aviso (no bloqueo): esta imagen exacta ya se escaneó con éxito en
+        // las últimas 48h en este household.
+        duplicateScan: duplicateOf != null,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

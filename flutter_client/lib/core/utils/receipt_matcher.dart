@@ -124,6 +124,35 @@ class ReceiptMatcher {
     'dove', 'nivea', 'colgate', 'gillette', 'milka',
   };
 
+  /// Abreviaturas típicas de tickets argentinos → palabra completa.
+  ///
+  /// Los tickets truncan los nombres a ~22 chars y abrevian el tipo de
+  /// producto ("QSO BARRA", "GALL ECOOP DE ARROZ", "CERV MICHELOB").
+  /// Sin esta tabla dependíamos de la regla de prefijo con diferencias de
+  /// largo enormes ("gall"→"galletas"), que era la misma laxitud que generaba
+  /// falsos positivos. Se expande ANTES de filtrar stopwords y stemmear.
+  /// Solo entradas vistas en tickets reales (panel OCR Insights) u obvias.
+  static const _ticketAbbreviations = {
+    'qso': 'queso',
+    'gall': 'galletitas',
+    'hambur': 'hamburguesas',
+    'hamb': 'hamburguesas',
+    'cerv': 'cerveza',
+    'antitr': 'antitranspirante',
+    'antitran': 'antitranspirante',
+    'antitrans': 'antitranspirante',
+    'suav': 'suavizante',
+    'yog': 'yogur',
+    'lech': 'leche',
+    'mantec': 'manteca',
+    'deterg': 'detergente',
+    'desod': 'desodorante',
+    'gase': 'gaseosa',
+    'azuc': 'azucar',
+    'choc': 'chocolate',
+    'mayon': 'mayonesa',
+  };
+
   /// Genéricos ambiguos: si el OCR no matcheó ningún item del catálogo y el
   /// primer token (ya stemmeado) es uno de estos, NO ofrecemos el producto
   /// como "nuevo detectado". Son palabras que requieren un calificador para
@@ -179,24 +208,39 @@ class ReceiptMatcher {
 
     CatalogEntry? best;
     double bestScore = 0;
-    int bestCatLen = 0; // tie-breaker 1: más tokens = más específico
-    int bestCatChars = 0; // tie-breaker 2: token más largo = más específico
-    // "ANTITRAN DOVE M PEPINO": tanto Antitranspirante como Pepino tienen
-    // 1 token con score 1.0. Gana Antitranspirante porque 'antitranspirante'
-    // (16 chars) > 'pepino' (6 chars).
+    // Tie-breakers, en orden:
+    // 0. Primer token: en tickets AR el tipo de producto va primero
+    //    ("PREMEZCLA S TACC ... PAN REP" es una premezcla, no pan). Si la
+    //    entrada matchea el primer token OCR, le gana a una que matchea
+    //    tokens del medio de la línea.
+    // 1. Más tokens = más específico ("Galletitas dulces" > "Galletitas").
+    // 2. Token más largo = más específico. "ANTITRAN DOVE M PEPINO":
+    //    Antitranspirante y Pepino empatan 1.0; gana 'antitranspirante'
+    //    (16 chars) > 'pepino' (6 chars).
+    bool bestFirstToken = false;
+    int bestCatLen = 0;
+    int bestCatChars = 0;
 
     for (final entry in _flatCatalog) {
       final catTokens = entry.tokens;
       if (catTokens.isEmpty) continue;
       final s = _scoreByCatalog(ocrTokens, catTokens);
+      if (s < bestScore) continue;
+      final firstToken = _tokensMatch(catTokens.first, ocrTokens.first);
       final catChars = catTokens.fold(0, (sum, t) => sum + t.length);
-      if (s > bestScore ||
-          (s == bestScore &&
-              s >= _catalogMinScore &&
-              (catTokens.length > bestCatLen ||
-                  (catTokens.length == bestCatLen &&
-                      catChars > bestCatChars)))) {
+      final isBetter = s > bestScore ||
+          (s >= _catalogMinScore &&
+              _rankBeats(
+                firstToken: firstToken,
+                catLen: catTokens.length,
+                catChars: catChars,
+                bestFirstToken: bestFirstToken,
+                bestCatLen: bestCatLen,
+                bestCatChars: bestCatChars,
+              ));
+      if (isBetter) {
         bestScore = s;
+        bestFirstToken = firstToken;
         bestCatLen = catTokens.length;
         bestCatChars = catChars;
         best = entry;
@@ -204,6 +248,20 @@ class ReceiptMatcher {
     }
 
     return (best != null && bestScore >= _catalogMinScore) ? best : null;
+  }
+
+  /// Compara los tie-breakers de dos entradas con el mismo score.
+  static bool _rankBeats({
+    required bool firstToken,
+    required int catLen,
+    required int catChars,
+    required bool bestFirstToken,
+    required int bestCatLen,
+    required int bestCatChars,
+  }) {
+    if (firstToken != bestFirstToken) return firstToken;
+    if (catLen != bestCatLen) return catLen > bestCatLen;
+    return catChars > bestCatChars;
   }
 
   /// Resultado del match: items de la lista que matchearon y los que no.
@@ -288,13 +346,24 @@ class ReceiptMatcher {
 
   static bool _tokensMatch(String a, String b) {
     if (a == b) return true;
-    // Prefijo: "yogur" matchea "yogurt"
-    if (a.length >= 4 && b.startsWith(a)) return true;
-    if (b.length >= 4 && a.startsWith(b)) return true;
-    // Levenshtein: permite 1 error cada 5 chars (ej: "bonito" ↔ "boniato")
+    // Prefijo acotado a diferencia ≤2: "yogur"↔"yogurt", "gallet"↔"galleta".
+    // Antes cualquier diferencia de largo valía y "manz" (de un yogur
+    // manzana/frutilla) matcheaba "manzana"; las abreviaturas largas reales
+    // ("antitran"→"antitranspirante") ahora las cubre _ticketAbbreviations.
+    final diff = (a.length - b.length).abs();
+    if (diff <= 2) {
+      if (a.length >= 4 && b.startsWith(a)) return true;
+      if (b.length >= 4 && a.startsWith(b)) return true;
+    }
+    // Levenshtein conservador: exige misma inicial y recién permite 2
+    // ediciones en tokens de 10+. Con el presupuesto anterior (2 ediciones
+    // desde 7 chars) pasaban banana→manzana, margarina→mandarina,
+    // repollo→pollo y moscada→tostada — todos vistos en tickets reales.
+    // "bonito"↔"boniato" (1 edición, misma inicial) sigue matcheando.
+    if (a[0] != b[0]) return false;
     final maxLen = a.length > b.length ? a.length : b.length;
     if (maxLen >= 5) {
-      final maxEdits = maxLen <= 6 ? 1 : 2;
+      final maxEdits = maxLen >= 10 ? 2 : 1;
       if (_levenshtein(a, b) <= maxEdits) return true;
     }
     return false;
@@ -362,6 +431,9 @@ class ReceiptMatcher {
     return cleaned
         .split(RegExp(r'\s+'))
         .map((t) => t.trim())
+        // Expandir abreviaturas de ticket ANTES de filtrar/stemmear, así
+        // "qso" pasa a "queso" y entra al pipeline como palabra real.
+        .map((t) => _ticketAbbreviations[t] ?? t)
         .where(
           (t) =>
               t.length >= 3 &&
@@ -376,8 +448,14 @@ class ReceiptMatcher {
   /// (-ito/-ita/-itos/-itas/-cito/-cita/-citos/-citas) para que "Galletitas"
   /// matchee "Galletas" y "Tomates" matchee "Tomate".
   ///
-  /// Conservador: solo toca tokens de 5+ chars y deja margen ≥3 chars tras stem.
+  /// Conservador: solo toca tokens de 5+ chars y deja margen ≥3 chars tras
+  /// stem, con una excepción puntual: plural simple de 4 letras ("uvas" →
+  /// "uva"). Sin esto "UVA RED GLOBE" nunca matcheaba el catálogo "Uvas":
+  /// el prefijo exige 4 chars en el token corto y Levenshtein arranca en 5.
   static String _stem(String token) {
+    if (token.length == 4 && token.endsWith('s') && !token.endsWith('es')) {
+      return token.substring(0, 3);
+    }
     if (token.length < 5) return token;
     const diminutives = [
       'citos',

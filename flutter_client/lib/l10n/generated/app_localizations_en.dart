@@ -3860,6 +3860,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get expensesFormOcrDuplicate =>
+      'This receipt was already scanned recently. Make sure you\'re not adding the expense twice.';
+
+  @override
   String get expensesFormOcrLowConfidence =>
       'Receipt hard to read — check the data before saving';
 
