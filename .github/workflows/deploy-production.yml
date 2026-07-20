@@ -1,4 +1,4 @@
-name: Deploy to Google Play (Internal Testing)
+name: Deploy to Google Play
 
 on:
   push:
@@ -218,13 +218,16 @@ jobs:
           echo "Bug fixes, performance improvements and UI enhancements." > whatsnew/en-US/whatsnew.txt
           echo "Correcciones de errores, mejoras de rendimiento y mejoras de interfaz." > whatsnew/es-AR/whatsnew.txt
 
-      - name: Deploy to Google Play (Internal Testing)
+      # Publicacion directa: track production con status completed. La release
+      # queda enviada a revision de Google y se publica sola al aprobarse
+      # (sin click de promocion en Play Console).
+      - name: Deploy to Google Play (Production)
         if: env.KEYSTORE_AVAILABLE == 'true'
         uses: r0adkll/upload-google-play@v1.1.3
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.blas.homesync
           releaseFiles: flutter_client/build/app/outputs/bundle/release/app-release.aab
-          track: alpha
-          status: draft
+          track: production
+          status: completed
           whatsNewDirectory: whatsnew
