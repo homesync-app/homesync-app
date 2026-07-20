@@ -13,7 +13,6 @@ class MemberModel {
   final String? displayRole;
   final MemberType type;
   final String? avatarUrl;
-  final String? mercadopagoAlias;
   final bool onboardingCompleted;
 
   const MemberModel({
@@ -27,7 +26,6 @@ class MemberModel {
     this.displayRole,
     required this.type,
     this.avatarUrl,
-    this.mercadopagoAlias,
     this.onboardingCompleted = true,
   });
 
@@ -77,7 +75,6 @@ class MemberModel {
       displayRole: rawDisplayRole,
       type: type,
       avatarUrl: userMap?['avatar_url'] as String?,
-      mercadopagoAlias: userMap?['mercadopago_alias'] as String?,
       onboardingCompleted: map['onboarding_completed'] as bool? ?? true,
     );
   }
@@ -96,7 +93,6 @@ class MemberModel {
         'full_name': fullName,
         'email': email,
         'avatar_url': avatarUrl,
-        'mercadopago_alias': mercadopagoAlias,
       },
     };
   }

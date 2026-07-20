@@ -11493,48 +11493,6 @@ abstract class AppLocalizations {
   /// **'{intro}\n\nDescarga la app e ingresa este código: *{code}*\n\n¡Organicemos nuestro hogar juntos!'**
   String invitationShareBody(String intro, String code);
 
-  /// Title of the Mercado Pago payments settings card.
-  ///
-  /// In es, this message translates to:
-  /// **'Pagos y Mercado Pago'**
-  String get mercadopagoTitle;
-
-  /// Subtitle of the Mercado Pago settings card.
-  ///
-  /// In es, this message translates to:
-  /// **'Configura cómo recibir y pagar gastos'**
-  String get mercadopagoSubtitle;
-
-  /// Uppercase label for the Mercado Pago alias/CVU input.
-  ///
-  /// In es, this message translates to:
-  /// **'TU ALIAS O CVU'**
-  String get mercadopagoAliasLabel;
-
-  /// Placeholder example for the Mercado Pago alias field.
-  ///
-  /// In es, this message translates to:
-  /// **'ej: mi.alias.mp'**
-  String get mercadopagoAliasHint;
-
-  /// Helper text under the alias field explaining its purpose.
-  ///
-  /// In es, this message translates to:
-  /// **'Esto permite que tu pareja te transfiera directamente sin comisiones.'**
-  String get mercadopagoAliasHelper;
-
-  /// Snackbar confirming the alias was saved.
-  ///
-  /// In es, this message translates to:
-  /// **'✅ Alias guardado correctamente'**
-  String get mercadopagoAliasSaved;
-
-  /// Info banner stating that payments via Mercado Pago are enabled.
-  ///
-  /// In es, this message translates to:
-  /// **'Pagos habilitados. Podés saldar deudas y aportar a metas directamente con Mercado Pago.'**
-  String get mercadopagoPaymentsEnabled;
-
   /// Title of the avatar picker bottom sheet.
   ///
   /// In es, this message translates to:
@@ -13749,6 +13707,96 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Al {action, select, enable{activar} other{desactivar}} el modo \"Solo finanzas\", TODOS los miembros del hogar verán solo funcionalidades financieras (sin tareas, compras, etc.). Esta configuración se aplica a todo el hogar.'**
   String financeOnlyConfirmBody(String action);
+
+  /// No description provided for @activityFallbackTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Actividad'**
+  String get activityFallbackTitle;
+
+  /// No description provided for @activitySettlementTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Balance equilibrado'**
+  String get activitySettlementTitle;
+
+  /// No description provided for @activityTimeNow.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora'**
+  String get activityTimeNow;
+
+  /// No description provided for @activityTimeMinutesAgo.
+  ///
+  /// In es, this message translates to:
+  /// **'Hace {minutes}m'**
+  String activityTimeMinutesAgo(int minutes);
+
+  /// No description provided for @activityTimeHoursAgo.
+  ///
+  /// In es, this message translates to:
+  /// **'Hace {hours}h'**
+  String activityTimeHoursAgo(int hours);
+
+  /// No description provided for @activityTimeDoneYesterday.
+  ///
+  /// In es, this message translates to:
+  /// **'Hecha ayer'**
+  String get activityTimeDoneYesterday;
+
+  /// No description provided for @activityTimeDoneDaysAgo.
+  ///
+  /// In es, this message translates to:
+  /// **'Hecha hace {days} días'**
+  String activityTimeDoneDaysAgo(int days);
+
+  /// No description provided for @homeLoadingStart.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargando inicio...'**
+  String get homeLoadingStart;
+
+  /// No description provided for @homeLoadingHousehold.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargando hogar...'**
+  String get homeLoadingHousehold;
+
+  /// No description provided for @homeErrorLoadHousehold.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar tu hogar.'**
+  String get homeErrorLoadHousehold;
+
+  /// No description provided for @homeNoHouseholdTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'No perteneces a un hogar todavía'**
+  String get homeNoHouseholdTitle;
+
+  /// No description provided for @homeNoHouseholdSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea o unite a un hogar para comenzar.'**
+  String get homeNoHouseholdSubtitle;
+
+  /// No description provided for @mainIdentityLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'Error de carga de identidad. Intenta salir de la app y volver a entrar:'**
+  String get mainIdentityLoadError;
+
+  /// No description provided for @notifLoveNoteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'💌 Tenés una nota especial'**
+  String get notifLoveNoteTitle;
+
+  /// No description provided for @notifLoveNoteBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu pareja te mandó una nota de amor ❤️'**
+  String get notifLoveNoteBody;
 }
 
 class _AppLocalizationsDelegate

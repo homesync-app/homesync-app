@@ -33,9 +33,10 @@ class SoloActivityTile extends ConsumerWidget {
     final isReward = type == 'reward';
     final isSettlement = activityIsSettlement(data);
 
-    final timeLabel = formatTaskActivityTimeLabel(activity);
+    final timeLabel = formatTaskActivityTimeLabel(t, activity);
     final category = data['category'] as String?;
     final title = activityDisplayTitle(
+      t,
       localizedActivityTitle(t, data),
       category,
     );

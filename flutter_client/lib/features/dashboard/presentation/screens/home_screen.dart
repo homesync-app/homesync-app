@@ -90,22 +90,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return householdAsync.when(
       loading: () => Scaffold(
         backgroundColor: theme.background,
-        body: const AppLoadingState(message: 'Cargando inicio...'),
+        body: AppLoadingState(
+          message: AppLocalizations.of(context).homeLoadingStart,
+        ),
       ),
       error: (e, _) => Scaffold(
         backgroundColor: theme.background,
         body: AppErrorState(
-          message: 'No pudimos cargar tu hogar.\n$e',
+          message: '${AppLocalizations.of(context).homeErrorLoadHousehold}\n$e',
           onRetry: _refreshHome,
         ),
       ),
       data: (householdId) {
         if (householdId == null) {
+          final t = AppLocalizations.of(context);
           return Scaffold(
             backgroundColor: theme.background,
-            body: const AppEmptyState(
-              title: 'No perteneces a un hogar todavía',
-              subtitle: 'Crea o unite a un hogar para comenzar.',
+            body: AppEmptyState(
+              title: t.homeNoHouseholdTitle,
+              subtitle: t.homeNoHouseholdSubtitle,
               icon: Icons.home_work_outlined,
               emoji: '🏠',
               accentColor: AppColors.accentOrange,
@@ -162,7 +165,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (!isForcedByAdmin &&
         householdAsync.isLoading &&
         !householdAsync.hasValue) {
-      return const AppLoadingState(message: 'Cargando hogar...');
+      return AppLoadingState(
+        message: AppLocalizations.of(context).homeLoadingHousehold,
+      );
     }
 
     final caps = ref.watch(householdCapabilitiesProvider);

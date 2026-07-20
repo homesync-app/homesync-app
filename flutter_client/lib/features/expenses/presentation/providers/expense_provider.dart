@@ -623,11 +623,3 @@ class ExpenseFiltersNotifier extends _$ExpenseFiltersNotifier {
   }
 }
 
-@riverpod
-class MercadopagoMovements extends _$MercadopagoMovements {
-  @override
-  Future<List<Map<String, dynamic>>> build() async {
-    // Basic stub for movements
-    return [];
-  }
-}

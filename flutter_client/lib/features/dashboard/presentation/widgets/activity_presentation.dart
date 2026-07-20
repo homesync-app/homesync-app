@@ -39,17 +39,15 @@ double? activityParseAmount(dynamic raw) {
 bool activityIsSettlement(Map<String, dynamic> data) =>
     data['type'] == 'settlement';
 
-/// Titulo unificado de un equilibrio de saldo. Single source of truth para
-/// chat bubble, solo tile, family feed y la hoja de detalle.
-const String activitySettlementTitle = 'Balance equilibrado';
-
 String localizedActivityTitle(
   AppLocalizations t,
   Map<String, dynamic> data,
 ) {
-  if (activityIsSettlement(data)) return activitySettlementTitle;
-  final fallback =
-      data['task_title'] ?? data['title'] ?? data['description'] ?? 'Actividad';
+  if (activityIsSettlement(data)) return t.activitySettlementTitle;
+  final fallback = data['task_title'] ??
+      data['title'] ??
+      data['description'] ??
+      t.activityFallbackTitle;
   return localizedTaskCatalogText(
     t,
     data['title_key'] as String?,
@@ -57,9 +55,13 @@ String localizedActivityTitle(
   );
 }
 
-String activityDisplayTitle(Object? rawTitle, String? category) {
+String activityDisplayTitle(
+  AppLocalizations t,
+  Object? rawTitle,
+  String? category,
+) {
   final normalized = _normalizedText('${rawTitle ?? ''}');
-  if (normalized.isEmpty) return 'Actividad';
+  if (normalized.isEmpty) return t.activityFallbackTitle;
 
   final lower = normalized.toLowerCase();
   final categoryLower = category?.trim().toLowerCase();
@@ -121,15 +123,18 @@ IconData activityIcon(
   }
 }
 
-String formatActivityTimeAgo(DateTime time) {
+String formatActivityTimeAgo(AppLocalizations t, DateTime time) {
   final diff = DateTime.now().difference(time);
-  if (diff.inMinutes < 1) return 'Ahora';
-  if (diff.inMinutes < 60) return 'Hace ${diff.inMinutes}m';
-  if (diff.inHours < 24) return 'Hace ${diff.inHours}h';
-  return DateFormat('d MMM', 'es_AR').format(time);
+  if (diff.inMinutes < 1) return t.activityTimeNow;
+  if (diff.inMinutes < 60) return t.activityTimeMinutesAgo(diff.inMinutes);
+  if (diff.inHours < 24) return t.activityTimeHoursAgo(diff.inHours);
+  return DateFormat('d MMM', t.localeName).format(time);
 }
 
-String formatTaskActivityTimeLabel(Map<String, dynamic> activity) {
+String formatTaskActivityTimeLabel(
+  AppLocalizations t,
+  Map<String, dynamic> activity,
+) {
   final createdAt =
       DateTime.tryParse(activity['created_at'] as String? ?? '')?.toLocal() ??
           DateTime.now();
@@ -151,11 +156,13 @@ String formatTaskActivityTimeLabel(Map<String, dynamic> activity) {
     );
     final dayDiff = createdDay.difference(completedDay).inDays;
     if (dayDiff > 0) {
-      return dayDiff == 1 ? 'Hecha ayer' : 'Hecha hace $dayDiff días';
+      return dayDiff == 1
+          ? t.activityTimeDoneYesterday
+          : t.activityTimeDoneDaysAgo(dayDiff);
     }
   }
 
-  return formatActivityTimeAgo(createdAt);
+  return formatActivityTimeAgo(t, createdAt);
 }
 
 bool _looksLikeDateOnlyTimestamp(dynamic raw) {
@@ -217,7 +224,7 @@ Future<void> openActivityDetail(
           ExpenseModel(
             id: expenseId,
             title: activityIsSettlement(data)
-                ? activitySettlementTitle
+                ? AppLocalizations.of(context).activitySettlementTitle
                 : data['title']?.toString() ?? '',
             titleKey: data['title_key']?.toString(),
             amount: activityParseAmount(data['amount']) ?? 0,

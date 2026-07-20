@@ -188,7 +188,6 @@ class SupabaseHouseholdRepository
                     'email': map['email'],
                     'full_name': map['full_name'],
                     'avatar_url': map['avatar_url'],
-                    'mercadopago_alias': map['mercadopago_alias'],
                   },
                 };
               },
@@ -198,7 +197,7 @@ class SupabaseHouseholdRepository
           final response = await _client
               .from(AppConstants.tableHouseholdMembers)
               .select(
-                'id, user_id, household_id, role, joined_at, display_role, member_type, onboarding_completed, users(full_name, email, avatar_url, mercadopago_alias)',
+                'id, user_id, household_id, role, joined_at, display_role, member_type, onboarding_completed, users(full_name, email, avatar_url)',
               )
               .eq('household_id', effectiveHouseholdId!);
 

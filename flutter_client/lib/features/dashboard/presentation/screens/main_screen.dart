@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
@@ -37,7 +36,6 @@ import 'package:homesync_client/features/onboarding/presentation/widgets/coachma
 import 'package:homesync_client/features/rewards/presentation/providers/couple_duel_stats_provider.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
-import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/screens/shopping_list_screen.dart';
 import 'package:homesync_client/features/stats/domain/utils/weekly_duel_period.dart';
@@ -70,8 +68,6 @@ class _MainScreenState extends ConsumerState<MainScreen>
     with WidgetsBindingObserver {
   bool _showWeeklyWinner = false;
   DateTime? _weeklyWinnerWeekStart;
-  late AppLinks _appLinks;
-  StreamSubscription<Uri>? _linkSubscription;
   ProviderSubscription<TaskRealtimeNotice?>? _taskRealtimeNoticeSubscription;
   ProviderSubscription<AsyncValue<List<Map<String, dynamic>>>>?
       _activityDetailPrefetchSub;
@@ -106,7 +102,6 @@ class _MainScreenState extends ConsumerState<MainScreen>
     _notifService = ref.read(notificationServiceProvider);
     _checkSetup();
     _initNotifications();
-    _initDeepLinks();
     _taskRealtimeNoticeSubscription = ref.listenManual<TaskRealtimeNotice?>(
       taskRealtimeNoticeProvider,
       (previous, next) {
@@ -164,7 +159,6 @@ class _MainScreenState extends ConsumerState<MainScreen>
     for (final controller in _tabScrollControllers.values) {
       controller.dispose();
     }
-    _linkSubscription?.cancel();
     _taskRealtimeNoticeSubscription?.close();
     _activityDetailPrefetchSub?.close();
     for (final sub in _idlePrefetchSubs) {
@@ -192,79 +186,6 @@ class _MainScreenState extends ConsumerState<MainScreen>
     if (state == AppLifecycleState.resumed) {
       _refreshRealtimeBackedData();
     }
-  }
-
-  void _initDeepLinks() {
-    _appLinks = AppLinks();
-    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      log.d('Deep link received: $uri');
-
-      if (uri.scheme != 'homesync') return;
-
-      // 1. Mercado Pago Auth callback
-      if (uri.host == 'auth-complete' || uri.path.contains('auth-complete')) {
-        final status = uri.queryParameters['status'];
-        final message = uri.queryParameters['message'];
-
-        if (status == 'success') {
-          _showToast('✅ Mercado Pago conectado con éxito', Colors.green);
-        } else if (status == 'error') {
-          _showToast(
-            '❌ Error al conectar: ${message ?? "Desconocido"}',
-            Colors.red,
-          );
-        }
-      }
-
-      // 2. Mercado Pago Payment callbacks
-      if (uri.host == 'payment-success' ||
-          uri.path.contains('payment-success')) {
-        _showToast(
-          '🎉 ¡Acreditado! Se verá reflejado en unos segundos.',
-          Colors.green,
-        );
-
-        // Refresh all relevant data
-        ref.invalidate(savingsGoalsProvider);
-        ref.invalidate(expenseBalancesProvider);
-        ref.invalidate(userBalanceProvider);
-        ref.invalidate(recentActivityProvider);
-      }
-
-      if (uri.host == 'payment-failure' ||
-          uri.path.contains('payment-failure')) {
-        _showToast('❌ El pago fue rechazado. Reintentá luego.', Colors.red);
-      }
-
-      if (uri.host == 'payment-pending' ||
-          uri.path.contains('payment-pending')) {
-        _showToast(
-          '⏳ Pago en proceso. Te avisaremos al acreditarse.',
-          Colors.orange,
-        );
-      }
-    });
-  }
-
-  void _showToast(String message, Color color) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.sm),
-        ),
-        margin: const EdgeInsets.all(AppSpacing.md),
-      ),
-    );
   }
 
   // ── Notification initialization ────────────────────────────────────────────
@@ -321,6 +242,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
             ? Map<String, dynamic>.from(ranking.first as Map)
             : null;
         if (top != null && (top['xp_earned'] as num? ?? 0) > 0) {
+          if (!mounted) return;
           setState(() {
             _weeklyWinnerWeekStart = targetWeekStart;
             _showWeeklyWinner = true;
@@ -439,7 +361,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Text(
-                  'Error de carga de identidad. Intenta salir de la app y volver a entrar: $e',
+                  '${AppLocalizations.of(context).mainIdentityLoadError} $e',
                   textAlign: TextAlign.center,
                 ),
               ),

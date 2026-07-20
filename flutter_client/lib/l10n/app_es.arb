@@ -4870,34 +4870,6 @@
       }
     }
   },
-  "mercadopagoTitle": "Pagos y Mercado Pago",
-  "@mercadopagoTitle": {
-    "description": "Title of the Mercado Pago payments settings card."
-  },
-  "mercadopagoSubtitle": "Configura cómo recibir y pagar gastos",
-  "@mercadopagoSubtitle": {
-    "description": "Subtitle of the Mercado Pago settings card."
-  },
-  "mercadopagoAliasLabel": "TU ALIAS O CVU",
-  "@mercadopagoAliasLabel": {
-    "description": "Uppercase label for the Mercado Pago alias/CVU input."
-  },
-  "mercadopagoAliasHint": "ej: mi.alias.mp",
-  "@mercadopagoAliasHint": {
-    "description": "Placeholder example for the Mercado Pago alias field."
-  },
-  "mercadopagoAliasHelper": "Esto permite que tu pareja te transfiera directamente sin comisiones.",
-  "@mercadopagoAliasHelper": {
-    "description": "Helper text under the alias field explaining its purpose."
-  },
-  "mercadopagoAliasSaved": "✅ Alias guardado correctamente",
-  "@mercadopagoAliasSaved": {
-    "description": "Snackbar confirming the alias was saved."
-  },
-  "mercadopagoPaymentsEnabled": "Pagos habilitados. Podés saldar deudas y aportar a metas directamente con Mercado Pago.",
-  "@mercadopagoPaymentsEnabled": {
-    "description": "Info banner stating that payments via Mercado Pago are enabled."
-  },
   "avatarPickerTitle": "Tu Identidad Visual",
   "@avatarPickerTitle": {
     "description": "Title of the avatar picker bottom sheet."
@@ -5496,5 +5468,23 @@
         "type": "String"
       }
     }
-  }
+  },
+  "activityFallbackTitle": "Actividad",
+  "activitySettlementTitle": "Balance equilibrado",
+  "activityTimeNow": "Ahora",
+  "activityTimeMinutesAgo": "Hace {minutes}m",
+  "@activityTimeMinutesAgo": {"placeholders": {"minutes": {"type": "int"}}},
+  "activityTimeHoursAgo": "Hace {hours}h",
+  "@activityTimeHoursAgo": {"placeholders": {"hours": {"type": "int"}}},
+  "activityTimeDoneYesterday": "Hecha ayer",
+  "activityTimeDoneDaysAgo": "Hecha hace {days} d\u00edas",
+  "@activityTimeDoneDaysAgo": {"placeholders": {"days": {"type": "int"}}},
+  "homeLoadingStart": "Cargando inicio...",
+  "homeLoadingHousehold": "Cargando hogar...",
+  "homeErrorLoadHousehold": "No pudimos cargar tu hogar.",
+  "homeNoHouseholdTitle": "No perteneces a un hogar todav\u00eda",
+  "homeNoHouseholdSubtitle": "Crea o unite a un hogar para comenzar.",
+  "mainIdentityLoadError": "Error de carga de identidad. Intenta salir de la app y volver a entrar:",
+  "notifLoveNoteTitle": "\ud83d\udc8c Ten\u00e9s una nota especial",
+  "notifLoveNoteBody": "Tu pareja te mand\u00f3 una nota de amor \u2764\ufe0f"
 }

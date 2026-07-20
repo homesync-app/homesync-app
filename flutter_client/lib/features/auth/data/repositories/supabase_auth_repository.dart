@@ -142,7 +142,7 @@ class SupabaseAuthRepository
       () async {
         final data = await _client
             .from('users')
-            .select('id, full_name, email, avatar_url, mercadopago_alias')
+            .select('id, full_name, email, avatar_url')
             .eq('id', userId)
             .maybeSingle();
 

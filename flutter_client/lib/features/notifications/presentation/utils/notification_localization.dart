@@ -110,6 +110,11 @@ import '../../domain/entities/app_notification.dart';
         title: t.notifWeeklySummaryTitle,
         body: t.notifWeeklySummaryBody,
       );
+    case 'love_note':
+      return (
+        title: t.notifLoveNoteTitle,
+        body: t.notifLoveNoteBody,
+      );
     case 'planned_payment_upcoming':
       final title = str('expense_title');
       final formattedAmount = amount('amount');

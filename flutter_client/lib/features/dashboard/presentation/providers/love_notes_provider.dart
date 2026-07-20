@@ -3,12 +3,15 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/dashboard/domain/models/love_note_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoveNotesNotifier extends AsyncNotifier<List<LoveNoteModel>> {
-  final _supabase = Supabase.instance.client;
   RealtimeChannel? _channel;
+
+  SupabaseClient get _supabase => ref.read(supabaseClientProvider);
 
   @override
   Future<List<LoveNoteModel>> build() async {
@@ -42,8 +45,18 @@ class LoveNotesNotifier extends AsyncNotifier<List<LoveNoteModel>> {
             value: currentUserId,
           ),
           callback: (payload) {
-            final newNote = LoveNoteModel.fromJson(payload.newRecord);
-            state = AsyncData([newNote, ...state.value ?? []]);
+            // Un payload con forma inesperada no debe tirar una excepcion no
+            // capturada en el zone del canal realtime.
+            try {
+              final newNote = LoveNoteModel.fromJson(payload.newRecord);
+              state = AsyncData([newNote, ...state.value ?? []]);
+            } catch (error, stackTrace) {
+              log.w(
+                'love_notes realtime payload invalido',
+                error: error,
+                stackTrace: stackTrace,
+              );
+            }
           },
         )
         .subscribe();

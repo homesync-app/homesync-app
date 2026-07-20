@@ -35,11 +35,13 @@ class ActivityChatBubble extends ConsumerWidget {
     // activity_presentation.dart).
     final isSettlement = activityIsSettlement(data);
 
-    final timeLabel = formatTaskActivityTimeLabel(activity);
+    final t = AppLocalizations.of(context);
+    final timeLabel = formatTaskActivityTimeLabel(t, activity);
 
     final category = data['category'] as String?;
     final title = activityDisplayTitle(
-      localizedActivityTitle(AppLocalizations.of(context), data),
+      t,
+      localizedActivityTitle(t, data),
       category,
     );
     final userName = (data['user_name'] as String?)?.trim();

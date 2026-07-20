@@ -8,7 +8,6 @@ class UserModel {
   final String email;
   final String? fullName;
   final String? avatarUrl;
-  final String? mercadopagoAlias;
   final bool isAdmin;
 
   const UserModel({
@@ -16,7 +15,6 @@ class UserModel {
     required this.email,
     this.fullName,
     this.avatarUrl,
-    this.mercadopagoAlias,
     this.isAdmin = false,
   });
 
@@ -28,7 +26,6 @@ class UserModel {
       email: json['email'] as String? ?? '',
       fullName: json['full_name'] as String?,
       avatarUrl: json['avatar_url'] as String?,
-      mercadopagoAlias: json['mercadopago_alias'] as String?,
       isAdmin: json['is_admin'] as bool? ?? false,
     );
   }

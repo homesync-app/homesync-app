@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as dev;
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -10,6 +11,24 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/dashboard/domain/recent_activity_merge.dart';
 import 'package:homesync_client/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+/// Firma de contenido de una lista de actividades del feed. Dos listas con la
+/// misma firma son visualmente idénticas: id + type + created_at capturan
+/// altas, bajas y reordenamientos (las filas del feed son inmutables una vez
+/// creadas; una edición de gasto genera invalidaciones aparte).
+String recentActivitySignature(List<Map<String, dynamic>> activities) {
+  final buffer = StringBuffer();
+  for (final activity in activities) {
+    buffer
+      ..write(activity['id'])
+      ..write('|')
+      ..write(activity['type'])
+      ..write('|')
+      ..write(activity['created_at'])
+      ..write(';');
+  }
+  return buffer.toString();
+}
 
 class SupabaseDashboardRepository implements DashboardRepository {
   final SupabaseClient _client;
@@ -34,12 +53,19 @@ class SupabaseDashboardRepository implements DashboardRepository {
     RealtimeChannel? channel;
     Timer? debounce;
     var disposed = false;
+    String? lastEmittedSignature;
 
     Future<void> emitLatest() async {
       if (disposed) return;
       try {
         final activities = await getRecentActivity(householdId, userId);
         if (!disposed && !controller.isClosed) {
+          // El poll de respaldo reemite la misma lista cada 15-60s; sin esta
+          // firma cada tick propaga una lista nueva y el Home visible
+          // reconstruye la sección de actividad aunque nada haya cambiado.
+          final signature = recentActivitySignature(activities);
+          if (signature == lastEmittedSignature) return;
+          lastEmittedSignature = signature;
           controller.add(activities);
         }
       } catch (error, stackTrace) {
@@ -273,9 +299,11 @@ class SupabaseDashboardRepository implements DashboardRepository {
           // que atañe a ambos miembros.
           final shouldShow = isShared || isGift;
 
-          dev.log(
-            'Activity Filter Trace [Expense]: title="${data['title']}", isShared=$isShared, isGift=$isGift, creatorId=$creatorId, currentUserId=$userId, results SHOW=$shouldShow',
-          );
+          if (kDebugMode) {
+            dev.log(
+              'Activity Filter Trace [Expense]: title="${data['title']}", isShared=$isShared, isGift=$isGift, creatorId=$creatorId, currentUserId=$userId, results SHOW=$shouldShow',
+            );
+          }
 
           return shouldShow;
         }
@@ -297,8 +325,11 @@ class SupabaseDashboardRepository implements DashboardRepository {
       );
       return activities;
     } catch (e) {
+      // Propagar en vez de devolver []: una falla de DB debe verse como estado
+      // de error (o caer al bootstrap en recentActivityProvider), no como
+      // "no hay actividad". El stream la captura en emitLatest via addError.
       dev.log('Error fetching activities: $e');
-      return [];
+      rethrow;
     }
   }
 

@@ -11,7 +11,7 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_presentation.dart'
     show
         activityIsSettlement,
-        activitySettlementTitle,
+        formatActivityTimeAgo,
         formatTaskActivityTimeLabel;
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
     show dashboardCategoryAccent;
@@ -29,7 +29,6 @@ import 'package:homesync_client/shared/widgets/animated_amount.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
-import 'package:intl/intl.dart';
 
 class FamilyActivityFeedItem extends ConsumerWidget {
   final Map<String, dynamic> activity;
@@ -60,7 +59,8 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     final createdAt =
         DateTime.tryParse(activity['created_at'] as String? ?? '')?.toLocal() ??
             DateTime.now();
-    final timeLabel = formatTaskActivityTimeLabel(activity);
+    final timeLabel =
+        formatTaskActivityTimeLabel(AppLocalizations.of(context), activity);
 
     final userName = _firstName((data['user_name'] as String?)?.trim());
     final avatarUrl =
@@ -92,7 +92,8 @@ class FamilyActivityFeedItem extends ConsumerWidget {
         userName: userName,
         avatarUrl: avatarUrl,
         detailTitle: detailTitle,
-        timeLabel: _formatTime(createdAt),
+        timeLabel:
+            formatActivityTimeAgo(AppLocalizations.of(context), createdAt),
         xpReward: xpReward,
         coinsReward: coinsReward,
         accent: accent,
@@ -253,7 +254,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
             ExpenseModel(
               id: expenseId,
               title: activityIsSettlement(data)
-                  ? activitySettlementTitle
+                  ? AppLocalizations.of(context).activitySettlementTitle
                   : data['title']?.toString() ?? '',
               titleKey: data['title_key']?.toString(),
               amount: _parseAmount(data['amount']) ?? 0,
@@ -329,24 +330,17 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     BuildContext context,
     Map<String, dynamic> data,
   ) {
-    if (activityIsSettlement(data)) return activitySettlementTitle;
+    final t = AppLocalizations.of(context);
+    if (activityIsSettlement(data)) return t.activitySettlementTitle;
     final fallback = data['task_title'] ??
         data['title'] ??
         data['description'] ??
-        'Actividad';
+        t.activityFallbackTitle;
     return localizedTaskCatalogText(
       AppLocalizations.of(context),
       data['title_key'] as String?,
       fallback.toString(),
     );
-  }
-
-  String _formatTime(DateTime time) {
-    final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) return 'Ahora';
-    if (diff.inMinutes < 60) return 'Hace ${diff.inMinutes}m';
-    if (diff.inHours < 24) return 'Hace ${diff.inHours}h';
-    return DateFormat('d MMM', 'es_AR').format(time);
   }
 
   Future<void> _approvePendingTask(

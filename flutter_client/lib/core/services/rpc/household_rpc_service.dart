@@ -63,7 +63,7 @@ class HouseholdRpcService extends BaseRpcService {
     final response = await client
         .from('household_members')
         .select(
-          'user_id, role, users(full_name, email, avatar_url, mercadopago_alias)',
+          'user_id, role, users(full_name, email, avatar_url)',
         )
         .eq('household_id', householdMember['household_id']);
 

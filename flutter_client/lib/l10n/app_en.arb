@@ -4303,13 +4303,6 @@
   "invitationIntroFriends": "Hi! Join our shared place on HomeSync to organize the flat better.",
   "invitationIntroDefault": "Hi! I'm inviting you to join our household on HomeSync.",
   "invitationShareBody": "{intro}\n\nDownload the app and enter this code: *{code}*\n\nLet's organize our household together!",
-  "mercadopagoTitle": "Payments and Mercado Pago",
-  "mercadopagoSubtitle": "Set up how you receive and pay expenses",
-  "mercadopagoAliasLabel": "YOUR ALIAS OR CVU",
-  "mercadopagoAliasHint": "e.g. my.alias.mp",
-  "mercadopagoAliasHelper": "This lets your partner transfer money to you directly with no fees.",
-  "mercadopagoAliasSaved": "✅ Alias saved successfully",
-  "mercadopagoPaymentsEnabled": "Payments enabled. You can settle debts and contribute to goals directly with Mercado Pago.",
   "avatarPickerTitle": "Your Visual Identity",
   "avatarPickerSubtitle": "Pick an avatar from the collection or create your own",
   "avatarPickerUpdated": "Avatar updated successfully",
@@ -4796,5 +4789,23 @@
         "type": "String"
       }
     }
-  }
+  },
+  "activityFallbackTitle": "Activity",
+  "activitySettlementTitle": "Balance settled",
+  "activityTimeNow": "Now",
+  "activityTimeMinutesAgo": "{minutes}m ago",
+  "@activityTimeMinutesAgo": {"placeholders": {"minutes": {"type": "int"}}},
+  "activityTimeHoursAgo": "{hours}h ago",
+  "@activityTimeHoursAgo": {"placeholders": {"hours": {"type": "int"}}},
+  "activityTimeDoneYesterday": "Done yesterday",
+  "activityTimeDoneDaysAgo": "Done {days} days ago",
+  "@activityTimeDoneDaysAgo": {"placeholders": {"days": {"type": "int"}}},
+  "homeLoadingStart": "Loading home...",
+  "homeLoadingHousehold": "Loading household...",
+  "homeErrorLoadHousehold": "We couldn't load your household.",
+  "homeNoHouseholdTitle": "You don't belong to a household yet",
+  "homeNoHouseholdSubtitle": "Create or join a household to get started.",
+  "mainIdentityLoadError": "Identity load error. Try closing and reopening the app:",
+  "notifLoveNoteTitle": "\ud83d\udc8c You have a special note",
+  "notifLoveNoteBody": "Your partner sent you a love note \u2764\ufe0f"
 }

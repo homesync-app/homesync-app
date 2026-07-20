@@ -7110,29 +7110,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get mercadopagoTitle => 'Payments and Mercado Pago';
-
-  @override
-  String get mercadopagoSubtitle => 'Set up how you receive and pay expenses';
-
-  @override
-  String get mercadopagoAliasLabel => 'YOUR ALIAS OR CVU';
-
-  @override
-  String get mercadopagoAliasHint => 'e.g. my.alias.mp';
-
-  @override
-  String get mercadopagoAliasHelper =>
-      'This lets your partner transfer money to you directly with no fees.';
-
-  @override
-  String get mercadopagoAliasSaved => '✅ Alias saved successfully';
-
-  @override
-  String get mercadopagoPaymentsEnabled =>
-      'Payments enabled. You can settle debts and contribute to goals directly with Mercado Pago.';
-
-  @override
   String get avatarPickerTitle => 'Your Visual Identity';
 
   @override
@@ -8417,4 +8394,57 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return 'When you $_temp0 \"Finance only\" mode, ALL household members will see only finance features (no tasks, shopping, etc.). This setting applies to the whole household.';
   }
+
+  @override
+  String get activityFallbackTitle => 'Activity';
+
+  @override
+  String get activitySettlementTitle => 'Balance settled';
+
+  @override
+  String get activityTimeNow => 'Now';
+
+  @override
+  String activityTimeMinutesAgo(int minutes) {
+    return '${minutes}m ago';
+  }
+
+  @override
+  String activityTimeHoursAgo(int hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String get activityTimeDoneYesterday => 'Done yesterday';
+
+  @override
+  String activityTimeDoneDaysAgo(int days) {
+    return 'Done $days days ago';
+  }
+
+  @override
+  String get homeLoadingStart => 'Loading home...';
+
+  @override
+  String get homeLoadingHousehold => 'Loading household...';
+
+  @override
+  String get homeErrorLoadHousehold => 'We couldn\'t load your household.';
+
+  @override
+  String get homeNoHouseholdTitle => 'You don\'t belong to a household yet';
+
+  @override
+  String get homeNoHouseholdSubtitle =>
+      'Create or join a household to get started.';
+
+  @override
+  String get mainIdentityLoadError =>
+      'Identity load error. Try closing and reopening the app:';
+
+  @override
+  String get notifLoveNoteTitle => '💌 You have a special note';
+
+  @override
+  String get notifLoveNoteBody => 'Your partner sent you a love note ❤️';
 }

@@ -384,3 +384,26 @@ Sesion de cierre pre-produccion con verificacion por SQL contra prod (MCP de Sup
   baseline de encoding. Cortes de 20-30 strings por sesion.
 - **`strict-casts: true`**: tarea dedicada (cascada de errores en modelos, requiere
   restart del analysis server para medir).
+
+### Adenda 2026-07-19 (tarde): dashboard + Mercado Pago
+
+- **Mercado Pago extirpado del cliente**: servicio, providers, deep links de
+  main_screen, DeepLinkService huerfano, MercadopagoSettingsCard (no montada),
+  MercadopagoMovements, campo mercadopagoAlias en modelos/selects, 7 claves ARB
+  y la edge function stub del repo.
+- **PENDIENTE (siguiente ciclo de release)**: dropear `users.mercadopago_alias`
+  y la tabla `mercadopago_connections` en la DB. NO antes: el APK 1.2.4+85
+  desplegado todavia selecciona esa columna (identity/auth/household queries) y
+  el drop romperia su bootstrap. Tambien borrar la function `mercadopago-api`
+  desplegada desde el dashboard de Supabase.
+- **Dashboard endurecido**: dedupe por firma en watchRecentActivity (el Home ya
+  no reconstruye con cada poll), errores propagados en getRecentActivity, trace
+  gateado con kDebugMode, mounted en _checkWeeklyWinner, callback realtime de
+  love_notes protegido y con cliente inyectado.
+- **l10n dashboard**: labels de tiempo del feed, titulo de settlement,
+  'Actividad', estados de home/main y caso love_note en notificaciones ahora
+  via ARB (es/en). Quedan en baseline los fallbacks degradados del repository
+  ('Alguien', 'Tarea del hogar', etc.: ruta rara, requiere pasar el fallback a
+  presentacion) y todo el admin workspace QA-only (nunca visible en prod).
+- **RLS love_notes**: migracion 20260719160000 (destinatario debe ser miembro
+  del hogar; update restringido a is_read por column grant).

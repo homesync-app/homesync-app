@@ -7135,29 +7135,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get mercadopagoTitle => 'Pagos y Mercado Pago';
-
-  @override
-  String get mercadopagoSubtitle => 'Configura cómo recibir y pagar gastos';
-
-  @override
-  String get mercadopagoAliasLabel => 'TU ALIAS O CVU';
-
-  @override
-  String get mercadopagoAliasHint => 'ej: mi.alias.mp';
-
-  @override
-  String get mercadopagoAliasHelper =>
-      'Esto permite que tu pareja te transfiera directamente sin comisiones.';
-
-  @override
-  String get mercadopagoAliasSaved => '✅ Alias guardado correctamente';
-
-  @override
-  String get mercadopagoPaymentsEnabled =>
-      'Pagos habilitados. Podés saldar deudas y aportar a metas directamente con Mercado Pago.';
-
-  @override
   String get avatarPickerTitle => 'Tu Identidad Visual';
 
   @override
@@ -8446,4 +8423,57 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return 'Al $_temp0 el modo \"Solo finanzas\", TODOS los miembros del hogar verán solo funcionalidades financieras (sin tareas, compras, etc.). Esta configuración se aplica a todo el hogar.';
   }
+
+  @override
+  String get activityFallbackTitle => 'Actividad';
+
+  @override
+  String get activitySettlementTitle => 'Balance equilibrado';
+
+  @override
+  String get activityTimeNow => 'Ahora';
+
+  @override
+  String activityTimeMinutesAgo(int minutes) {
+    return 'Hace ${minutes}m';
+  }
+
+  @override
+  String activityTimeHoursAgo(int hours) {
+    return 'Hace ${hours}h';
+  }
+
+  @override
+  String get activityTimeDoneYesterday => 'Hecha ayer';
+
+  @override
+  String activityTimeDoneDaysAgo(int days) {
+    return 'Hecha hace $days días';
+  }
+
+  @override
+  String get homeLoadingStart => 'Cargando inicio...';
+
+  @override
+  String get homeLoadingHousehold => 'Cargando hogar...';
+
+  @override
+  String get homeErrorLoadHousehold => 'No pudimos cargar tu hogar.';
+
+  @override
+  String get homeNoHouseholdTitle => 'No perteneces a un hogar todavía';
+
+  @override
+  String get homeNoHouseholdSubtitle =>
+      'Crea o unite a un hogar para comenzar.';
+
+  @override
+  String get mainIdentityLoadError =>
+      'Error de carga de identidad. Intenta salir de la app y volver a entrar:';
+
+  @override
+  String get notifLoveNoteTitle => '💌 Tenés una nota especial';
+
+  @override
+  String get notifLoveNoteBody => 'Tu pareja te mandó una nota de amor ❤️';
 }

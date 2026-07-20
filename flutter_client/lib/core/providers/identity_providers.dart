@@ -104,7 +104,6 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
       'full_name': AdminTestingConfig.adminDisplayName,
       'email': AdminTestingConfig.adminEmail,
       'avatar_url': AdminTestingConfig.adminAvatar,
-      'mercadopago_alias': null,
       'is_admin': true,
     };
   }
@@ -122,7 +121,7 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final client = ref.read(supabaseClientProvider);
   return await client
       .from('users')
-      .select('id, full_name, email, avatar_url, mercadopago_alias, is_admin')
+      .select('id, full_name, email, avatar_url, is_admin')
       .eq('id', userId)
       .maybeSingle();
 });
