@@ -3559,6 +3559,7 @@
     }
   },
   "faceoffWeeklyRhythm": "Weekly rhythm",
+  "weekDayInitials": "M,T,W,T,F,S,S",
   "faceoffMyWeekLabel": "Your week",
   "@faceoffMyWeekLabel": {
     "description": "Label of the personal weekly XP progress bar on the duel card."

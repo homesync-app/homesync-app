@@ -9267,6 +9267,12 @@ abstract class AppLocalizations {
   /// **'Ritmo semanal'**
   String get faceoffWeeklyRhythm;
 
+  /// Comma-separated single-letter weekday initials, Monday first (7 items). Shared by the weekly duel rhythm row and the schedule dialog day pickers.
+  ///
+  /// In es, this message translates to:
+  /// **'L,M,X,J,V,S,D'**
+  String get weekDayInitials;
+
   /// Label of the personal weekly XP progress bar on the duel card.
   ///
   /// In es, this message translates to:

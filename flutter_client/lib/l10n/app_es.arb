@@ -3609,6 +3609,10 @@
     }
   },
   "faceoffWeeklyRhythm": "Ritmo semanal",
+  "weekDayInitials": "L,M,X,J,V,S,D",
+  "@weekDayInitials": {
+    "description": "Comma-separated single-letter weekday initials, Monday first (7 items). Shared by the weekly duel rhythm row and the schedule dialog day pickers."
+  },
   "faceoffMyWeekLabel": "Tu semana",
   "@faceoffMyWeekLabel": {
     "description": "Label of the personal weekly XP progress bar on the duel card."

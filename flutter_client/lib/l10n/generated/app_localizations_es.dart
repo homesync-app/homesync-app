@@ -5788,6 +5788,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get faceoffWeeklyRhythm => 'Ritmo semanal';
 
   @override
+  String get weekDayInitials => 'L,M,X,J,V,S,D';
+
+  @override
   String get faceoffMyWeekLabel => 'Tu semana';
 
   @override

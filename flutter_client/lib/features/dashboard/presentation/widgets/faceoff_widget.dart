@@ -422,7 +422,7 @@ class AIFaceoffWidget extends ConsumerWidget {
     List<int> xpByDay,
   ) {
     final theme = context.theme;
-    final days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+    final days = t.weekDayInitials.split(',');
     final today = DateTime.now().weekday;
     final maxDayXp = xpByDay.fold(0, (max, xp) => xp > max ? xp : max);
 

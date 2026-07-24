@@ -58,7 +58,8 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   int? _selectedMonthlyDay;
   String? _selectedAssignedTo;
 
-  final List<String> _dayNames = const ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+  List<String> get _dayNames =>
+      AppLocalizations.of(context).weekDayInitials.split(',');
 
   @override
   void initState() {
