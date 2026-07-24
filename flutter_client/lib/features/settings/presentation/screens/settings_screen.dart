@@ -379,7 +379,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       // que deben pedirle a sus padres que activen el plan.
       onLockedTap: isMinor
           ? _showMinorPremiumSnackbar
-          : () => PremiumPaywall.show(context),
+          : () => PremiumPaywall.show(context, source: 'settings'),
       onPaletteTap: (palette) {
         AppHaptics.tap();
         ref.read(primaryColorProvider.notifier).setColor(palette.primary);
@@ -555,7 +555,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           onTapPlans: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
+              MaterialPageRoute(
+                builder: (_) =>
+                    const PremiumPaywallScreen(source: 'settings_premium_card'),
+              ),
             );
           },
           onFeedbackTap: isPremium

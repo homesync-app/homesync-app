@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/theme/household_design.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -130,25 +133,48 @@ class SetupWizardState {
 @riverpod
 class SetupWizardController extends _$SetupWizardController {
   @override
-  SetupWizardState build() => const SetupWizardState();
+  SetupWizardState build() {
+    // El primer paso no pasa por _goToStep, así que se emite acá. En microtask
+    // para no disparar un side effect durante el build del provider.
+    scheduleMicrotask(() => _trackStep(SetupStep.valueProp));
+    return const SetupWizardState();
+  }
 
   // -- Navegación -----------------------------------------------------------
 
-  void goTo(SetupStep step) => state = state.copyWith(step: step);
+  /// Único punto de cambio de paso. Todas las transiciones pasan por acá para
+  /// que `setup_step_viewed` no dependa de que alguien se acuerde de emitirlo
+  /// al agregar un salto nuevo: es lo que permite ver en qué paso se cae la
+  /// gente antes de rediseñar el wizard.
+  void _goToStep(SetupStep step) {
+    state = state.copyWith(step: step);
+    _trackStep(step);
+  }
+
+  void _trackStep(SetupStep step) {
+    unawaited(
+      ref.read(analyticsServiceProvider).trackSetupStepViewed(
+            step: step.name,
+            mode: state.selectedMode ?? 'undecided',
+          ),
+    );
+  }
+
+  void goTo(SetupStep step) => _goToStep(step);
 
   /// Vuelve un paso (comportamiento del botón back del sistema).
   /// Devuelve `false` si ya está en el primer paso (el pop debe propagarse).
   bool goBack() {
     if (state.step == SetupStep.valueProp) return false;
-    state = state.copyWith(step: SetupStep.values[state.step.index - 1]);
+    _goToStep(SetupStep.values[state.step.index - 1]);
     return true;
   }
 
   /// Confirmar el modo elegido: solo saltea equipo/invitación/config y va
   /// directo a tareas; el resto pasa a elegir crear/unirse.
   void confirmMode() {
-    state = state.copyWith(
-      step: state.selectedMode == 'solo'
+    _goToStep(
+      state.selectedMode == 'solo'
           ? SetupStep.taskSelection
           : SetupStep.teamOptions,
     );
@@ -156,8 +182,8 @@ class SetupWizardController extends _$SetupWizardController {
 
   /// Continuar desde la pantalla del código de invitación.
   void continueFromInviteCode() {
-    state = state.copyWith(
-      step: state.selectedMode == 'solo'
+    _goToStep(
+      state.selectedMode == 'solo'
           ? SetupStep.taskSelection
           : SetupStep.householdConfig,
     );

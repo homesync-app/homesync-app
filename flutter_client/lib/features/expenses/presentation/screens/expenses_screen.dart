@@ -429,7 +429,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final t = AppLocalizations.of(context);
     final isPremium = ref.read(premiumProvider).value ?? false;
     if (!isPremium) {
-      PremiumPaywall.show(context);
+      PremiumPaywall.show(context, source: 'expenses_export');
       return;
     }
 

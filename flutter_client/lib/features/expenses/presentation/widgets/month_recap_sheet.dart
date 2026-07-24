@@ -56,7 +56,7 @@ class MonthRecapBanner extends ConsumerWidget {
         onTap: () {
           final isPremium = ref.read(premiumProvider).value ?? false;
           if (!isPremium) {
-            PremiumPaywall.show(context);
+            PremiumPaywall.show(context, source: 'month_recap');
             return;
           }
           AppHaptics.selection();

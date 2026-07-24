@@ -120,7 +120,7 @@ class SubscriptionSuggestionBanner extends ConsumerWidget {
                     final isPremium =
                         ref.read(premiumProvider).value ?? false;
                     if (!isPremium) {
-                      PremiumPaywall.show(context);
+                      PremiumPaywall.show(context, source: 'subscription_suggestion');
                       return;
                     }
                     AppHaptics.selection();

@@ -42,7 +42,7 @@ class BudgetSection extends ConsumerWidget {
           0,
         ),
         child: _TeaserCard(
-          onTap: () => PremiumPaywall.show(context),
+          onTap: () => PremiumPaywall.show(context, source: 'budgets'),
         ),
       );
     }

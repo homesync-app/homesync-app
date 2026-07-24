@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/service_providers.dart';
+import 'package:homesync_client/core/services/analytics_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -26,7 +28,11 @@ const Map<AvatarMotion, String> _kMascotMotions = {
 const String _kMascotFallback = '$_kMascotDir/premium_orange_cat.webp';
 
 class PremiumPaywallScreen extends ConsumerStatefulWidget {
-  const PremiumPaywallScreen({super.key});
+  const PremiumPaywallScreen({super.key, this.source = 'direct'});
+
+  /// Gate que abrió el paywall. Lo propaga `PremiumPaywall.show`; las
+  /// navegaciones directas quedan como `direct`.
+  final String source;
 
   @override
   ConsumerState<PremiumPaywallScreen> createState() =>
@@ -34,15 +40,42 @@ class PremiumPaywallScreen extends ConsumerStatefulWidget {
 }
 
 class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
+  static const String _kVariant = 'full_screen';
+
+  /// Evita contar como rebote la salida que sigue a una compra o a un restore
+  /// exitoso: `paywall_dismissed` tiene que significar "se fue sin pagar".
+  bool _convertedOrRestored = false;
+
+  /// Se resuelve en initState y NO con `ref.read` dentro de `dispose`: usar
+  /// `ref` mientras el widget se desmonta tira
+  /// `Using "ref" when a widget is about to or has been unmounted is unsafe`.
+  late final AnalyticsService _analytics;
+
   @override
   void initState() {
     super.initState();
+    _analytics = ref.read(analyticsServiceProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(analyticsServiceProvider).trackPaywallOpened(
-            source: 'premium_screen',
-            variant: 'full_screen',
-          );
+      _analytics.trackPaywallOpened(
+        source: widget.source,
+        variant: _kVariant,
+      );
     });
+  }
+
+  @override
+  void dispose() {
+    // En dispose y no en el botón X: el paywall también se cierra con el back
+    // del sistema y con el gesto de swipe, y esos caminos no pasan por la X.
+    if (!_convertedOrRestored) {
+      unawaited(
+        _analytics.trackPaywallDismissed(
+          source: widget.source,
+          variant: _kVariant,
+        ),
+      );
+    }
+    super.dispose();
   }
 
   @override
@@ -51,6 +84,15 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
     final t = AppLocalizations.of(context);
     final productsAsync = ref.watch(premiumProductsProvider);
     final isPremium = ref.watch(premiumProvider).value ?? false;
+
+    // Se escucha el cambio real de entitlement en vez de marcar un flag en cada
+    // handler: la compra y el restore viven en `_PurchasePanelState`, y así el
+    // rebote se calcula bien sin pasar callbacks entre widgets anidados.
+    ref.listen<AsyncValue<bool>>(premiumProvider, (previous, next) {
+      if ((previous?.value ?? false) == false && (next.value ?? false)) {
+        _convertedOrRestored = true;
+      }
+    });
 
     return Scaffold(
       backgroundColor: theme.background,

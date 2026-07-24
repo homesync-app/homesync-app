@@ -3,12 +3,21 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'logger_service.dart';
+import 'posthog_sink.dart';
 
+/// Punto único de instrumentación. Hace fan-out a Firebase Analytics (Play,
+/// Crashlytics) y a PostHog (funnels, retención, cohortes, experimentos).
+///
+/// Las features NUNCA llaman a un SDK de analytics directo: agregan un método
+/// `trackX` acá y lo invocan. Así sumar o sacar un destino es un solo cambio.
 class AnalyticsService {
-  AnalyticsService({FirebaseAnalytics? analytics})
-      : _analyticsOverride = analytics;
+  AnalyticsService({FirebaseAnalytics? analytics, PostHogSink? postHog})
+      : _analyticsOverride = analytics,
+        _postHog = postHog ?? PostHogSink.instance;
 
   final FirebaseAnalytics? _analyticsOverride;
+  final PostHogSink _postHog;
+
   FirebaseAnalytics get _analytics =>
       _analyticsOverride ?? FirebaseAnalytics.instance;
 
@@ -20,6 +29,13 @@ class AnalyticsService {
       'setUserId',
       () => _analytics.setUserId(id: userId),
     );
+    // En PostHog identify y reset no son simétricos: un `identify(null)` no
+    // existe, hay que cortar la sesión explícitamente al desloguear.
+    if (userId == null) {
+      await _postHog.reset();
+    } else {
+      await _postHog.identify(userId);
+    }
   }
 
   Future<void> setUserProperty({
@@ -30,6 +46,11 @@ class AnalyticsService {
       'setUserProperty:$name',
       () => _analytics.setUserProperty(name: name, value: value),
     );
+    if (value != null) {
+      // Super property: viaja en todos los eventos, que es lo que permite
+      // segmentar retención y funnels por modo / premium sin joins.
+      await _postHog.register(name, value);
+    }
   }
 
   Future<void> trackAppOpened({
@@ -58,6 +79,7 @@ class AnalyticsService {
         screenClass: screenClass ?? screenName,
       ),
     );
+    await _postHog.screen(screenName, screenClass: screenClass ?? screenName);
   }
 
   Future<void> trackAuthStarted({
@@ -94,6 +116,83 @@ class AnalyticsService {
       parameters: {
         'method': method,
         'reason': _normalizeParam(reason),
+      },
+    );
+  }
+
+  // --- Funnel de activación -------------------------------------------------
+  // El orden es: auth_sign_up_succeeded → setup_step_viewed (x8) →
+  // setup_completed → invite_sent → invite_accepted →
+  // household_second_member_joined → first_expense_created.
+  // `household_second_member_joined` es LA métrica del negocio: sin segundo
+  // miembro, una app de hogar compartido no tiene producto.
+
+  /// Un paso del wizard quedó a la vista. Emitir en cada avance permite ver en
+  /// qué paso exacto se cae la gente antes de rediseñar nada.
+  Future<void> trackSetupStepViewed({
+    required String step,
+    required String mode,
+  }) async {
+    await logEvent(
+      'setup_step_viewed',
+      parameters: {
+        'step': step,
+        'mode': mode,
+      },
+    );
+  }
+
+  /// El wizard terminó. [joined] distingue al que creó el hogar del que entró
+  /// con código: son dos funnels con motivaciones distintas.
+  Future<void> trackSetupCompleted({
+    required String mode,
+    required bool joined,
+  }) async {
+    await logEvent(
+      'setup_completed',
+      parameters: {
+        'mode': mode,
+        'path': joined ? 'joined' : 'created',
+      },
+    );
+  }
+
+  /// Se compartió el código de invitación. [channel]: whatsapp | share | copy.
+  Future<void> trackInviteSent({
+    required String mode,
+    required String channel,
+  }) async {
+    await logEvent(
+      'invite_sent',
+      parameters: {
+        'mode': mode,
+        'channel': channel,
+      },
+    );
+  }
+
+  /// Alguien entró a un hogar con un código válido.
+  Future<void> trackInviteAccepted({required String mode}) async {
+    await logEvent(
+      'invite_accepted',
+      parameters: {
+        'mode': mode,
+      },
+    );
+  }
+
+  /// El hogar dejó de estar solo. Se emite una única vez por dispositivo:
+  /// mide el hito, no el tamaño del hogar.
+  Future<void> trackHouseholdSecondMemberJoined({
+    required String mode,
+    required int memberCount,
+  }) async {
+    await _trackOnce(
+      storageKey: 'analytics_household_second_member',
+      eventName: 'household_second_member_joined',
+      parameters: {
+        'mode': mode,
+        'member_count': memberCount,
       },
     );
   }
@@ -145,12 +244,32 @@ class AnalyticsService {
     );
   }
 
+  // --- Funnel de monetización -----------------------------------------------
+  // paywall_opened → premium_purchase_started → premium_purchase_completed.
+  // Cada paso tiene su salida (dismissed / cancelled / failed): sin ellas no se
+  // puede distinguir "no le interesó" de "quiso pagar y no pudo".
+
   Future<void> trackPaywallOpened({
     required String source,
     required String variant,
   }) async {
     await logEvent(
       'paywall_opened',
+      parameters: {
+        'source': source,
+        'variant': variant,
+      },
+    );
+  }
+
+  /// El paywall se cerró sin compra. Junto con `paywall_opened` da la tasa de
+  /// rebote por `source`, que es lo que dice qué gate vale la pena empujar.
+  Future<void> trackPaywallDismissed({
+    required String source,
+    required String variant,
+  }) async {
+    await logEvent(
+      'paywall_dismissed',
       parameters: {
         'source': source,
         'variant': variant,
@@ -169,8 +288,56 @@ class AnalyticsService {
     );
   }
 
+  /// Compra confirmada por la tienda. Sin este evento la conversión real es
+  /// inobservable: `purchase_started` solo dice que abrió el diálogo de pago.
+  Future<void> trackPremiumPurchaseCompleted({
+    required String productId,
+  }) async {
+    await logEvent(
+      'premium_purchase_completed',
+      parameters: {
+        'product_id': productId,
+      },
+    );
+  }
+
+  /// El usuario cerró el diálogo de pago. No es un error: es señal de precio,
+  /// de momento o de confianza, y hay que poder separarla de `failed`.
+  Future<void> trackPremiumPurchaseCancelled({
+    required String productId,
+  }) async {
+    await logEvent(
+      'premium_purchase_cancelled',
+      parameters: {
+        'product_id': productId,
+      },
+    );
+  }
+
+  Future<void> trackPremiumPurchaseFailed({
+    required String productId,
+    required String errorCode,
+  }) async {
+    await logEvent(
+      'premium_purchase_failed',
+      parameters: {
+        'product_id': productId,
+        'error_code': errorCode,
+      },
+    );
+  }
+
   Future<void> trackPremiumRestoreStarted() async {
     await logEvent('premium_restore_started');
+  }
+
+  Future<void> trackPremiumRestoreCompleted({required bool restored}) async {
+    await logEvent(
+      'premium_restore_completed',
+      parameters: {
+        'restored': restored,
+      },
+    );
   }
 
   Future<void> trackMainTabOpened({
@@ -220,6 +387,7 @@ class AnalyticsService {
         parameters: sanitized.isEmpty ? null : sanitized,
       ),
     );
+    await _postHog.capture(name, sanitized);
   }
 
   Object? _normalizeValue(Object value) {

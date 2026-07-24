@@ -207,22 +207,40 @@ class PremiumService {
       throw UnsupportedError('RevenueCat is not available on this platform');
     }
 
-    await _analytics.trackPremiumPurchaseStarted(
-      productId: package.storeProduct.identifier,
-    );
+    final productId = package.storeProduct.identifier;
+    await _analytics.trackPremiumPurchaseStarted(productId: productId);
 
     try {
       final result = await rc.Purchases.purchase(
         rc.PurchaseParams.package(package),
       );
-      return _hasPremium(result.customerInfo);
+      final purchased = _hasPremium(result.customerInfo);
+      // El resultado de la compra se trackea SIEMPRE: sin este evento la tasa
+      // de conversión real es inobservable (`purchase_started` solo dice que
+      // se abrió el diálogo de pago de la tienda).
+      if (purchased) {
+        await _analytics.trackPremiumPurchaseCompleted(productId: productId);
+      } else {
+        // La tienda respondió OK pero el entitlement no llegó: ni compra ni
+        // cancelación. Casi siempre es config de RevenueCat, y hay que verlo.
+        await _analytics.trackPremiumPurchaseFailed(
+          productId: productId,
+          errorCode: 'entitlement_missing',
+        );
+      }
+      return purchased;
     } on PlatformException catch (e, stack) {
       final code = rc.PurchasesErrorHelper.getErrorCode(e);
       if (code == rc.PurchasesErrorCode.purchaseCancelledError) {
         log.i('RevenueCat purchase cancelled by user');
+        await _analytics.trackPremiumPurchaseCancelled(productId: productId);
         return false;
       }
       log.e('RevenueCat purchase failed: $e', error: e, stackTrace: stack);
+      await _analytics.trackPremiumPurchaseFailed(
+        productId: productId,
+        errorCode: code.name,
+      );
       rethrow;
     }
   }
@@ -235,8 +253,13 @@ class PremiumService {
 
     await _analytics.trackPremiumRestoreStarted();
     final customerInfo = await rc.Purchases.restorePurchases();
-    if (_hasPremium(customerInfo)) return true;
-    return getPremiumStatus();
+    if (_hasPremium(customerInfo)) {
+      await _analytics.trackPremiumRestoreCompleted(restored: true);
+      return true;
+    }
+    final restored = await getPremiumStatus();
+    await _analytics.trackPremiumRestoreCompleted(restored: restored);
+    return restored;
   }
 
   Future<void> togglePremiumMock() async {

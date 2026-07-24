@@ -489,6 +489,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         }
       }
 
+      // Entró alguien con un código válido: cierra el loop de la invitación.
+      // Se emite antes de los invalidates para no perderlo si algún refresh
+      // falla y el flujo cae al catch.
+      final joinedMode = _wizardState.selectedMode ?? 'unknown';
+      unawaited(
+        ref.read(analyticsServiceProvider).trackInviteAccepted(mode: joinedMode),
+      );
+      unawaited(
+        ref
+            .read(analyticsServiceProvider)
+            .trackSetupCompleted(mode: joinedMode, joined: true),
+      );
+
       ref.invalidate(householdIdProvider);
       ref.invalidate(userProfileProvider);
       ref.invalidate(currentHouseholdProvider);
@@ -738,6 +751,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       ref.invalidate(householdMembersProvider);
       ref.invalidate(memberOnboardingProvider);
 
+      unawaited(
+        ref.read(analyticsServiceProvider).trackSetupCompleted(
+              mode: _wizardState.selectedMode ?? 'unknown',
+              joined: false,
+            ),
+      );
+
       if (!widget.isAdminPreview) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('setup_completed', true);
@@ -846,6 +866,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   void _copyCode() {
     if (_myInviteCode == null) return;
     Clipboard.setData(ClipboardData(text: _myInviteCode!));
+    _trackInviteSent('copy');
     AppHaptics.selection();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -857,8 +878,20 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     );
   }
 
+  /// `invite_sent` es el primer paso del loop viral: sin él no se puede saber
+  /// si el problema es que no invitan o que la invitación no convierte.
+  void _trackInviteSent(String channel) {
+    unawaited(
+      ref.read(analyticsServiceProvider).trackInviteSent(
+            mode: _wizardState.selectedMode ?? 'unknown',
+            channel: channel,
+          ),
+    );
+  }
+
   Future<void> _shareViaWhatsApp() async {
     if (_myInviteCode == null) return;
+    _trackInviteSent('whatsapp');
     final t = AppLocalizations.of(context);
 
     final intro = switch (_wizardState.selectedMode) {

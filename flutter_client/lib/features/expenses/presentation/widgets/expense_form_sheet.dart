@@ -1230,7 +1230,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               isPremium ? const [] : _scanResult?.detectedItems ?? [],
           onTap: isPremium
               ? () => _showShoppingItemsSelector(context)
-              : () => PremiumPaywall.show(context),
+              : () => PremiumPaywall.show(context, source: 'expense_form'),
           // Solo permitimos limpiar/quitar si hubo scan (caso tipico:
           // el usuario escaneó pero el ticket no es de un super → quita todo).
           onClearAll: _scanResult != null

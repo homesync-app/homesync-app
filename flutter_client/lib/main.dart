@@ -23,6 +23,7 @@ import 'package:homesync_client/core/services/breadcrumb_service.dart';
 import 'package:homesync_client/core/services/concept_icons.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
+import 'package:homesync_client/core/services/posthog_sink.dart';
 import 'package:homesync_client/core/services/premium_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_system_ui.dart';
@@ -34,7 +35,9 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/dashboard/presentation/screens/main_screen.dart';
 // Prefetching Providers
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/household/domain/models/household_model.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/data/shopping_icons_remote.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
@@ -43,6 +46,7 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:posthog_flutter/posthog_flutter.dart' show PosthogObserver;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -172,6 +176,11 @@ void main() async {
   } catch (e) {
     log.e('Firebase initialization failed', error: e);
   }
+
+  // PostHog: fuera del camino crítico. Arranca en paralelo con Supabase y se
+  // espera recién antes de runApp, igual que el warm-up de GoogleSignIn. Si
+  // falla, PostHogSink queda inerte y la app sigue sin analytics de producto.
+  final postHogFuture = PostHogSink.instance.setup();
 
   // Inicialización de Supabase + auth/rpc. Si no hay red la SDK reintenta
   // internamente; este try/catch protege el arranque para que un fallo de
@@ -311,7 +320,11 @@ void main() async {
     );
   };
 
-  await Future.wait([dateFormattingFuture, googleSignInWarmupFuture]);
+  await Future.wait([
+    dateFormattingFuture,
+    googleSignInWarmupFuture,
+    postHogFuture,
+  ]);
   final prefs = await prefsFuture;
 
   runApp(
@@ -438,6 +451,9 @@ class _MyAppState extends ConsumerState<MyApp> {
   late final FirebaseAnalyticsObserver _analyticsObserver;
   final RouteObserver<ModalRoute<void>> _breadcrumbObserver =
       BreadcrumbRouteObserver();
+  // Emite `$screen` en cada push/pop de ruta nombrada. Es lo que alimenta los
+  // reportes de navegación y "última pantalla antes de abandonar" en PostHog.
+  final PosthogObserver _postHogObserver = PosthogObserver();
 
   // GlobalKey so we can imperatively navigate from outside the build() method.
   static final _navigatorKey = GlobalKey<NavigatorState>();
@@ -453,6 +469,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     }
     ref.read(authBootstrapProvider);
     unawaited(_configureAnalytics());
+    _wireAnalyticsContext();
 
     if (AppEnvironment.adminTestingAutoLogin) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -513,6 +530,70 @@ class _MyAppState extends ConsumerState<MyApp> {
         );
       },
       warnAfterMs: 800,
+    );
+  }
+
+  /// Mantiene al día las dimensiones con las que se segmenta TODO el análisis
+  /// (retención por modo, conversión por tamaño de hogar) y emite el hito de
+  /// negocio `household_second_member_joined`.
+  ///
+  /// Va acá y no en las features por dos razones: es un solo lugar para
+  /// cambiar, y `listenManual` mantiene vivos providers auto-dispose que un
+  /// `read` fire-and-forget dejaría morir antes de resolver.
+  void _wireAnalyticsContext() {
+    final analytics = ref.read(analyticsServiceProvider);
+
+    ref.listenManual<AsyncValue<HouseholdModel?>>(
+      currentHouseholdProvider,
+      (_, next) {
+        final household = next.value;
+        if (household == null) return;
+        unawaited(
+          analytics.setUserProperty(
+            name: 'household_mode',
+            value: household.householdType,
+          ),
+        );
+      },
+    );
+
+    ref.listenManual<AsyncValue<List<MemberModel>>>(
+      householdMembersProvider,
+      (_, next) {
+        final members = next.value;
+        if (members == null || members.isEmpty) return;
+        unawaited(
+          analytics.setUserProperty(
+            name: 'member_count',
+            value: '${members.length}',
+          ),
+        );
+        if (members.length >= 2) {
+          final mode =
+              ref.read(currentHouseholdProvider).value?.householdType ??
+                  'unknown';
+          unawaited(
+            analytics.trackHouseholdSecondMemberJoined(
+              mode: mode,
+              memberCount: members.length,
+            ),
+          );
+        }
+      },
+    );
+
+    ref.listenManual<AsyncValue<bool>>(
+      premiumProvider,
+      (_, next) {
+        final isPremium = next.value;
+        if (isPremium == null) return;
+        unawaited(
+          analytics.setUserProperty(
+            name: 'is_premium',
+            value: '$isPremium',
+          ),
+        );
+      },
     );
   }
 
@@ -769,6 +850,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       navigatorKey: _navigatorKey,
       navigatorObservers: [
         if (Firebase.apps.isNotEmpty) _analyticsObserver,
+        if (PostHogSink.instance.isReady) _postHogObserver,
         _breadcrumbObserver,
       ],
       theme: AppTheme.lightTheme(customPrimary: customPrimary),

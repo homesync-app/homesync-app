@@ -101,6 +101,31 @@ class AppEnvironment {
     );
   }
 
+  // --- PostHog (product analytics) ---
+  // El project token es público por diseño, igual que la publishable key de
+  // Supabase: solo habilita ingestión de eventos, nunca lectura. Se deja como
+  // default para que staging y los builds locales reporten sin configurar nada.
+  static const String _kDefaultPostHogApiKey =
+      'phc_rYKLrdPcVWEgs7Q69boQ46kS5afqYkwUKPLJWDJepauU';
+
+  static String get postHogApiKey {
+    return const String.fromEnvironment(
+      'POSTHOG_API_KEY',
+      defaultValue: _kDefaultPostHogApiKey,
+    );
+  }
+
+  static String get postHogHost {
+    return const String.fromEnvironment(
+      'POSTHOG_HOST',
+      defaultValue: 'https://us.i.posthog.com',
+    );
+  }
+
+  /// PostHog se apaga entero poniendo `POSTHOG_API_KEY=""` en el build.
+  /// En tests el sink queda inerte porque nunca se llama a `setup()`.
+  static bool get postHogEnabled => postHogApiKey.isNotEmpty;
+
   static String _readWebQueryParam(String key) {
     final value = Uri.base.queryParameters[key];
     return value?.trim() ?? '';

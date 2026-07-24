@@ -421,7 +421,7 @@ class RecurrentesTab extends ConsumerWidget {
             const SizedBox(height: 28),
             Builder(
               builder: (context) => ElevatedButton(
-                onPressed: () => PremiumPaywall.show(context),
+                onPressed: () => PremiumPaywall.show(context, source: 'recurring_expenses'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: gold,
                   foregroundColor: Colors.white,

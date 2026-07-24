@@ -108,7 +108,7 @@ class AvatarPickerSheet extends ConsumerWidget {
         'isPremiumAvatar=$isPremiumAvatar isPremium=$isPremium',
       );
       if (isPremiumAvatar && !isPremium) {
-        await PremiumPaywall.show(context);
+        await PremiumPaywall.show(context, source: 'avatar_picker');
         // Si compro premium desde el paywall, retomar la seleccion pendiente
         // en vez de descartarla (antes el avatar elegido se perdia).
         final nowPremium = ref.read(premiumProvider).value ?? false;
@@ -327,7 +327,7 @@ class AvatarPickerSheet extends ConsumerWidget {
                                           ref,
                                           value,
                                         )
-                                    : () => PremiumPaywall.show(context),
+                                    : () => PremiumPaywall.show(context, source: 'avatar_picker'),
                               );
                             }).toList(),
                           ),
@@ -621,7 +621,7 @@ class _AiAvatarCreationCard extends ConsumerWidget {
                   ? null
                   : isPremium
                       ? onCreate
-                      : () => PremiumPaywall.show(context),
+                      : () => PremiumPaywall.show(context, source: 'avatar_picker'),
               icon: Icon(
                 isPremium
                     ? Icons.auto_awesome_rounded
@@ -818,7 +818,7 @@ class _CustomAvatarOptionsSection extends ConsumerWidget {
                   isSelected: currentAvatar == avatar.avatarUrl,
                   onTap: isPremium
                       ? () => onSelect(avatar.avatarUrl)
-                      : () => PremiumPaywall.show(context),
+                      : () => PremiumPaywall.show(context, source: 'avatar_picker'),
                   onDelete: isPremium ? () => onDelete(avatar) : null,
                 );
               }).toList(),

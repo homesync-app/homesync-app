@@ -160,7 +160,9 @@ class _SettingsParentModeCardState
 
   void _openPaywall() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
+      MaterialPageRoute(
+        builder: (_) => const PremiumPaywallScreen(source: 'parent_mode'),
+      ),
     );
   }
 

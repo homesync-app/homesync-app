@@ -34,6 +34,10 @@ dependencies:
   # Charts
   fl_chart: ^1.1.1
 
+  # Product analytics (funnels, retención, cohortes). Convive con Firebase
+  # Analytics: ambos cuelgan del mismo AnalyticsService (sink dual).
+  posthog_flutter: ^5.33.0
+
   # Firebase Services
   firebase_core: ^4.11.0
   firebase_auth: ^6.5.4

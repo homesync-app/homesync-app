@@ -60,7 +60,7 @@ final class SetupWizardControllerProvider
 }
 
 String _$setupWizardControllerHash() =>
-    r'468728bc1596747929198f824b5289e2b91d5aed';
+    r'9b101dc4581a8cb0f54a391318a1db8af2f408fc';
 
 /// Dueño único de `currentStep` + estado del formulario del wizard de setup.
 ///

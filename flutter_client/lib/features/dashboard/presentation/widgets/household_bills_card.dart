@@ -116,7 +116,7 @@ class HouseholdBillsCard extends ConsumerWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: () => PremiumPaywall.show(context),
+            onPressed: () => PremiumPaywall.show(context, source: 'dashboard_bills'),
             icon: const Icon(Icons.workspace_premium_rounded, size: 20),
             label: Text(t.householdBillsPremiumUnlock),
             style: ElevatedButton.styleFrom(

@@ -36,7 +36,7 @@ class GoalAutoContributionSheet extends ConsumerStatefulWidget {
   ) {
     final isPremium = ref.read(premiumProvider).value ?? false;
     if (!isPremium) {
-      PremiumPaywall.show(context);
+      PremiumPaywall.show(context, source: 'goal_auto_contribution');
       return Future.value();
     }
     return AppSheet.show<void>(

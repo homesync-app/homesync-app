@@ -110,7 +110,7 @@ class WeeklyProgressTab extends ConsumerWidget {
           GestureDetector(
             onTap: () {
               if (!isPremium) {
-                PremiumPaywall.show(context);
+                PremiumPaywall.show(context, source: 'weekly_progress');
               } else {
                 AppHaptics.tap();
                 showLoveNoteDialog(context: context, ref: ref);
