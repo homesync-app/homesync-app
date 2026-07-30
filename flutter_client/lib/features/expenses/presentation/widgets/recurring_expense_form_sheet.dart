@@ -13,11 +13,12 @@ import 'package:homesync_client/features/expenses/presentation/utils/finance_loc
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
+
 import 'expense_category_matcher.dart';
 import 'expense_form_data.dart';
 
@@ -272,11 +273,16 @@ class _RecurringExpenseFormSheetState
           .read(expenseTemplateControllerProvider.notifier)
           .saveTemplate(template);
       if (mounted) Navigator.pop(context);
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'RecurringExpenseFormSheet failed to save recurring item',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.commonErrorWithDetails('$e'))),
+          SnackBar(content: Text(t.recurringExpenseSaveError)),
         );
       }
     } finally {
@@ -338,7 +344,13 @@ class _RecurringExpenseFormSheetState
           height: 220,
           child: Center(child: AppLoader()),
         ),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (error, stackTrace) => SizedBox(
+          height: 220,
+          child: AppErrorState(
+            message: t.recurringExpenseMembersLoadError,
+            onRetry: () => ref.invalidate(householdMembersProvider),
+          ),
+        ),
         data: (members) {
           return Column(
             children: [

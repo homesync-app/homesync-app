@@ -16,8 +16,34 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
 import 'task_creation_result.dart';
+
+String? _readString(Object? value) {
+  if (value is! String) return null;
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
+}
+
+Map<String, dynamic>? _readStringKeyedMap(Object? value) {
+  if (value is! Map) return null;
+  return <String, dynamic>{
+    for (final entry in value.entries)
+      if (entry.key is String) entry.key as String: entry.value,
+  };
+}
+
+Map<String, dynamic>? _normalizeMember(Map<String, dynamic> member) {
+  final userId = _readString(member['user_id']);
+  if (userId == null) return null;
+  final user = _readStringKeyedMap(member['users']);
+  return <String, dynamic>{
+    ...member,
+    'user_id': userId,
+    if (user != null) 'users': user,
+  };
+}
 
 const int _maxTaskXpReward = 50;
 const int _maxTaskCoinReward = 5;
@@ -54,6 +80,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   bool _customRewards = false;
   bool _isLoading = false;
   bool _showSuccessState = false;
+  bool _membersLoading = false;
+  bool _membersLoadFailed = false;
   List<Map<String, dynamic>> _members = [];
 
   // Difficulty/recurrence display names are looked up by id at render time
@@ -103,7 +131,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   void initState() {
     super.initState();
     if (widget.members != null && widget.members!.isNotEmpty) {
-      _members = widget.members!;
+      _members = widget.members!
+          .map(_normalizeMember)
+          .whereType<Map<String, dynamic>>()
+          .toList(growable: false);
     } else {
       _loadMembers();
     }
@@ -118,16 +149,33 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   }
 
   Future<void> _loadMembers() async {
+    if (mounted) {
+      setState(() {
+        _membersLoading = true;
+        _membersLoadFailed = false;
+      });
+    }
     try {
       final members = await ref.read(householdMembersProvider.future);
+      if (!mounted) return;
       setState(() {
         _members = members
-            .map((member) => member.toMap())
-            .toList()
-            .cast<Map<String, dynamic>>();
+            .map((member) => _normalizeMember(member.toMap()))
+            .whereType<Map<String, dynamic>>()
+            .toList(growable: false);
+        _membersLoading = false;
       });
-    } catch (e) {
-      log.e('Error loading members: $e', error: e);
+    } catch (error, stackTrace) {
+      log.e(
+        'CreateTaskDialog failed to load members',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) return;
+      setState(() {
+        _membersLoading = false;
+        _membersLoadFailed = true;
+      });
     }
   }
 
@@ -136,8 +184,12 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       final categories = await ref.read(categoriesProvider.future);
       if (!mounted || categories.isEmpty || _selectedCategory != null) return;
       setState(() => _selectedCategory = categories.first.id);
-    } catch (e) {
-      log.e('Error loading default task category: $e', error: e);
+    } catch (error, stackTrace) {
+      log.e(
+        'CreateTaskDialog failed to load default task category',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -559,7 +611,13 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                 ),
                               ),
                             ),
-                            error: (_, __) => const SizedBox(),
+                            error: (error, stackTrace) => AppErrorState(
+                              message: AppLocalizations.of(context).commonError,
+                              onRetry: () {
+                                ref.invalidate(categoriesProvider);
+                                _loadDefaultCategory();
+                              },
+                            ),
                           ),
                           const SizedBox(height: 20),
                           _buildSectionHeader(
@@ -610,35 +668,57 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                 .createTaskSectionAssigneeSubtitle,
                           ),
                           const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _buildAssigneeChip(
-                                AppLocalizations.of(context)
-                                    .createTaskAssigneeAnyone,
-                                null,
-                                'C',
+                          if (_membersLoading)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: AppSpacing.md,
                               ),
-                              ..._members.map((member) {
-                                final user =
-                                    member['users'] as Map<String, dynamic>?;
-                                final name = user?['full_name'] ??
-                                    user?['email'] ??
-                                    AppLocalizations.of(context)
-                                        .settingsHouseholdMemberFallbackName;
-                                final safeName = name.toString().trim();
-                                final initial = safeName.isNotEmpty
-                                    ? safeName.substring(0, 1).toUpperCase()
-                                    : '?';
-                                return _buildAssigneeChip(
-                                  name,
-                                  member['user_id'] as String,
-                                  initial,
-                                );
-                              }),
-                            ],
-                          ),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            )
+                          else if (_membersLoadFailed)
+                            AppErrorState(
+                              message: AppLocalizations.of(context).commonError,
+                              onRetry: _loadMembers,
+                            )
+                          else
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _buildAssigneeChip(
+                                  AppLocalizations.of(context)
+                                      .createTaskAssigneeAnyone,
+                                  null,
+                                  'C',
+                                ),
+                                ..._members.expand<Widget>((member) {
+                                  final userId = _readString(member['user_id']);
+                                  if (userId == null) return const <Widget>[];
+                                  final user =
+                                      _readStringKeyedMap(member['users']);
+                                  final name = _readString(
+                                        user?['full_name'],
+                                      ) ??
+                                      _readString(user?['email']) ??
+                                      AppLocalizations.of(context)
+                                          .settingsHouseholdMemberFallbackName;
+                                  final initial =
+                                      name.substring(0, 1).toUpperCase();
+                                  return <Widget>[
+                                    _buildAssigneeChip(
+                                      name,
+                                      userId,
+                                      initial,
+                                    ),
+                                  ];
+                                }),
+                              ],
+                            ),
                           const SizedBox(height: 20),
                           _buildRotationSection(),
                           _buildSectionHeader(
@@ -1182,16 +1262,14 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           spacing: 8,
           runSpacing: 8,
           children: _members.map((member) {
-            final id = member['user_id'] as String;
-            final user = member['users'] as Map<String, dynamic>?;
-            final name = user?['full_name'] ??
-                user?['email'] ??
+            final id = _readString(member['user_id']);
+            if (id == null) return const SizedBox.shrink();
+            final user = _readStringKeyedMap(member['users']);
+            final name = _readString(user?['full_name']) ??
+                _readString(user?['email']) ??
                 AppLocalizations.of(context)
                     .settingsHouseholdMemberFallbackName;
-            final safeName = name.toString().trim();
-            final initial = safeName.isNotEmpty
-                ? safeName.substring(0, 1).toUpperCase()
-                : '?';
+            final initial = name.substring(0, 1).toUpperCase();
             final selected = _rotationPool.contains(id);
             return _buildAccessibleSelector(
               label: name.toString(),

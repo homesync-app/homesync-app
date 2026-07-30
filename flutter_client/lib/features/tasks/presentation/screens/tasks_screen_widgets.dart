@@ -825,14 +825,18 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         type: AppSnackBarType.info,
         duration: const Duration(milliseconds: 1500),
       );
-    } catch (e) {
+    } catch (error, stackTrace) {
       // El notifier relanza el fallo: sin este catch el spinner se reseteaba
       // sin ningún aviso y el error moría como excepción async sin manejar.
+      log.e(
+        'TasksScreen failed to submit task for approval',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         AppSnackBar.show(
           context,
-          message:
-              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
+          message: AppLocalizations.of(context).commonError,
           type: AppSnackBarType.error,
         );
       }

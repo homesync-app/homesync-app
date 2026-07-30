@@ -5388,8 +5388,8 @@ abstract class AppLocalizations {
   /// No description provided for @pendingApprovalsLoadError.
   ///
   /// In es, this message translates to:
-  /// **'No pudimos cargar las aprobaciones: {message}'**
-  String pendingApprovalsLoadError(Object message);
+  /// **'No pudimos cargar las aprobaciones pendientes.'**
+  String get pendingApprovalsLoadError;
 
   /// No description provided for @pendingApprovalsApprovedSnack.
   ///
@@ -10700,6 +10700,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'\"{title}\" añadida'**
   String addTaskOptionsAddedSnack(String title);
+
+  /// Error amigable al intentar agregar una tarea sugerida.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos agregar la tarea.'**
+  String get addTaskOptionsAddError;
+
+  /// Error amigable al intentar editar una tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos guardar los cambios.'**
+  String get editTaskSaveError;
+
+  /// Error amigable al intentar eliminar una tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos eliminar la tarea.'**
+  String get editTaskDeleteError;
+
+  /// Error amigable al guardar un gasto o ingreso recurrente.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos guardar este registro recurrente.'**
+  String get recurringExpenseSaveError;
+
+  /// Error al cargar integrantes requeridos por el formulario recurrente.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar los integrantes del hogar.'**
+  String get recurringExpenseMembersLoadError;
 
   /// No description provided for @recurringExpenseValidationTitleAmount.
   ///

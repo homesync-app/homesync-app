@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -111,13 +112,16 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
       if (mounted) {
         Navigator.pop(context, true);
       }
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'EditTaskSheet failed to save task ${widget.task.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
-            ),
+            content: Text(AppLocalizations.of(context).editTaskSaveError),
             backgroundColor: AppColors.error,
           ),
         );
@@ -250,13 +254,16 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
       if (mounted) {
         Navigator.pop(context, true);
       }
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'EditTaskSheet failed to delete task ${widget.task.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
-            ),
+            content: Text(AppLocalizations.of(context).editTaskDeleteError),
             backgroundColor: AppColors.error,
           ),
         );
@@ -299,12 +306,17 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
           ),
         );
       }
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'EditTaskSheet failed to complete task ${widget.task.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
+              AppLocalizations.of(context).tasksSnackCompleteError,
             ),
             backgroundColor: AppColors.error,
           ),

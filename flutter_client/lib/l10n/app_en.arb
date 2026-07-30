@@ -2255,7 +2255,7 @@
   "pendingApprovalsSubmittedBy": "Submitted by {name}",
   "pendingApprovalsApproveButton": "Approve",
   "pendingApprovalsRejectButton": "Reject",
-  "pendingApprovalsLoadError": "We couldn't load approvals: {message}",
+  "pendingApprovalsLoadError": "We couldn't load pending approvals.",
   "pendingApprovalsApprovedSnack": "Approved. {coins} coins were credited.",
   "pendingApprovalsApproveErrorRetry": "We couldn't approve the task. Try again.",
   "pendingApprovalsRejectedSnack": "Task rejected.",
@@ -4284,6 +4284,26 @@
         "example": "Wash the dishes"
       }
     }
+  },
+  "addTaskOptionsAddError": "We couldn't add the task.",
+  "@addTaskOptionsAddError": {
+    "description": "Friendly error shown when a suggested task cannot be added."
+  },
+  "editTaskSaveError": "We couldn't save the changes.",
+  "@editTaskSaveError": {
+    "description": "Friendly error shown when a task cannot be edited."
+  },
+  "editTaskDeleteError": "We couldn't delete the task.",
+  "@editTaskDeleteError": {
+    "description": "Friendly error shown when a task cannot be deleted."
+  },
+  "recurringExpenseSaveError": "We couldn't save this recurring item.",
+  "@recurringExpenseSaveError": {
+    "description": "Friendly error shown when a recurring expense or income cannot be saved."
+  },
+  "recurringExpenseMembersLoadError": "We couldn't load the household members.",
+  "@recurringExpenseMembersLoadError": {
+    "description": "Error shown when members required by the recurring form cannot be loaded."
   },
   "recurringExpenseValidationTitleAmount": "Add a title and a valid amount.",
   "recurringExpenseValidationPayer": "Choose who usually pays it to finish setup.",

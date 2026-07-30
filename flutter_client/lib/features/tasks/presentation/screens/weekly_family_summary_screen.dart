@@ -9,7 +9,7 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/tasks/domain/models/weekly_family_summary.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/weekly_family_summary_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 String _formatMoney(num value) {
@@ -84,15 +84,9 @@ class WeeklyFamilySummaryScreen extends ConsumerWidget {
       ),
       body: summaryAsync.when(
         loading: () => const Center(child: AppLoader()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Text(
-              'No pudimos cargar el resumen: $e',
-              style: TextStyle(color: theme.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          ),
+        error: (error, stackTrace) => AppErrorState(
+          message: t.tasksLoadError,
+          onRetry: () => ref.invalidate(weeklyFamilySummaryProvider),
         ),
         data: (summary) {
           if (summary == null) return _EmptyState(theme: theme);

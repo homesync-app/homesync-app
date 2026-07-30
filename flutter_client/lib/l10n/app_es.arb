@@ -2287,7 +2287,7 @@
   "pendingApprovalsSubmittedBy": "Enviada por {name}",
   "pendingApprovalsApproveButton": "Aprobar",
   "pendingApprovalsRejectButton": "Rechazar",
-  "pendingApprovalsLoadError": "No pudimos cargar las aprobaciones: {message}",
+  "pendingApprovalsLoadError": "No pudimos cargar las aprobaciones pendientes.",
   "pendingApprovalsApprovedSnack": "Aprobada. Se acreditaron {coins} coins.",
   "pendingApprovalsApproveErrorRetry": "No pudimos aprobar la tarea. Reintentá.",
   "pendingApprovalsRejectedSnack": "Tarea rechazada.",
@@ -4406,6 +4406,26 @@
         "example": "Wash the dishes"
       }
     }
+  },
+  "addTaskOptionsAddError": "No pudimos agregar la tarea.",
+  "@addTaskOptionsAddError": {
+    "description": "Error amigable al intentar agregar una tarea sugerida."
+  },
+  "editTaskSaveError": "No pudimos guardar los cambios.",
+  "@editTaskSaveError": {
+    "description": "Error amigable al intentar editar una tarea."
+  },
+  "editTaskDeleteError": "No pudimos eliminar la tarea.",
+  "@editTaskDeleteError": {
+    "description": "Error amigable al intentar eliminar una tarea."
+  },
+  "recurringExpenseSaveError": "No pudimos guardar este registro recurrente.",
+  "@recurringExpenseSaveError": {
+    "description": "Error amigable al guardar un gasto o ingreso recurrente."
+  },
+  "recurringExpenseMembersLoadError": "No pudimos cargar los integrantes del hogar.",
+  "@recurringExpenseMembersLoadError": {
+    "description": "Error al cargar integrantes requeridos por el formulario recurrente."
   },
   "recurringExpenseValidationTitleAmount": "Completá título y monto válido.",
   "recurringExpenseValidationPayer": "Elegí quién suele abonarla para dejarla lista.",

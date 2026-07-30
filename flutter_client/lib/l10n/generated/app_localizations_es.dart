@@ -3505,9 +3505,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pendingApprovalsRejectButton => 'Rechazar';
 
   @override
-  String pendingApprovalsLoadError(Object message) {
-    return 'No pudimos cargar las aprobaciones: $message';
-  }
+  String get pendingApprovalsLoadError =>
+      'No pudimos cargar las aprobaciones pendientes.';
 
   @override
   String pendingApprovalsApprovedSnack(Object coins) {
@@ -6753,6 +6752,23 @@ class AppLocalizationsEs extends AppLocalizations {
   String addTaskOptionsAddedSnack(String title) {
     return '\"$title\" añadida';
   }
+
+  @override
+  String get addTaskOptionsAddError => 'No pudimos agregar la tarea.';
+
+  @override
+  String get editTaskSaveError => 'No pudimos guardar los cambios.';
+
+  @override
+  String get editTaskDeleteError => 'No pudimos eliminar la tarea.';
+
+  @override
+  String get recurringExpenseSaveError =>
+      'No pudimos guardar este registro recurrente.';
+
+  @override
+  String get recurringExpenseMembersLoadError =>
+      'No pudimos cargar los integrantes del hogar.';
 
   @override
   String get recurringExpenseValidationTitleAmount =>

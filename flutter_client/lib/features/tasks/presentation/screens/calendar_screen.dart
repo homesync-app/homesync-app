@@ -14,7 +14,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/category_p
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:intl/intl.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -179,11 +179,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         loading: () => const Center(
           child: AppLoader(),
         ),
-        error: (err, _) => Center(
-          child: Text(
-            'Error: $err',
-            style: const TextStyle(color: AppColors.error),
-          ),
+        error: (error, stackTrace) => AppErrorState(
+          message: AppLocalizations.of(context).tasksLoadError,
+          onRetry: () => ref.invalidate(tasksProvider),
         ),
         data: (tasks) {
           final scheduledTasks = _groupTasks(tasks);

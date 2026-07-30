@@ -147,7 +147,7 @@ class ShoppingItems extends _$ShoppingItems {
     );
   }
 
-  Future<void> addItem({
+  Future<bool> addItem({
     required String name,
     String? quantity,
     String? unit,
@@ -160,7 +160,8 @@ class ShoppingItems extends _$ShoppingItems {
     final userId = ref.read(currentUserIdProvider);
 
     if (householdId == null || userId == null) {
-      throw Exception('Authentication or Household required');
+      log.w('Shopping add skipped: missing user or household');
+      return false;
     }
 
     final oldState = state.value ?? [];
@@ -201,10 +202,11 @@ class ShoppingItems extends _$ShoppingItems {
             note: note,
           );
 
-      result.fold(
+      return result.fold(
         (failure) {
           log.e('Failed to add item: ${failure.message}');
           state = AsyncValue.data(oldState); // Rollback
+          return false;
         },
         (newItem) {
           // Replace temp item with real one to get the proper ID
@@ -216,11 +218,17 @@ class ShoppingItems extends _$ShoppingItems {
           );
           // Log si el item no está en el catálogo predefinido (para admin analytics)
           _logCatalogRequestIfNeeded(name, emoji);
+          return true;
         },
       );
-    } catch (e, stack) {
-      log.e('Error in addItem: $e', error: e, stackTrace: stack);
+    } catch (error, stackTrace) {
+      log.e(
+        'Shopping add failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       state = AsyncValue.data(oldState);
+      return false;
     }
   }
 
@@ -252,10 +260,13 @@ class ShoppingItems extends _$ShoppingItems {
     });
   }
 
-  Future<void> toggleItem(String itemId, bool completed) async {
+  Future<bool> toggleItem(String itemId, bool completed) async {
     final householdId = await ref.read(householdIdProvider.future);
     final userId = ref.read(currentUserIdProvider);
-    if (householdId == null) return;
+    if (householdId == null) {
+      log.w('Shopping toggle skipped: missing household');
+      return false;
+    }
 
     final oldState = state.value ?? [];
 
@@ -283,14 +294,21 @@ class ShoppingItems extends _$ShoppingItems {
       if (result.isLeft()) {
         log.e('Failed to toggle item');
         state = AsyncValue.data(oldState); // Rollback
+        return false;
       }
-    } catch (e, stack) {
-      log.e('Error in toggleItem: $e', error: e, stackTrace: stack);
+      return true;
+    } catch (error, stackTrace) {
+      log.e(
+        'Shopping toggle failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       state = AsyncValue.data(oldState);
+      return false;
     }
   }
 
-  Future<void> updateItem({
+  Future<bool> updateItem({
     required String itemId,
     required String name,
     required String category,
@@ -338,16 +356,26 @@ class ShoppingItems extends _$ShoppingItems {
       if (result.isLeft()) {
         log.e('Failed to update item');
         state = AsyncValue.data(oldState);
+        return false;
       }
-    } catch (e) {
-      log.e('Error in updateItem: $e');
+      return true;
+    } catch (error, stackTrace) {
+      log.e(
+        'Shopping update failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       state = AsyncValue.data(oldState);
+      return false;
     }
   }
 
-  Future<void> deleteItem(String itemId) async {
+  Future<bool> deleteItem(String itemId) async {
     final householdId = await ref.read(householdIdProvider.future);
-    if (householdId == null) return;
+    if (householdId == null) {
+      log.w('Shopping delete skipped: missing household');
+      return false;
+    }
 
     final oldState = state.value ?? [];
 
@@ -362,16 +390,26 @@ class ShoppingItems extends _$ShoppingItems {
       if (result.isLeft()) {
         log.e('Failed to delete item');
         state = AsyncValue.data(oldState); // Rollback
+        return false;
       }
-    } catch (e, stack) {
-      log.e('Error in deleteItem: $e', error: e, stackTrace: stack);
+      return true;
+    } catch (error, stackTrace) {
+      log.e(
+        'Shopping delete failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       state = AsyncValue.data(oldState);
+      return false;
     }
   }
 
-  Future<void> clearCompleted() async {
+  Future<bool> clearCompleted() async {
     final householdId = await ref.read(householdIdProvider.future);
-    if (householdId == null) return;
+    if (householdId == null) {
+      log.w('Shopping clear completed skipped: missing household');
+      return false;
+    }
 
     final oldState = state.value ?? [];
 
@@ -388,16 +426,26 @@ class ShoppingItems extends _$ShoppingItems {
       if (result.isLeft()) {
         log.e('Failed to clear completed items');
         state = AsyncValue.data(oldState); // Rollback
+        return false;
       }
-    } catch (e, stack) {
-      log.e('Error in clearCompleted: $e', error: e, stackTrace: stack);
+      return true;
+    } catch (error, stackTrace) {
+      log.e(
+        'Shopping clear completed failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       state = AsyncValue.data(oldState);
+      return false;
     }
   }
 
-  Future<void> uncompleteAll() async {
+  Future<bool> uncompleteAll() async {
     final householdId = await ref.read(householdIdProvider.future);
-    if (householdId == null) return;
+    if (householdId == null) {
+      log.w('Shopping uncomplete all skipped: missing household');
+      return false;
+    }
 
     final oldState = state.value ?? [];
 
@@ -414,10 +462,17 @@ class ShoppingItems extends _$ShoppingItems {
       if (result.isLeft()) {
         log.e('Failed to uncomplete items');
         state = AsyncValue.data(oldState); // Rollback
+        return false;
       }
-    } catch (e, stack) {
-      log.e('Error in uncompleteAll: $e', error: e, stackTrace: stack);
+      return true;
+    } catch (error, stackTrace) {
+      log.e(
+        'Shopping uncomplete all failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       state = AsyncValue.data(oldState);
+      return false;
     }
   }
 }

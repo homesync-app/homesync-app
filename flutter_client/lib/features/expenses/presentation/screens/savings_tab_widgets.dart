@@ -19,8 +19,38 @@ class _ContributionHistory extends ConsumerWidget {
     final currency = ref.watch(currencyProvider);
     final contributionsAsync = ref.watch(goalContributionsProvider(goalId));
 
-    return contributionsAsync.maybeWhen(
-      orElse: () => const SizedBox.shrink(),
+    return contributionsAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.only(top: AppSpacing.sm),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      ),
+      error: (error, stackTrace) => Padding(
+        padding: const EdgeInsets.only(top: AppSpacing.sm),
+        child: Row(
+          children: [
+            Icon(Icons.error_outline_rounded, color: theme.textMuted, size: 18),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: Text(
+                t.commonError,
+                style: AppTypography.caption.copyWith(color: theme.textMuted),
+              ),
+            ),
+            TextButton(
+              onPressed: () =>
+                  ref.invalidate(goalContributionsProvider(goalId)),
+              child: Text(t.commonRetry),
+            ),
+          ],
+        ),
+      ),
       data: (list) {
         if (list.isEmpty) return const SizedBox.shrink();
         final visible = list.take(3).toList();
@@ -359,7 +389,6 @@ class _GoalMenu extends ConsumerWidget {
       ],
     );
   }
-
 }
 
 /// Confirmación de archivo compartida entre el kebab y el sheet de long-press.
@@ -673,10 +702,13 @@ class _SavingsSuggesterCard extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('💡', style: AppTypography.body.copyWith(
-            fontSize: 26,
-            fontWeight: FontWeight.w400,
-          ),),
+          Text(
+            '💡',
+            style: AppTypography.body.copyWith(
+              fontSize: 26,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -763,54 +795,72 @@ class _ContributionSheetState extends ConsumerState<_ContributionSheet> {
     // across an async gap (the sheet's own context is also defunct after pop).
     final navigator = Navigator.of(context);
     final navigatorContext = navigator.context;
+    final t = AppLocalizations.of(context);
 
-    final note = _noteController.text.trim();
-    SplitType splitType = SplitType.personal;
-    List<Map<String, dynamic>>? splits;
+    try {
+      final note = _noteController.text.trim();
+      SplitType splitType = SplitType.personal;
+      List<Map<String, dynamic>>? splits;
 
-    if (_split == _ContributionSplit.shared) {
-      final caps = ref.read(householdCapabilitiesProvider);
-      final household = ref.read(currentHouseholdProvider).value;
-      final members = await ref.read(householdMembersProvider.future);
-      final financeMembers = _financeMembers(members, caps.type);
-      final isSharedEconomy = household?.financeMode == 'shared';
-      final result = ExpenseSplitBuilder.build(
-        showSplit: true,
-        splitMode: SplitType.equal,
-        amount: amount,
-        paidByUserId: ref.read(currentUserIdProvider) ?? '',
-        financeMembers: financeMembers,
-        selectedMembers: financeMembers.map((m) => m.userId).toSet(),
-        fixedAmounts: const {},
-        defaultRatio: household?.defaultSplitRatio ?? 0.5,
-        currentUserId: ref.read(currentUserIdProvider),
-        splitRatioAnchorId: household?.splitRatioAnchorId,
-      );
-      splits = result.splits;
-      splitType = isSharedEconomy ? SplitType.fixed : SplitType.equal;
-    }
-
-    final wasReached = widget.goal.isReached;
-    await ref.read(savingsGoalsProvider.notifier).contribute(
-          widget.goal.id,
-          amount,
-          note: note.isEmpty ? null : note,
-          goalTitle: widget.goal.title,
-          splitType: splitType,
-          savingsSplitType: _split == _ContributionSplit.shared
-              ? SplitType.equal
-              : SplitType.personal,
-          splits: splits,
+      if (_split == _ContributionSplit.shared) {
+        final caps = ref.read(householdCapabilitiesProvider);
+        final household = ref.read(currentHouseholdProvider).value;
+        final members = await ref.read(householdMembersProvider.future);
+        final financeMembers = _financeMembers(members, caps.type);
+        final isSharedEconomy = household?.financeMode == 'shared';
+        final result = ExpenseSplitBuilder.build(
+          showSplit: true,
+          splitMode: SplitType.equal,
+          amount: amount,
+          paidByUserId: ref.read(currentUserIdProvider) ?? '',
+          financeMembers: financeMembers,
+          selectedMembers: financeMembers.map((m) => m.userId).toSet(),
+          fixedAmounts: const {},
+          defaultRatio: household?.defaultSplitRatio ?? 0.5,
+          currentUserId: ref.read(currentUserIdProvider),
+          splitRatioAnchorId: household?.splitRatioAnchorId,
         );
+        splits = result.splits;
+        splitType = isSharedEconomy ? SplitType.fixed : SplitType.equal;
+      }
 
-    if (!mounted) return;
-    // Celebrate the first time a contribution crosses the finish line. The
-    // Navigator (captured pre-await) stays mounted after the sheet closes.
-    final nowReached =
-        widget.goal.currentAmount + amount >= widget.goal.targetAmount;
-    navigator.pop();
-    if (!wasReached && nowReached && navigatorContext.mounted) {
-      _showCelebration(navigatorContext);
+      final wasReached = widget.goal.isReached;
+      await ref.read(savingsGoalsProvider.notifier).contribute(
+            widget.goal.id,
+            amount,
+            note: note.isEmpty ? null : note,
+            goalTitle: widget.goal.title,
+            splitType: splitType,
+            savingsSplitType: _split == _ContributionSplit.shared
+                ? SplitType.equal
+                : SplitType.personal,
+            splits: splits,
+          );
+
+      if (!mounted) return;
+      // Celebrate the first time a contribution crosses the finish line. The
+      // Navigator (captured pre-await) stays mounted after the sheet closes.
+      final nowReached =
+          widget.goal.currentAmount + amount >= widget.goal.targetAmount;
+      navigator.pop();
+      if (!wasReached && nowReached && navigatorContext.mounted) {
+        _showCelebration(navigatorContext);
+      }
+    } catch (error, stackTrace) {
+      log.e(
+        'Savings contribution failed for goal ${widget.goal.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: t.commonError,
+          type: AppSnackBarType.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
     }
   }
 
@@ -822,8 +872,7 @@ class _ContributionSheetState extends ConsumerState<_ContributionSheet> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('🎉', style: TextStyle(fontSize: 48))
-                .animatePulse(),
+            const Text('🎉', style: TextStyle(fontSize: 48)).animatePulse(),
             const SizedBox(height: 12),
             Text(
               t.savingsCompletedCelebrationTitle,
@@ -936,7 +985,8 @@ class _ContributionSheetState extends ConsumerState<_ContributionSheet> {
                                     const SizedBox(height: 2),
                                     Text(
                                       goal.title,
-                                      style: AppTypography.sectionTitle.copyWith(
+                                      style:
+                                          AppTypography.sectionTitle.copyWith(
                                         fontSize: 22,
                                         height: 1.05,
                                         color: theme.textPrimary,

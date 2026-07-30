@@ -3484,9 +3484,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pendingApprovalsRejectButton => 'Reject';
 
   @override
-  String pendingApprovalsLoadError(Object message) {
-    return 'We couldn\'t load approvals: $message';
-  }
+  String get pendingApprovalsLoadError =>
+      'We couldn\'t load pending approvals.';
 
   @override
   String pendingApprovalsApprovedSnack(Object coins) {
@@ -6723,6 +6722,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String addTaskOptionsAddedSnack(String title) {
     return '\"$title\" added';
   }
+
+  @override
+  String get addTaskOptionsAddError => 'We couldn\'t add the task.';
+
+  @override
+  String get editTaskSaveError => 'We couldn\'t save the changes.';
+
+  @override
+  String get editTaskDeleteError => 'We couldn\'t delete the task.';
+
+  @override
+  String get recurringExpenseSaveError =>
+      'We couldn\'t save this recurring item.';
+
+  @override
+  String get recurringExpenseMembersLoadError =>
+      'We couldn\'t load the household members.';
 
   @override
   String get recurringExpenseValidationTitleAmount =>

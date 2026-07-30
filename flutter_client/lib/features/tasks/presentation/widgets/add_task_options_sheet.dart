@@ -159,11 +159,16 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         type: AppSnackBarType.success,
         duration: const Duration(milliseconds: 1500),
       );
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'AddTaskOptionsSheet failed to add template ${template.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        message: 'Error: $e',
+        message: AppLocalizations.of(context).addTaskOptionsAddError,
         type: AppSnackBarType.error,
       );
     } finally {

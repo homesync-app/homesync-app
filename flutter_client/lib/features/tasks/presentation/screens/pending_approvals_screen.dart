@@ -12,8 +12,8 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
 /// Sprint 1 Modo Padres: bandeja de aprobaciones para adultos owner/admin.
 ///
@@ -74,15 +74,9 @@ class PendingApprovalsScreen extends ConsumerWidget {
       body: approvalsAsync.when(
         skipLoadingOnReload: true,
         loading: () => const Center(child: AppLoader()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Text(
-              t.pendingApprovalsLoadError(e.toString()),
-              style: TextStyle(color: theme.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          ),
+        error: (error, stackTrace) => AppErrorState(
+          message: t.pendingApprovalsLoadError,
+          onRetry: () => ref.invalidate(pendingTaskApprovalsProvider),
         ),
         data: (items) {
           if (items.isEmpty) {

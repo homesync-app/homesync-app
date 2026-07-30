@@ -24,6 +24,20 @@ import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
+String? _readString(Object? value) {
+  if (value is! String) return null;
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
+}
+
+Map<String, dynamic>? _readStringKeyedMap(Object? value) {
+  if (value is! Map) return null;
+  return <String, dynamic>{
+    for (final entry in value.entries)
+      if (entry.key is String) entry.key as String: entry.value,
+  };
+}
+
 class TaskDetailSheet extends ConsumerStatefulWidget {
   final Map<String, dynamic> taskData;
   final VoidCallback? onChanged;
@@ -65,14 +79,15 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
         widget.taskData['coins_per_user'],
         widget.taskData['coins'],
       );
-  String? get _activityId => widget.taskData['activity_id'] as String?;
-  String? get _comment => widget.taskData['objection_reason'] as String?;
+  String? get _activityId => _readString(widget.taskData['activity_id']);
+  String? get _comment => _readString(widget.taskData['objection_reason']);
 
-  Map? get _completedUser => widget.taskData['completed_user'] as Map?;
+  Map<String, dynamic>? get _completedUser =>
+      _readStringKeyedMap(widget.taskData['completed_user']);
   String _completedByName(AppLocalizations t) =>
-      (_completedUser?['full_name'] as String?) ?? t.taskDetailFallbackUser;
-  String? get _completedByAvatar => _completedUser?['avatar_url'] as String?;
-  String? get _completedById => _completedUser?['id'] as String?;
+      _readString(_completedUser?['full_name']) ?? t.taskDetailFallbackUser;
+  String? get _completedByAvatar => _readString(_completedUser?['avatar_url']);
+  String? get _completedById => _readString(_completedUser?['id']);
   String get _currentUserId => ref.read(currentUserIdProvider) ?? '';
   bool get _isAuthor => _completedById == _currentUserId;
   DateTime? get _completedAt => _readDate(
