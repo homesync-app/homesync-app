@@ -388,7 +388,26 @@
   "authForgotInvalidEmail": "Ingresá un correo válido",
   "authForgotEmailSent": "¡Revisá tu correo para cambiar tu contraseña!",
   "authSignUpEmailSent": "¡Revisá tu correo para confirmar tu cuenta!",
-  "commonErrorWithDetails": "Error: {message}",
+  "authSignInError": "No pudimos iniciar sesión. Revisá tus datos e intentá de nuevo.",
+  "@authSignInError": {
+    "description": "Safe error shown when email sign-in fails without exposing provider details."
+  },
+  "authSignUpError": "No pudimos crear tu cuenta. Intentá de nuevo.",
+  "@authSignUpError": {
+    "description": "Safe error shown when email registration fails."
+  },
+  "authPasswordResetError": "No pudimos enviar el correo de recuperación. Intentá de nuevo.",
+  "@authPasswordResetError": {
+    "description": "Safe error shown when requesting a password reset email fails."
+  },
+  "authGoogleSignInError": "No pudimos ingresar con Google. Intentá de nuevo.",
+  "@authGoogleSignInError": {
+    "description": "Safe error shown when Google sign-in fails, excluding user cancellation."
+  },
+  "invitationLoadError": "No pudimos generar el código de invitación.",
+  "@invitationLoadError": {
+    "description": "Recoverable inline error shown when the household invitation code cannot be generated."
+  },  "commonErrorWithDetails": "Error: {message}",
   "@commonErrorWithDetails": {
     "description": "Generic technical error shown to the user. {message} is the raw exception text — usually English/technical, not localizable.",
     "placeholders": {
@@ -1796,13 +1815,13 @@
     }
   },
   "coupleSplitSavedSnack": "Configuración guardada correctamente",
-  "coupleSplitSaveError": "Error al guardar: {message}",
+  "coupleSplitSaveError": "No pudimos guardar la configuración. Intentá de nuevo.",
   "@coupleSplitSaveError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
+    "description": "Mensaje seguro cuando falla el guardado de la configuración financiera del hogar."
+  },
+  "setupTemplatesLoadError": "No pudimos cargar las tareas sugeridas.",
+  "@setupTemplatesLoadError": {
+    "description": "Estado recuperable cuando falla la carga de plantillas de tareas durante el setup."
   },
   "coupleSplitFamilyHowTitle": "Cómo se registran los gastos",
   "coupleSplitFamilyHowBody": "En familia, lo normal es una economía compartida: el gasto queda visible para el hogar, pero no genera deuda entre adultos. Si lo necesitás, podés activar división como en pareja.",
@@ -3223,15 +3242,31 @@
   "membersRoleParentGuardianDesc": "Aprueba tareas, administra el hogar.",
   "membersRoleTeenDesc": "Crea sus tareas, pero las completa bajo revisión.",
   "membersRoleChildDesc": "Solo completa sus tareas, siempre bajo revisión.",
-  "membersRoleUpdateError": "No se pudo cambiar el rol: {message}",
+  "membersRoleUpdateError": "No pudimos cambiar el rol. Intentá de nuevo.",
   "@membersRoleUpdateError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
+    "description": "Mensaje seguro cuando falla la actualización del rol de un integrante."
   },
   "membersRoleUpdated": "Rol actualizado",
+  "membersLoadError": "No pudimos cargar los integrantes del hogar.",
+  "@membersLoadError": {
+    "description": "Estado de error recuperable cuando no se puede cargar la lista de integrantes."
+  },
+  "setupCreateHouseholdError": "No pudimos crear el hogar o generar el código. Intentá de nuevo.",
+  "@setupCreateHouseholdError": {
+    "description": "Mensaje seguro cuando falla la creación del hogar o de su código de invitación."
+  },
+  "setupJoinCodeLengthError": "El código debe tener 6 caracteres.",
+  "@setupJoinCodeLengthError": {
+    "description": "Validación mostrada cuando el código de invitación no tiene seis caracteres."
+  },
+  "setupJoinHouseholdError": "No pudimos unirte al hogar. Revisá el código e intentá de nuevo.",
+  "@setupJoinHouseholdError": {
+    "description": "Mensaje seguro cuando falla la unión a un hogar mediante código."
+  },
+  "setupCompleteError": "No pudimos terminar la configuración. Intentá de nuevo.",
+  "@setupCompleteError": {
+    "description": "Mensaje seguro cuando falla la finalización del setup inicial."
+  },
   "membersInviteTitle": "Invitar miembro",
   "membersInviteSubtitle": "Agregá otra persona al hogar con un código de invitación.",
   "shoppingSearchHint": "Necesito...",

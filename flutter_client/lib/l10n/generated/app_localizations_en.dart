@@ -561,6 +561,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authSignUpEmailSent => 'Check your email to confirm your account!';
 
   @override
+  String get authSignInError =>
+      'We couldn\'t sign you in. Check your details and try again.';
+
+  @override
+  String get authSignUpError => 'We couldn\'t create your account. Try again.';
+
+  @override
+  String get authPasswordResetError =>
+      'We couldn\'t send the recovery email. Try again.';
+
+  @override
+  String get authGoogleSignInError =>
+      'We couldn\'t sign you in with Google. Try again.';
+
+  @override
+  String get invitationLoadError =>
+      'We couldn\'t generate the invitation code.';
+
+  @override
   String commonErrorWithDetails(String message) {
     return 'Error: $message';
   }
@@ -2510,9 +2529,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coupleSplitSavedSnack => 'Settings saved successfully';
 
   @override
-  String coupleSplitSaveError(String message) {
-    return 'Save failed: $message';
-  }
+  String get coupleSplitSaveError => 'Couldn\'t save the settings. Try again.';
+
+  @override
+  String get setupTemplatesLoadError => 'Couldn\'t load the suggested tasks.';
 
   @override
   String get coupleSplitFamilyHowTitle => 'How expenses are recorded';
@@ -5002,12 +5022,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only completes their tasks, always under review.';
 
   @override
-  String membersRoleUpdateError(String message) {
-    return 'Couldn\'t change the role: $message';
-  }
+  String get membersRoleUpdateError => 'Couldn\'t change the role. Try again.';
 
   @override
   String get membersRoleUpdated => 'Role updated';
+
+  @override
+  String get membersLoadError => 'Couldn\'t load the household members.';
+
+  @override
+  String get setupCreateHouseholdError =>
+      'Couldn\'t create the household or generate the code. Try again.';
+
+  @override
+  String get setupJoinCodeLengthError => 'The code must be 6 characters long.';
+
+  @override
+  String get setupJoinHouseholdError =>
+      'Couldn\'t join the household. Check the code and try again.';
+
+  @override
+  String get setupCompleteError => 'Couldn\'t finish setup. Try again.';
 
   @override
   String get membersInviteTitle => 'Invite member';

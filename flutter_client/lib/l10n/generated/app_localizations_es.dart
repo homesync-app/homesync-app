@@ -563,6 +563,25 @@ class AppLocalizationsEs extends AppLocalizations {
       '¡Revisá tu correo para confirmar tu cuenta!';
 
   @override
+  String get authSignInError =>
+      'No pudimos iniciar sesión. Revisá tus datos e intentá de nuevo.';
+
+  @override
+  String get authSignUpError => 'No pudimos crear tu cuenta. Intentá de nuevo.';
+
+  @override
+  String get authPasswordResetError =>
+      'No pudimos enviar el correo de recuperación. Intentá de nuevo.';
+
+  @override
+  String get authGoogleSignInError =>
+      'No pudimos ingresar con Google. Intentá de nuevo.';
+
+  @override
+  String get invitationLoadError =>
+      'No pudimos generar el código de invitación.';
+
+  @override
   String commonErrorWithDetails(String message) {
     return 'Error: $message';
   }
@@ -2518,9 +2537,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleSplitSavedSnack => 'Configuración guardada correctamente';
 
   @override
-  String coupleSplitSaveError(String message) {
-    return 'Error al guardar: $message';
-  }
+  String get coupleSplitSaveError =>
+      'No pudimos guardar la configuración. Intentá de nuevo.';
+
+  @override
+  String get setupTemplatesLoadError =>
+      'No pudimos cargar las tareas sugeridas.';
 
   @override
   String get coupleSplitFamilyHowTitle => 'Cómo se registran los gastos';
@@ -5029,12 +5051,29 @@ class AppLocalizationsEs extends AppLocalizations {
       'Solo completa sus tareas, siempre bajo revisión.';
 
   @override
-  String membersRoleUpdateError(String message) {
-    return 'No se pudo cambiar el rol: $message';
-  }
+  String get membersRoleUpdateError =>
+      'No pudimos cambiar el rol. Intentá de nuevo.';
 
   @override
   String get membersRoleUpdated => 'Rol actualizado';
+
+  @override
+  String get membersLoadError => 'No pudimos cargar los integrantes del hogar.';
+
+  @override
+  String get setupCreateHouseholdError =>
+      'No pudimos crear el hogar o generar el código. Intentá de nuevo.';
+
+  @override
+  String get setupJoinCodeLengthError => 'El código debe tener 6 caracteres.';
+
+  @override
+  String get setupJoinHouseholdError =>
+      'No pudimos unirte al hogar. Revisá el código e intentá de nuevo.';
+
+  @override
+  String get setupCompleteError =>
+      'No pudimos terminar la configuración. Intentá de nuevo.';
 
   @override
   String get membersInviteTitle => 'Invitar miembro';

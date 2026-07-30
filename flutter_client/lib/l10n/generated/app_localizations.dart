@@ -944,6 +944,36 @@ abstract class AppLocalizations {
   /// **'¡Revisá tu correo para confirmar tu cuenta!'**
   String get authSignUpEmailSent;
 
+  /// Safe error shown when email sign-in fails without exposing provider details.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos iniciar sesión. Revisá tus datos e intentá de nuevo.'**
+  String get authSignInError;
+
+  /// Safe error shown when email registration fails.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos crear tu cuenta. Intentá de nuevo.'**
+  String get authSignUpError;
+
+  /// Safe error shown when requesting a password reset email fails.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos enviar el correo de recuperación. Intentá de nuevo.'**
+  String get authPasswordResetError;
+
+  /// Safe error shown when Google sign-in fails, excluding user cancellation.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos ingresar con Google. Intentá de nuevo.'**
+  String get authGoogleSignInError;
+
+  /// Recoverable inline error shown when the household invitation code cannot be generated.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos generar el código de invitación.'**
+  String get invitationLoadError;
+
   /// Generic technical error shown to the user. {message} is the raw exception text — usually English/technical, not localizable.
   ///
   /// In es, this message translates to:
@@ -3843,11 +3873,17 @@ abstract class AppLocalizations {
   /// **'Configuración guardada correctamente'**
   String get coupleSplitSavedSnack;
 
-  /// No description provided for @coupleSplitSaveError.
+  /// Mensaje seguro cuando falla el guardado de la configuración financiera del hogar.
   ///
   /// In es, this message translates to:
-  /// **'Error al guardar: {message}'**
-  String coupleSplitSaveError(String message);
+  /// **'No pudimos guardar la configuración. Intentá de nuevo.'**
+  String get coupleSplitSaveError;
+
+  /// Estado recuperable cuando falla la carga de plantillas de tareas durante el setup.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar las tareas sugeridas.'**
+  String get setupTemplatesLoadError;
 
   /// No description provided for @coupleSplitFamilyHowTitle.
   ///
@@ -7857,17 +7893,47 @@ abstract class AppLocalizations {
   /// **'Solo completa sus tareas, siempre bajo revisión.'**
   String get membersRoleChildDesc;
 
-  /// No description provided for @membersRoleUpdateError.
+  /// Mensaje seguro cuando falla la actualización del rol de un integrante.
   ///
   /// In es, this message translates to:
-  /// **'No se pudo cambiar el rol: {message}'**
-  String membersRoleUpdateError(String message);
+  /// **'No pudimos cambiar el rol. Intentá de nuevo.'**
+  String get membersRoleUpdateError;
 
   /// No description provided for @membersRoleUpdated.
   ///
   /// In es, this message translates to:
   /// **'Rol actualizado'**
   String get membersRoleUpdated;
+
+  /// Estado de error recuperable cuando no se puede cargar la lista de integrantes.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar los integrantes del hogar.'**
+  String get membersLoadError;
+
+  /// Mensaje seguro cuando falla la creación del hogar o de su código de invitación.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos crear el hogar o generar el código. Intentá de nuevo.'**
+  String get setupCreateHouseholdError;
+
+  /// Validación mostrada cuando el código de invitación no tiene seis caracteres.
+  ///
+  /// In es, this message translates to:
+  /// **'El código debe tener 6 caracteres.'**
+  String get setupJoinCodeLengthError;
+
+  /// Mensaje seguro cuando falla la unión a un hogar mediante código.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos unirte al hogar. Revisá el código e intentá de nuevo.'**
+  String get setupJoinHouseholdError;
+
+  /// Mensaje seguro cuando falla la finalización del setup inicial.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos terminar la configuración. Intentá de nuevo.'**
+  String get setupCompleteError;
 
   /// No description provided for @membersInviteTitle.
   ///

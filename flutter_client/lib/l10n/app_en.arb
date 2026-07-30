@@ -388,7 +388,26 @@
   "authForgotInvalidEmail": "Enter a valid email",
   "authForgotEmailSent": "Check your email to reset your password!",
   "authSignUpEmailSent": "Check your email to confirm your account!",
-  "commonErrorWithDetails": "Error: {message}",
+  "authSignInError": "We couldn't sign you in. Check your details and try again.",
+  "@authSignInError": {
+    "description": "Safe error shown when email sign-in fails without exposing provider details."
+  },
+  "authSignUpError": "We couldn't create your account. Try again.",
+  "@authSignUpError": {
+    "description": "Safe error shown when email registration fails."
+  },
+  "authPasswordResetError": "We couldn't send the recovery email. Try again.",
+  "@authPasswordResetError": {
+    "description": "Safe error shown when requesting a password reset email fails."
+  },
+  "authGoogleSignInError": "We couldn't sign you in with Google. Try again.",
+  "@authGoogleSignInError": {
+    "description": "Safe error shown when Google sign-in fails, excluding user cancellation."
+  },
+  "invitationLoadError": "We couldn't generate the invitation code.",
+  "@invitationLoadError": {
+    "description": "Recoverable inline error shown when the household invitation code cannot be generated."
+  },  "commonErrorWithDetails": "Error: {message}",
   "@commonErrorWithDetails": {
     "description": "Generic technical error shown to the user. {message} is the raw exception text — usually English/technical, not localizable.",
     "placeholders": {
@@ -1799,13 +1818,13 @@
     }
   },
   "coupleSplitSavedSnack": "Settings saved successfully",
-  "coupleSplitSaveError": "Save failed: {message}",
+  "coupleSplitSaveError": "Couldn't save the settings. Try again.",
   "@coupleSplitSaveError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
+    "description": "Safe message shown when saving household finance settings fails."
+  },
+  "setupTemplatesLoadError": "Couldn't load the suggested tasks.",
+  "@setupTemplatesLoadError": {
+    "description": "Recoverable state shown when task templates fail to load during setup."
   },
   "coupleSplitFamilyHowTitle": "How expenses are recorded",
   "coupleSplitFamilyHowBody": "In a family, the usual setup is a shared economy: expenses stay visible to the household but don't create debt between adults. If you need it, you can switch to a couple-style split.",
@@ -3173,15 +3192,31 @@
   "membersRoleParentGuardianDesc": "Approves tasks, manages the household.",
   "membersRoleTeenDesc": "Creates their own tasks, but completes them under review.",
   "membersRoleChildDesc": "Only completes their tasks, always under review.",
-  "membersRoleUpdateError": "Couldn't change the role: {message}",
+  "membersRoleUpdateError": "Couldn't change the role. Try again.",
   "@membersRoleUpdateError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
+    "description": "Safe message shown when updating a household member's role fails."
   },
   "membersRoleUpdated": "Role updated",
+  "membersLoadError": "Couldn't load the household members.",
+  "@membersLoadError": {
+    "description": "Recoverable error state shown when the household member list cannot load."
+  },
+  "setupCreateHouseholdError": "Couldn't create the household or generate the code. Try again.",
+  "@setupCreateHouseholdError": {
+    "description": "Safe message shown when household or invitation-code creation fails."
+  },
+  "setupJoinCodeLengthError": "The code must be 6 characters long.",
+  "@setupJoinCodeLengthError": {
+    "description": "Validation shown when an invitation code is not six characters long."
+  },
+  "setupJoinHouseholdError": "Couldn't join the household. Check the code and try again.",
+  "@setupJoinHouseholdError": {
+    "description": "Safe message shown when joining a household with a code fails."
+  },
+  "setupCompleteError": "Couldn't finish setup. Try again.",
+  "@setupCompleteError": {
+    "description": "Safe message shown when the initial setup cannot be completed."
+  },
   "membersInviteTitle": "Invite member",
   "membersInviteSubtitle": "Add another person to the household with an invitation code.",
   "shoppingSearchHint": "I need...",

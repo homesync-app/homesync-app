@@ -857,7 +857,7 @@ class _HouseholdSettingsScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(t.membersRoleUpdateError(e.toString())),
+            content: Text(t.membersRoleUpdateError),
             backgroundColor: AppColors.error,
           ),
         );

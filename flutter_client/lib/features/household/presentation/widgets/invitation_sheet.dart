@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -10,8 +11,8 @@ import 'package:homesync_client/features/household/domain/models/household_capab
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/portal_labs/reveal_copy_interaction.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -33,7 +34,8 @@ class InvitationSheet extends ConsumerStatefulWidget {
 
 class _InvitationSheetState extends ConsumerState<InvitationSheet> {
   String? _invitationCode;
-  bool _isLoading = true;
+  String? _loadError;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -42,30 +44,45 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
   }
 
   Future<void> _loadInvitationCode() async {
-    setState(() => _isLoading = true);
-    try {
-      final hId = await ref.read(householdIdProvider.future);
-      if (hId == null) return;
+    if (_isLoading) return;
+    final t = AppLocalizations.of(context);
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
 
-      // Intentar buscar código existente o generar uno nuevo
+    try {
+      final householdId = await ref.read(householdIdProvider.future);
+      if (householdId == null) {
+        throw StateError('Cannot generate an invitation without a household');
+      }
+
       final result =
           await ref.read(generateInvitationCodeUseCaseProvider).call();
+      String? code;
+      Object? failure;
       result.fold(
-        (failure) => _showError(failure.message),
-        (code) => setState(() => _invitationCode = code),
+        (value) => failure = value,
+        (value) => code = value,
       );
-    } catch (e) {
-      _showError(e.toString());
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
 
-  void _showError(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.error),
-    );
+      if (failure != null) {
+        log.e('Invitation code generation failed', error: failure);
+        if (mounted) setState(() => _loadError = t.invitationLoadError);
+        return;
+      }
+      if (!mounted) return;
+      setState(() => _invitationCode = code);
+    } catch (error, stackTrace) {
+      log.e(
+        'Invitation code generation threw unexpectedly',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) setState(() => _loadError = t.invitationLoadError);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   // Used by the WhatsApp-share fallback: copies to the clipboard and confirms.
@@ -119,7 +136,12 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
           );
         }
       }
-    } catch (e) {
+    } catch (e, stack) {
+      log.w(
+        'InvitationSheet._shareWhatsApp failed; copying code instead',
+        error: e,
+        stackTrace: stack,
+      );
       _copyCode();
     }
   }
@@ -179,6 +201,14 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
             const Padding(
               padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
               child: AppLoader(),
+            )
+          else if (_loadError != null)
+            SizedBox(
+              height: 190,
+              child: AppErrorState(
+                message: _loadError!,
+                onRetry: _loadInvitationCode,
+              ),
             )
           else if (_invitationCode != null) ...[
             RevealCopyInteraction(

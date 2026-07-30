@@ -118,8 +118,12 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
           _updateMemberTypeFromRole(_selectedDisplayRole);
         });
       }
-    } catch (e) {
-      log.w('Failed to load available roles, using safe defaults: $e');
+    } catch (e, stack) {
+      log.w(
+        'Failed to load available roles, using safe defaults',
+        error: e,
+        stackTrace: stack,
+      );
       if (mounted) {
         setState(() {
           _availableRoles = ['Tutor/a', 'Adolescente', 'Hijo/a'];
@@ -159,32 +163,28 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
   }
 
   Future<void> _completeOnboarding() async {
+    if (_isSaving) return;
+
     final t = AppLocalizations.of(context);
     setState(() => _isSaving = true);
     AppHaptics.warning();
 
     try {
       final client = ref.read(supabaseClientProvider);
-
       final rpcResult = await client.rpc(
         'complete_member_onboarding',
         params: {
           'p_member_type': _selectedMemberType,
           'p_display_role': _selectedDisplayRole,
         },
-      ).catchError((e) {
-        log.e('Error in complete_member_onboarding RPC: $e');
-        throw e;
-      });
+      );
 
       if (rpcResult is Map<String, dynamic> && rpcResult['ok'] == false) {
-        final errorMsg =
-            rpcResult['error'] as String? ?? t.setupSnackUnknownError;
-        log.w('complete_member_onboarding returned error: $errorMsg');
+        final rpcError = rpcResult['error'];
+        log.w('complete_member_onboarding returned error: $rpcError');
         if (mounted) {
-          setState(() => _isSaving = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMsg)),
+            SnackBar(content: Text(t.memberOnboardingSaveError)),
           );
         }
         return;
@@ -192,18 +192,22 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
 
       ref.invalidate(memberOnboardingProvider);
       ref.invalidate(householdMembersProvider);
-      ref.invalidate(householdMembersProvider);
       ref.invalidate(userProfileProvider);
 
       if (mounted) widget.onComplete();
-    } catch (e) {
-      log.e('Error completing onboarding: $e');
+    } catch (e, stack) {
+      log.e(
+        'Error completing onboarding',
+        error: e,
+        stackTrace: stack,
+      );
       if (mounted) {
-        setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(t.memberOnboardingSaveError)),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -503,7 +507,8 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
                     style: AppTypography.body.copyWith(
                       fontWeight: FontWeight.w400,
                       height: 1.35,
-                      color: context.theme.textSecondary.withValues(alpha: 0.84),
+                      color:
+                          context.theme.textSecondary.withValues(alpha: 0.84),
                     ),
                   ),
                 ],
