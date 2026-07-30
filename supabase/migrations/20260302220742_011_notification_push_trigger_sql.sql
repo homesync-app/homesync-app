@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260302220742).
+-- Reconstructed from remote migration history (version 20260302220742).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE EXTENSION IF NOT EXISTS pg_net;

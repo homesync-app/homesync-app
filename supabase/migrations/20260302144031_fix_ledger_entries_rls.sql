@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260302144031).
+-- Reconstructed from remote migration history (version 20260302144031).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Allow authenticated users to insert ledger entries (for weekly winner bonus)

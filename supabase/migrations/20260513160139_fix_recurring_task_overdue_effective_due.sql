@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260513160139).
+-- Reconstructed from remote migration history (version 20260513160139).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Keep overdue counters aligned with recurring task completion semantics.

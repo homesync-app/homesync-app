@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260227225346).
+-- Reconstructed from remote migration history (version 20260227225346).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Drop the old FK to auth.users and point to public.users to enable joins

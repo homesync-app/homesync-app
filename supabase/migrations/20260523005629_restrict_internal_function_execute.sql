@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260523005629).
+-- Reconstructed from remote migration history (version 20260523005629).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Internal trigger/cron functions are SECURITY DEFINER implementation details.

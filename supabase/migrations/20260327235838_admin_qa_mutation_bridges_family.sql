@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260327235838).
+-- Reconstructed from remote migration history (version 20260327235838).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.qa_admin_complete_task(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/offline/sync_service.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class OfflineIndicator extends ConsumerWidget {
   const OfflineIndicator({super.key});
@@ -11,6 +12,7 @@ class OfflineIndicator extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final connectivity = ref.watch(connectivityProvider);
     final syncState = ref.watch(syncProvider);
+    final t = AppLocalizations.of(context);
 
     if (connectivity.isOnline &&
         !syncState.isSyncing &&
@@ -43,7 +45,7 @@ class OfflineIndicator extends ConsumerWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                _getMessage(connectivity, syncState),
+                _getMessage(connectivity, syncState, t),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 13,
@@ -69,7 +71,7 @@ class OfflineIndicator extends ConsumerWidget {
               )
             else if (syncState.pendingCount > 0)
               Text(
-                '${syncState.pendingCount} pendientes',
+                t.offlinePendingShort(syncState.pendingCount),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
@@ -107,15 +109,19 @@ class OfflineIndicator extends ConsumerWidget {
     return const Icon(Icons.info_outline, color: Colors.white, size: 18);
   }
 
-  String _getMessage(ConnectivityState connectivity, SyncState syncState) {
+  String _getMessage(
+    ConnectivityState connectivity,
+    SyncState syncState,
+    AppLocalizations t,
+  ) {
     if (!connectivity.isOnline) {
-      return 'Sin conexión - Los cambios se guardarán cuando estés online';
+      return t.offlineDisconnectedMessage;
     } else if (syncState.isSyncing) {
-      return 'Sincronizando cambios...';
+      return t.offlineSyncingMessage;
     } else if (syncState.pendingCount > 0) {
-      return '${syncState.pendingCount} cambio${syncState.pendingCount > 1 ? 's' : ''} pendiente${syncState.pendingCount > 1 ? 's' : ''} de sincronizar';
+      return t.offlinePendingChanges(syncState.pendingCount);
     }
-    return 'Sincronizado';
+    return t.offlineSyncedMessage;
   }
 }
 
@@ -126,6 +132,7 @@ class SyncFAB extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final connectivity = ref.watch(connectivityProvider);
     final syncState = ref.watch(syncProvider);
+    final t = AppLocalizations.of(context);
 
     if (connectivity.isOnline &&
         syncState.pendingCount > 0 &&
@@ -136,7 +143,7 @@ class SyncFAB extends ConsumerWidget {
         },
         backgroundColor: Theme.of(context).colorScheme.primary,
         icon: const Icon(Icons.sync),
-        label: Text('Sincronizar (${syncState.pendingCount})'),
+        label: Text(t.offlineSyncButton(syncState.pendingCount)),
       );
     }
 

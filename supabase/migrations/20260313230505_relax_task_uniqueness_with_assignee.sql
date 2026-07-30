@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260313230505).
+-- Reconstructed from remote migration history (version 20260313230505).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Relax the unique constraint to allow the same task title for different users within the same household.

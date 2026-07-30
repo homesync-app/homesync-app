@@ -9,6 +9,7 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
@@ -49,6 +50,8 @@ class DashboardTaskCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
+    final showGamification =
+        ref.watch(householdCapabilitiesProvider).type != HouseholdType.couple;
     final currentUserId = ref.watch(currentUserIdProvider);
     final members =
         ref.watch(householdMembersProvider).value ?? const <MemberModel>[];
@@ -128,10 +131,11 @@ class DashboardTaskCard extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        _TaskRewardPill(
-                          xp: task.xpReward,
-                          coins: displayCoins,
-                        ),
+                        if (showGamification)
+                          _TaskRewardPill(
+                            xp: task.xpReward,
+                            coins: displayCoins,
+                          ),
                       ],
                     ),
                   ),
@@ -452,10 +456,10 @@ class _TaskRewardPill extends StatelessWidget {
     if (xp <= 0 && coins <= 0) return const SizedBox.shrink();
 
     TextStyle style(Color color) => AppTypography.caption.copyWith(
-      fontSize: 10,
-      fontWeight: FontWeight.w700,
-      color: color,
-    );
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: color,
+        );
 
     return Container(
       padding: const EdgeInsets.symmetric(

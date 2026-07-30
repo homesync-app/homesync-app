@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260302163358).
+-- Reconstructed from remote migration history (version 20260302163358).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 DROP FUNCTION IF EXISTS public.get_debts(UUID);

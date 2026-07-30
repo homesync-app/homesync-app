@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260322172623).
+-- Reconstructed from remote migration history (version 20260322172623).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 drop policy if exists "Authenticated users can insert own logs" on public.application_logs;

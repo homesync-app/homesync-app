@@ -202,13 +202,17 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
                 onAction: () => _goToTab(MainTab.tasks),
               );
             }
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: tasks.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) =>
-                  _buildTaskCard(tasks[index], theme).animateStaggered(index),
+            const taskPreviewLimit = 5;
+            final visibleTasks =
+                tasks.take(taskPreviewLimit).toList(growable: false);
+            return Column(
+              children: [
+                for (var index = 0; index < visibleTasks.length; index++) ...[
+                  if (index > 0) const SizedBox(height: 8),
+                  _buildTaskCard(visibleTasks[index], theme)
+                      .animateStaggered(index),
+                ],
+              ],
             );
           },
         ),

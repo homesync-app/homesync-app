@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart'
     show sharedPreferencesProvider;
+import 'package:homesync_client/core/services/logger_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LocaleNotifier — persists app language preference (es / en / system)
@@ -18,6 +19,8 @@ const _kLocaleKey = 'app_locale';
 const supportedLanguageCodes = {'es', 'en'};
 
 class LocaleNotifier extends Notifier<Locale?> {
+  Future<void> _persistenceQueue = Future<void>.value();
+
   @override
   Locale? build() {
     final prefs = ref.read(sharedPreferencesProvider);
@@ -25,14 +28,39 @@ class LocaleNotifier extends Notifier<Locale?> {
     return _decode(saved);
   }
 
-  Future<void> setLocale(Locale? locale) async {
-    state = locale;
+  Future<void> setLocale(Locale? locale) {
+    final operation = _persistenceQueue.then(
+      (_) => _persistLocale(locale),
+    );
+    _persistenceQueue = operation;
+    return operation;
+  }
+
+  Future<void> _persistLocale(Locale? locale) async {
     final prefs = ref.read(sharedPreferencesProvider);
     final encoded = _encode(locale);
-    if (encoded == null) {
-      await prefs.remove(_kLocaleKey);
-    } else {
-      await prefs.setString(_kLocaleKey, encoded);
+
+    try {
+      final persisted = encoded == null
+          ? await prefs.remove(_kLocaleKey)
+          : await prefs.setString(_kLocaleKey, encoded);
+      if (!persisted) {
+        log.e(
+          'Failed to persist locale preference',
+          error: StateError('SharedPreferences returned false'),
+        );
+        return;
+      }
+
+      // Decode the persisted value instead of trusting the input so an
+      // unsupported locale consistently falls back to the system language.
+      state = _decode(encoded);
+    } catch (error, stackTrace) {
+      log.e(
+        'Failed to persist locale preference',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
   }
 

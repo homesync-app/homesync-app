@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260221155513).
+-- Reconstructed from remote migration history (version 20260221155513).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Fix existing tasks with missing completed_at

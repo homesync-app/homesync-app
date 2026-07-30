@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260313120448).
+-- Reconstructed from remote migration history (version 20260313120448).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Overhaul categories and task templates

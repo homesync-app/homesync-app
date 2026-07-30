@@ -75,6 +75,12 @@ $old$;
   ),
 $new$;
 
+  -- Dollar-quoted function bodies preserve the migration file line endings.
+  -- Normalize them so this textual patch works identically on LF and CRLF.
+  src := replace(src, E'\r\n', E'\n');
+  old_cte := replace(old_cte, E'\r\n', E'\n');
+  new_cte := replace(new_cte, E'\r\n', E'\n');
+
   if position(old_cte in src) = 0 then
     raise exception 'get_home_bootstrap pending_approvals CTE not found';
   end if;

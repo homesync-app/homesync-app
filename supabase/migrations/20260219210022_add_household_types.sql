@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260219210022).
+-- Reconstructed from remote migration history (version 20260219210022).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 ALTER TABLE public.households ADD COLUMN IF NOT EXISTS household_type TEXT NOT NULL DEFAULT 'couple';

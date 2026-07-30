@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260524224831).
+-- Reconstructed from remote migration history (version 20260524224831).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Parent Mode task approvals are premium-only.

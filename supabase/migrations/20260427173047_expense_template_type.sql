@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260427173047).
+-- Reconstructed from remote migration history (version 20260427173047).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 ALTER TABLE expense_templates

@@ -338,10 +338,10 @@ void main() {
       expect(solo.showFamilyBoard, isFalse);
     });
 
-    test('couple shows love notes and couple rewards experience', () {
+    test('couple shows love notes and couple connection experience', () {
       final couple = caps(HouseholdType.couple);
       expect(couple.showLoveNotes, isTrue);
-      expect(couple.usesCoupleRewardsExperience, isTrue);
+      expect(couple.usesCoupleConnectionExperience, isTrue);
       expect(couple.showFamilyBoard, isFalse);
       expect(couple.showPartnerTab, isTrue);
     });
@@ -351,7 +351,7 @@ void main() {
         final c = caps(type);
         expect(c.showFamilyBoard, isTrue, reason: '$type should show board');
         expect(c.showLoveNotes, isFalse, reason: '$type has no love notes');
-        expect(c.usesCoupleRewardsExperience, isFalse);
+        expect(c.usesCoupleConnectionExperience, isFalse);
       }
     });
 

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260513163557).
+-- Reconstructed from remote migration history (version 20260513163557).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.delete_expense_v1(

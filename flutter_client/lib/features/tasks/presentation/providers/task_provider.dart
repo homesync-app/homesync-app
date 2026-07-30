@@ -145,7 +145,12 @@ class Tasks extends _$Tasks {
     HomeBootstrapData? bootstrap;
     try {
       bootstrap = await ref.watch(homeBootstrapProvider.future);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Task bootstrap failed; falling back to the task query',
+        error: error,
+        stackTrace: stackTrace,
+      );
       bootstrap = null;
     }
     if (bootstrap?.householdId == householdId &&
@@ -620,6 +625,9 @@ class Tasks extends _$Tasks {
     required int coinReward,
     required List<String>? performers,
   }) {
+    if (ref.read(householdCapabilitiesProvider).type == HouseholdType.couple) {
+      return;
+    }
     final currentUserId = ref.read(currentUserIdProvider);
     final householdId = ref.read(householdIdProvider).value;
     if (currentUserId == null ||

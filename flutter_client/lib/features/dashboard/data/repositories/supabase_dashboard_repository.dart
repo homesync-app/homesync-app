@@ -248,6 +248,11 @@ class SupabaseDashboardRepository implements DashboardRepository {
               metadata['p_coin_reward'] ??
               metadata['p_coins_reward'] ??
               metadata['coins'];
+        } else if (eventType == 'couple_challenge_completed') {
+          uiType = 'couple_challenge';
+          data['title'] = item['title'];
+          data['description'] = item['description'];
+          data['shared_memory'] = true;
         } else if (eventType == 'expense_added') {
           uiType = 'expense';
           final amount = metadata['amount'] ?? 0;

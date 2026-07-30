@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260311154544).
+-- Reconstructed from remote migration history (version 20260311154544).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Update expense notification trigger to respect is_shared

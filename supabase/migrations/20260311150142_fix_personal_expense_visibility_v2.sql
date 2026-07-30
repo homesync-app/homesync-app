@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260311150142).
+-- Reconstructed from remote migration history (version 20260311150142).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Drop and recreate get_combined_feed to change return type

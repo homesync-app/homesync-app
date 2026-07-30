@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260316234645).
+-- Reconstructed from remote migration history (version 20260316234645).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- 1. Update save_expense_v4 or just the RLS logic? 

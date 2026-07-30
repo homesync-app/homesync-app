@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260425235552).
+-- Reconstructed from remote migration history (version 20260425235552).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- trigger que llama a la edge function notify-feedback en cada nuevo reporte

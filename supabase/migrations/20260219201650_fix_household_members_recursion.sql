@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260219201650).
+-- Reconstructed from remote migration history (version 20260219201650).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 DROP POLICY IF EXISTS "Users can view household members" ON public.household_members;

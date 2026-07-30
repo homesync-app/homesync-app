@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260505130817).
+-- Reconstructed from remote migration history (version 20260505130817).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 alter table public.households

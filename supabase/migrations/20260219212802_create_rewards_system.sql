@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260219212802).
+-- Reconstructed from remote migration history (version 20260219212802).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE TABLE IF NOT EXISTS public.rewards (

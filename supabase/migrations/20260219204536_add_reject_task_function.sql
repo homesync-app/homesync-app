@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260219204536).
+-- Reconstructed from remote migration history (version 20260219204536).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION public.reject_task_transaction(

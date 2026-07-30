@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -286,6 +287,18 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
           type: AppSnackBarType.error,
         );
       }
+    } catch (error, stackTrace) {
+      log.e(
+        'Approve pending task failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        _snack(
+          AppLocalizations.of(context).pendingApprovalsApproveErrorRetry,
+          type: AppSnackBarType.error,
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -309,7 +322,12 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
           type: AppSnackBarType.error,
         );
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Reject pending task failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         _snack(
           AppLocalizations.of(context).pendingApprovalsRejectErrorRetry,

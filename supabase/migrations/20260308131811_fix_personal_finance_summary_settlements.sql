@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260308131811).
+-- Reconstructed from remote migration history (version 20260308131811).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION public.get_personal_finance_summary(p_user_id uuid, p_household_id uuid)

@@ -300,7 +300,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                         if (!_isExpanded && _isSubmitting) ...[
                           const SizedBox(width: 10),
                           _completionBadge(categoryColor),
-                        ] else if (!_isExpanded &&
+                        ] else if (caps.type != HouseholdType.couple &&
+                            !_isExpanded &&
                             (task.xpReward > 0 || displayCoins > 0)) ...[
                           const SizedBox(width: 10),
                           _rewardBadge(task.xpReward, displayCoins),
@@ -925,10 +926,10 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   /// de AppColors: XP en dorado, coins en verde — igual que en el Home.
   Widget _rewardBadge(int xp, int coins) {
     TextStyle style(Color color) => AppTypography.caption.copyWith(
-      fontSize: 11,
-      fontWeight: FontWeight.w700,
-      color: color,
-    );
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: color,
+        );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

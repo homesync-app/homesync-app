@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260526163514).
+-- Reconstructed from remote migration history (version 20260526163514).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Vista de uso real de items en shopping_items (ultimos 90 dias) agrupados por

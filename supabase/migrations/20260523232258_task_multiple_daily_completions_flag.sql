@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260523232258).
+-- Reconstructed from remote migration history (version 20260523232258).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Explicitly mark tasks that can be completed multiple times in the same day.

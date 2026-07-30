@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260425234445).
+-- Reconstructed from remote migration history (version 20260425234445).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- reemplaza la polâ”œÂ¡tica de lectura para que el admin QA pueda leer todo el feedback

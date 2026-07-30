@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260520114950).
+-- Reconstructed from remote migration history (version 20260520114950).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 drop policy if exists "users insert own logs" on public.ocr_scan_logs;

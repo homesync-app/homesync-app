@@ -47,6 +47,33 @@
     "description": "Generic user-facing error message. Soft, not alarming."
   },
   "commonNoConnection": "Sin conexión a internet",
+  "offlineDisconnectedMessage": "Sin conexión · Los cambios se guardarán cuando vuelvas a estar online",
+  "@offlineDisconnectedMessage": {
+    "description": "Mensaje del indicador offline cuando no hay conexión."
+  },
+  "offlineSyncingMessage": "Sincronizando cambios...",
+  "@offlineSyncingMessage": {
+    "description": "Mensaje del indicador mientras sincroniza cambios pendientes."
+  },
+  "offlinePendingShort": "{count, plural, =1{1 pendiente} other{{count} pendientes}}",
+  "@offlinePendingShort": {
+    "description": "Contador compacto de cambios pendientes en el indicador offline.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "offlinePendingChanges": "{count, plural, =1{1 cambio pendiente de sincronizar} other{{count} cambios pendientes de sincronizar}}",
+  "@offlinePendingChanges": {
+    "description": "Estado completo de cambios pendientes de sincronización.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "offlineSyncedMessage": "Sincronizado",
+  "@offlineSyncedMessage": {
+    "description": "Estado mostrado cuando no quedan cambios pendientes."
+  },
+  "offlineSyncButton": "Sincronizar ({count})",
+  "@offlineSyncButton": {
+    "description": "Botón para sincronizar manualmente, con cantidad pendiente.",
+    "placeholders": {"count": {"type": "int"}}
+  },
   "commonConfirm": "Confirmar",
   "@commonConfirm": {
     "description": "Generic confirm button label, typically alongside Cancel in a 2-button dialog."
@@ -799,6 +826,28 @@
   "homeCoupleShoppingListTitle": "Lista actual",
   "@homeCoupleShoppingListTitle": {
     "description": "Title of the shopping-list preview card on the couple home."
+  },
+  "homeShoppingPreviewOpen": "Abrir compras",
+  "@homeShoppingPreviewOpen": {
+    "description": "Acción para abrir la lista completa desde el preview del Home."
+  },
+  "homeShoppingPreviewEmpty": "No hay productos pendientes.",
+  "@homeShoppingPreviewEmpty": {
+    "description": "Estado vacío del preview de compras del Home."
+  },
+  "homeShoppingPreviewLoadError": "No pudimos cargar la lista.",
+  "@homeShoppingPreviewLoadError": {
+    "description": "Error amigable al cargar el preview de compras."
+  },
+  "homeShoppingPreviewPendingCount": "{count, plural, =1{1 pendiente} other{{count} pendientes}}",
+  "@homeShoppingPreviewPendingCount": {
+    "description": "Cantidad de productos pendientes en el preview de compras.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "homeShoppingPreviewMoreItems": "{count, plural, =1{+1 más en la lista} other{+{count} más en la lista}}",
+  "@homeShoppingPreviewMoreItems": {
+    "description": "Cantidad de productos adicionales ocultos en el preview compacto.",
+    "placeholders": {"count": {"type": "int"}}
   },
   "homeCoupleTasksTitle": "Hoy en casa",
   "@homeCoupleTasksTitle": {
@@ -1902,9 +1951,17 @@
   "createTaskRecurrenceCustom": "Personalizada",
   "createTaskValidationCustomDays": "Elegí al menos un día para la repetición personalizada.",
   "createTaskValidationCustomMonthDates": "Elegí al menos una fecha del mes.",
+  "createTaskValidationInterval": "El intervalo debe ser de al menos 1 día.",
+  "@createTaskValidationInterval": {
+    "description": "Error mostrado cuando el intervalo de repetición personalizado es menor que un día."
+  },
   "createTaskValidationTitleRequired": "Título requerido",
   "createTaskValidationNumberRequired": "Ingresá un número",
   "createTaskValidationNotNegative": "No puede ser negativo",
+  "createTaskValidationRewardRange": "Usá entre 0 y 50 XP y entre 0 y 5 coins.",
+  "@createTaskValidationRewardRange": {
+    "description": "Límite de seguridad para recompensas personalizadas de tareas."
+  },
   "createTaskSnackCategoryNotReady": "Esperá un momento y elegí una categoría.",
   "createTaskSnackDuplicate": "Ya existe una tarea idéntica activa",
   "createTaskSnackCreated": "Tarea creada",
@@ -1933,6 +1990,10 @@
   "createTaskSectionRotationEyebrow": "ROTACIÓN",
   "createTaskSectionRotationTitle": "Que se turnen los miembros",
   "createTaskSectionRotationSubtitle": "Elegí al menos dos. Cada vez que se complete, le toca al siguiente.",
+  "createTaskRotationMinimumPeople": "Elegí al menos 2 personas para armar el turno.",
+  "@createTaskRotationMinimumPeople": {
+    "description": "Ayuda mostrada cuando el usuario seleccionó una sola persona para la rotación de una tarea."
+  },
   "createTaskCustomTabWeekdays": "Por día",
   "createTaskCustomTabInterval": "Intervalo",
   "createTaskCustomTabMonthDays": "Fecha",
@@ -1996,6 +2057,31 @@
       }
     }
   },
+  "completeTaskMixedApprovalMessage": "{count, plural, =1{1 tarea pendiente de aprobación} other{{count} tareas pendientes de aprobación}}, ⭐ {xp} XP y {coins} Coins!",
+  "@completeTaskMixedApprovalMessage": {
+    "description": "Mensaje al completar tareas cuando algunas requieren aprobación y otras otorgan recompensas inmediatamente.",
+    "placeholders": {
+      "count": {"type": "int"},
+      "xp": {"type": "int"},
+      "coins": {"type": "int"}
+    }
+  },
+  "completeTaskApprovalOnlyMessage": "{count, plural, =1{1 tarea enviada para aprobación} other{{count} tareas enviadas para aprobación}}",
+  "@completeTaskApprovalOnlyMessage": {
+    "description": "Mensaje al completar tareas cuando todas quedan pendientes de aprobación.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "completeTaskRewardMessage": "⭐ {verb} {xp} XP y {coins} Coins!",
+  "@completeTaskRewardMessage": {
+    "description": "Mensaje de recompensas obtenidas al completar tareas sin aprobación.",
+    "placeholders": {
+      "verb": {"type": "String"},
+      "xp": {"type": "int"},
+      "coins": {"type": "int"}
+    }
+  },
   "editTaskHeaderTitle": "Editar tarea",
   "editTaskHeaderSubtitle": "Actualizá el nombre, la categoría y la recompensa de esta tarea.",
   "editTaskFieldNameHint": "Nombre de la tarea",
@@ -2037,6 +2123,46 @@
   "familyDashboardTitle": "Vista por miembro",
   "familyDashboardLockedNotice": "Esta vista es para administradores de hogares familiares.",
   "familyDashboardWeekFilter": "Semana",
+  "familyDashboardMonthFilter": "Mes",
+  "@familyDashboardMonthFilter": {
+    "description": "Opción del selector de período para mostrar el mes completo."
+  },
+  "familyDashboardProgress": "{done, plural, =1{1 de {total} hecha} other{{done} de {total} hechas}}",
+  "@familyDashboardProgress": {
+    "description": "Progreso compacto de tareas completadas sobre el total planificado de un integrante.",
+    "placeholders": {
+      "done": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "familyDashboardStreakDays": "{count, plural, =1{1 día} other{{count} días}}",
+  "@familyDashboardStreakDays": {
+    "description": "Cantidad de días de racha de un integrante.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "familyDashboardPendingCount": "{count, plural, =1{1 pendiente} other{{count} pendientes}}",
+  "@familyDashboardPendingCount": {
+    "description": "Cantidad compacta de tareas pendientes.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "familyDashboardOverdueCount": "{count, plural, =1{1 atrasada} other{{count} atrasadas}}",
+  "@familyDashboardOverdueCount": {
+    "description": "Cantidad compacta de tareas atrasadas.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "familyDashboardToApproveCount": "{count, plural, =1{1 a aprobar} other{{count} a aprobar}}",
+  "@familyDashboardToApproveCount": {
+    "description": "Cantidad compacta de tareas que esperan aprobación. La frase no cambia entre singular y plural en español.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "familyDashboardActiveMembers": "{active, plural, =1{1 de {total} integrante tiene tareas activas.} other{{active} de {total} integrantes tienen tareas activas.}}",
+  "@familyDashboardActiveMembers": {
+    "description": "Resumen de integrantes que tienen tareas activas en el período.",
+    "placeholders": {
+      "active": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
   "familyDashboardEmptyWeek": "Sin tareas esta semana",
   "familyDashboardEmptyMonth": "Sin tareas este mes",
   "familyDashboardNoStreak": "Sin racha",
@@ -2072,6 +2198,34 @@
   "weeklySummaryMetricCompletion": "Cumpl.",
   "weeklySummaryEyebrowCompletion": "Cumplimiento",
   "weeklySummaryEyebrowNeedsBoost": "Necesita un empujón",
+  "weeklySummaryMvpTitle": "{name} se llevó la semana",
+  "@weeklySummaryMvpTitle": {
+    "description": "Título de la persona MVP del resumen semanal.",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "weeklySummaryMvpSubtitle": "{count, plural, =1{Completó 1 tarea en el hogar.} other{Completó {count} tareas en el hogar.}}",
+  "@weeklySummaryMvpSubtitle": {
+    "description": "Cantidad de tareas completadas por la persona MVP de la semana.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "weeklySummaryNeedsBoostTitle": "{name} se quedó con tareas pendientes",
+  "@weeklySummaryNeedsBoostTitle": {
+    "description": "Título para la persona que necesita apoyo con sus tareas.",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "weeklySummaryNeedsBoostSubtitle": "{count, plural, =1{1 tarea atrasada. Quizá esta semana puedas ayudarle a destrabar.} other{{count} tareas atrasadas. Quizá esta semana puedas ayudarle a destrabar.}}",
+  "@weeklySummaryNeedsBoostSubtitle": {
+    "description": "Cantidad de tareas atrasadas y sugerencia de apoyo semanal.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "weeklySummaryEyebrowMostForgotten": "La más olvidada",
   "weeklySummaryEyebrowExpenses": "Gastos compartidos",
   "weeklySummaryEyebrowTopCategory": "Top categoría",
@@ -2901,7 +3055,7 @@
   "faqWhoSeesWhat": "¿Qué ve cada miembro del hogar?",
   "faqWhoSeesWhatAnswer": "Cada rol ve lo que le corresponde: los adultos ven todo, incluidas las finanzas compartidas; los adolescentes ven sus finanzas personales pero no los gastos de los adultos; y los hijos/as no ven finanzas — su mundo son las tareas, los puntos y los premios.",
   "faqTasksBasics": "¿Cómo funcionan las tareas?",
-  "faqTasksBasicsAnswer": "Creá tareas puntuales o recurrentes (diarias, semanales, mensuales), asignalas a alguien o dejalas libres para quien las agarre. Cada tarea da XP y coins al completarse, el calendario muestra lo que viene, y las recurrentes se reprograman solas.",
+  "faqTasksBasicsAnswer": "Creá tareas puntuales o recurrentes (diarias, semanales, mensuales), asignalas a alguien o dejalas libres para quien las agarre. El calendario muestra lo que viene y las recurrentes se reprograman solas. En Pareja, completarlas actualiza el progreso compartido sin XP ni coins.",
   "faqApprovals": "¿Cómo funcionan las aprobaciones de tareas?",
   "faqApprovalsAnswer": "{role, select, parent{Cuando un hijo/a o adolescente marca una tarea como hecha, queda pendiente de tu aprobación: la revisás desde Aprobaciones y, al confirmarla, recién ahí se acreditan los XP y coins. Quién necesita aprobación se ajusta en la configuración del hogar.} teen{Según cómo esté configurado el hogar, al marcar una tarea como hecha puede quedar pendiente hasta que un adulto la confirme. Recién ahí se te acreditan los XP y coins.} child{Cuando marcás una tarea como hecha, un adulto la revisa y la confirma. ¡Apenas la apruebe te llegan los XP y los coins!} other{Las tareas de hijos/as y adolescentes pueden requerir la confirmación de un adulto antes de acreditar XP y coins, según la configuración del hogar.}}",
   "@faqApprovalsAnswer": {
@@ -2914,7 +3068,7 @@
   "faqHowEarnXp": "¿Cómo gano XP y subo de nivel?",
   "faqHowEarnXpAnswer": "Cada tarea completada suma XP (las más difíciles dan más). Con el XP subís de nivel y desbloqueás logros: medallas por hitos como completar 50 tareas. Todo tu progreso se ve en Estadísticas.",
   "faqWhatCoins": "¿Para qué sirven los Coins?",
-  "faqWhatCoinsAnswer": "{mode, select, family{Los coins son la moneda del hogar: los chicos los ganan completando tareas y los canjean en la tienda de premios por las recompensas que crearon los adultos — una salida, tiempo de pantalla, su comida favorita.} other{Los coins que ganás completando tareas se canjean en Premios por los vouchers que crea tu pareja: una cena, un masaje, una salida sorpresa. La idea es premiarse mutuamente por bancar el hogar.}}",
+  "faqWhatCoinsAnswer": "{mode, select, family{Los coins son la moneda del hogar: los chicos los ganan completando tareas y los canjean en la tienda de premios por las recompensas que crearon los adultos — una salida, tiempo de pantalla, su comida favorita.} other{En modo Pareja no se usan coins: las tareas muestran cómo se reparte el trabajo y las propuestas se conversan sin precio, deuda ni obligación. Los coins quedan reservados para la dinámica familiar con chicos.}}",
   "@faqWhatCoinsAnswer": {
     "placeholders": {
       "mode": {
@@ -2922,12 +3076,12 @@
       }
     }
   },
-  "faqWhatWeeklyDuels": "¿Qué son los Duelos Semanales?",
-  "faqWhatWeeklyDuelsAnswer": "Cada semana arranca un duelo de XP contra tu pareja con marcador oculto: ves tu propio avance, pero el resultado real se descubre recién al cierre del domingo. Quien más sumó se lleva la corona y un bonus de coins.",
+  "faqWhatWeeklyDuels": "¿Hay un duelo semanal en Pareja?",
+  "faqWhatWeeklyDuelsAnswer": "No. En modo Pareja la semana se mira como un esfuerzo compartido: pueden ver cuántas tareas hicieron y cómo se repartieron, sin ganador, marcador ni bonus.",
   "faqFamilyRanking": "¿Cómo funciona el ranking familiar?",
   "faqFamilyRankingAnswer": "Cada semana la familia compite sano: el ranking muestra quién sumó más XP completando tareas. Al cierre hay un ganador con corona y bonus, y el resumen semanal les cuenta cómo le fue a cada uno.",
   "faqWhatSpecialEvents": "¿Qué es el evento semanal de pareja?",
-  "faqWhatSpecialEventsAnswer": "Cada semana aparece un desafío pensado para los dos: recrear la primera cita, cocinar juntos, una noche sin pantallas. Al completarlo, ambos reciben coins y el evento queda marcado como logrado para los dos hasta que llegue el siguiente.",
+  "faqWhatSpecialEventsAnswer": "Cada semana aparece una propuesta pensada para los dos: recrear la primera cita, cocinar juntos o pasar una noche sin pantallas. Al completarla guardan un momento compartido y avanzan en sus logros de pareja, sin coins ni obligaciones.",
   "faqContributionBalance": "¿Qué es el equilibrio de aporte?",
   "faqContributionBalanceAnswer": "Es la foto neutral del mes: combina tareas hechas y gastos compartidos para mostrar cuánto viene aportando cada uno a la convivencia. Sin ganadores ni perdedores — sirve para charlar con datos, no para competir.",
   "faqRewardsStore": "¿Cómo funciona la tienda de premios?",
@@ -3343,9 +3497,10 @@
   "coupleChallengeExpandTooltip": "Expandir",
   "coupleChallengeShowLess": "Ver menos",
   "coupleChallengeShowMore": "Ver detalles completos",
-  "coupleChallengeSharedReward": "Recompensa compartida",
-  "coupleChallengeSharedRewardBody": "Si lo completan, ambos reciben {count} coins.",
+  "coupleChallengeSharedReward": "Un momento de los dos",
+  "coupleChallengeSharedRewardBody": "{count, plural, =0{Todavía no guardaron momentos especiales} =1{1 momento compartido} other{{count} momentos compartidos}}",
   "@coupleChallengeSharedRewardBody": {
+    "description": "Cantidad de eventos semanales que la pareja completó y guardó como momentos compartidos.",
     "placeholders": {
       "count": {
         "type": "int"
@@ -3353,8 +3508,117 @@
     }
   },
   "coupleChallengeWeDidIt": "Lo hicimos",
-  "coupleChallengeDoneThisWeek": "¡Completado esta semana!",
-  "coupleChallengeAlreadyDone": "Ya completaron el desafío de esta semana 💚",
+  "coupleChallengeDoneThisWeek": "Guardado como momento compartido",
+  "coupleChallengeAlreadyDone": "Ya guardaron el especial de esta semana.",
+  "coupleSpaceWeekEyebrow": "NUESTRA SEMANA",
+  "coupleSpaceTasksReady": "{done} de {total} tareas listas",
+  "@coupleSpaceTasksReady": {
+    "description": "Progreso conjunto de tareas del hogar durante la semana.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleSpaceNoTasksPlanned": "Una semana tranquila por ahora",
+  "coupleSpaceRemainingTasks": "{count, plural, =0{No quedan tareas pendientes} =1{Queda 1 pendiente} other{Quedan {count} pendientes}}",
+  "@coupleSpaceRemainingTasks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleSpaceNeedsAttention": "{count, plural, =1{1 necesita atención} other{{count} necesitan atención}}",
+  "@coupleSpaceNeedsAttention": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleSpaceWeekSupport": "El hogar avanza cuando se reparten lo que pesa.",
+  "coupleSpaceTaskEffortEyebrow": "ESFUERZO",
+  "coupleSpaceTaskEffortTitle": "Qué tan demandante es",
+  "coupleSpaceTaskEffortSubtitle": "La dificultad ayuda a repartir mejor las tareas; no genera puntos ni coins.",
+  "coupleSpaceTaskCompletionMessage": "{count, plural, =1{Tarea completada. La semana avanzó un poco más.} other{{count} tareas completadas. La semana avanzó un poco más.}}",
+  "@coupleSpaceTaskCompletionMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleSpaceDistributionAction": "Ver cómo se repartió",
+  "coupleSpaceDistributionTitle": "Cómo se repartió la semana",
+  "coupleSpaceDistributionSubtitle": "Una foto para conversar, sin ganadores ni puntajes.",
+  "coupleSpaceTasksDone": "{count, plural, =0{Sin tareas completadas} =1{1 tarea completada} other{{count} tareas completadas}}",
+  "@coupleSpaceTasksDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleSpaceForConnection": "Para conectar",
+  "coupleSpaceSpecialMemoryBody": "Al completarlo, guardan el recuerdo y avanzan juntos en sus logros de pareja.",
+  "coupleSpaceSkipWeek": "Pasar esta semana",
+  "coupleSpaceSkipToast": "Lo dejamos para otro momento. No afecta ningún logro.",
+  "coupleSpaceUndo": "Ver de nuevo",
+  "coupleSpaceSpecialConfirmTitle": "¿Guardamos este momento?",
+  "coupleSpaceSpecialConfirmBody": "Confirmá solo si los dos participaron y se sintieron cómodos. No suma coins ni genera ninguna deuda.",
+  "coupleSpaceSpecialCompletedTitle": "Un momento más de ustedes",
+  "coupleSpaceSpecialCompletedBody": "Quedó guardado en su historia compartida.",
+  "coupleSpacePlansTitle": "Planes y deseos",
+  "coupleSpacePlansSubtitle": "Propuestas gratuitas: se pueden aceptar, posponer o retirar sin consecuencias.",
+  "coupleSpaceProposeAction": "Proponer algo",
+  "coupleSpaceProposalsEmptyTitle": "Todavía no hay propuestas",
+  "coupleSpaceProposalsEmptyBody": "Podés abrir una conversación, sugerir un plan o pedir apoyo sin ponerle precio.",
+  "coupleSpaceProposalAwaiting": "Esperando respuesta",
+  "coupleSpaceProposalRespond": "Responder",
+  "coupleSpaceProposalAccepted": "Acordado",
+  "coupleSpaceProposalDeferred": "Para después",
+  "@coupleSpaceProposalDeferred": {
+    "description": "Estado visible de una propuesta que la pareja decidió retomar más adelante."
+  },
+  "coupleSpaceProposalMine": "Tu propuesta",
+  "coupleSpaceProposalCategoryTalk": "Para charlar",
+  "coupleSpaceProposalCategoryPlan": "Plan juntos",
+  "coupleSpaceProposalCategoryAffection": "Afecto",
+  "coupleSpaceProposalCategorySupport": "Apoyo",
+  "coupleSpaceNewProposalTitle": "Proponer algo",
+  "coupleSpaceNewProposalBody": "No tiene precio ni crea una obligación. La otra persona siempre puede decir “ahora no”.",
+  "coupleSpaceProposalTitleLabel": "¿Qué te gustaría proponer?",
+  "coupleSpaceProposalTitleHint": "Ej.: Cocinar algo nuevo juntos",
+  "coupleSpaceProposalDescriptionLabel": "Contá un poco más (opcional)",
+  "coupleSpaceProposalDescriptionHint": "Qué imaginás, cuándo podría ser o qué necesitás",
+  "coupleSpaceProposalCategoryLabel": "Tipo de propuesta",
+  "coupleSpaceProposalSend": "Enviar propuesta",
+  "coupleSpaceProposalTitleValidation": "Escribí al menos 3 caracteres.",
+  "coupleSpaceProposalCreated": "Propuesta enviada. No genera ninguna deuda.",
+  "coupleSpaceProposalResponseTitle": "Responder la propuesta",
+  "coupleSpaceProposalResponseBody": "Elegí con libertad. Decir “ahora no” no resta puntos ni requiere explicación.",
+  "coupleSpaceProposalAccept": "Dale",
+  "coupleSpaceProposalDefer": "Para después",
+  "@coupleSpaceProposalDefer": {
+    "description": "Acción para posponer una propuesta sin aceptarla ni rechazarla."
+  },
+  "coupleSpaceProposalDecline": "Ahora no",
+  "coupleSpaceProposalWithdraw": "Retirar propuesta",
+  "coupleSpaceProposalArchive": "Archivar",
+  "coupleSpaceProposalAcceptedToast": "Quedó como un plan acordado.",
+  "coupleSpaceProposalDeferredToast": "Quedó guardada para retomarla cuando quieran.",
+  "@coupleSpaceProposalDeferredToast": {
+    "description": "Confirmación sin presión al posponer una propuesta de pareja."
+  },
+  "coupleSpaceProposalDeclinedToast": "Respuesta guardada sin penalizaciones.",
+  "coupleSpaceProposalWithdrawnToast": "Retiraste la propuesta.",
+  "coupleSpaceProposalArchivedToast": "Plan archivado.",
+  "coupleSpaceLoadError": "No pudimos cargar este espacio.",
+  "coupleSpaceRetry": "Reintentar",
   "tourStepLabel": "Paso {current} de {total}",
   "@tourStepLabel": {
     "placeholders": {
@@ -3373,8 +3637,8 @@
   "tourFinaleTitle": "¡Listo!",
   "tourFinaleCta": "Empezar a usar",
   "tourCoupleWelcomeTitle": "Su hogar, en 30 segundos",
-  "tourCoupleWelcomeBody": "Les muestro lo esencial: tareas, monedas, duelo y gastos. Corto y al punto.",
-  "tourCoupleWelcomeBodyNamed": "Te muestro lo esencial para organizar todo con {partnerName}: tareas, monedas, duelo y gastos.",
+  "tourCoupleWelcomeBody": "Les muestro lo esencial: tareas compartidas, propuestas, momentos especiales y gastos. Corto y al punto.",
+  "tourCoupleWelcomeBodyNamed": "Te muestro lo esencial para organizar todo con {partnerName}: tareas compartidas, propuestas, momentos especiales y gastos.",
   "@tourCoupleWelcomeBodyNamed": {
     "placeholders": {
       "partnerName": {
@@ -3382,13 +3646,13 @@
       }
     }
   },
-  "tourTasksTitleHas": "Hacé tareas, ganá puntos",
-  "tourTasksBodyHas": "Tocá ✓ para completar. Cada tarea suma monedas y XP solo para vos.",
+  "tourTasksTitleHas": "Las tareas, entre los dos",
+  "tourTasksBodyHas": "Tocá ✓ para completar. El progreso semanal ayuda a ver lo que falta y a repartir mejor el trabajo.",
   "tourTasksTitleEmpty": "Hoy en casa está vacío",
   "tourTasksBodyEmpty": "Acá van a vivir las tareas del día. Programá la primera ahora y vela aparecer — o seguí el recorrido y lo hacés después.",
   "tourTasksCtaCreate": "Programar una tarea",
   "tourBalanceTitle": "El pulso del hogar",
-  "tourBalanceBody": "{mode, select, shared{Tienen economía integrada: acá no hay deudas entre ustedes. Ven cuánto gastó el hogar este mes y, abajo, los puntos de cada uno.} other{Acá ven cuánto se deben en gastos compartidos y, abajo, lo que ganó cada uno. Con “Equilibrar” saldan cuentas en un toque.}}",
+  "tourBalanceBody": "{mode, select, shared{Tienen economía integrada: acá no hay deudas entre ustedes y ven cuánto gastó el hogar este mes.} other{Acá ven cuánto se deben por gastos compartidos. Con “Equilibrar” pueden saldar las cuentas reales en un toque.}}",
   "@tourBalanceBody": {
     "placeholders": {
       "mode": {
@@ -5111,9 +5375,9 @@
   "coupleChallenge27Category": "Detallista",
   "coupleChallenge27Location": "Cualquier lugar",
   "coupleChallenge27Timing": "Sorpresa",
-  "coupleChallenge28Title": "Al servicio del amor",
-  "coupleChallenge28Description": "Turnarse para \"cuidar\" al otro por un rato: preparar un baño, dar un masaje o cocinar mientras el otro no hace nada.\n\nNo se trata de servir, se trata de cuidar con ternura e intención.",
-  "coupleChallenge28Motivation": "Cuidar es una forma silenciosa y poderosa de amar.",
+  "coupleChallenge28Title": "Un gesto de cuidado",
+  "coupleChallenge28Description": "Pregúntense qué gesto simple les haría bien hoy: preparar un mate, cocinar algo rico o dar un masaje, solo si nace y ambos se sienten cómodos.\n\nNo es una deuda ni un turno obligatorio. Es una invitación a cuidar con ternura y libertad.",
+  "coupleChallenge28Motivation": "El cuidado se siente mejor cuando se ofrece y se recibe con libertad.",
   "coupleChallenge28Category": "Cotidiano",
   "coupleChallenge28Location": "En casa",
   "coupleChallenge28Timing": "Noche",
@@ -5124,7 +5388,7 @@
   "coupleChallenge29Location": "En casa",
   "coupleChallenge29Timing": "Cualquier momento",
   "coupleChallenge30Title": "Sabores con historia",
-  "coupleChallenge30Description": "Elijan tres sabores, como vino, chocolate o queso, y con cada uno compartan un recuerdo personal: un viaje, una etapa, una persona.\n\nDejen que el sabor despierte historias que todavía no se contaron.",
+  "coupleChallenge30Description": "Elijan tres sabores, como una infusión, chocolate, fruta o queso, y con cada uno compartan un recuerdo personal: un viaje, una etapa, una persona.\n\nDejen que el sabor despierte historias que todavía no se contaron.",
   "coupleChallenge30Motivation": "Cada bocado es una puerta abierta a un recuerdo.",
   "coupleChallenge30Category": "Experiencial",
   "coupleChallenge30Location": "Cualquier lugar",
@@ -5148,8 +5412,8 @@
   "coupleChallenge33Location": "Naturaleza",
   "coupleChallenge33Timing": "Noche",
   "coupleChallenge34Title": "Noche de los sentidos",
-  "coupleChallenge34Description": "Preparen una mesa con texturas, aromas y sabores sorpresa. Con los ojos cerrados, el otro adivina qué está sintiendo.\n\nUna dinámica para entregarse a las sensaciones sin necesitar muchas palabras.",
-  "coupleChallenge34Motivation": "El amor se saborea, se huele y se toca.",
+  "coupleChallenge34Description": "Elijan juntos texturas, aromas y sabores que sean seguros para ambos. Quien adivina puede cerrar los ojos si quiere, y cualquiera puede pausar o cambiar algo en cualquier momento.\n\nUna dinámica suave para prestar atención a las sensaciones, sin presión.",
+  "coupleChallenge34Motivation": "La curiosidad compartida también puede ser una forma de conexión.",
   "coupleChallenge34Category": "Sensoral",
   "coupleChallenge34Location": "En casa",
   "coupleChallenge34Timing": "Noche",

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260321172821).
+-- Reconstructed from remote migration history (version 20260321172821).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Security hardening phase 1

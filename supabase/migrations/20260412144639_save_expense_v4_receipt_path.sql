@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260412144639).
+-- Reconstructed from remote migration history (version 20260412144639).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 DROP FUNCTION IF EXISTS public.save_expense_v4(

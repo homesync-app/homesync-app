@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260323173458).
+-- Reconstructed from remote migration history (version 20260323173458).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Create or replace function to provision the mapping between Firebase UID and internal App User ID

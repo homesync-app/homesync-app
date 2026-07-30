@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260325134212).
+-- Reconstructed from remote migration history (version 20260325134212).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.qa_admin_delete_dummy_member(

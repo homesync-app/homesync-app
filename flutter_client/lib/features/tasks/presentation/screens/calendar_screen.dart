@@ -7,6 +7,8 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/utils/date_extensions.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -429,6 +431,8 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
     final theme = context.theme;
     final isCompleted = task.isVerified;
     final xp = task.xpReward;
+    final showGamification =
+        ref.watch(householdCapabilitiesProvider).type != HouseholdType.couple;
     final category = task.category ?? 'general';
     final normalizedCategory = CategoryMapping.normaliseCategory(category);
 
@@ -532,15 +536,16 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Text(
-                              '+$xp XP',
-                              style: AppTypography.caption.copyWith(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.accentGold,
+                            if (showGamification)
+                              Text(
+                                '+$xp XP',
+                                style: AppTypography.caption.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.accentGold,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
+                            if (showGamification) const SizedBox(width: 8),
                             if (task.recurrenceType != null)
                               Container(
                                 padding: const EdgeInsets.symmetric(

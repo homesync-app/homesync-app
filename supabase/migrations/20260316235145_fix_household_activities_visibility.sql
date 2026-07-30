@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260316235145).
+-- Reconstructed from remote migration history (version 20260316235145).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Update RLS for household_activities to include gifts

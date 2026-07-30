@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260308000747).
+-- Reconstructed from remote migration history (version 20260308000747).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Update get_personal_finance_summary to include expenses table data

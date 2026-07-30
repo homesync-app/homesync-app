@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260421153845).
+-- Reconstructed from remote migration history (version 20260421153845).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.get_expense_stats_by_category(p_user_id uuid)

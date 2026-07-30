@@ -8,7 +8,8 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -17,6 +18,9 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 
 import 'task_creation_result.dart';
+
+const int _maxTaskXpReward = 50;
+const int _maxTaskCoinReward = 5;
 
 class CreateTaskDialog extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>>? members;
@@ -154,7 +158,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         break;
       case 'interval':
         if (_recurrenceInterval < 1) {
-          return 'El intervalo debe ser de al menos 1 dia.';
+          return t.createTaskValidationInterval;
         }
         break;
     }
@@ -233,6 +237,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
               : null;
       final assignedTo =
           rotationPoolList != null ? rotationPoolList.first : _selectedMemberId;
+      final isCouple =
+          ref.read(householdCapabilitiesProvider).type == HouseholdType.couple;
 
       await ref.read(tasksProvider.notifier).createTask({
         'title': title,
@@ -241,8 +247,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
             : _descriptionController.text.trim(),
         'category': _selectedCategory,
         'difficulty': _selectedDifficulty,
-        'xpReward': int.tryParse(_xpController.text) ?? 10,
-        'coinReward': int.tryParse(_coinController.text) ?? 1,
+        'xpReward': isCouple ? 0 : int.tryParse(_xpController.text) ?? 10,
+        'coinReward': isCouple ? 0 : int.tryParse(_coinController.text) ?? 1,
         'assignedTo': assignedTo,
         'recurrenceType': _selectedRecurrence,
         'recurrenceInterval': _recurrenceInterval,
@@ -263,11 +269,16 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           TaskCreationResult(title: title, category: _selectedCategory!),
         );
       }
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Create task failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(AppLocalizations.of(context).commonError),
             backgroundColor: AppColors.error,
           ),
         );
@@ -285,6 +296,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final showGamification =
+        ref.watch(householdCapabilitiesProvider).type != HouseholdType.couple;
     final media = MediaQuery.of(context);
     final keyboardInset = media.viewInsets.bottom;
     final availableHeight = media.size.height -
@@ -451,10 +464,19 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                       currentCategoryId == category.id;
                                   final color =
                                       AppColors.fromHex(category.color);
-                                  return GestureDetector(
+                                  final categoryLabel =
+                                      localizedTaskCategoryName(
+                                    AppLocalizations.of(context),
+                                    category,
+                                  );
+                                  return _buildAccessibleSelector(
+                                    label: categoryLabel,
+                                    selected: isSelected,
                                     onTap: () => setState(
                                       () => _selectedCategory = category.id,
                                     ),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.pill),
                                     child: Padding(
                                       padding: const EdgeInsets.only(
                                         right: AppSpacing.md,
@@ -509,10 +531,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                           ),
                                           const SizedBox(height: 6),
                                           Text(
-                                            localizedTaskCategoryName(
-                                              AppLocalizations.of(context),
-                                              category,
-                                            ),
+                                            categoryLabel,
                                             style: TextStyle(
                                               fontSize: 11,
                                               fontWeight: isSelected
@@ -623,17 +642,28 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                           const SizedBox(height: 20),
                           _buildRotationSection(),
                           _buildSectionHeader(
-                            AppLocalizations.of(context)
-                                .createTaskSectionValueEyebrow,
-                            AppLocalizations.of(context)
-                                .createTaskSectionValueTitle,
-                            AppLocalizations.of(context)
-                                .createTaskSectionValueSubtitle,
+                            showGamification
+                                ? AppLocalizations.of(context)
+                                    .createTaskSectionValueEyebrow
+                                : AppLocalizations.of(context)
+                                    .coupleSpaceTaskEffortEyebrow,
+                            showGamification
+                                ? AppLocalizations.of(context)
+                                    .createTaskSectionValueTitle
+                                : AppLocalizations.of(context)
+                                    .coupleSpaceTaskEffortTitle,
+                            showGamification
+                                ? AppLocalizations.of(context)
+                                    .createTaskSectionValueSubtitle
+                                : AppLocalizations.of(context)
+                                    .coupleSpaceTaskEffortSubtitle,
                           ),
                           const SizedBox(height: 10),
                           _buildDifficultySection(),
-                          const SizedBox(height: 16),
-                          _buildRewardsSection(),
+                          if (showGamification) ...[
+                            const SizedBox(height: 16),
+                            _buildRewardsSection(),
+                          ],
                         ],
                       ),
                     ),
@@ -732,7 +762,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                               Text(
                                                 AppLocalizations.of(context)
                                                     .createTaskSnackCreated,
-                                                style: AppTypography.cardTitle.copyWith(
+                                                style: AppTypography.cardTitle
+                                                    .copyWith(
                                                   color: Colors.white,
                                                 ),
                                               ),
@@ -742,7 +773,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                             key: const ValueKey('idle'),
                                             AppLocalizations.of(context)
                                                 .createTaskCreateButton,
-                                            style: AppTypography.cardTitle.copyWith(
+                                            style: AppTypography.cardTitle
+                                                .copyWith(
                                               color: Colors.white,
                                             ),
                                           ),
@@ -786,10 +818,35 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
     );
   }
 
+  Widget _buildAccessibleSelector({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+    required BorderRadius borderRadius,
+    required Widget child,
+  }) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: borderRadius,
+          excludeFromSemantics: true,
+          child: child,
+        ),
+      ),
+    );
+  }
+
   Widget _buildFrequencyChip(String label, String? value) {
     final theme = context.theme;
     final isSelected = _selectedRecurrence == value;
-    return GestureDetector(
+    return _buildAccessibleSelector(
+      label: label,
+      selected: isSelected,
       onTap: () => setState(() {
         _selectedRecurrence = value;
         if (value == 'custom' &&
@@ -798,6 +855,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           _selectedWeekdays.add(DateTime.now().weekday);
         }
       }),
+      borderRadius: BorderRadius.circular(AppRadii.lg),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(
@@ -870,8 +928,11 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
 
   Widget _buildCustomModeTab(String label, String mode) {
     final isSelected = _customRecurrenceMode == mode;
-    return GestureDetector(
+    return _buildAccessibleSelector(
+      label: label,
+      selected: isSelected,
       onTap: () => setState(() => _customRecurrenceMode = mode),
+      borderRadius: BorderRadius.circular(AppRadii.xs),
       child: Column(
         children: [
           Text(
@@ -916,7 +977,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       children: List.generate(7, (index) {
         final dayNum = index + 1;
         final isSelected = _selectedWeekdays.contains(dayNum);
-        return GestureDetector(
+        return _buildAccessibleSelector(
+          label: days[index],
+          selected: isSelected,
           onTap: () {
             setState(() {
               if (isSelected) {
@@ -926,6 +989,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
               }
             });
           },
+          borderRadius: BorderRadius.circular(AppRadii.pill),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: 36,
@@ -1051,7 +1115,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           children: List.generate(31, (index) {
             final day = index + 1;
             final isSelected = _selectedMonthDays.contains(day);
-            return GestureDetector(
+            return _buildAccessibleSelector(
+              label: day.toString(),
+              selected: isSelected,
               onTap: () {
                 setState(() {
                   if (isSelected) {
@@ -1061,6 +1127,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                   }
                 });
               },
+              borderRadius: BorderRadius.circular(AppRadii.xs),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: 30,
@@ -1126,7 +1193,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                 ? safeName.substring(0, 1).toUpperCase()
                 : '?';
             final selected = _rotationPool.contains(id);
-            return GestureDetector(
+            return _buildAccessibleSelector(
+              label: name.toString(),
+              selected: selected,
               onTap: () => setState(() {
                 if (selected) {
                   _rotationPool.remove(id);
@@ -1134,6 +1203,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                   _rotationPool.add(id);
                 }
               }),
+              borderRadius: BorderRadius.circular(AppRadii.modal),
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.sm,
@@ -1187,7 +1257,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.xs),
             child: Text(
-              'Necesitas al menos 2 personas en el pool.',
+              AppLocalizations.of(context).createTaskRotationMinimumPeople,
               style: AppTypography.caption.copyWith(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w700,
@@ -1203,8 +1273,11 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   Widget _buildAssigneeChip(String name, String? id, String initial) {
     final theme = context.theme;
     final isSelected = _selectedMemberId == id;
-    return GestureDetector(
+    return _buildAccessibleSelector(
+      label: name,
+      selected: isSelected,
       onTap: () => setState(() => _selectedMemberId = id),
+      borderRadius: BorderRadius.circular(AppRadii.modal),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
@@ -1263,6 +1336,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
 
   Widget _buildDifficultySection() {
     final theme = context.theme;
+    final showGamification =
+        ref.watch(householdCapabilitiesProvider).type != HouseholdType.couple;
     return Row(
       children: _difficulties.map((difficulty) {
         final isSelected = _selectedDifficulty == difficulty['id'];
@@ -1304,28 +1379,32 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                       color: isSelected ? AppColors.primary : theme.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${difficulty['xp']} XP / ${difficulty['coins']}',
-                        style: AppTypography.caption.copyWith(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: isSelected ? AppColors.primary : theme.textMuted,
+                  if (showGamification) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${difficulty['xp']} XP / ${difficulty['coins']}',
+                          style: AppTypography.caption.copyWith(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: isSelected
+                                ? AppColors.primary
+                                : theme.textMuted,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.monetization_on_rounded,
-                        size: 11,
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.coinGreen,
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.monetization_on_rounded,
+                          size: 11,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.coinGreen,
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -1418,7 +1497,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                       return AppLocalizations.of(context)
                           .createTaskValidationNumberRequired;
                     }
-                    if (parsed <= 0) return 'Debe ser mayor a 0';
+                    if (parsed < 0 || parsed > _maxTaskXpReward) {
+                      return AppLocalizations.of(context)
+                          .createTaskValidationRewardRange;
+                    }
                     return null;
                   },
                 ),
@@ -1452,9 +1534,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                       return AppLocalizations.of(context)
                           .createTaskValidationNumberRequired;
                     }
-                    if (parsed < 0) {
+                    if (parsed < 0 || parsed > _maxTaskCoinReward) {
                       return AppLocalizations.of(context)
-                          .createTaskValidationNotNegative;
+                          .createTaskValidationRewardRange;
                     }
                     return null;
                   },

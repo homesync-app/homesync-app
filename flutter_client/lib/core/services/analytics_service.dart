@@ -1,4 +1,5 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,13 +22,19 @@ class AnalyticsService {
   FirebaseAnalytics get _analytics =>
       _analyticsOverride ?? FirebaseAnalytics.instance;
 
+  FirebaseAnalytics? get _availableAnalytics {
+    if (_analyticsOverride != null) return _analyticsOverride;
+    if (Firebase.apps.isEmpty) return null;
+    return FirebaseAnalytics.instance;
+  }
+
   FirebaseAnalyticsObserver get observer =>
       FirebaseAnalyticsObserver(analytics: _analytics);
 
   Future<void> setUserId(String? userId) async {
-    await _safeCall(
+    await _safeFirebaseCall(
       'setUserId',
-      () => _analytics.setUserId(id: userId),
+      (analytics) => analytics.setUserId(id: userId),
     );
     // En PostHog identify y reset no son simétricos: un `identify(null)` no
     // existe, hay que cortar la sesión explícitamente al desloguear.
@@ -42,9 +49,9 @@ class AnalyticsService {
     required String name,
     String? value,
   }) async {
-    await _safeCall(
+    await _safeFirebaseCall(
       'setUserProperty:$name',
-      () => _analytics.setUserProperty(name: name, value: value),
+      (analytics) => analytics.setUserProperty(name: name, value: value),
     );
     if (value != null) {
       // Super property: viaja en todos los eventos, que es lo que permite
@@ -72,9 +79,9 @@ class AnalyticsService {
     required String screenName,
     String? screenClass,
   }) async {
-    await _safeCall(
+    await _safeFirebaseCall(
       'screenView:$screenName',
-      () => _analytics.logScreenView(
+      (analytics) => analytics.logScreenView(
         screenName: screenName,
         screenClass: screenClass ?? screenName,
       ),
@@ -380,9 +387,9 @@ class AnalyticsService {
       }
     }
 
-    await _safeCall(
+    await _safeFirebaseCall(
       'logEvent:$name',
-      () => _analytics.logEvent(
+      (analytics) => analytics.logEvent(
         name: name,
         parameters: sanitized.isEmpty ? null : sanitized,
       ),
@@ -401,6 +408,15 @@ class AnalyticsService {
         value.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]+'), '_');
     if (cleaned.isEmpty) return 'unknown';
     return cleaned.length <= 100 ? cleaned : cleaned.substring(0, 100);
+  }
+
+  Future<void> _safeFirebaseCall(
+    String context,
+    Future<void> Function(FirebaseAnalytics analytics) action,
+  ) async {
+    final analytics = _availableAnalytics;
+    if (analytics == null) return;
+    await _safeCall(context, () => action(analytics));
   }
 
   Future<void> _safeCall(

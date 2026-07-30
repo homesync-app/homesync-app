@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260414004607).
+-- Reconstructed from remote migration history (version 20260414004607).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Tabla para trackear productos que los usuarios agregan y no estâ”œÃ­n en el catâ”œÃ­logo predefinido.

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260313124826).
+-- Reconstructed from remote migration history (version 20260313124826).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Add category column to reward_templates and rewards

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260523232030).
+-- Reconstructed from remote migration history (version 20260523232030).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Allow intentional repeated completions of the same task in one day.

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260308165658).
+-- Reconstructed from remote migration history (version 20260308165658).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 ALTER TABLE public.savings_contributions

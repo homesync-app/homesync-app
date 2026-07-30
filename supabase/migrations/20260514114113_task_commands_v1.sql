@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260514114113).
+-- Reconstructed from remote migration history (version 20260514114113).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Task commands v1: idempotent versioned RPCs.

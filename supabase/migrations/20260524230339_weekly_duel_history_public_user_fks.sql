@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260524230339).
+-- Reconstructed from remote migration history (version 20260524230339).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Firebase Third-Party Auth stores app identities in public.users.

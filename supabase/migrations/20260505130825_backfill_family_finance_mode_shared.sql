@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260505130825).
+-- Reconstructed from remote migration history (version 20260505130825).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 alter table public.households disable trigger user;

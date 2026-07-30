@@ -10,6 +10,8 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/data/repositories/supabase_task_repository.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
@@ -232,6 +234,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
     final theme = Theme.of(context);
     final appTheme = context.theme;
     final t = AppLocalizations.of(context);
+    final showGamification =
+        ref.watch(householdCapabilitiesProvider).type != HouseholdType.couple;
     final (statusLabel, statusColor, statusIcon) = _statusInfo(t);
     final categoryColor = CategoryMapping.getCategoryColor(_category);
     final categoryIcon = CategoryMapping.getCategoryMaterialIcon(_category);
@@ -395,24 +399,26 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                     spacing: 6,
                                     runSpacing: 6,
                                     children: [
-                                      _buildChip(
-                                        icon: Icons.star_rounded,
-                                        label: '+$_xpReward XP',
-                                        color: AppColors.xpGold,
-                                        textColor: appTheme.textPrimary,
-                                        background: AppColors.accentGold
-                                            .withValues(alpha: 0.10),
-                                      ),
-                                      _buildChip(
-                                        icon: Icons.monetization_on_rounded,
-                                        label: t.taskDetailCoinsAwarded(
-                                          _coinReward,
+                                      if (showGamification) ...[
+                                        _buildChip(
+                                          icon: Icons.star_rounded,
+                                          label: '+$_xpReward XP',
+                                          color: AppColors.xpGold,
+                                          textColor: appTheme.textPrimary,
+                                          background: AppColors.accentGold
+                                              .withValues(alpha: 0.10),
                                         ),
-                                        color: AppColors.coinGreen,
-                                        textColor: appTheme.textPrimary,
-                                        background: AppColors.coinGreen
-                                            .withValues(alpha: 0.12),
-                                      ),
+                                        _buildChip(
+                                          icon: Icons.monetization_on_rounded,
+                                          label: t.taskDetailCoinsAwarded(
+                                            _coinReward,
+                                          ),
+                                          color: AppColors.coinGreen,
+                                          textColor: appTheme.textPrimary,
+                                          background: AppColors.coinGreen
+                                              .withValues(alpha: 0.12),
+                                        ),
+                                      ],
                                       if (_task.isRecurring)
                                         _buildChip(
                                           icon: Icons.event_repeat_rounded,

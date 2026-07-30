@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260313141731).
+-- Reconstructed from remote migration history (version 20260313141731).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 DROP INDEX IF EXISTS tasks_unique_per_household;

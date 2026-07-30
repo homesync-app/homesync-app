@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260318005757).
+-- Reconstructed from remote migration history (version 20260318005757).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION resolve_task_objection(

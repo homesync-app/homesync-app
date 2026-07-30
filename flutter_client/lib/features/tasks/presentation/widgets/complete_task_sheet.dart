@@ -9,7 +9,9 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
@@ -234,17 +236,23 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
         final approvalCount = selectedMembersRequiringApproval.length;
         final directCount = remainingMemberIds.length;
+        final showGamification = ref.read(householdCapabilitiesProvider).type !=
+            HouseholdType.couple;
 
         String message;
-        if (approvalCount > 0 && directCount > 0) {
-          message =
-              '$approvalCount tarea${approvalCount > 1 ? "s" : ""} pendiente${approvalCount > 1 ? "s" : ""} de aprobacion, ⭐ $totalXp XP y $totalCoins Coins!';
+        if (!showGamification) {
+          message = t.coupleSpaceTaskCompletionMessage(selectedTasks.length);
+        } else if (approvalCount > 0 && directCount > 0) {
+          message = t.completeTaskMixedApprovalMessage(
+            approvalCount,
+            totalXp,
+            totalCoins,
+          );
         } else if (approvalCount > 0) {
-          message =
-              '$approvalCount tarea${approvalCount > 1 ? "s" : ""} enviada${approvalCount > 1 ? "s" : ""} para aprobacion';
+          message = t.completeTaskApprovalOnlyMessage(approvalCount);
         } else {
           final verb = t.completeTaskRewardVerb(onlyMe ? 1 : 2);
-          message = '⭐ $verb $totalXp XP y $totalCoins Coins!';
+          message = t.completeTaskRewardMessage(verb, totalXp, totalCoins);
         }
 
         AppSnackBar.show(
@@ -1141,6 +1149,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   Widget _buildTaskSelectionItem(TaskModel task, Color catColor) {
     final theme = context.theme;
     final isSelected = _selectedTaskIds.contains(task.id);
+    final showGamification =
+        ref.watch(householdCapabilitiesProvider).type != HouseholdType.couple;
     final itemKey = _taskItemKeys.putIfAbsent(task.id, GlobalKey.new);
 
     return KeyedSubtree(
@@ -1184,7 +1194,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                   ),
                 ),
               ),
-              if (task.xpReward > 0)
+              if (showGamification && task.xpReward > 0)
                 Text(
                   '${task.xpReward} XP',
                   style: AppTypography.caption.copyWith(

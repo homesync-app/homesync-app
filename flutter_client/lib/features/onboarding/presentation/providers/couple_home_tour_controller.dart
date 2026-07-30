@@ -147,32 +147,7 @@ class CoupleHomeTourController extends Notifier<CoupleHomeTourState> {
               tint: AppColors.accentOrange,
               text: t.tourBalanceBulletSettle,
             ),
-          CoachmarkBullet(
-            icon: Icons.star_rounded,
-            tint: AppColors.xpGold,
-            text: t.tourBalanceBulletXp,
-          ),
-          CoachmarkBullet(
-            icon: Icons.monetization_on_rounded,
-            tint: AppColors.coinGreen,
-            text: t.tourBalanceBulletCoins,
-          ),
         ],
-      ),
-      CoachmarkStep(
-        kind: CoachmarkStepKind.infoModal,
-        title: t.tourDuelTitle,
-        body: t.tourDuelBody,
-        primaryCta: t.tourCtaNext,
-        icon: Icons.emoji_events_rounded,
-      ),
-      CoachmarkStep(
-        kind: CoachmarkStepKind.spotlight,
-        title: t.tourRewardsTitle,
-        body: t.tourRewardsBody,
-        primaryCta: t.tourCtaNext,
-        target: TourTarget.rewardsTab,
-        placement: TooltipPlacement.above,
       ),
       CoachmarkStep(
         kind: CoachmarkStepKind.spotlight,

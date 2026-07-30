@@ -469,13 +469,13 @@ class _MvpCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return _StoryCard(
       accent: AppColors.accentGold,
       icon: Icons.emoji_events_rounded,
       eyebrow: 'MVP',
-      title: '${member.fullName} se llevo la semana',
-      subtitle:
-          'Completo ${member.count} tarea${member.count == 1 ? "" : "s"} en el hogar.',
+      title: t.weeklySummaryMvpTitle(member.fullName),
+      subtitle: t.weeklySummaryMvpSubtitle(member.count),
       trailing: CustomUserAvatar(
         avatarUrl: member.avatarUrl,
         name: member.fullName,
@@ -492,13 +492,13 @@ class _SlackerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return _StoryCard(
       accent: AppColors.accentBlue,
       icon: Icons.support_rounded,
-      eyebrow: AppLocalizations.of(context).weeklySummaryEyebrowNeedsBoost,
-      title: '${member.fullName} se quedo con tareas pendientes',
-      subtitle:
-          '${member.count} tarea${member.count == 1 ? "" : "s"} atrasada${member.count == 1 ? "" : "s"}. Quiza esta semana puedas ayudarle a destrabar.',
+      eyebrow: t.weeklySummaryEyebrowNeedsBoost,
+      title: t.weeklySummaryNeedsBoostTitle(member.fullName),
+      subtitle: t.weeklySummaryNeedsBoostSubtitle(member.count),
       trailing: CustomUserAvatar(
         avatarUrl: member.avatarUrl,
         name: member.fullName,

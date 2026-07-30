@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260508170819).
+-- Reconstructed from remote migration history (version 20260508170819).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.reject_user_sensitive_updates()

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260322172239).
+-- Reconstructed from remote migration history (version 20260322172239).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.get_my_household_ids()

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260221163538).
+-- Reconstructed from remote migration history (version 20260221163538).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Enable Write access for Admin on Category and Task Template tables

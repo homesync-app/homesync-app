@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260311160846).
+-- Reconstructed from remote migration history (version 20260311160846).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- 1. Fix Privacy Policies: Treat 'gift' as shared

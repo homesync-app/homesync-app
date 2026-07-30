@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260519162911).
+-- Reconstructed from remote migration history (version 20260519162911).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Align production feedback schema with the app/admin contract and let

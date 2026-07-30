@@ -22,6 +22,7 @@ class BalanceCard extends ConsumerStatefulWidget {
   final String? balancedLabel;
   final String? neutralLabel;
   final bool compact;
+  final bool showGamification;
 
   /// When true, the household uses an integrated (shared) economy: there is no
   /// debt/balance between members, so the card shows a neutral "shared
@@ -44,6 +45,7 @@ class BalanceCard extends ConsumerStatefulWidget {
     this.balancedLabel,
     this.neutralLabel,
     this.compact = false,
+    this.showGamification = true,
     this.integratedEconomy = false,
     this.monthlySpent,
   });
@@ -322,50 +324,52 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                   ),
               ],
             ),
-            SizedBox(height: widget.compact ? 10 : 13),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(top: widget.compact ? 10 : 12),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: theme.border.withValues(alpha: 0.32),
+            if (widget.showGamification) ...[
+              SizedBox(height: widget.compact ? 10 : 13),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(top: widget.compact ? 10 : 12),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: theme.border.withValues(alpha: 0.32),
+                    ),
                   ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildInlineMetric(
-                      context,
-                      icon: Icons.star_rounded,
-                      label: 'XP',
-                      value: widget.xp,
-                      beginValue: _xpAnimationStart,
-                      color: AppColors.xpGold,
-                      subdued: isBalanced && widget.xp == 0,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildInlineMetric(
+                        context,
+                        icon: Icons.star_rounded,
+                        label: 'XP',
+                        value: widget.xp,
+                        beginValue: _xpAnimationStart,
+                        color: AppColors.xpGold,
+                        subdued: isBalanced && widget.xp == 0,
+                      ),
                     ),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 24,
-                    color: theme.border
-                        .withValues(alpha: isBalanced ? 0.14 : 0.22),
-                  ),
-                  Expanded(
-                    child: _buildInlineMetric(
-                      context,
-                      icon: Icons.monetization_on_rounded,
-                      label: 'coins',
-                      value: widget.coins,
-                      beginValue: _coinsAnimationStart,
-                      color: AppColors.coinGreen,
-                      subdued: isBalanced && widget.coins == 0,
+                    Container(
+                      width: 1,
+                      height: 24,
+                      color: theme.border
+                          .withValues(alpha: isBalanced ? 0.14 : 0.22),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: _buildInlineMetric(
+                        context,
+                        icon: Icons.monetization_on_rounded,
+                        label: 'coins',
+                        value: widget.coins,
+                        beginValue: _coinsAnimationStart,
+                        color: AppColors.coinGreen,
+                        subdued: isBalanced && widget.coins == 0,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),

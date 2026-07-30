@@ -58,11 +58,10 @@ enabled = true
 schema_paths = []
 
 [db.seed]
-# If enabled, seeds the database after migrations during a db reset.
-enabled = true
-# Specifies an ordered list of seed files to load during db reset.
-# Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed.sql"]
+# No maintained seed file exists yet. Keep reset reproducible instead of
+# pointing at a missing ./seed.sql; re-enable when a reviewed seed is added.
+enabled = false
+sql_paths = []
 
 [db.network_restrictions]
 # Enable management of network restrictions.
@@ -323,9 +322,10 @@ email_optional = false
 enabled = false
 
 # Use Firebase Auth as a third-party provider alongside Supabase Auth.
+# This mirrors production so local RLS/RPC checks receive Firebase claims.
 [auth.third_party.firebase]
-enabled = false
-# project_id = "my-firebase-project"
+enabled = true
+project_id = "homesync-prod-r7-123"
 
 # Use Auth0 as a third-party provider alongside Supabase Auth.
 [auth.third_party.auth0]
@@ -364,6 +364,14 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.scan-receipt]
+verify_jwt = false
+
+# Firebase Third-Party Auth uses asymmetric Firebase JWTs. These handlers
+# validate issuer, audience and signature themselves with Firebase JWKS.
+[functions.send-notification]
+verify_jwt = false
+
+[functions.send-feedback-ack]
 verify_jwt = false
 
 # RevenueCat authentica con su propio secret (REVENUECAT_WEBHOOK_SECRET) dentro

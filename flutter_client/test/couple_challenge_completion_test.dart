@@ -46,7 +46,7 @@ void main() {
       () async {
         final client = _CapturingClient({
           'status': 'completed',
-          'coins_earned': 15,
+          'coins_earned': 0,
         });
 
         final outcome = await completeCoupleChallengeRpc(
@@ -54,10 +54,7 @@ void main() {
           householdId: 'h1',
           weekIndex: 3,
           challengeId: 'weekly_challenge_1',
-          userIds: ['u1', 'u2'],
           completedBy: 'u1',
-          coinReward: 15,
-          xpReward: 10,
           title: 'Desafío: Recreando la primera cita',
           description: 'desc',
         );
@@ -77,10 +74,10 @@ void main() {
         expect(params['p_household_id'], 'h1');
         expect(params['p_week_index'], 3);
         expect(params['p_challenge_id'], 'weekly_challenge_1');
-        expect(params['p_user_ids'], ['u1', 'u2']);
+        expect(params['p_user_ids'], ['u1']);
         expect(params['p_completed_by'], 'u1');
-        expect(params['p_coin_reward'], 15);
-        expect(params['p_xp_reward'], 10);
+        expect(params['p_coin_reward'], 0);
+        expect(params['p_xp_reward'], 0);
       },
     );
 
@@ -91,10 +88,7 @@ void main() {
         householdId: 'h',
         weekIndex: 0,
         challengeId: 'c',
-        userIds: ['u'],
         completedBy: 'u',
-        coinReward: 15,
-        xpReward: 10,
         title: 't',
       );
       expect(outcome, CoupleChallengeOutcome.alreadyCompleted);
@@ -107,10 +101,7 @@ void main() {
         householdId: 'h',
         weekIndex: 0,
         challengeId: 'c',
-        userIds: ['u'],
         completedBy: 'u',
-        coinReward: 15,
-        xpReward: 10,
         title: 't',
       );
       expect(outcome, CoupleChallengeOutcome.failed);

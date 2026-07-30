@@ -6,11 +6,8 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/domain/models/couple_challenge.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/couple_challenge_provider.dart';
-import 'package:homesync_client/features/rewards/presentation/providers/couple_duel_stats_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_loader.dart';
 
@@ -22,7 +19,7 @@ import 'package:homesync_client/shared/widgets/app_loader.dart';
 /// (`complete_couple_challenge_v1`) → celebración → manejo de error/duplicado.
 mixin CoupleChallengeCompletionMixin<T extends ConsumerStatefulWidget>
     on ConsumerState<T> {
-  Future<void> handleCoupleChallengeCompletion(
+  Future<CoupleChallengeOutcome?> handleCoupleChallengeCompletion(
     CoupleChallenge challenge,
     String householdId,
     int weekIndex,
@@ -44,7 +41,7 @@ mixin CoupleChallengeCompletionMixin<T extends ConsumerStatefulWidget>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(t.coupleChallengeAlreadyDone)),
       );
-      return;
+      return CoupleChallengeOutcome.alreadyCompleted;
     }
 
     final confirm = await showDialog<bool>(
@@ -54,7 +51,7 @@ mixin CoupleChallengeCompletionMixin<T extends ConsumerStatefulWidget>
           borderRadius: BorderRadius.circular(AppRadii.xl),
         ),
         title: Text(t.rewardsChallengeCompletePrompt),
-        content: Text(t.rewardsChallengeCompleteBody(challenge.coinReward)),
+        content: Text(t.coupleSpaceSpecialConfirmBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -78,13 +75,13 @@ mixin CoupleChallengeCompletionMixin<T extends ConsumerStatefulWidget>
       ),
     );
 
-    if (confirm != true) return;
-    if (!mounted) return;
+    if (confirm != true) return null;
+    if (!mounted) return null;
 
-    await _execute(challenge, householdId, weekIndex);
+    return _execute(challenge, householdId, weekIndex);
   }
 
-  Future<void> _execute(
+  Future<CoupleChallengeOutcome?> _execute(
     CoupleChallenge challenge,
     String householdId,
     int weekIndex,
@@ -97,11 +94,9 @@ mixin CoupleChallengeCompletionMixin<T extends ConsumerStatefulWidget>
 
     final t = AppLocalizations.of(context);
     try {
-      final members = ref.read(householdMembersProvider).value ?? const [];
-      final userIds = members.map((m) => m.userId).toList();
       final currentUserId = ref.read(currentUserIdProvider);
-      if (userIds.isEmpty && currentUserId != null) {
-        userIds.add(currentUserId);
+      if (currentUserId == null) {
+        throw StateError('Missing current app user');
       }
 
       final title = t.rewardsChallengeTitle(challenge.localizedTitle(t));
@@ -111,31 +106,22 @@ mixin CoupleChallengeCompletionMixin<T extends ConsumerStatefulWidget>
         householdId: householdId,
         weekIndex: weekIndex,
         challengeId: challenge.id,
-        userIds: userIds,
-        completedBy: currentUserId ?? userIds.first,
-        coinReward: challenge.coinReward,
-        xpReward: 10,
+        completedBy: currentUserId,
         title: title,
         description: challenge.localizedDescription(t),
       );
 
-      if (!mounted) return;
+      if (!mounted) return null;
       Navigator.pop(context); // cerrar loader
 
       switch (outcome) {
         case CoupleChallengeOutcome.completed:
           SuccessCelebration.show(
             context,
-            title: t.rewardsChallengeCompleted,
-            message: t.rewardsChallengeCompletedBody(challenge.coinReward),
-            icon: '✨',
+            title: t.coupleSpaceSpecialCompletedTitle,
+            message: t.coupleSpaceSpecialCompletedBody,
+            icon: '💚',
           );
-          ref.invalidate(userBalanceProvider);
-          ref.invalidate(tasksProvider);
-          // El desafío acredita XP+coins a ambos: refrescar el duelo para que
-          // el tab no muestre números viejos.
-          ref.invalidate(coupleDuelStatsProvider);
-          ref.invalidate(weeklyXpByDayProvider);
         case CoupleChallengeOutcome.alreadyCompleted:
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(t.coupleChallengeAlreadyDone)),
@@ -148,9 +134,10 @@ mixin CoupleChallengeCompletionMixin<T extends ConsumerStatefulWidget>
             ),
           );
       }
+      return outcome;
     } catch (e, stack) {
       log.e('Couple challenge completion failed', error: e, stackTrace: stack);
-      if (!mounted) return;
+      if (!mounted) return null;
       Navigator.pop(context); // cerrar loader
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -158,6 +145,7 @@ mixin CoupleChallengeCompletionMixin<T extends ConsumerStatefulWidget>
           backgroundColor: AppColors.error,
         ),
       );
+      return null;
     }
   }
 }

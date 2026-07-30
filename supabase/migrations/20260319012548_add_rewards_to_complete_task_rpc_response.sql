@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260319012548).
+-- Reconstructed from remote migration history (version 20260319012548).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION public.complete_task_transaction(

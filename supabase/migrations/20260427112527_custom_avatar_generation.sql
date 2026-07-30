@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260427112527).
+-- Reconstructed from remote migration history (version 20260427112527).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Custom premium avatars.

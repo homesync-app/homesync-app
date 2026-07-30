@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260326221750).
+-- Reconstructed from remote migration history (version 20260326221750).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 ALTER TABLE public.rewards ADD COLUMN IF NOT EXISTS target_type TEXT DEFAULT 'all' CHECK (target_type IN ('adult', 'child', 'all'));

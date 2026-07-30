@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260428130535).
+-- Reconstructed from remote migration history (version 20260428130535).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.enforce_free_avatar_when_not_premium()

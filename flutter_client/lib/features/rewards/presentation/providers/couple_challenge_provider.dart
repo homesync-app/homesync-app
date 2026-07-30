@@ -24,10 +24,9 @@ final coupleChallengeCompletedProvider = FutureProvider.autoDispose
   return rows.isNotEmpty;
 });
 
-/// Completa el desafío semanal en UNA sola llamada atómica
-/// (`complete_couple_challenge_v1`): registra la semana, acredita XP+coins a
-/// cada miembro y deja la actividad en el feed. Reemplaza las 3 llamadas
-/// encadenadas que dejaban estado a medias y creaban una tarea fantasma.
+/// Completa el especial semanal en UNA sola llamada atómica
+/// (`complete_couple_challenge_v1`): registra la semana y guarda el momento en
+/// el feed compartido. En modo Pareja no acredita XP ni coins.
 ///
 /// Idempotente en el servidor: si la semana ya estaba registrada devuelve
 /// [CoupleChallengeOutcome.alreadyCompleted] sin re-acreditar.
@@ -36,10 +35,7 @@ Future<CoupleChallengeOutcome> completeCoupleChallenge(
   required String householdId,
   required int weekIndex,
   required String challengeId,
-  required List<String> userIds,
   required String completedBy,
-  required int coinReward,
-  required int xpReward,
   required String title,
   String? description,
 }) async {
@@ -48,10 +44,7 @@ Future<CoupleChallengeOutcome> completeCoupleChallenge(
     householdId: householdId,
     weekIndex: weekIndex,
     challengeId: challengeId,
-    userIds: userIds,
     completedBy: completedBy,
-    coinReward: coinReward,
-    xpReward: xpReward,
     title: title,
     description: description,
   );
@@ -76,10 +69,7 @@ Future<CoupleChallengeOutcome> completeCoupleChallengeRpc(
   required String householdId,
   required int weekIndex,
   required String challengeId,
-  required List<String> userIds,
   required String completedBy,
-  required int coinReward,
-  required int xpReward,
   required String title,
   String? description,
 }) async {
@@ -90,9 +80,12 @@ Future<CoupleChallengeOutcome> completeCoupleChallengeRpc(
       'p_household_id': householdId,
       'p_week_index': weekIndex,
       'p_challenge_id': challengeId,
-      'p_user_ids': userIds,
-      'p_xp_reward': xpReward,
-      'p_coin_reward': coinReward,
+      // The legacy v1 signature is kept for installed clients. The hardened
+      // server ignores these compatibility params and derives the actor from
+      // current_app_user_id().
+      'p_user_ids': [completedBy],
+      'p_xp_reward': 0,
+      'p_coin_reward': 0,
       'p_title': title,
       'p_description': description,
       'p_completed_by': completedBy,

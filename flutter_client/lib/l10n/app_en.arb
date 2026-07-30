@@ -47,6 +47,33 @@
     "description": "Generic user-facing error message. Soft, not alarming."
   },
   "commonNoConnection": "No internet connection",
+  "offlineDisconnectedMessage": "No connection · Changes will be saved when you're back online",
+  "@offlineDisconnectedMessage": {
+    "description": "Offline indicator message shown when there is no connection."
+  },
+  "offlineSyncingMessage": "Syncing changes...",
+  "@offlineSyncingMessage": {
+    "description": "Indicator message shown while pending changes are syncing."
+  },
+  "offlinePendingShort": "{count, plural, =1{1 pending} other{{count} pending}}",
+  "@offlinePendingShort": {
+    "description": "Compact count of pending changes in the offline indicator.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "offlinePendingChanges": "{count, plural, =1{1 change pending sync} other{{count} changes pending sync}}",
+  "@offlinePendingChanges": {
+    "description": "Full status for changes waiting to sync.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "offlineSyncedMessage": "Synced",
+  "@offlineSyncedMessage": {
+    "description": "Status shown when no changes are waiting to sync."
+  },
+  "offlineSyncButton": "Sync ({count})",
+  "@offlineSyncButton": {
+    "description": "Manual sync button with the number of pending changes.",
+    "placeholders": {"count": {"type": "int"}}
+  },
   "commonConfirm": "Confirm",
   "@commonConfirm": {
     "description": "Generic confirm button label, typically alongside Cancel in a 2-button dialog."
@@ -799,6 +826,28 @@
   "homeCoupleShoppingListTitle": "Current list",
   "@homeCoupleShoppingListTitle": {
     "description": "Title of the shopping-list preview card on the couple home."
+  },
+  "homeShoppingPreviewOpen": "Open shopping",
+  "@homeShoppingPreviewOpen": {
+    "description": "Action that opens the full shopping list from its Home preview."
+  },
+  "homeShoppingPreviewEmpty": "No pending products.",
+  "@homeShoppingPreviewEmpty": {
+    "description": "Empty state for the shopping preview on Home."
+  },
+  "homeShoppingPreviewLoadError": "We couldn't load the list.",
+  "@homeShoppingPreviewLoadError": {
+    "description": "Friendly error shown when the shopping preview cannot load."
+  },
+  "homeShoppingPreviewPendingCount": "{count, plural, =1{1 pending} other{{count} pending}}",
+  "@homeShoppingPreviewPendingCount": {
+    "description": "Number of pending products in the shopping preview.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "homeShoppingPreviewMoreItems": "{count, plural, =1{+1 more in the list} other{+{count} more in the list}}",
+  "@homeShoppingPreviewMoreItems": {
+    "description": "Number of additional products hidden by the compact preview.",
+    "placeholders": {"count": {"type": "int"}}
   },
   "homeCoupleTasksTitle": "Today at home",
   "@homeCoupleTasksTitle": {
@@ -1905,9 +1954,17 @@
   "createTaskRecurrenceCustom": "Custom",
   "createTaskValidationCustomDays": "Pick at least one day for the custom repeat.",
   "createTaskValidationCustomMonthDates": "Pick at least one date in the month.",
+  "createTaskValidationInterval": "The interval must be at least 1 day.",
+  "@createTaskValidationInterval": {
+    "description": "Error shown when a custom repeat interval is shorter than one day."
+  },
   "createTaskValidationTitleRequired": "Title required",
   "createTaskValidationNumberRequired": "Enter a number",
   "createTaskValidationNotNegative": "Can't be negative",
+  "createTaskValidationRewardRange": "Use 0–50 XP and 0–5 coins.",
+  "@createTaskValidationRewardRange": {
+    "description": "Safety limit for custom task rewards."
+  },
   "createTaskSnackCategoryNotReady": "Hold on a moment and pick a category.",
   "createTaskSnackDuplicate": "An identical active task already exists",
   "createTaskSnackCreated": "Task created",
@@ -1936,6 +1993,10 @@
   "createTaskSectionRotationEyebrow": "ROTATION",
   "createTaskSectionRotationTitle": "Members take turns",
   "createTaskSectionRotationSubtitle": "Pick at least two. Each completion shifts to the next person.",
+  "createTaskRotationMinimumPeople": "Pick at least 2 people to set up the rotation.",
+  "@createTaskRotationMinimumPeople": {
+    "description": "Helper shown when only one person is selected for a task rotation."
+  },
   "createTaskCustomTabWeekdays": "By day",
   "createTaskCustomTabInterval": "Interval",
   "createTaskCustomTabMonthDays": "Date",
@@ -1999,6 +2060,31 @@
       }
     }
   },
+  "completeTaskMixedApprovalMessage": "{count, plural, =1{1 task pending approval} other{{count} tasks pending approval}}, ⭐ {xp} XP and {coins} Coins!",
+  "@completeTaskMixedApprovalMessage": {
+    "description": "Message shown when some completed tasks require approval and others grant rewards immediately.",
+    "placeholders": {
+      "count": {"type": "int"},
+      "xp": {"type": "int"},
+      "coins": {"type": "int"}
+    }
+  },
+  "completeTaskApprovalOnlyMessage": "{count, plural, =1{1 task sent for approval} other{{count} tasks sent for approval}}",
+  "@completeTaskApprovalOnlyMessage": {
+    "description": "Message shown when every completed task is sent for approval.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "completeTaskRewardMessage": "⭐ {verb} {xp} XP and {coins} Coins!",
+  "@completeTaskRewardMessage": {
+    "description": "Reward message shown after completing tasks that do not require approval.",
+    "placeholders": {
+      "verb": {"type": "String"},
+      "xp": {"type": "int"},
+      "coins": {"type": "int"}
+    }
+  },
   "editTaskHeaderTitle": "Edit task",
   "editTaskHeaderSubtitle": "Update this task's name, category, and reward.",
   "editTaskFieldNameHint": "Task name",
@@ -2040,6 +2126,46 @@
   "familyDashboardTitle": "Per-member view",
   "familyDashboardLockedNotice": "This view is for family-household admins.",
   "familyDashboardWeekFilter": "Week",
+  "familyDashboardMonthFilter": "Month",
+  "@familyDashboardMonthFilter": {
+    "description": "Period selector option that shows the full month."
+  },
+  "familyDashboardProgress": "{done} of {total} done",
+  "@familyDashboardProgress": {
+    "description": "Compact completed-task progress over a member's planned total.",
+    "placeholders": {
+      "done": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "familyDashboardStreakDays": "{count, plural, =1{1 day} other{{count} days}}",
+  "@familyDashboardStreakDays": {
+    "description": "Number of consecutive streak days for a member.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "familyDashboardPendingCount": "{count, plural, =1{1 pending} other{{count} pending}}",
+  "@familyDashboardPendingCount": {
+    "description": "Compact number of pending tasks.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "familyDashboardOverdueCount": "{count, plural, =1{1 overdue} other{{count} overdue}}",
+  "@familyDashboardOverdueCount": {
+    "description": "Compact number of overdue tasks.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "familyDashboardToApproveCount": "{count, plural, =1{1 to approve} other{{count} to approve}}",
+  "@familyDashboardToApproveCount": {
+    "description": "Compact number of tasks awaiting approval.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "familyDashboardActiveMembers": "{active, plural, =1{1 of {total} member has active tasks.} other{{active} of {total} members have active tasks.}}",
+  "@familyDashboardActiveMembers": {
+    "description": "Summary of members who have active tasks in the selected period.",
+    "placeholders": {
+      "active": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
   "familyDashboardEmptyWeek": "No tasks this week",
   "familyDashboardEmptyMonth": "No tasks this month",
   "familyDashboardNoStreak": "No streak",
@@ -2075,6 +2201,34 @@
   "weeklySummaryMetricCompletion": "Compl.",
   "weeklySummaryEyebrowCompletion": "Completion",
   "weeklySummaryEyebrowNeedsBoost": "Needs a boost",
+  "weeklySummaryMvpTitle": "{name} owned the week",
+  "@weeklySummaryMvpTitle": {
+    "description": "Title naming the weekly MVP.",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "weeklySummaryMvpSubtitle": "{count, plural, =1{Completed 1 household task.} other{Completed {count} household tasks.}}",
+  "@weeklySummaryMvpSubtitle": {
+    "description": "Number of household tasks completed by the weekly MVP.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "weeklySummaryNeedsBoostTitle": "{name} has pending tasks",
+  "@weeklySummaryNeedsBoostTitle": {
+    "description": "Title naming the member who could use support with tasks.",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "weeklySummaryNeedsBoostSubtitle": "{count, plural, =1{1 overdue task. Maybe you can help them get unstuck this week.} other{{count} overdue tasks. Maybe you can help them get unstuck this week.}}",
+  "@weeklySummaryNeedsBoostSubtitle": {
+    "description": "Number of overdue tasks and a suggestion to offer support.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "weeklySummaryEyebrowMostForgotten": "Most forgotten",
   "weeklySummaryEyebrowExpenses": "Shared expenses",
   "weeklySummaryEyebrowTopCategory": "Top category",
@@ -2851,7 +3005,7 @@
   "faqWhoSeesWhat": "What does each member see?",
   "faqWhoSeesWhatAnswer": "Each role sees what belongs to them: adults see everything, shared finances included; teens see their personal finances but not the adults' shared expenses; and kids don't see finances at all — their world is tasks, points and rewards.",
   "faqTasksBasics": "How do tasks work?",
-  "faqTasksBasicsAnswer": "Create one-time or recurring tasks (daily, weekly, monthly), assign them to someone or leave them open for whoever grabs them. Every task pays XP and coins when completed, the calendar shows what's coming, and recurring ones reschedule themselves.",
+  "faqTasksBasicsAnswer": "Create one-time or recurring tasks (daily, weekly, monthly), assign them to someone or leave them open for whoever grabs them. The calendar shows what's coming and recurring tasks reschedule themselves. In Couple mode, completing them updates shared progress without XP or coins.",
   "faqApprovals": "How do task approvals work?",
   "faqApprovalsAnswer": "{role, select, parent{When a kid or teen marks a task as done, it waits for your approval: review it under Approvals and, once you confirm, the XP and coins are credited. Who needs approval is set in the household settings.} teen{Depending on how the home is set up, marking a task as done may leave it pending until an adult confirms it. Only then are your XP and coins credited.} child{When you mark a task as done, an adult reviews and confirms it. As soon as they approve, your XP and coins arrive!} other{Tasks completed by kids and teens may require an adult's confirmation before XP and coins are credited, depending on household settings.}}",
   "@faqApprovalsAnswer": {
@@ -2864,7 +3018,7 @@
   "faqHowEarnXp": "How do I earn XP and level up?",
   "faqHowEarnXpAnswer": "Every completed task earns XP (harder ones pay more). XP levels you up and unlocks achievements: medals for milestones like completing 50 tasks. All your progress lives in Stats.",
   "faqWhatCoins": "What are Coins for?",
-  "faqWhatCoinsAnswer": "{mode, select, family{Coins are the home currency: kids earn them by completing tasks and spend them in the rewards store on prizes the adults created — an outing, screen time, their favorite meal.} other{The coins you earn completing tasks are redeemed in Rewards for vouchers your partner creates: a dinner, a massage, a surprise date. The idea is to reward each other for keeping the home running.}}",
+  "faqWhatCoinsAnswer": "{mode, select, family{Coins are the home currency: kids earn them by completing tasks and spend them in the rewards store on prizes the adults created — an outing, screen time, their favorite meal.} other{Couple mode doesn't use coins: tasks show how household work is shared and proposals are discussed without a price, debt or obligation. Coins are reserved for family dynamics with kids.}}",
   "@faqWhatCoinsAnswer": {
     "placeholders": {
       "mode": {
@@ -2872,12 +3026,12 @@
       }
     }
   },
-  "faqWhatWeeklyDuels": "What are Weekly Duels?",
-  "faqWhatWeeklyDuelsAnswer": "Every week a new XP duel against your partner starts, with a hidden score: you see your own progress, but the real result is revealed at Sunday's close. Whoever earned more takes the crown and a coin bonus.",
+  "faqWhatWeeklyDuels": "Is there a weekly duel in Couple mode?",
+  "faqWhatWeeklyDuelsAnswer": "No. In Couple mode, the week is viewed as shared effort: you can see how many tasks were completed and how they were shared, with no winner, score or bonus.",
   "faqFamilyRanking": "How does the family ranking work?",
   "faqFamilyRankingAnswer": "Every week the family competes in a healthy way: the ranking shows who earned the most XP completing tasks. At week's close there's a winner with a crown and bonus, and the weekly summary shows how everyone did.",
   "faqWhatSpecialEvents": "What is the weekly couple event?",
-  "faqWhatSpecialEventsAnswer": "Every week brings a challenge designed for the two of you: recreate your first date, cook together, a screen-free night. When you complete it, you both receive coins and the event is marked as done for both until the next one arrives.",
+  "faqWhatSpecialEventsAnswer": "Every week brings an idea designed for the two of you: recreate your first date, cook together or have a screen-free night. Completing it saves a shared moment and advances your couple achievements, with no coins or obligations.",
   "faqContributionBalance": "What is the contribution balance?",
   "faqContributionBalanceAnswer": "It's the month's neutral snapshot: it combines completed tasks and shared expenses to show how much each person is contributing to the household. No winners or losers — it's for talking with data, not competing.",
   "faqRewardsStore": "How does the rewards store work?",
@@ -3293,9 +3447,10 @@
   "coupleChallengeExpandTooltip": "Expand",
   "coupleChallengeShowLess": "Show less",
   "coupleChallengeShowMore": "See full details",
-  "coupleChallengeSharedReward": "Shared reward",
-  "coupleChallengeSharedRewardBody": "If you complete it, both receive {count} coins.",
+  "coupleChallengeSharedReward": "A moment for both of you",
+  "coupleChallengeSharedRewardBody": "{count, plural, =0{You haven't saved any special moments yet} =1{1 shared moment} other{{count} shared moments}}",
   "@coupleChallengeSharedRewardBody": {
+    "description": "Number of weekly couple events completed and saved as shared moments.",
     "placeholders": {
       "count": {
         "type": "int"
@@ -3303,8 +3458,117 @@
     }
   },
   "coupleChallengeWeDidIt": "We did it",
-  "coupleChallengeDoneThisWeek": "Completed this week!",
-  "coupleChallengeAlreadyDone": "You two already completed this week's challenge 💚",
+  "coupleChallengeDoneThisWeek": "Saved as a shared moment",
+  "coupleChallengeAlreadyDone": "You already saved this week's special.",
+  "coupleSpaceWeekEyebrow": "OUR WEEK",
+  "coupleSpaceTasksReady": "{done} of {total} tasks done",
+  "@coupleSpaceTasksReady": {
+    "description": "Shared household task progress during the current week.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleSpaceNoTasksPlanned": "A quiet week so far",
+  "coupleSpaceRemainingTasks": "{count, plural, =0{No tasks left} =1{1 task left} other{{count} tasks left}}",
+  "@coupleSpaceRemainingTasks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleSpaceNeedsAttention": "{count, plural, =1{1 needs attention} other{{count} need attention}}",
+  "@coupleSpaceNeedsAttention": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleSpaceWeekSupport": "Home moves forward when you share what weighs on you.",
+  "coupleSpaceTaskEffortEyebrow": "EFFORT",
+  "coupleSpaceTaskEffortTitle": "How demanding is it?",
+  "coupleSpaceTaskEffortSubtitle": "Difficulty helps you share tasks more fairly; it doesn't generate points or coins.",
+  "coupleSpaceTaskCompletionMessage": "{count, plural, =1{Task completed. The week moved forward a little more.} other{{count} tasks completed. The week moved forward a little more.}}",
+  "@coupleSpaceTaskCompletionMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleSpaceDistributionAction": "See how it was shared",
+  "coupleSpaceDistributionTitle": "How the week was shared",
+  "coupleSpaceDistributionSubtitle": "A snapshot for conversation, with no winners or scores.",
+  "coupleSpaceTasksDone": "{count, plural, =0{No completed tasks} =1{1 completed task} other{{count} completed tasks}}",
+  "@coupleSpaceTasksDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleSpaceForConnection": "To connect",
+  "coupleSpaceSpecialMemoryBody": "When you complete it, you save the memory and move forward together in your couple achievements.",
+  "coupleSpaceSkipWeek": "Skip this week",
+  "coupleSpaceSkipToast": "We'll leave it for another time. It won't affect any achievement.",
+  "coupleSpaceUndo": "Show again",
+  "coupleSpaceSpecialConfirmTitle": "Save this moment?",
+  "coupleSpaceSpecialConfirmBody": "Only confirm if you both took part and felt comfortable. It adds no coins and creates no debt.",
+  "coupleSpaceSpecialCompletedTitle": "One more moment together",
+  "coupleSpaceSpecialCompletedBody": "It was saved in your shared history.",
+  "coupleSpacePlansTitle": "Plans and wishes",
+  "coupleSpacePlansSubtitle": "Free proposals: accept, postpone or withdraw them without consequences.",
+  "coupleSpaceProposeAction": "Propose something",
+  "coupleSpaceProposalsEmptyTitle": "No proposals yet",
+  "coupleSpaceProposalsEmptyBody": "Start a conversation, suggest a plan or ask for support without putting a price on it.",
+  "coupleSpaceProposalAwaiting": "Waiting for a response",
+  "coupleSpaceProposalRespond": "Respond",
+  "coupleSpaceProposalAccepted": "Agreed",
+  "coupleSpaceProposalDeferred": "For later",
+  "@coupleSpaceProposalDeferred": {
+    "description": "Visible status for a proposal the couple decided to revisit later."
+  },
+  "coupleSpaceProposalMine": "Your proposal",
+  "coupleSpaceProposalCategoryTalk": "Let's talk",
+  "coupleSpaceProposalCategoryPlan": "Plan together",
+  "coupleSpaceProposalCategoryAffection": "Affection",
+  "coupleSpaceProposalCategorySupport": "Support",
+  "coupleSpaceNewProposalTitle": "Propose something",
+  "coupleSpaceNewProposalBody": "It has no price and creates no obligation. The other person can always say “not now”.",
+  "coupleSpaceProposalTitleLabel": "What would you like to propose?",
+  "coupleSpaceProposalTitleHint": "E.g. Cook something new together",
+  "coupleSpaceProposalDescriptionLabel": "Tell them a bit more (optional)",
+  "coupleSpaceProposalDescriptionHint": "What you have in mind, when it could happen or what you need",
+  "coupleSpaceProposalCategoryLabel": "Proposal type",
+  "coupleSpaceProposalSend": "Send proposal",
+  "coupleSpaceProposalTitleValidation": "Enter at least 3 characters.",
+  "coupleSpaceProposalCreated": "Proposal sent. It doesn't create any debt.",
+  "coupleSpaceProposalResponseTitle": "Respond to the proposal",
+  "coupleSpaceProposalResponseBody": "Choose freely. Saying “not now” costs no points and needs no explanation.",
+  "coupleSpaceProposalAccept": "Sounds good",
+  "coupleSpaceProposalDefer": "For later",
+  "@coupleSpaceProposalDefer": {
+    "description": "Action that postpones a proposal without accepting or declining it."
+  },
+  "coupleSpaceProposalDecline": "Not now",
+  "coupleSpaceProposalWithdraw": "Withdraw proposal",
+  "coupleSpaceProposalArchive": "Archive",
+  "coupleSpaceProposalAcceptedToast": "It's now an agreed plan.",
+  "coupleSpaceProposalDeferredToast": "Saved so you can revisit it whenever you want.",
+  "@coupleSpaceProposalDeferredToast": {
+    "description": "Pressure-free confirmation shown after postponing a couple proposal."
+  },
+  "coupleSpaceProposalDeclinedToast": "Response saved with no penalties.",
+  "coupleSpaceProposalWithdrawnToast": "You withdrew the proposal.",
+  "coupleSpaceProposalArchivedToast": "Plan archived.",
+  "coupleSpaceLoadError": "We couldn't load this space.",
+  "coupleSpaceRetry": "Try again",
   "tourStepLabel": "Step {current} of {total}",
   "@tourStepLabel": {
     "placeholders": {
@@ -3323,8 +3587,8 @@
   "tourFinaleTitle": "All set!",
   "tourFinaleCta": "Start using",
   "tourCoupleWelcomeTitle": "Your home, in 30 seconds",
-  "tourCoupleWelcomeBody": "A quick look at the essentials: tasks, coins, the duel and expenses. Short and sweet.",
-  "tourCoupleWelcomeBodyNamed": "A quick look at the essentials to organize everything with {partnerName}: tasks, coins, the duel and expenses.",
+  "tourCoupleWelcomeBody": "A quick look at the essentials: shared tasks, proposals, special moments and expenses.",
+  "tourCoupleWelcomeBodyNamed": "A quick look at the essentials to organize everything with {partnerName}: shared tasks, proposals, special moments and expenses.",
   "@tourCoupleWelcomeBodyNamed": {
     "placeholders": {
       "partnerName": {
@@ -3332,13 +3596,13 @@
       }
     }
   },
-  "tourTasksTitleHas": "Do tasks, earn points",
-  "tourTasksBodyHas": "Tap ✓ to complete. Every task earns coins and XP just for you.",
+  "tourTasksTitleHas": "Tasks, shared together",
+  "tourTasksBodyHas": "Tap ✓ to complete. Weekly progress helps you see what's left and share the work more fairly.",
   "tourTasksTitleEmpty": "Today at home is empty",
   "tourTasksBodyEmpty": "Your daily tasks will live here. Schedule the first one now and watch it appear — or keep the tour going and do it later.",
   "tourTasksCtaCreate": "Schedule a task",
   "tourBalanceTitle": "The home's pulse",
-  "tourBalanceBody": "{mode, select, shared{You have an integrated economy: no debts between you here. You see what the home spent this month and, below, each one's points.} other{Here you see what you owe each other in shared expenses and, below, what each one earned. “Settle” squares things up in one tap.}}",
+  "tourBalanceBody": "{mode, select, shared{You have integrated finances: there are no debts between you here, and you can see what the household spent this month.} other{Here you see what you owe each other for shared expenses. “Settle” squares up real expenses in one tap.}}",
   "@tourBalanceBody": {
     "placeholders": {
       "mode": {
@@ -4429,9 +4693,9 @@
   "coupleChallenge27Category": "Thoughtful",
   "coupleChallenge27Location": "Anywhere",
   "coupleChallenge27Timing": "Surprise",
-  "coupleChallenge28Title": "In the service of love",
-  "coupleChallenge28Description": "Take turns \"taking care\" of the other for a while: prepare a bath, give a massage, or cook while the other person does absolutely nothing.\n\nThis is not about serving. It is about caring with tenderness and intention.",
-  "coupleChallenge28Motivation": "Caring is one of the quietest and strongest ways to love.",
+  "coupleChallenge28Title": "A caring gesture",
+  "coupleChallenge28Description": "Ask each other what simple gesture would feel good today: making a favorite drink, cooking something nice or offering a massage, only if it feels natural and you both feel comfortable.\n\nIt is not a debt or a required turn. It is an invitation to care with tenderness and freedom.",
+  "coupleChallenge28Motivation": "Care feels best when it is offered and received freely.",
   "coupleChallenge28Category": "Everyday",
   "coupleChallenge28Location": "At home",
   "coupleChallenge28Timing": "Night",
@@ -4442,7 +4706,7 @@
   "coupleChallenge29Location": "At home",
   "coupleChallenge29Timing": "Anytime",
   "coupleChallenge30Title": "Flavors with a story",
-  "coupleChallenge30Description": "Choose three flavors such as wine, chocolate, or cheese, and for each one share a personal memory connected to it: a trip, childhood, or a person.\n\nLet taste awaken stories you still have not told each other.",
+  "coupleChallenge30Description": "Choose three flavors such as tea, chocolate, fruit or cheese, and for each one share a personal memory connected to it: a trip, childhood or a person.\n\nLet taste awaken stories you still have not told each other.",
   "coupleChallenge30Motivation": "Every bite can open a door to a memory.",
   "coupleChallenge30Category": "Experiential",
   "coupleChallenge30Location": "Anywhere",
@@ -4466,8 +4730,8 @@
   "coupleChallenge33Location": "Nature",
   "coupleChallenge33Timing": "Night",
   "coupleChallenge34Title": "Night of the senses",
-  "coupleChallenge34Description": "Set a table with mysterious textures, aromas, and flavors. With eyes closed, the other person has to guess what they are feeling.\n\nA dynamic meant to surrender to sensation without needing many words.",
-  "coupleChallenge34Motivation": "Love can be tasted, smelled, and touched.",
+  "coupleChallenge34Description": "Choose textures, aromas and flavors together that are safe for both of you. The person guessing can close their eyes if they want, and either of you can pause or change something at any time.\n\nA gentle activity for noticing sensations, with no pressure.",
+  "coupleChallenge34Motivation": "Shared curiosity can be a form of connection too.",
   "coupleChallenge34Category": "Sensory",
   "coupleChallenge34Location": "At home",
   "coupleChallenge34Timing": "Night",

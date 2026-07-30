@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260302142946).
+-- Reconstructed from remote migration history (version 20260302142946).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Tabla para guardar el historial de duelos semanales

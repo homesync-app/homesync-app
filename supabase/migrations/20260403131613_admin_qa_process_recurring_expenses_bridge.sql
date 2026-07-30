@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260403131613).
+-- Reconstructed from remote migration history (version 20260403131613).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.finance_process_recurring_expenses_internal(

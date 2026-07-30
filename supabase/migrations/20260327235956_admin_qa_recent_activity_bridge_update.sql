@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260327235956).
+-- Reconstructed from remote migration history (version 20260327235956).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.qa_admin_get_recent_activity(

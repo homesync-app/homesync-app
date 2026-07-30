@@ -15,6 +15,7 @@ import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/widgets/app_background.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
+import 'package:homesync_client/features/couple_space/presentation/providers/couple_space_providers.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/admin_workspace_screen.dart';
@@ -33,8 +34,6 @@ import 'package:homesync_client/features/notifications/presentation/screens/noti
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
 import 'package:homesync_client/features/onboarding/presentation/widgets/coachmark_overlay.dart';
-import 'package:homesync_client/features/rewards/presentation/providers/couple_duel_stats_provider.dart';
-import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/screens/shopping_list_screen.dart';
@@ -218,6 +217,12 @@ class _MainScreenState extends ConsumerState<MainScreen>
   }
 
   Future<void> _checkWeeklyWinner() async {
+    // Competitive ranking belongs to Family mode only. Couple mode uses a
+    // neutral shared-progress summary and must never reveal a winner.
+    if (!ref.read(householdCapabilitiesProvider).usesCompetitiveRanking) {
+      return;
+    }
+
     final now = DateTime.now();
     final currentDay = now.weekday;
     final currentHour = now.hour;
@@ -289,15 +294,26 @@ class _MainScreenState extends ConsumerState<MainScreen>
         ..add(ref.listenManual(expenseControllerProvider, (_, __) {}))
         ..add(ref.listenManual(monthlyProjectionProvider, (_, __) {}));
 
-      // Pareja (solo en modo couple, que usa CoupleRewardsScreen). Los premios
-      // viven en un provider autoDispose (hay que sostener un listener); las
-      // stats del duelo en uno keepAlive (basta gatillar el build con un read).
+      // Pareja: precargar el resumen colaborativo y las propuestas. Ambos son
+      // autoDispose, por eso sostenemos listeners mientras vive MainScreen.
       final caps = ref.read(householdCapabilitiesProvider);
-      if (caps.usesCoupleRewardsExperience) {
-        _idlePrefetchSubs.add(ref.listenManual(rewardsProvider, (_, __) {}));
-        ref.read(coupleDuelStatsProvider.future).catchError(
-              (_) => CoupleDuelStats.empty,
+      if (caps.usesCoupleConnectionExperience) {
+        final householdId = ref.read(householdIdProvider).value;
+        if (householdId != null && householdId.isNotEmpty) {
+          _idlePrefetchSubs
+            ..add(
+              ref.listenManual(
+                coupleConnectionSummaryProvider(householdId),
+                (_, __) {},
+              ),
+            )
+            ..add(
+              ref.listenManual(
+                coupleProposalsProvider(householdId),
+                (_, __) {},
+              ),
             );
+        }
       }
       log.d('MainScreen: prefetch ocioso de pestañas secundarias iniciado');
     });
@@ -716,7 +732,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
           icon: caps.partnerIcon,
           screen: caps.type == HouseholdType.solo
               ? const SoloSpaceScreen(key: ValueKey(MainTab.social))
-              : caps.usesCoupleRewardsExperience
+              : caps.usesCoupleConnectionExperience
                   ? const CoupleSpaceScreen(key: ValueKey(MainTab.social))
                   : const HouseholdSocialHubScreen(
                       key: ValueKey(MainTab.social),

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260429000915).
+-- Reconstructed from remote migration history (version 20260429000915).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Normalize legacy onboarding member_type values to the current enum.

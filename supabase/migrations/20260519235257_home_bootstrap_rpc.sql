@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260519235257).
+-- Reconstructed from remote migration history (version 20260519235257).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Home startup bootstrap: collapse the first-screen data dependencies into a

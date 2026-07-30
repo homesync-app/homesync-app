@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260323170023).
+-- Reconstructed from remote migration history (version 20260323170023).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- 1. Add columns for advanced recurrence

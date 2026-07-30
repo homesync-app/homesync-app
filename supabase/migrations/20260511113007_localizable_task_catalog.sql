@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260511113007).
+-- Reconstructed from remote migration history (version 20260511113007).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Localizable task catalog metadata.

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260523002950).
+-- Reconstructed from remote migration history (version 20260523002950).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Harden task completion idempotency beyond request_id retries.

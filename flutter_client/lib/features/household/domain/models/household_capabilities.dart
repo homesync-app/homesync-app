@@ -43,7 +43,7 @@ class HouseholdCapabilities {
   });
 
   bool get showPartnerTab => type != HouseholdType.solo;
-  bool get usesCoupleRewardsExperience => type == HouseholdType.couple;
+  bool get usesCoupleConnectionExperience => type == HouseholdType.couple;
   bool get showExpensesSplit => type != HouseholdType.solo;
   bool get hasSharedTasks => type != HouseholdType.solo;
   bool get showTasks => tasksEnabled;

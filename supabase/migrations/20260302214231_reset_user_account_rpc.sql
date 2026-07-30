@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260302214231).
+-- Reconstructed from remote migration history (version 20260302214231).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION public.reset_user_account()

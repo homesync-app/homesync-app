@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260412144615).
+-- Reconstructed from remote migration history (version 20260412144615).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Aâ”œâ–’ade receipt_path a la tabla expenses.

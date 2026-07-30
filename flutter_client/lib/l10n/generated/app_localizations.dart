@@ -218,6 +218,42 @@ abstract class AppLocalizations {
   /// **'Sin conexión a internet'**
   String get commonNoConnection;
 
+  /// Mensaje del indicador offline cuando no hay conexión.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin conexión · Los cambios se guardarán cuando vuelvas a estar online'**
+  String get offlineDisconnectedMessage;
+
+  /// Mensaje del indicador mientras sincroniza cambios pendientes.
+  ///
+  /// In es, this message translates to:
+  /// **'Sincronizando cambios...'**
+  String get offlineSyncingMessage;
+
+  /// Contador compacto de cambios pendientes en el indicador offline.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 pendiente} other{{count} pendientes}}'**
+  String offlinePendingShort(int count);
+
+  /// Estado completo de cambios pendientes de sincronización.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 cambio pendiente de sincronizar} other{{count} cambios pendientes de sincronizar}}'**
+  String offlinePendingChanges(int count);
+
+  /// Estado mostrado cuando no quedan cambios pendientes.
+  ///
+  /// In es, this message translates to:
+  /// **'Sincronizado'**
+  String get offlineSyncedMessage;
+
+  /// Botón para sincronizar manualmente, con cantidad pendiente.
+  ///
+  /// In es, this message translates to:
+  /// **'Sincronizar ({count})'**
+  String offlineSyncButton(int count);
+
   /// Generic confirm button label, typically alongside Cancel in a 2-button dialog.
   ///
   /// In es, this message translates to:
@@ -1831,6 +1867,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Lista actual'**
   String get homeCoupleShoppingListTitle;
+
+  /// Acción para abrir la lista completa desde el preview del Home.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir compras'**
+  String get homeShoppingPreviewOpen;
+
+  /// Estado vacío del preview de compras del Home.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay productos pendientes.'**
+  String get homeShoppingPreviewEmpty;
+
+  /// Error amigable al cargar el preview de compras.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar la lista.'**
+  String get homeShoppingPreviewLoadError;
+
+  /// Cantidad de productos pendientes en el preview de compras.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 pendiente} other{{count} pendientes}}'**
+  String homeShoppingPreviewPendingCount(int count);
+
+  /// Cantidad de productos adicionales ocultos en el preview compacto.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{+1 más en la lista} other{+{count} más en la lista}}'**
+  String homeShoppingPreviewMoreItems(int count);
 
   /// Section title above the day-tasks list on the couple home.
   ///
@@ -4221,6 +4287,12 @@ abstract class AppLocalizations {
   /// **'Elegí al menos una fecha del mes.'**
   String get createTaskValidationCustomMonthDates;
 
+  /// Error mostrado cuando el intervalo de repetición personalizado es menor que un día.
+  ///
+  /// In es, this message translates to:
+  /// **'El intervalo debe ser de al menos 1 día.'**
+  String get createTaskValidationInterval;
+
   /// No description provided for @createTaskValidationTitleRequired.
   ///
   /// In es, this message translates to:
@@ -4238,6 +4310,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No puede ser negativo'**
   String get createTaskValidationNotNegative;
+
+  /// Límite de seguridad para recompensas personalizadas de tareas.
+  ///
+  /// In es, this message translates to:
+  /// **'Usá entre 0 y 50 XP y entre 0 y 5 coins.'**
+  String get createTaskValidationRewardRange;
 
   /// No description provided for @createTaskSnackCategoryNotReady.
   ///
@@ -4406,6 +4484,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Elegí al menos dos. Cada vez que se complete, le toca al siguiente.'**
   String get createTaskSectionRotationSubtitle;
+
+  /// Ayuda mostrada cuando el usuario seleccionó una sola persona para la rotación de una tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegí al menos 2 personas para armar el turno.'**
+  String get createTaskRotationMinimumPeople;
 
   /// No description provided for @createTaskCustomTabWeekdays.
   ///
@@ -4653,6 +4737,24 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Ganaste} other{Ganaron}}'**
   String completeTaskRewardVerb(int count);
 
+  /// Mensaje al completar tareas cuando algunas requieren aprobación y otras otorgan recompensas inmediatamente.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 tarea pendiente de aprobación} other{{count} tareas pendientes de aprobación}}, ⭐ {xp} XP y {coins} Coins!'**
+  String completeTaskMixedApprovalMessage(int count, int xp, int coins);
+
+  /// Mensaje al completar tareas cuando todas quedan pendientes de aprobación.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 tarea enviada para aprobación} other{{count} tareas enviadas para aprobación}}'**
+  String completeTaskApprovalOnlyMessage(int count);
+
+  /// Mensaje de recompensas obtenidas al completar tareas sin aprobación.
+  ///
+  /// In es, this message translates to:
+  /// **'⭐ {verb} {xp} XP y {coins} Coins!'**
+  String completeTaskRewardMessage(String verb, int xp, int coins);
+
   /// No description provided for @editTaskHeaderTitle.
   ///
   /// In es, this message translates to:
@@ -4850,6 +4952,48 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Semana'**
   String get familyDashboardWeekFilter;
+
+  /// Opción del selector de período para mostrar el mes completo.
+  ///
+  /// In es, this message translates to:
+  /// **'Mes'**
+  String get familyDashboardMonthFilter;
+
+  /// Progreso compacto de tareas completadas sobre el total planificado de un integrante.
+  ///
+  /// In es, this message translates to:
+  /// **'{done, plural, =1{1 de {total} hecha} other{{done} de {total} hechas}}'**
+  String familyDashboardProgress(int done, int total);
+
+  /// Cantidad de días de racha de un integrante.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 día} other{{count} días}}'**
+  String familyDashboardStreakDays(int count);
+
+  /// Cantidad compacta de tareas pendientes.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 pendiente} other{{count} pendientes}}'**
+  String familyDashboardPendingCount(int count);
+
+  /// Cantidad compacta de tareas atrasadas.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 atrasada} other{{count} atrasadas}}'**
+  String familyDashboardOverdueCount(int count);
+
+  /// Cantidad compacta de tareas que esperan aprobación. La frase no cambia entre singular y plural en español.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 a aprobar} other{{count} a aprobar}}'**
+  String familyDashboardToApproveCount(int count);
+
+  /// Resumen de integrantes que tienen tareas activas en el período.
+  ///
+  /// In es, this message translates to:
+  /// **'{active, plural, =1{1 de {total} integrante tiene tareas activas.} other{{active} de {total} integrantes tienen tareas activas.}}'**
+  String familyDashboardActiveMembers(int active, int total);
 
   /// No description provided for @familyDashboardEmptyWeek.
   ///
@@ -5060,6 +5204,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Necesita un empujón'**
   String get weeklySummaryEyebrowNeedsBoost;
+
+  /// Título de la persona MVP del resumen semanal.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} se llevó la semana'**
+  String weeklySummaryMvpTitle(String name);
+
+  /// Cantidad de tareas completadas por la persona MVP de la semana.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{Completó 1 tarea en el hogar.} other{Completó {count} tareas en el hogar.}}'**
+  String weeklySummaryMvpSubtitle(int count);
+
+  /// Título para la persona que necesita apoyo con sus tareas.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} se quedó con tareas pendientes'**
+  String weeklySummaryNeedsBoostTitle(String name);
+
+  /// Cantidad de tareas atrasadas y sugerencia de apoyo semanal.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 tarea atrasada. Quizá esta semana puedas ayudarle a destrabar.} other{{count} tareas atrasadas. Quizá esta semana puedas ayudarle a destrabar.}}'**
+  String weeklySummaryNeedsBoostSubtitle(int count);
 
   /// No description provided for @weeklySummaryEyebrowMostForgotten.
   ///
@@ -7188,7 +7356,7 @@ abstract class AppLocalizations {
   /// No description provided for @faqTasksBasicsAnswer.
   ///
   /// In es, this message translates to:
-  /// **'Creá tareas puntuales o recurrentes (diarias, semanales, mensuales), asignalas a alguien o dejalas libres para quien las agarre. Cada tarea da XP y coins al completarse, el calendario muestra lo que viene, y las recurrentes se reprograman solas.'**
+  /// **'Creá tareas puntuales o recurrentes (diarias, semanales, mensuales), asignalas a alguien o dejalas libres para quien las agarre. El calendario muestra lo que viene y las recurrentes se reprograman solas. En Pareja, completarlas actualiza el progreso compartido sin XP ni coins.'**
   String get faqTasksBasicsAnswer;
 
   /// No description provided for @faqApprovals.
@@ -7224,19 +7392,19 @@ abstract class AppLocalizations {
   /// No description provided for @faqWhatCoinsAnswer.
   ///
   /// In es, this message translates to:
-  /// **'{mode, select, family{Los coins son la moneda del hogar: los chicos los ganan completando tareas y los canjean en la tienda de premios por las recompensas que crearon los adultos — una salida, tiempo de pantalla, su comida favorita.} other{Los coins que ganás completando tareas se canjean en Premios por los vouchers que crea tu pareja: una cena, un masaje, una salida sorpresa. La idea es premiarse mutuamente por bancar el hogar.}}'**
+  /// **'{mode, select, family{Los coins son la moneda del hogar: los chicos los ganan completando tareas y los canjean en la tienda de premios por las recompensas que crearon los adultos — una salida, tiempo de pantalla, su comida favorita.} other{En modo Pareja no se usan coins: las tareas muestran cómo se reparte el trabajo y las propuestas se conversan sin precio, deuda ni obligación. Los coins quedan reservados para la dinámica familiar con chicos.}}'**
   String faqWhatCoinsAnswer(String mode);
 
   /// No description provided for @faqWhatWeeklyDuels.
   ///
   /// In es, this message translates to:
-  /// **'¿Qué son los Duelos Semanales?'**
+  /// **'¿Hay un duelo semanal en Pareja?'**
   String get faqWhatWeeklyDuels;
 
   /// No description provided for @faqWhatWeeklyDuelsAnswer.
   ///
   /// In es, this message translates to:
-  /// **'Cada semana arranca un duelo de XP contra tu pareja con marcador oculto: ves tu propio avance, pero el resultado real se descubre recién al cierre del domingo. Quien más sumó se lleva la corona y un bonus de coins.'**
+  /// **'No. En modo Pareja la semana se mira como un esfuerzo compartido: pueden ver cuántas tareas hicieron y cómo se repartieron, sin ganador, marcador ni bonus.'**
   String get faqWhatWeeklyDuelsAnswer;
 
   /// No description provided for @faqFamilyRanking.
@@ -7260,7 +7428,7 @@ abstract class AppLocalizations {
   /// No description provided for @faqWhatSpecialEventsAnswer.
   ///
   /// In es, this message translates to:
-  /// **'Cada semana aparece un desafío pensado para los dos: recrear la primera cita, cocinar juntos, una noche sin pantallas. Al completarlo, ambos reciben coins y el evento queda marcado como logrado para los dos hasta que llegue el siguiente.'**
+  /// **'Cada semana aparece una propuesta pensada para los dos: recrear la primera cita, cocinar juntos o pasar una noche sin pantallas. Al completarla guardan un momento compartido y avanzan en sus logros de pareja, sin coins ni obligaciones.'**
   String get faqWhatSpecialEventsAnswer;
 
   /// No description provided for @faqContributionBalance.
@@ -8454,13 +8622,13 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallengeSharedReward.
   ///
   /// In es, this message translates to:
-  /// **'Recompensa compartida'**
+  /// **'Un momento de los dos'**
   String get coupleChallengeSharedReward;
 
-  /// No description provided for @coupleChallengeSharedRewardBody.
+  /// Cantidad de eventos semanales que la pareja completó y guardó como momentos compartidos.
   ///
   /// In es, this message translates to:
-  /// **'Si lo completan, ambos reciben {count} coins.'**
+  /// **'{count, plural, =0{Todavía no guardaron momentos especiales} =1{1 momento compartido} other{{count} momentos compartidos}}'**
   String coupleChallengeSharedRewardBody(int count);
 
   /// No description provided for @coupleChallengeWeDidIt.
@@ -8472,14 +8640,380 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallengeDoneThisWeek.
   ///
   /// In es, this message translates to:
-  /// **'¡Completado esta semana!'**
+  /// **'Guardado como momento compartido'**
   String get coupleChallengeDoneThisWeek;
 
   /// No description provided for @coupleChallengeAlreadyDone.
   ///
   /// In es, this message translates to:
-  /// **'Ya completaron el desafío de esta semana 💚'**
+  /// **'Ya guardaron el especial de esta semana.'**
   String get coupleChallengeAlreadyDone;
+
+  /// No description provided for @coupleSpaceWeekEyebrow.
+  ///
+  /// In es, this message translates to:
+  /// **'NUESTRA SEMANA'**
+  String get coupleSpaceWeekEyebrow;
+
+  /// Progreso conjunto de tareas del hogar durante la semana.
+  ///
+  /// In es, this message translates to:
+  /// **'{done} de {total} tareas listas'**
+  String coupleSpaceTasksReady(int done, int total);
+
+  /// No description provided for @coupleSpaceNoTasksPlanned.
+  ///
+  /// In es, this message translates to:
+  /// **'Una semana tranquila por ahora'**
+  String get coupleSpaceNoTasksPlanned;
+
+  /// No description provided for @coupleSpaceRemainingTasks.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{No quedan tareas pendientes} =1{Queda 1 pendiente} other{Quedan {count} pendientes}}'**
+  String coupleSpaceRemainingTasks(int count);
+
+  /// No description provided for @coupleSpaceNeedsAttention.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 necesita atención} other{{count} necesitan atención}}'**
+  String coupleSpaceNeedsAttention(int count);
+
+  /// No description provided for @coupleSpaceWeekSupport.
+  ///
+  /// In es, this message translates to:
+  /// **'El hogar avanza cuando se reparten lo que pesa.'**
+  String get coupleSpaceWeekSupport;
+
+  /// No description provided for @coupleSpaceTaskEffortEyebrow.
+  ///
+  /// In es, this message translates to:
+  /// **'ESFUERZO'**
+  String get coupleSpaceTaskEffortEyebrow;
+
+  /// No description provided for @coupleSpaceTaskEffortTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Qué tan demandante es'**
+  String get coupleSpaceTaskEffortTitle;
+
+  /// No description provided for @coupleSpaceTaskEffortSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'La dificultad ayuda a repartir mejor las tareas; no genera puntos ni coins.'**
+  String get coupleSpaceTaskEffortSubtitle;
+
+  /// No description provided for @coupleSpaceTaskCompletionMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{Tarea completada. La semana avanzó un poco más.} other{{count} tareas completadas. La semana avanzó un poco más.}}'**
+  String coupleSpaceTaskCompletionMessage(int count);
+
+  /// No description provided for @coupleSpaceDistributionAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver cómo se repartió'**
+  String get coupleSpaceDistributionAction;
+
+  /// No description provided for @coupleSpaceDistributionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cómo se repartió la semana'**
+  String get coupleSpaceDistributionTitle;
+
+  /// No description provided for @coupleSpaceDistributionSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Una foto para conversar, sin ganadores ni puntajes.'**
+  String get coupleSpaceDistributionSubtitle;
+
+  /// No description provided for @coupleSpaceTasksDone.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{Sin tareas completadas} =1{1 tarea completada} other{{count} tareas completadas}}'**
+  String coupleSpaceTasksDone(int count);
+
+  /// No description provided for @coupleSpaceForConnection.
+  ///
+  /// In es, this message translates to:
+  /// **'Para conectar'**
+  String get coupleSpaceForConnection;
+
+  /// No description provided for @coupleSpaceSpecialMemoryBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Al completarlo, guardan el recuerdo y avanzan juntos en sus logros de pareja.'**
+  String get coupleSpaceSpecialMemoryBody;
+
+  /// No description provided for @coupleSpaceSkipWeek.
+  ///
+  /// In es, this message translates to:
+  /// **'Pasar esta semana'**
+  String get coupleSpaceSkipWeek;
+
+  /// No description provided for @coupleSpaceSkipToast.
+  ///
+  /// In es, this message translates to:
+  /// **'Lo dejamos para otro momento. No afecta ningún logro.'**
+  String get coupleSpaceSkipToast;
+
+  /// No description provided for @coupleSpaceUndo.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver de nuevo'**
+  String get coupleSpaceUndo;
+
+  /// No description provided for @coupleSpaceSpecialConfirmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Guardamos este momento?'**
+  String get coupleSpaceSpecialConfirmTitle;
+
+  /// No description provided for @coupleSpaceSpecialConfirmBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmá solo si los dos participaron y se sintieron cómodos. No suma coins ni genera ninguna deuda.'**
+  String get coupleSpaceSpecialConfirmBody;
+
+  /// No description provided for @coupleSpaceSpecialCompletedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Un momento más de ustedes'**
+  String get coupleSpaceSpecialCompletedTitle;
+
+  /// No description provided for @coupleSpaceSpecialCompletedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Quedó guardado en su historia compartida.'**
+  String get coupleSpaceSpecialCompletedBody;
+
+  /// No description provided for @coupleSpacePlansTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Planes y deseos'**
+  String get coupleSpacePlansTitle;
+
+  /// No description provided for @coupleSpacePlansSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Propuestas gratuitas: se pueden aceptar, posponer o retirar sin consecuencias.'**
+  String get coupleSpacePlansSubtitle;
+
+  /// No description provided for @coupleSpaceProposeAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Proponer algo'**
+  String get coupleSpaceProposeAction;
+
+  /// No description provided for @coupleSpaceProposalsEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay propuestas'**
+  String get coupleSpaceProposalsEmptyTitle;
+
+  /// No description provided for @coupleSpaceProposalsEmptyBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Podés abrir una conversación, sugerir un plan o pedir apoyo sin ponerle precio.'**
+  String get coupleSpaceProposalsEmptyBody;
+
+  /// No description provided for @coupleSpaceProposalAwaiting.
+  ///
+  /// In es, this message translates to:
+  /// **'Esperando respuesta'**
+  String get coupleSpaceProposalAwaiting;
+
+  /// No description provided for @coupleSpaceProposalRespond.
+  ///
+  /// In es, this message translates to:
+  /// **'Responder'**
+  String get coupleSpaceProposalRespond;
+
+  /// No description provided for @coupleSpaceProposalAccepted.
+  ///
+  /// In es, this message translates to:
+  /// **'Acordado'**
+  String get coupleSpaceProposalAccepted;
+
+  /// Estado visible de una propuesta que la pareja decidió retomar más adelante.
+  ///
+  /// In es, this message translates to:
+  /// **'Para después'**
+  String get coupleSpaceProposalDeferred;
+
+  /// No description provided for @coupleSpaceProposalMine.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu propuesta'**
+  String get coupleSpaceProposalMine;
+
+  /// No description provided for @coupleSpaceProposalCategoryTalk.
+  ///
+  /// In es, this message translates to:
+  /// **'Para charlar'**
+  String get coupleSpaceProposalCategoryTalk;
+
+  /// No description provided for @coupleSpaceProposalCategoryPlan.
+  ///
+  /// In es, this message translates to:
+  /// **'Plan juntos'**
+  String get coupleSpaceProposalCategoryPlan;
+
+  /// No description provided for @coupleSpaceProposalCategoryAffection.
+  ///
+  /// In es, this message translates to:
+  /// **'Afecto'**
+  String get coupleSpaceProposalCategoryAffection;
+
+  /// No description provided for @coupleSpaceProposalCategorySupport.
+  ///
+  /// In es, this message translates to:
+  /// **'Apoyo'**
+  String get coupleSpaceProposalCategorySupport;
+
+  /// No description provided for @coupleSpaceNewProposalTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Proponer algo'**
+  String get coupleSpaceNewProposalTitle;
+
+  /// No description provided for @coupleSpaceNewProposalBody.
+  ///
+  /// In es, this message translates to:
+  /// **'No tiene precio ni crea una obligación. La otra persona siempre puede decir “ahora no”.'**
+  String get coupleSpaceNewProposalBody;
+
+  /// No description provided for @coupleSpaceProposalTitleLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué te gustaría proponer?'**
+  String get coupleSpaceProposalTitleLabel;
+
+  /// No description provided for @coupleSpaceProposalTitleHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Ej.: Cocinar algo nuevo juntos'**
+  String get coupleSpaceProposalTitleHint;
+
+  /// No description provided for @coupleSpaceProposalDescriptionLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Contá un poco más (opcional)'**
+  String get coupleSpaceProposalDescriptionLabel;
+
+  /// No description provided for @coupleSpaceProposalDescriptionHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Qué imaginás, cuándo podría ser o qué necesitás'**
+  String get coupleSpaceProposalDescriptionHint;
+
+  /// No description provided for @coupleSpaceProposalCategoryLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo de propuesta'**
+  String get coupleSpaceProposalCategoryLabel;
+
+  /// No description provided for @coupleSpaceProposalSend.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar propuesta'**
+  String get coupleSpaceProposalSend;
+
+  /// No description provided for @coupleSpaceProposalTitleValidation.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribí al menos 3 caracteres.'**
+  String get coupleSpaceProposalTitleValidation;
+
+  /// No description provided for @coupleSpaceProposalCreated.
+  ///
+  /// In es, this message translates to:
+  /// **'Propuesta enviada. No genera ninguna deuda.'**
+  String get coupleSpaceProposalCreated;
+
+  /// No description provided for @coupleSpaceProposalResponseTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Responder la propuesta'**
+  String get coupleSpaceProposalResponseTitle;
+
+  /// No description provided for @coupleSpaceProposalResponseBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegí con libertad. Decir “ahora no” no resta puntos ni requiere explicación.'**
+  String get coupleSpaceProposalResponseBody;
+
+  /// No description provided for @coupleSpaceProposalAccept.
+  ///
+  /// In es, this message translates to:
+  /// **'Dale'**
+  String get coupleSpaceProposalAccept;
+
+  /// Acción para posponer una propuesta sin aceptarla ni rechazarla.
+  ///
+  /// In es, this message translates to:
+  /// **'Para después'**
+  String get coupleSpaceProposalDefer;
+
+  /// No description provided for @coupleSpaceProposalDecline.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora no'**
+  String get coupleSpaceProposalDecline;
+
+  /// No description provided for @coupleSpaceProposalWithdraw.
+  ///
+  /// In es, this message translates to:
+  /// **'Retirar propuesta'**
+  String get coupleSpaceProposalWithdraw;
+
+  /// No description provided for @coupleSpaceProposalArchive.
+  ///
+  /// In es, this message translates to:
+  /// **'Archivar'**
+  String get coupleSpaceProposalArchive;
+
+  /// No description provided for @coupleSpaceProposalAcceptedToast.
+  ///
+  /// In es, this message translates to:
+  /// **'Quedó como un plan acordado.'**
+  String get coupleSpaceProposalAcceptedToast;
+
+  /// Confirmación sin presión al posponer una propuesta de pareja.
+  ///
+  /// In es, this message translates to:
+  /// **'Quedó guardada para retomarla cuando quieran.'**
+  String get coupleSpaceProposalDeferredToast;
+
+  /// No description provided for @coupleSpaceProposalDeclinedToast.
+  ///
+  /// In es, this message translates to:
+  /// **'Respuesta guardada sin penalizaciones.'**
+  String get coupleSpaceProposalDeclinedToast;
+
+  /// No description provided for @coupleSpaceProposalWithdrawnToast.
+  ///
+  /// In es, this message translates to:
+  /// **'Retiraste la propuesta.'**
+  String get coupleSpaceProposalWithdrawnToast;
+
+  /// No description provided for @coupleSpaceProposalArchivedToast.
+  ///
+  /// In es, this message translates to:
+  /// **'Plan archivado.'**
+  String get coupleSpaceProposalArchivedToast;
+
+  /// No description provided for @coupleSpaceLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar este espacio.'**
+  String get coupleSpaceLoadError;
+
+  /// No description provided for @coupleSpaceRetry.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar'**
+  String get coupleSpaceRetry;
 
   /// No description provided for @tourStepLabel.
   ///
@@ -8532,25 +9066,25 @@ abstract class AppLocalizations {
   /// No description provided for @tourCoupleWelcomeBody.
   ///
   /// In es, this message translates to:
-  /// **'Les muestro lo esencial: tareas, monedas, duelo y gastos. Corto y al punto.'**
+  /// **'Les muestro lo esencial: tareas compartidas, propuestas, momentos especiales y gastos. Corto y al punto.'**
   String get tourCoupleWelcomeBody;
 
   /// No description provided for @tourCoupleWelcomeBodyNamed.
   ///
   /// In es, this message translates to:
-  /// **'Te muestro lo esencial para organizar todo con {partnerName}: tareas, monedas, duelo y gastos.'**
+  /// **'Te muestro lo esencial para organizar todo con {partnerName}: tareas compartidas, propuestas, momentos especiales y gastos.'**
   String tourCoupleWelcomeBodyNamed(String partnerName);
 
   /// No description provided for @tourTasksTitleHas.
   ///
   /// In es, this message translates to:
-  /// **'Hacé tareas, ganá puntos'**
+  /// **'Las tareas, entre los dos'**
   String get tourTasksTitleHas;
 
   /// No description provided for @tourTasksBodyHas.
   ///
   /// In es, this message translates to:
-  /// **'Tocá ✓ para completar. Cada tarea suma monedas y XP solo para vos.'**
+  /// **'Tocá ✓ para completar. El progreso semanal ayuda a ver lo que falta y a repartir mejor el trabajo.'**
   String get tourTasksBodyHas;
 
   /// No description provided for @tourTasksTitleEmpty.
@@ -8580,7 +9114,7 @@ abstract class AppLocalizations {
   /// No description provided for @tourBalanceBody.
   ///
   /// In es, this message translates to:
-  /// **'{mode, select, shared{Tienen economía integrada: acá no hay deudas entre ustedes. Ven cuánto gastó el hogar este mes y, abajo, los puntos de cada uno.} other{Acá ven cuánto se deben en gastos compartidos y, abajo, lo que ganó cada uno. Con “Equilibrar” saldan cuentas en un toque.}}'**
+  /// **'{mode, select, shared{Tienen economía integrada: acá no hay deudas entre ustedes y ven cuánto gastó el hogar este mes.} other{Acá ven cuánto se deben por gastos compartidos. Con “Equilibrar” pueden saldar las cuentas reales en un toque.}}'**
   String tourBalanceBody(String mode);
 
   /// No description provided for @tourBalanceBulletSettle.
@@ -12252,19 +12786,19 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge28Title.
   ///
   /// In es, this message translates to:
-  /// **'Al servicio del amor'**
+  /// **'Un gesto de cuidado'**
   String get coupleChallenge28Title;
 
   /// No description provided for @coupleChallenge28Description.
   ///
   /// In es, this message translates to:
-  /// **'Turnarse para \"cuidar\" al otro por un rato: preparar un baño, dar un masaje o cocinar mientras el otro no hace nada.\n\nNo se trata de servir, se trata de cuidar con ternura e intención.'**
+  /// **'Pregúntense qué gesto simple les haría bien hoy: preparar un mate, cocinar algo rico o dar un masaje, solo si nace y ambos se sienten cómodos.\n\nNo es una deuda ni un turno obligatorio. Es una invitación a cuidar con ternura y libertad.'**
   String get coupleChallenge28Description;
 
   /// No description provided for @coupleChallenge28Motivation.
   ///
   /// In es, this message translates to:
-  /// **'Cuidar es una forma silenciosa y poderosa de amar.'**
+  /// **'El cuidado se siente mejor cuando se ofrece y se recibe con libertad.'**
   String get coupleChallenge28Motivation;
 
   /// No description provided for @coupleChallenge28Category.
@@ -12330,7 +12864,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge30Description.
   ///
   /// In es, this message translates to:
-  /// **'Elijan tres sabores, como vino, chocolate o queso, y con cada uno compartan un recuerdo personal: un viaje, una etapa, una persona.\n\nDejen que el sabor despierte historias que todavía no se contaron.'**
+  /// **'Elijan tres sabores, como una infusión, chocolate, fruta o queso, y con cada uno compartan un recuerdo personal: un viaje, una etapa, una persona.\n\nDejen que el sabor despierte historias que todavía no se contaron.'**
   String get coupleChallenge30Description;
 
   /// No description provided for @coupleChallenge30Motivation.
@@ -12474,13 +13008,13 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge34Description.
   ///
   /// In es, this message translates to:
-  /// **'Preparen una mesa con texturas, aromas y sabores sorpresa. Con los ojos cerrados, el otro adivina qué está sintiendo.\n\nUna dinámica para entregarse a las sensaciones sin necesitar muchas palabras.'**
+  /// **'Elijan juntos texturas, aromas y sabores que sean seguros para ambos. Quien adivina puede cerrar los ojos si quiere, y cualquiera puede pausar o cambiar algo en cualquier momento.\n\nUna dinámica suave para prestar atención a las sensaciones, sin presión.'**
   String get coupleChallenge34Description;
 
   /// No description provided for @coupleChallenge34Motivation.
   ///
   /// In es, this message translates to:
-  /// **'El amor se saborea, se huele y se toca.'**
+  /// **'La curiosidad compartida también puede ser una forma de conexión.'**
   String get coupleChallenge34Motivation;
 
   /// No description provided for @coupleChallenge34Category.

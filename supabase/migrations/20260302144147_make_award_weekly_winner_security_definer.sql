@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260302144147).
+-- Reconstructed from remote migration history (version 20260302144147).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Recreate award_weekly_winner with SECURITY DEFINER to bypass RLS

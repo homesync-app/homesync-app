@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260309124415).
+-- Reconstructed from remote migration history (version 20260309124415).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Update complete_task_transaction to support multiple users (p_user_ids array)

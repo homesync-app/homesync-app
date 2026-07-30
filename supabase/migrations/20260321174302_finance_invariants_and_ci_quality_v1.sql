@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260321174302).
+-- Reconstructed from remote migration history (version 20260321174302).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Finance invariants + performance hardening

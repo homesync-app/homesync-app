@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260221160541).
+-- Reconstructed from remote migration history (version 20260221160541).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- AUTO-CAPTURE ACTIVITIES IN THE FEED

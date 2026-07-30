@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260321001246).
+-- Reconstructed from remote migration history (version 20260321001246).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Fix pay_planned_expense to satisfy NOT NULL created_by_id on expenses

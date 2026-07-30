@@ -354,8 +354,6 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
   }
 
   Widget _buildFinancialSummary(String householdId) {
-    final balanceAsync = ref.watch(userBalanceProvider);
-    final balanceData = balanceAsync.value;
     final membersAsync = ref.watch(householdMembersProvider);
     final expenseBalancesAsync = ref.watch(expenseBalancesProvider);
     final currentUserId = ref.read(currentUserIdProvider);
@@ -388,16 +386,18 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     if (isIntegratedEconomy) {
       final projection = ref.watch(monthlyProjectionProvider).value;
       return BalanceCard(
-        coins: (balanceData?['coins'] as num?)?.toInt() ?? 0,
-        xp: (balanceData?['xp'] as num?)?.toInt() ?? 0,
+        coins: 0,
+        xp: 0,
+        showGamification: false,
         integratedEconomy: true,
         monthlySpent: projection?.spent,
       ).animateEntrance(delay: 100);
     }
 
     return BalanceCard(
-      coins: (balanceData?['coins'] as num?)?.toInt() ?? 0,
-      xp: (balanceData?['xp'] as num?)?.toInt() ?? 0,
+      coins: 0,
+      xp: 0,
+      showGamification: false,
       userBalance: displayedExpenseBalance,
       partnerName: partner?.displayName,
       settlementJustCompleted: _settlementJustCompleted,
@@ -476,14 +476,17 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
             if (tasks.isEmpty) {
               return _buildEmptyState(t.homeAllDoneToday, theme);
             }
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: tasks.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 14),
-              itemBuilder: (context, index) =>
-                  _buildTaskCard(tasks.elementAt(index), theme, members)
+            const taskPreviewLimit = 5;
+            final visibleTasks =
+                tasks.take(taskPreviewLimit).toList(growable: false);
+            return Column(
+              children: [
+                for (var index = 0; index < visibleTasks.length; index++) ...[
+                  if (index > 0) const SizedBox(height: 14),
+                  _buildTaskCard(visibleTasks[index], theme, members)
                       .animateStaggered(index),
+                ],
+              ],
             );
           },
         ),
@@ -537,11 +540,14 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
             child: Text(t.commonErrorWithDetails(e.toString())),
           ),
           data: (activities) {
-            if (activities.isEmpty) {
+            final visibleActivities = activities
+                .where((activity) => activity['type'] != 'reward')
+                .toList();
+            if (visibleActivities.isEmpty) {
               return _buildActivityEmptyState(theme);
             }
             return Column(
-              children: activities.map(
+              children: visibleActivities.map(
                 (activity) {
                   final creatorId = activity['creator_id'] as String?;
                   final isMe = creatorId == currentUserId;
@@ -555,6 +561,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
                     child: ActivityChatBubble(
                       activity: activity,
                       currentUserId: currentUserId,
+                      showGamification: false,
                     ),
                   );
                 },
@@ -784,4 +791,3 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     );
   }
 }
-

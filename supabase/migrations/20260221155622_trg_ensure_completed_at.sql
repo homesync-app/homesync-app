@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260221155622).
+-- Reconstructed from remote migration history (version 20260221155622).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Asegurar que completed_at siempre estâ”œÂ® presente para el historial

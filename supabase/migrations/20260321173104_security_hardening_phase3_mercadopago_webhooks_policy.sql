@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260321173104).
+-- Reconstructed from remote migration history (version 20260321173104).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Keep mercadopago_webhooks table/config, but make RLS explicit and safe.

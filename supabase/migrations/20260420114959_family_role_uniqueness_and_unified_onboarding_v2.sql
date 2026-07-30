@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260420114959).
+-- Reconstructed from remote migration history (version 20260420114959).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 drop function if exists public.complete_member_onboarding(text, text);

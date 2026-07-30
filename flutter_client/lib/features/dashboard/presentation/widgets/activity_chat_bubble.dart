@@ -14,11 +14,13 @@ import 'package:homesync_client/shared/widgets/user_avatar.dart';
 class ActivityChatBubble extends ConsumerWidget {
   final Map<String, dynamic> activity;
   final String? currentUserId;
+  final bool showGamification;
 
   const ActivityChatBubble({
     super.key,
     required this.activity,
     required this.currentUserId,
+    this.showGamification = true,
   });
 
   @override
@@ -28,7 +30,8 @@ class ActivityChatBubble extends ConsumerWidget {
     final data = (activity['data'] as Map<String, dynamic>?) ?? {};
     final creatorId = activity['creator_id'] as String?;
     final isMe = creatorId == currentUserId;
-    final isReward = type == 'reward';
+    final isReward = showGamification && type == 'reward';
+    final hasDetail = type == 'task' || type == 'expense';
     // Un equilibrio de saldo (settle_debt_v1) llega como expense con
     // type='settlement' en metadata. Reusamos los slots de header + titulo
     // existentes para no agrandar la tarjeta (titulo/icono centralizados en
@@ -47,12 +50,16 @@ class ActivityChatBubble extends ConsumerWidget {
     final userName = (data['user_name'] as String?)?.trim();
     final avatarUrl =
         (data['avatar_url'] ?? data['creator_avatar_url']) as String?;
-    final xpReward = activityReadInt(
-      data['xp_reward'] ?? data['xp_per_user'] ?? data['xp'],
-    );
-    final coinsReward = activityReadInt(
-      data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],
-    );
+    final xpReward = showGamification
+        ? activityReadInt(
+            data['xp_reward'] ?? data['xp_per_user'] ?? data['xp'],
+          )
+        : null;
+    final coinsReward = showGamification
+        ? activityReadInt(
+            data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],
+          )
+        : null;
     final amount = activityParseAmount(data['amount']);
     final normalizedCategory = CategoryMapping.normaliseCategory(category);
     final categoriesAsync = ref.watch(categoriesProvider);
@@ -84,7 +91,8 @@ class ActivityChatBubble extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: InkWell(
-        onTap: () => openActivityDetail(context, ref, activity),
+        onTap:
+            hasDetail ? () => openActivityDetail(context, ref, activity) : null,
         borderRadius: BorderRadius.circular(AppRadii.lg),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,

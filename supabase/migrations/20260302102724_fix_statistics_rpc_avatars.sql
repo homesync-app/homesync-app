@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260302102724).
+-- Reconstructed from remote migration history (version 20260302102724).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Update member activity stats to include user_id and avatar_url

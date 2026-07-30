@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260321001905).
+-- Reconstructed from remote migration history (version 20260321001905).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Align payer semantics: when registering a planned payment on behalf of another

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260308135443).
+-- Reconstructed from remote migration history (version 20260308135443).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Lower coin rewards in templates

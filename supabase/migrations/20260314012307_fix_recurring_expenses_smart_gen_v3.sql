@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260314012307).
+-- Reconstructed from remote migration history (version 20260314012307).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- 1. Refine ensure_planned_expenses to NOT create past items for the current month

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260310133030).
+-- Reconstructed from remote migration history (version 20260310133030).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- PHASE 3: AUTOMATION (CRON JOB)

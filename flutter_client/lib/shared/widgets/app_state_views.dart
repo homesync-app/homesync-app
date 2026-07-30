@@ -3,6 +3,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_loader.dart';
 
 export 'package:homesync_client/shared/widgets/app_loader.dart';
@@ -15,25 +16,33 @@ class AppLoadingState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const AppLoader(size: 28),
-            if (message != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                message!,
-                style: TextStyle(
-                  color: theme.textSecondary,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ],
+    final t = AppLocalizations.of(context);
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: message ?? t.commonLoading,
+      child: ExcludeSemantics(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const AppLoader(size: 28),
+                if (message != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    message!,
+                    style: TextStyle(
+                      color: theme.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -53,32 +62,45 @@ class AppErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              color: AppColors.error,
-              size: 34,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              message,
-              style: TextStyle(
-                color: theme.textPrimary,
-                fontWeight: FontWeight.w700,
+            Semantics(
+              container: true,
+              liveRegion: true,
+              label: message,
+              child: ExcludeSemantics(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      color: AppColors.error,
+                      size: 34,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      message,
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
-              textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 14),
               OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Reintentar'),
+                label: Text(t.commonRetry),
               ),
             ],
           ],
