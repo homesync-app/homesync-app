@@ -3667,6 +3667,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get budgetsManageTitle => 'Budgets';
 
   @override
+  String get budgetsLoadError => 'We couldn\'t load your budgets.';
+
+  @override
+  String get budgetsSaveError => 'We couldn\'t save the budget. Try again.';
+
+  @override
+  String get budgetsDeleteError => 'We couldn\'t delete the budget. Try again.';
+
+  @override
+  String get expensesPlannedPaymentError =>
+      'We couldn\'t record the payment. Try again.';
+
+  @override
+  String get expensesPlannedPaymentMembersLoadError =>
+      'We couldn\'t load the household members.';
+
+  @override
+  String get settingsHouseholdCodeGenerateError =>
+      'We couldn\'t generate the code. Try again.';
+
+  @override
   String get budgetsManageSubtitleShared =>
       'Household monthly caps, visible to everyone.';
 
@@ -3917,6 +3938,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get poolsCreateCta => 'Create pool';
+
+  @override
+  String get poolsLoadError => 'We couldn\'t load the pools.';
+
+  @override
+  String get poolsCreateError => 'We couldn\'t create the pool. Try again.';
+
+  @override
+  String get poolsDetailLoadError => 'We couldn\'t load this pool.';
+
+  @override
+  String get poolsSettleError => 'We couldn\'t record the payment. Try again.';
+
+  @override
+  String get poolsCloseError => 'We couldn\'t close the pool. Try again.';
 
   @override
   String get poolsDetailNotFound => 'This pool no longer exists';
@@ -4281,6 +4317,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allowanceSendGenericError => 'We couldn\'t send the allowance.';
+
+  @override
+  String get allowanceMembersLoadError => 'We couldn\'t load the recipients.';
+
+  @override
+  String get allowanceSentScheduleFailed =>
+      'The allowance was sent, but we couldn\'t schedule the monthly repeat.';
+
+  @override
+  String get allowanceScheduleDisableError =>
+      'We couldn\'t disable the scheduled allowance. Try again.';
 
   @override
   String get allowanceSentSnack => 'Allowance sent.';
@@ -6901,6 +6948,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String expensesNewItemsAddToList(int count) {
     return 'Add $count to list';
   }
+
+  @override
+  String get expensesNewItemsAddError =>
+      'We couldn\'t add every item. Retry the ones left.';
+
+  @override
+  String get expensesRecurringLoadError =>
+      'We couldn\'t load your recurring expenses.';
+
+  @override
+  String get expensesFormSaveError => 'We couldn\'t save the entry. Try again.';
+
+  @override
+  String get expensesFormMembersLoadError =>
+      'We couldn\'t load the household members.';
+
+  @override
+  String get expensesDeleteError => 'We couldn\'t delete the entry. Try again.';
 
   @override
   String expensesPlannedPaymentTitle(String type) {

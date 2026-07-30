@@ -2315,6 +2315,30 @@
   "budgetsTeaserSubtitle": "Set monthly caps and see what's left",
   "budgetsEmptyCta": "Create your first budget",
   "budgetsManageTitle": "Budgets",
+  "budgetsLoadError": "We couldn't load your budgets.",
+  "@budgetsLoadError": {
+    "description": "Recoverable error shown when category budgets cannot be loaded."
+  },
+  "budgetsSaveError": "We couldn't save the budget. Try again.",
+  "@budgetsSaveError": {
+    "description": "Snackbar shown when creating or updating a category budget fails."
+  },
+  "budgetsDeleteError": "We couldn't delete the budget. Try again.",
+  "@budgetsDeleteError": {
+    "description": "Snackbar shown when deleting a category budget fails."
+  },
+  "expensesPlannedPaymentError": "We couldn't record the payment. Try again.",
+  "@expensesPlannedPaymentError": {
+    "description": "Snackbar shown when confirming a planned expense payment fails."
+  },
+  "expensesPlannedPaymentMembersLoadError": "We couldn't load the household members.",
+  "@expensesPlannedPaymentMembersLoadError": {
+    "description": "Recoverable error shown when household members cannot be loaded in the planned payment sheet."
+  },
+  "settingsHouseholdCodeGenerateError": "We couldn't generate the code. Try again.",
+  "@settingsHouseholdCodeGenerateError": {
+    "description": "Snackbar shown when generating a household invitation code fails without exposing technical details."
+  },
   "budgetsManageSubtitleShared": "Household monthly caps, visible to everyone.",
   "budgetsManageSubtitlePersonal": "Your monthly caps, based on your share of spending.",
   "budgetsManageEmpty": "No budgets yet.",
@@ -2530,6 +2554,26 @@
   "poolsCreateSubtitle": "Group an event's expenses and settle it apart from day-to-day spending.",
   "poolsCreateNameHint": "Saturday BBQ, Córdoba trip…",
   "poolsCreateCta": "Create pool",
+  "poolsLoadError": "We couldn't load the pools.",
+  "@poolsLoadError": {
+    "description": "Recoverable compact error shown when active expense pools cannot be loaded."
+  },
+  "poolsCreateError": "We couldn't create the pool. Try again.",
+  "@poolsCreateError": {
+    "description": "Snackbar shown when creating an expense pool fails."
+  },
+  "poolsDetailLoadError": "We couldn't load this pool.",
+  "@poolsDetailLoadError": {
+    "description": "Recoverable error shown when an expense pool summary cannot be loaded."
+  },
+  "poolsSettleError": "We couldn't record the payment. Try again.",
+  "@poolsSettleError": {
+    "description": "Snackbar shown when settling a debt inside an expense pool fails without exposing technical details."
+  },
+  "poolsCloseError": "We couldn't close the pool. Try again.",
+  "@poolsCloseError": {
+    "description": "Snackbar shown when archiving an expense pool fails."
+  },
   "poolsDetailNotFound": "This pool no longer exists",
   "poolsDetailTotalLabel": "POOL TOTAL",
   "poolsDetailSettleTitle": "TO SETTLE THIS POOL",
@@ -2837,6 +2881,18 @@
   "allowanceRecipientRequired": "Choose who should receive the allowance.",
   "allowanceAmountInvalid": "Enter a valid amount.",
   "allowanceSendGenericError": "We couldn't send the allowance.",
+  "allowanceMembersLoadError": "We couldn't load the recipients.",
+  "@allowanceMembersLoadError": {
+    "description": "Recoverable error shown when household members cannot be loaded in the allowance sheet."
+  },
+  "allowanceSentScheduleFailed": "The allowance was sent, but we couldn't schedule the monthly repeat.",
+  "@allowanceSentScheduleFailed": {
+    "description": "Partial-success message shown when the allowance transfer succeeds but its monthly schedule fails."
+  },
+  "allowanceScheduleDisableError": "We couldn't disable the scheduled allowance. Try again.",
+  "@allowanceScheduleDisableError": {
+    "description": "Snackbar shown when disabling an allowance schedule fails."
+  },
   "allowanceSentSnack": "Allowance sent.",
   "allowanceSendError": "Error sending allowance: {error}",
   "@allowanceSendError": {
@@ -4364,6 +4420,26 @@
         "type": "int"
       }
     }
+  },
+  "expensesNewItemsAddError": "We couldn't add every item. Retry the ones left.",
+  "@expensesNewItemsAddError": {
+    "description": "Error shown after a partial or failed attempt to add receipt suggestions to Shopping."
+  },
+  "expensesRecurringLoadError": "We couldn't load your recurring expenses.",
+  "@expensesRecurringLoadError": {
+    "description": "Recoverable error shown when recurring expense templates cannot be loaded."
+  },
+  "expensesFormSaveError": "We couldn't save the entry. Try again.",
+  "@expensesFormSaveError": {
+    "description": "Inline error shown when saving an expense or income fails without exposing technical details."
+  },
+  "expensesFormMembersLoadError": "We couldn't load the household members.",
+  "@expensesFormMembersLoadError": {
+    "description": "Recoverable error shown when household members cannot be loaded in the expense form."
+  },
+  "expensesDeleteError": "We couldn't delete the entry. Try again.",
+  "@expensesDeleteError": {
+    "description": "Snackbar shown when deleting an expense fails after the form closes."
   },
   "expensesPlannedPaymentTitle": "{type, select, income{Confirm income} other{Confirm payment}}",
   "@expensesPlannedPaymentTitle": {

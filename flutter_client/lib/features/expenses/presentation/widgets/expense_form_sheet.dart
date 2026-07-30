@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/errors/error_messages.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
@@ -34,10 +33,10 @@ import 'package:homesync_client/features/shopping/domain/models/shopping_model.d
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_shake.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/inline_error_banner.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -553,6 +552,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Future<void> _saveExpense() async {
+    if (_isLoading) return;
     final t = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
       setState(() {
@@ -573,20 +573,20 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       return;
     }
 
-    final householdId = await ref.read(householdIdProvider.future);
-    if (householdId == null) {
-      throw Exception(t.expensesFormValidationNoHousehold);
-    }
-
-    final members = await ref.read(householdMembersProvider.future);
-    final financeMembers = _financeMembers(members);
-
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
+      final householdId = await ref.read(householdIdProvider.future);
+      if (householdId == null) {
+        throw StateError('Cannot save an expense without a household');
+      }
+
+      final members = await ref.read(householdMembersProvider.future);
+      if (!mounted) return;
+      final financeMembers = _financeMembers(members);
       final repo = ref.read(expenseRepositoryProvider);
 
       String computedTitle = _titleController.text.trim();
@@ -757,13 +757,17 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           duration: const Duration(milliseconds: 1500),
         );
       }
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Expense form save failed for ${widget.expense?.id ?? 'new expense'}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
-        final t = AppLocalizations.of(context);
         // Inline, not a snackbar: the sheet is still open, so a snackbar would
         // render behind the modal barrier and look like nothing happened.
         setState(() {
-          _errorMessage = t.commonErrorWithDetails(friendlyErrorMessage(e, t: t));
+          _errorMessage = t.expensesFormSaveError;
         });
       }
     } finally {
@@ -784,11 +788,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
     return membersAsync.when(
       loading: () => const Center(child: AppLoader()),
-      error: (e, s) {
-        return Center(
-          child: Text(t.commonErrorWithDetails(friendlyErrorMessage(e, t: t))),
-        );
-      },
+      error: (error, stackTrace) => AppErrorState(
+        message: t.expensesFormMembersLoadError,
+        onRetry: () => ref.invalidate(householdMembersProvider),
+      ),
       data: (members) {
         if (members.isEmpty) {
           return Center(
@@ -904,20 +907,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                                 NewItemsSuggestionBanner(
                                   animationTrigger: _shoppingRevealEpoch,
                                   items: _unmatchedOcrItems,
-                                  householdId: ref
-                                          .read(currentHouseholdProvider)
-                                          .value
-                                          ?.id ??
-                                      '',
                                   onDismiss: () =>
                                       setState(() => _unmatchedOcrItems = []),
-                                  onItemsAdded: (addedItems) {
-                                    setState(() {
-                                      _selectedShoppingItems.addAll(addedItems);
-                                      _ocrMatchedShoppingItems
-                                          .addAll(addedItems);
-                                    });
-                                  },
                                 ),
                               ],
                               const SizedBox(height: 28),
@@ -1028,7 +1019,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       final messenger = ScaffoldMessenger.of(context);
       final expenseId = widget.expense!.id;
       final successMessage = t.expensesDeletedSnack;
-      String errorMessage(Object error) => t.commonErrorWithDetails('$error');
+      final errorMessage = t.expensesDeleteError;
 
       container
           .read(combinedFeedControllerProvider.notifier)
@@ -1054,7 +1045,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     required ScaffoldMessengerState messenger,
     required String expenseId,
     required String successMessage,
-    required String Function(Object error) errorMessage,
+    required String errorMessage,
   }) async {
     try {
       await client.rpc(
@@ -1098,7 +1089,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       container.invalidate(recentActivityRemoteProvider);
       _showDeleteResultSnackBar(
         messenger,
-        message: errorMessage(e),
+        message: errorMessage,
         isError: true,
       );
     }
@@ -1347,9 +1338,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               labelStyle: AppTypography.caption.copyWith(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
-                color: _selectedPoolId == null
-                    ? Colors.white
-                    : theme.textPrimary,
+                color:
+                    _selectedPoolId == null ? Colors.white : theme.textPrimary,
               ),
               selectedColor: theme.primary,
               backgroundColor: theme.surface,
@@ -1365,8 +1355,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             for (final pool in pools)
               ChoiceChip(
                 selected: _selectedPoolId == pool.id,
-                onSelected: (_) =>
-                    setState(() => _selectedPoolId = pool.id),
+                onSelected: (_) => setState(() => _selectedPoolId = pool.id),
                 showCheckmark: false,
                 label: Text('${pool.emoji} ${pool.name}'),
                 labelStyle: AppTypography.caption.copyWith(
@@ -1490,10 +1479,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 radius: 14,
                 forceCircular: true,
               ),
-              title: Text(m.displayName, style: AppTypography.caption.copyWith(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),),
+              title: Text(
+                m.displayName,
+                style: AppTypography.caption.copyWith(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               trailing: Text(
                 '${(memRatio * 100).toInt()}%',
                 style: TextStyle(

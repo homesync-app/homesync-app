@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -29,11 +30,42 @@ class PoolSection extends ConsumerWidget {
     final caps = ref.watch(householdCapabilitiesProvider);
     if (caps.type != HouseholdType.friends) return const SizedBox.shrink();
 
-    final pools = ref.watch(activePoolsProvider).value;
-    if (pools == null) return const SizedBox.shrink();
-
     final t = AppLocalizations.of(context);
     final theme = context.theme;
+    final poolsAsync = ref.watch(activePoolsProvider);
+    if (poolsAsync.hasError) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppInsets.screenHorizontal,
+          AppSpacing.md,
+          AppInsets.screenHorizontal,
+          0,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 18,
+              color: theme.textMuted,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: Text(
+                t.poolsLoadError,
+                style: AppTypography.caption.copyWith(color: theme.textMuted),
+              ),
+            ),
+            TextButton(
+              onPressed: () => ref.invalidate(activePoolsProvider),
+              child: Text(t.commonRetry),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final pools = poolsAsync.value;
+    if (pools == null) return const SizedBox.shrink();
 
     // Sin fondos todavía: CTA compacto para crear el primero.
     if (pools.isEmpty) {
@@ -56,8 +88,7 @@ class PoolSection extends ConsumerWidget {
             decoration: BoxDecoration(
               color: theme.primary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(AppRadii.xl),
-              border:
-                  Border.all(color: theme.primary.withValues(alpha: 0.18)),
+              border: Border.all(color: theme.primary.withValues(alpha: 0.18)),
             ),
             child: Row(
               children: [
@@ -187,10 +218,13 @@ class _PoolCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Text(pool.emoji, style: AppTypography.body.copyWith(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w400,
-                ),),
+                Text(
+                  pool.emoji,
+                  style: AppTypography.body.copyWith(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -208,9 +242,7 @@ class _PoolCard extends ConsumerWidget {
             ),
             const Spacer(),
             Text(
-              summary == null
-                  ? '—'
-                  : currency.format(summary.total.round()),
+              summary == null ? '—' : currency.format(summary.total.round()),
               style: AppTypography.cardTitle.copyWith(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
@@ -269,6 +301,7 @@ class _PoolCreateSheetState extends ConsumerState<PoolCreateSheet> {
   }
 
   Future<void> _save() async {
+    if (_isSaving) return;
     final t = AppLocalizations.of(context);
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
@@ -279,11 +312,16 @@ class _PoolCreateSheetState extends ConsumerState<PoolCreateSheet> {
       if (!mounted) return;
       AppHaptics.success();
       Navigator.pop(context);
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Pool creation failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        message: t.commonErrorWithDetails('$e'),
+        message: t.poolsCreateError,
         type: AppSnackBarType.error,
       );
     } finally {
@@ -399,10 +437,13 @@ class _PoolCreateSheetState extends ConsumerState<PoolCreateSheet> {
                       ),
                     ),
                     child: Center(
-                      child: Text(emoji, style: AppTypography.body.copyWith(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                      ),),
+                      child: Text(
+                        emoji,
+                        style: AppTypography.body.copyWith(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
                     ),
                   ),
                 );

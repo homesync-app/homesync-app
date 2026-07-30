@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -12,9 +13,9 @@ import 'package:homesync_client/features/expenses/presentation/providers/expense
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -122,12 +123,13 @@ class _PlannedExpensePaymentSheetState
   }
 
   Future<void> _confirmPayment() async {
+    if (_isLoading) return;
+    final t = AppLocalizations.of(context);
     final amount = _parseAmount(_amountController.text);
     if (amount == null || amount <= 0) return;
 
     setState(() => _isLoading = true);
     try {
-
       final result = await ref
           .read(combinedFeedControllerProvider.notifier)
           .payPlannedExpense(
@@ -146,14 +148,19 @@ class _PlannedExpensePaymentSheetState
         'template_updated': templateUpdated,
         'title': widget.plannedExpense.title,
       });
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Planned expense payment failed for ${widget.plannedExpense.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
       // Use the overlay-based snackbar: a ScaffoldMessenger snackbar renders
       // *behind* this modal bottom sheet, so the user would see no feedback and
       // an open form. AppSnackBar draws on the root overlay, above the sheet.
       AppSnackBar.show(
         context,
-        message: AppLocalizations.of(context).commonErrorWithDetails('$e'),
+        message: t.expensesPlannedPaymentError,
         type: AppSnackBarType.error,
       );
     } finally {
@@ -185,9 +192,13 @@ class _PlannedExpensePaymentSheetState
           height: 200,
           child: Center(child: AppLoader()),
         ),
-        error: (e, _) => Center(
-          child:
-              Text(AppLocalizations.of(context).commonErrorWithDetails('$e')),
+        error: (error, stackTrace) => SizedBox(
+          height: 200,
+          child: AppErrorState(
+            message: AppLocalizations.of(context)
+                .expensesPlannedPaymentMembersLoadError,
+            onRetry: () => ref.invalidate(householdMembersProvider),
+          ),
         ),
         data: (List<MemberModel> members) {
           _ensureValidPayer(members);

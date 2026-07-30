@@ -5727,6 +5727,42 @@ abstract class AppLocalizations {
   /// **'Presupuestos'**
   String get budgetsManageTitle;
 
+  /// Recoverable error shown when category budgets cannot be loaded.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar tus presupuestos.'**
+  String get budgetsLoadError;
+
+  /// Snackbar shown when creating or updating a category budget fails.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos guardar el presupuesto. Intentá de nuevo.'**
+  String get budgetsSaveError;
+
+  /// Snackbar shown when deleting a category budget fails.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos eliminar el presupuesto. Intentá de nuevo.'**
+  String get budgetsDeleteError;
+
+  /// Snackbar shown when confirming a planned expense payment fails.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos registrar el pago. Intentá de nuevo.'**
+  String get expensesPlannedPaymentError;
+
+  /// Recoverable error shown when household members cannot be loaded in the planned payment sheet.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar los integrantes.'**
+  String get expensesPlannedPaymentMembersLoadError;
+
+  /// Snackbar shown when generating a household invitation code fails without exposing technical details.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos generar el código. Intentá de nuevo.'**
+  String get settingsHouseholdCodeGenerateError;
+
   /// No description provided for @budgetsManageSubtitleShared.
   ///
   /// In es, this message translates to:
@@ -6146,6 +6182,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Crear fondo'**
   String get poolsCreateCta;
+
+  /// Recoverable compact error shown when active expense pools cannot be loaded.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar los fondos.'**
+  String get poolsLoadError;
+
+  /// Snackbar shown when creating an expense pool fails.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos crear el fondo. Intentá de nuevo.'**
+  String get poolsCreateError;
+
+  /// Recoverable error shown when an expense pool summary cannot be loaded.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar este fondo.'**
+  String get poolsDetailLoadError;
+
+  /// Snackbar shown when settling a debt inside an expense pool fails without exposing technical details.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos registrar el pago. Intentá de nuevo.'**
+  String get poolsSettleError;
+
+  /// Snackbar shown when archiving an expense pool fails.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cerrar el fondo. Intentá de nuevo.'**
+  String get poolsCloseError;
 
   /// No description provided for @poolsDetailNotFound.
   ///
@@ -6746,6 +6812,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo enviar la mesada.'**
   String get allowanceSendGenericError;
+
+  /// Recoverable error shown when household members cannot be loaded in the allowance sheet.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar los destinatarios.'**
+  String get allowanceMembersLoadError;
+
+  /// Partial-success message shown when the allowance transfer succeeds but its monthly schedule fails.
+  ///
+  /// In es, this message translates to:
+  /// **'La mesada se envió, pero no pudimos programar la repetición.'**
+  String get allowanceSentScheduleFailed;
+
+  /// Snackbar shown when disabling an allowance schedule fails.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos desactivar la mesada programada. Intentá de nuevo.'**
+  String get allowanceScheduleDisableError;
 
   /// No description provided for @allowanceSentSnack.
   ///
@@ -11006,6 +11090,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Agregar {count} a lista'**
   String expensesNewItemsAddToList(int count);
+
+  /// Error shown after a partial or failed attempt to add receipt suggestions to Shopping.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos agregar todos los productos. Reintentá los que quedaron.'**
+  String get expensesNewItemsAddError;
+
+  /// Recoverable error shown when recurring expense templates cannot be loaded.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar tus gastos recurrentes.'**
+  String get expensesRecurringLoadError;
+
+  /// Inline error shown when saving an expense or income fails without exposing technical details.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos guardar el movimiento. Intentá de nuevo.'**
+  String get expensesFormSaveError;
+
+  /// Recoverable error shown when household members cannot be loaded in the expense form.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar los integrantes.'**
+  String get expensesFormMembersLoadError;
+
+  /// Snackbar shown when deleting an expense fails after the form closes.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos eliminar el movimiento. Intentá de nuevo.'**
+  String get expensesDeleteError;
 
   /// No description provided for @expensesPlannedPaymentTitle.
   ///

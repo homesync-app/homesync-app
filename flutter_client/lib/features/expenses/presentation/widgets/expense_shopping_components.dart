@@ -903,17 +903,11 @@ class _ShoppingItemsSelectorSheetState
                         border: InputBorder.none,
                       ),
                       onChanged: (val) => setState(() => _searchQuery = val),
-                      onSubmitted: (val) async {
+                      onSubmitted: (val) {
                         if (val.trim().isEmpty) return;
                         _searchController.clear();
                         setState(() => _searchQuery = '');
                         _searchFocus.requestFocus();
-
-                        await ref.read(shoppingItemsProvider.notifier).addItem(
-                              name: val.trim(),
-                              category: 'general',
-                              emoji: '🏷️',
-                            );
 
                         final temp = ShoppingItemModel(
                           id: 'selection_sync_${val.trim()}',
@@ -936,11 +930,13 @@ class _ShoppingItemsSelectorSheetState
                     children: [
                       if (showAddOption)
                         ListTile(
-                          leading:
-                              Text('âž•', style: AppTypography.body.copyWith(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w400,
-                              ),),
+                          leading: Text(
+                            'âž•',
+                            style: AppTypography.body.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
                           title: Text(
                             t.expensesFormShoppingAddQuery(_searchQuery),
                             style: const TextStyle(
@@ -954,19 +950,11 @@ class _ShoppingItemsSelectorSheetState
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          onTap: () async {
+                          onTap: () {
                             final queryToSave = _searchQuery.trim();
                             _searchController.clear();
                             setState(() => _searchQuery = '');
                             _searchFocus.requestFocus();
-
-                            await ref
-                                .read(shoppingItemsProvider.notifier)
-                                .addItem(
-                                  name: queryToSave,
-                                  category: 'general',
-                                  emoji: '🏷️',
-                                );
 
                             final temp = ShoppingItemModel(
                               id: 'selection_sync_$queryToSave',
@@ -1066,7 +1054,7 @@ class _ShoppingItemsSelectorSheetState
                               color: AppColors.primary,
                               size: 24,
                             ),
-                            onTap: () async {
+                            onTap: () {
                               final name = item['name']!;
                               final cat = item['categoryId']!;
                               final emoji = item['emoji']!;
@@ -1074,14 +1062,6 @@ class _ShoppingItemsSelectorSheetState
                               _searchController.clear();
                               setState(() => _searchQuery = '');
                               _searchFocus.requestFocus();
-
-                              await ref
-                                  .read(shoppingItemsProvider.notifier)
-                                  .addItem(
-                                    name: name,
-                                    category: cat,
-                                    emoji: emoji,
-                                  );
 
                               final temp = ShoppingItemModel(
                                 id: 'selection_sync_$name',

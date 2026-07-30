@@ -3689,6 +3689,29 @@ class AppLocalizationsEs extends AppLocalizations {
   String get budgetsManageTitle => 'Presupuestos';
 
   @override
+  String get budgetsLoadError => 'No pudimos cargar tus presupuestos.';
+
+  @override
+  String get budgetsSaveError =>
+      'No pudimos guardar el presupuesto. Intentá de nuevo.';
+
+  @override
+  String get budgetsDeleteError =>
+      'No pudimos eliminar el presupuesto. Intentá de nuevo.';
+
+  @override
+  String get expensesPlannedPaymentError =>
+      'No pudimos registrar el pago. Intentá de nuevo.';
+
+  @override
+  String get expensesPlannedPaymentMembersLoadError =>
+      'No pudimos cargar los integrantes.';
+
+  @override
+  String get settingsHouseholdCodeGenerateError =>
+      'No pudimos generar el código. Intentá de nuevo.';
+
+  @override
   String get budgetsManageSubtitleShared =>
       'Topes mensuales del hogar, visibles para todos.';
 
@@ -3939,6 +3962,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get poolsCreateCta => 'Crear fondo';
+
+  @override
+  String get poolsLoadError => 'No pudimos cargar los fondos.';
+
+  @override
+  String get poolsCreateError => 'No pudimos crear el fondo. Intentá de nuevo.';
+
+  @override
+  String get poolsDetailLoadError => 'No pudimos cargar este fondo.';
+
+  @override
+  String get poolsSettleError =>
+      'No pudimos registrar el pago. Intentá de nuevo.';
+
+  @override
+  String get poolsCloseError => 'No pudimos cerrar el fondo. Intentá de nuevo.';
 
   @override
   String get poolsDetailNotFound => 'Este fondo ya no existe';
@@ -4301,6 +4340,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get allowanceSendGenericError => 'No se pudo enviar la mesada.';
+
+  @override
+  String get allowanceMembersLoadError =>
+      'No pudimos cargar los destinatarios.';
+
+  @override
+  String get allowanceSentScheduleFailed =>
+      'La mesada se envió, pero no pudimos programar la repetición.';
+
+  @override
+  String get allowanceScheduleDisableError =>
+      'No pudimos desactivar la mesada programada. Intentá de nuevo.';
 
   @override
   String get allowanceSentSnack => 'Mesada enviada.';
@@ -6931,6 +6982,26 @@ class AppLocalizationsEs extends AppLocalizations {
   String expensesNewItemsAddToList(int count) {
     return 'Agregar $count a lista';
   }
+
+  @override
+  String get expensesNewItemsAddError =>
+      'No pudimos agregar todos los productos. Reintentá los que quedaron.';
+
+  @override
+  String get expensesRecurringLoadError =>
+      'No pudimos cargar tus gastos recurrentes.';
+
+  @override
+  String get expensesFormSaveError =>
+      'No pudimos guardar el movimiento. Intentá de nuevo.';
+
+  @override
+  String get expensesFormMembersLoadError =>
+      'No pudimos cargar los integrantes.';
+
+  @override
+  String get expensesDeleteError =>
+      'No pudimos eliminar el movimiento. Intentá de nuevo.';
 
   @override
   String expensesPlannedPaymentTitle(String type) {

@@ -2347,6 +2347,30 @@
   "budgetsTeaserSubtitle": "Definí topes mensuales y mirá cuánto te queda",
   "budgetsEmptyCta": "Crear tu primer presupuesto",
   "budgetsManageTitle": "Presupuestos",
+  "budgetsLoadError": "No pudimos cargar tus presupuestos.",
+  "@budgetsLoadError": {
+    "description": "Recoverable error shown when category budgets cannot be loaded."
+  },
+  "budgetsSaveError": "No pudimos guardar el presupuesto. Intentá de nuevo.",
+  "@budgetsSaveError": {
+    "description": "Snackbar shown when creating or updating a category budget fails."
+  },
+  "budgetsDeleteError": "No pudimos eliminar el presupuesto. Intentá de nuevo.",
+  "@budgetsDeleteError": {
+    "description": "Snackbar shown when deleting a category budget fails."
+  },
+  "expensesPlannedPaymentError": "No pudimos registrar el pago. Intentá de nuevo.",
+  "@expensesPlannedPaymentError": {
+    "description": "Snackbar shown when confirming a planned expense payment fails."
+  },
+  "expensesPlannedPaymentMembersLoadError": "No pudimos cargar los integrantes.",
+  "@expensesPlannedPaymentMembersLoadError": {
+    "description": "Recoverable error shown when household members cannot be loaded in the planned payment sheet."
+  },
+  "settingsHouseholdCodeGenerateError": "No pudimos generar el código. Intentá de nuevo.",
+  "@settingsHouseholdCodeGenerateError": {
+    "description": "Snackbar shown when generating a household invitation code fails without exposing technical details."
+  },
   "budgetsManageSubtitleShared": "Topes mensuales del hogar, visibles para todos.",
   "budgetsManageSubtitlePersonal": "Tus topes mensuales, sobre tu parte de los gastos.",
   "budgetsManageEmpty": "Todavía no hay presupuestos.",
@@ -2562,6 +2586,26 @@
   "poolsCreateSubtitle": "Agrupá los gastos de un evento y saldalo aparte del día a día del piso.",
   "poolsCreateNameHint": "Asado del sábado, Viaje a Córdoba…",
   "poolsCreateCta": "Crear fondo",
+  "poolsLoadError": "No pudimos cargar los fondos.",
+  "@poolsLoadError": {
+    "description": "Recoverable compact error shown when active expense pools cannot be loaded."
+  },
+  "poolsCreateError": "No pudimos crear el fondo. Intentá de nuevo.",
+  "@poolsCreateError": {
+    "description": "Snackbar shown when creating an expense pool fails."
+  },
+  "poolsDetailLoadError": "No pudimos cargar este fondo.",
+  "@poolsDetailLoadError": {
+    "description": "Recoverable error shown when an expense pool summary cannot be loaded."
+  },
+  "poolsSettleError": "No pudimos registrar el pago. Intentá de nuevo.",
+  "@poolsSettleError": {
+    "description": "Snackbar shown when settling a debt inside an expense pool fails without exposing technical details."
+  },
+  "poolsCloseError": "No pudimos cerrar el fondo. Intentá de nuevo.",
+  "@poolsCloseError": {
+    "description": "Snackbar shown when archiving an expense pool fails."
+  },
   "poolsDetailNotFound": "Este fondo ya no existe",
   "poolsDetailTotalLabel": "TOTAL DEL FONDO",
   "poolsDetailSettleTitle": "PARA SALDAR ESTE FONDO",
@@ -2869,6 +2913,18 @@
   "allowanceRecipientRequired": "Elegí a quién darle la mesada.",
   "allowanceAmountInvalid": "Ingresá un monto válido.",
   "allowanceSendGenericError": "No se pudo enviar la mesada.",
+  "allowanceMembersLoadError": "No pudimos cargar los destinatarios.",
+  "@allowanceMembersLoadError": {
+    "description": "Recoverable error shown when household members cannot be loaded in the allowance sheet."
+  },
+  "allowanceSentScheduleFailed": "La mesada se envió, pero no pudimos programar la repetición.",
+  "@allowanceSentScheduleFailed": {
+    "description": "Partial-success message shown when the allowance transfer succeeds but its monthly schedule fails."
+  },
+  "allowanceScheduleDisableError": "No pudimos desactivar la mesada programada. Intentá de nuevo.",
+  "@allowanceScheduleDisableError": {
+    "description": "Snackbar shown when disabling an allowance schedule fails."
+  },
   "allowanceSentSnack": "Mesada enviada.",
   "allowanceSendError": "Error al enviar la mesada: {error}",
   "@allowanceSendError": {
@@ -4486,6 +4542,26 @@
         "type": "int"
       }
     }
+  },
+  "expensesNewItemsAddError": "No pudimos agregar todos los productos. Reintentá los que quedaron.",
+  "@expensesNewItemsAddError": {
+    "description": "Error shown after a partial or failed attempt to add receipt suggestions to Shopping."
+  },
+  "expensesRecurringLoadError": "No pudimos cargar tus gastos recurrentes.",
+  "@expensesRecurringLoadError": {
+    "description": "Recoverable error shown when recurring expense templates cannot be loaded."
+  },
+  "expensesFormSaveError": "No pudimos guardar el movimiento. Intentá de nuevo.",
+  "@expensesFormSaveError": {
+    "description": "Inline error shown when saving an expense or income fails without exposing technical details."
+  },
+  "expensesFormMembersLoadError": "No pudimos cargar los integrantes.",
+  "@expensesFormMembersLoadError": {
+    "description": "Recoverable error shown when household members cannot be loaded in the expense form."
+  },
+  "expensesDeleteError": "No pudimos eliminar el movimiento. Intentá de nuevo.",
+  "@expensesDeleteError": {
+    "description": "Snackbar shown when deleting an expense fails after the form closes."
   },
   "expensesPlannedPaymentTitle": "{type, select, income{Confirmar cobro} other{Confirmar pago}}",
   "@expensesPlannedPaymentTitle": {
