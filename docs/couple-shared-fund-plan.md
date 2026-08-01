@@ -4,7 +4,25 @@ Propuesta de rediseño de la economía del modo pareja. Reemplaza el circuito
 actual *"hago tareas → gano moneda personal → compro algo que mi pareja me
 debe"* por un fondo común del hogar y un espacio de propuestas sin precio.
 
-Estado: propuesta. No implementado.
+Estado: parcialmente implementado (1.3.0).
+
+Ya está en la app y en la base:
+
+- Propuestas gratuitas y rechazables (`couple_proposals` + RPCs), que son la
+  Regla 2 completa.
+- Muere la economía de coins en pareja: sin tienda, sin canjes, sin coins en
+  el ledger ni en Stats.
+- Muere el duelo semanal en pareja: sin ganador, sin ranking, sin card de duelo.
+- El desafío semanal deja recuerdo y no crédito.
+- El XP sobrevive como progreso personal, tal como argumenta este documento.
+  Ojo: la migración original lo había matado junto con las coins; se corrigió
+  en `20260801120000_restore_couple_personal_xp.sql`.
+
+Todavía **no** está implementado lo que le da nombre al plan: **el fondo común
+del hogar**. No existe tabla de fondo, ni catálogo de desbloqueos conjuntos, ni
+aporte del esfuerzo doméstico a un pozo compartido. Hoy el modo pareja quedó en
+"sin economía" — que es la mitad destructiva del plan — y falta la mitad que
+construye.
 
 Contexto de datos: el owner confirma que la base activa es despreciable, así que
 el esquema puede rehacerse sin plan de migración de usuarios. Ojo con una
