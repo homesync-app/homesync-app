@@ -4609,7 +4609,7 @@
   "savingsHistoryTitle": "CONTRIBUTION HISTORY",
   "savingsCompletedGoalsHistoryTitle": "Completed goals",
   "savingsContributionLine": "{name} added {amount}",
-  "savingsSharedContributionLine": "{names} added {amount}",
+  "savingsSharedContributionLine": "{names} contributed {amount}",
   "savingsContributionSomeone": "Someone",
   "savingsCompletedBadge": "Reached!",
   "savingsDeadlineChip": "By {date}",
@@ -5270,5 +5270,30 @@
   "coupleFundCatalogPicnic": "Picnic",
   "coupleFundCatalogDinnerOut": "Dinner out",
   "coupleFundCatalogDayTrip": "Day trip",
-  "coupleFundCatalogWeekendAway": "Weekend away"
+  "coupleFundCatalogWeekendAway": "Weekend away",
+  "contributionTitle": "How it was split",
+  "contributionEyebrow": "THIS WEEK",
+  "contributionEmpty": "No tasks completed this week yet.",
+  "contributionRhythmLabel": "Household rhythm",
+  "contributionRhythmValue": "{weeks} of the last {window} weeks",
+  "@contributionRhythmValue": {
+    "description": "Ritmo: semanas activas sobre la ventana. Nunca 'racha'.",
+    "placeholders": {"weeks": {"type": "int"}, "window": {"type": "int"}}
+  },
+  "contributionRhythmHint": "Not a streak: a quiet week lowers it without breaking anything.",
+  "contributionTasksLabel": "{count, plural, =0{no tasks} =1{1 task} other{{count} tasks}}",
+  "@contributionTasksLabel": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "contributionDemandingLabel": "{count, plural, =0{none of the heavy ones} =1{1 heavy one} other{{count} heavy ones}}",
+  "@contributionDemandingLabel": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "contributionSkewed": "The {category} ones kept landing on the same side.",
+  "@contributionSkewed": {
+    "description": "Lectura accionable, nunca un puntaje ni un reproche.",
+    "placeholders": {"category": {"type": "String"}}
+  },
+  "contributionBalanced": "This week was evenly split.",
+  "contributionNoDurationNote": "The split is measured in tasks and how many heavy ones each took."
 }

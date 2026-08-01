@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
+import 'package:homesync_client/features/couple_space/presentation/providers/couple_space_providers.dart';
+import 'package:homesync_client/features/couple_space/presentation/widgets/contribution_split_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 import 'love_note_dialog.dart';
@@ -65,6 +69,11 @@ class WeeklyProgressTab extends ConsumerWidget {
               weeklyRanking: weeklyRanking,
               duelHistory: duelHistory,
             ),
+            const SizedBox(height: AppSpacing.xl),
+          ] else if (!caps.showsWeeklyDuelCard) ...[
+            // El duelo se fue; en su lugar va el ritmo del hogar contra su
+            // propio pasado y el reparto honesto de la semana.
+            const _ContributionSection(),
             const SizedBox(height: AppSpacing.xl),
           ],
           SectionLabel(label: t.statsHouseholdSummary, icon: '•'),
@@ -356,5 +365,30 @@ class _SummaryMetric extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// El reparto de la semana en la pestaña Progreso. Resuelve su propio estado
+/// para que un fallo acá no se lleve puesta toda la pestaña.
+class _ContributionSection extends ConsumerWidget {
+  const _ContributionSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final householdId = ref.watch(householdIdProvider).value;
+    if (householdId == null || householdId.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return ref.watch(householdContributionProvider(householdId)).when(
+          skipLoadingOnReload: true,
+          data: (contribution) =>
+              ContributionSplitCard(contribution: contribution),
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            child: Center(child: AppLoader()),
+          ),
+          error: (_, __) => const SizedBox.shrink(),
+        );
   }
 }

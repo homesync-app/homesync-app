@@ -11658,7 +11658,7 @@ abstract class AppLocalizations {
   /// A contribution row for a shared savings contribution with multiple participants.
   ///
   /// In es, this message translates to:
-  /// **'{names} sumaron {amount}'**
+  /// **'{names} aportaron {amount}'**
   String savingsSharedContributionLine(String names, String amount);
 
   /// Fallback name when a contributor's name is unknown.
@@ -14763,6 +14763,72 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Escapada de fin de semana'**
   String get coupleFundCatalogWeekendAway;
+
+  /// No description provided for @contributionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cómo se repartió'**
+  String get contributionTitle;
+
+  /// No description provided for @contributionEyebrow.
+  ///
+  /// In es, this message translates to:
+  /// **'LA SEMANA'**
+  String get contributionEyebrow;
+
+  /// No description provided for @contributionEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay tareas completadas esta semana.'**
+  String get contributionEmpty;
+
+  /// No description provided for @contributionRhythmLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Ritmo del hogar'**
+  String get contributionRhythmLabel;
+
+  /// Ritmo: semanas activas sobre la ventana. Nunca 'racha'.
+  ///
+  /// In es, this message translates to:
+  /// **'{weeks} de las últimas {window} semanas'**
+  String contributionRhythmValue(int weeks, int window);
+
+  /// No description provided for @contributionRhythmHint.
+  ///
+  /// In es, this message translates to:
+  /// **'No es una racha: una semana tranquila lo baja sin romper nada.'**
+  String get contributionRhythmHint;
+
+  /// No description provided for @contributionTasksLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{sin tareas} =1{1 tarea} other{{count} tareas}}'**
+  String contributionTasksLabel(int count);
+
+  /// No description provided for @contributionDemandingLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{ninguna de las pesadas} =1{1 de las pesadas} other{{count} de las pesadas}}'**
+  String contributionDemandingLabel(int count);
+
+  /// Lectura accionable, nunca un puntaje ni un reproche.
+  ///
+  /// In es, this message translates to:
+  /// **'Las de {category} cayeron siempre del mismo lado.'**
+  String contributionSkewed(String category);
+
+  /// No description provided for @contributionBalanced.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta semana se repartió parejo.'**
+  String get contributionBalanced;
+
+  /// No description provided for @contributionNoDurationNote.
+  ///
+  /// In es, this message translates to:
+  /// **'El reparto se mide en tareas y en cuántas de las pesadas tomó cada uno.'**
+  String get contributionNoDurationNote;
 }
 
 class _AppLocalizationsDelegate

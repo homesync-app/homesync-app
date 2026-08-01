@@ -7356,7 +7356,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String savingsSharedContributionLine(String names, String amount) {
-    return '$names sumaron $amount';
+    return '$names aportaron $amount';
   }
 
   @override
@@ -9202,4 +9202,62 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get coupleFundCatalogWeekendAway => 'Escapada de fin de semana';
+
+  @override
+  String get contributionTitle => 'Cómo se repartió';
+
+  @override
+  String get contributionEyebrow => 'LA SEMANA';
+
+  @override
+  String get contributionEmpty =>
+      'Todavía no hay tareas completadas esta semana.';
+
+  @override
+  String get contributionRhythmLabel => 'Ritmo del hogar';
+
+  @override
+  String contributionRhythmValue(int weeks, int window) {
+    return '$weeks de las últimas $window semanas';
+  }
+
+  @override
+  String get contributionRhythmHint =>
+      'No es una racha: una semana tranquila lo baja sin romper nada.';
+
+  @override
+  String contributionTasksLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tareas',
+      one: '1 tarea',
+      zero: 'sin tareas',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contributionDemandingLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count de las pesadas',
+      one: '1 de las pesadas',
+      zero: 'ninguna de las pesadas',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contributionSkewed(String category) {
+    return 'Las de $category cayeron siempre del mismo lado.';
+  }
+
+  @override
+  String get contributionBalanced => 'Esta semana se repartió parejo.';
+
+  @override
+  String get contributionNoDurationNote =>
+      'El reparto se mide en tareas y en cuántas de las pesadas tomó cada uno.';
 }

@@ -4,7 +4,7 @@ Propuesta de rediseño de la economía del modo pareja. Reemplaza el circuito
 actual *"hago tareas → gano moneda personal → compro algo que mi pareja me
 debe"* por un fondo común del hogar y un espacio de propuestas sin precio.
 
-Estado: implementado (1.3.0), salvo las fases 4 y 6.
+Estado: implementado (1.3.0).
 
 Ya está en la app y en la base:
 
@@ -20,7 +20,12 @@ Ya está en la app y en la base:
 - **El fondo compartido** (`20260801130000_couple_shared_fund.sql`): las tres
   tablas de §6, la acumulación dentro de la transacción de completar tarea, el
   ritual de dos llaves, y la celebración que abre una propuesta en vez de
-  comprar el plan. El ritmo (§5) se calcula en `get_household_fund_v1`.
+  comprar el plan.
+- **El reparto y el ritmo** (`20260801140000_household_contribution_split.sql`):
+  la Fase 4 y lo que faltaba de la Fase 6. En Progreso, donde estaba el duelo,
+  ahora va el ritmo del hogar contra su propio pasado y una foto de quién hizo
+  qué, con la lectura accionable de §5 ("las de cocina cayeron siempre del mismo
+  lado"). Los miembros salen en orden de ingreso, nunca por quién hizo más.
 
 Decisiones que este documento dejaba abiertas en §10 y que la implementación
 resolvió — el detalle y el porqué están en el encabezado de la migración:
@@ -34,12 +39,19 @@ resolvió — el detalle y el porqué están en el encabezado de la migración:
   y regalar paletas premium por tareas la tomaría de hecho. El mecanismo soporta
   agregarlos cuando esa decisión exista; hoy todas las metas son celebraciones.
 
-Sigue pendiente: **§ Fase 4** (la vista de reparto en Progreso, que es la
-contraparte de haber sacado el desglose por persona del fondo) y **§ Fase 6**
-(reemplazar el duelo por el indicador de ritmo dentro de Stats). La calibración
-de costos de §10 es provisoria: el catálogo va de 150 a 700 contra tareas de 5 a
-50, o sea una meta chica a ~2 semanas de ritmo normal. Hay que mirarla con uso
-real.
+Una precisión sobre "en tareas y **tiempo**": `public.tasks` no tiene ninguna
+columna de duración, así que el reparto **no** reporta minutos — inventarlos
+sería fabricar datos. Reporta cuántas de las exigentes (dificultad big/heavy)
+tomó cada uno, que es el proxy de carga que la app ya le muestra al usuario como
+"qué tan demandante es". Si algún día se registra duración real, el modelo tiene
+lugar para ella.
+
+Sigue pendiente: la **Fase 6** solo a medias — el duelo ya no se muestra en
+pareja y el ritmo ocupó su lugar, pero la reescritura de la pantalla que
+menciona la fase ya no aplica: `couple_rewards_screen` (1830 líneas) se borró y
+`CoupleConnectionScreen` nació partida en widgets. La calibración de costos de
+§10 es provisoria: el catálogo va de 150 a 700 contra tareas de 5 a 50, o sea una
+meta chica a ~2 semanas de ritmo normal. Hay que mirarla con uso real.
 
 Contexto de datos: el owner confirma que la base activa es despreciable, así que
 el esquema puede rehacerse sin plan de migración de usuarios. Ojo con una

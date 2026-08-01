@@ -4853,7 +4853,7 @@
       }
     }
   },
-  "savingsSharedContributionLine": "{names} sumaron {amount}",
+  "savingsSharedContributionLine": "{names} aportaron {amount}",
   "@savingsSharedContributionLine": {
     "description": "A contribution row for a shared savings contribution with multiple participants.",
     "placeholders": {
@@ -5952,5 +5952,30 @@
   "coupleFundCatalogPicnic": "Picnic",
   "coupleFundCatalogDinnerOut": "Cena afuera",
   "coupleFundCatalogDayTrip": "Escapada de un d\u00eda",
-  "coupleFundCatalogWeekendAway": "Escapada de fin de semana"
+  "coupleFundCatalogWeekendAway": "Escapada de fin de semana",
+  "contributionTitle": "C\u00f3mo se reparti\u00f3",
+  "contributionEyebrow": "LA SEMANA",
+  "contributionEmpty": "Todav\u00eda no hay tareas completadas esta semana.",
+  "contributionRhythmLabel": "Ritmo del hogar",
+  "contributionRhythmValue": "{weeks} de las \u00faltimas {window} semanas",
+  "@contributionRhythmValue": {
+    "description": "Ritmo: semanas activas sobre la ventana. Nunca 'racha'.",
+    "placeholders": {"weeks": {"type": "int"}, "window": {"type": "int"}}
+  },
+  "contributionRhythmHint": "No es una racha: una semana tranquila lo baja sin romper nada.",
+  "contributionTasksLabel": "{count, plural, =0{sin tareas} =1{1 tarea} other{{count} tareas}}",
+  "@contributionTasksLabel": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "contributionDemandingLabel": "{count, plural, =0{ninguna de las pesadas} =1{1 de las pesadas} other{{count} de las pesadas}}",
+  "@contributionDemandingLabel": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "contributionSkewed": "Las de {category} cayeron siempre del mismo lado.",
+  "@contributionSkewed": {
+    "description": "Lectura accionable, nunca un puntaje ni un reproche.",
+    "placeholders": {"category": {"type": "String"}}
+  },
+  "contributionBalanced": "Esta semana se reparti\u00f3 parejo.",
+  "contributionNoDurationNote": "El reparto se mide en tareas y en cu\u00e1ntas de las pesadas tom\u00f3 cada uno."
 }

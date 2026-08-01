@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/utils/app_scroll_physics.dart';
+import 'package:homesync_client/features/couple_space/presentation/providers/couple_space_providers.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
@@ -79,6 +80,16 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
         (s, e) => s + ((e['coins_earned'] as num?)?.toInt() ?? 0),
       );
 
+  /// El reparto de la semana vive en su propio provider, así que el
+  /// pull-to-refresh de la pestaña tiene que arrastrarlo también.
+  Future<void> _refreshWeekly() async {
+    final householdId = ref.read(householdIdProvider).value;
+    if (householdId != null && householdId.isNotEmpty) {
+      ref.invalidate(householdContributionProvider(householdId));
+    }
+    await ref.read(statsControllerProvider.notifier).refresh();
+  }
+
   String _getWeekRange() {
     final now = DateTime.now();
     final monday = now.subtract(Duration(days: now.weekday - 1));
@@ -141,7 +152,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                   totalXp:
                       _totalXpEarned(stats.taskStats, stats.memberActivity),
                   totalCoins: _totalCoinsEarned(stats.memberActivity),
-                  onRefresh: ref.read(statsControllerProvider.notifier).refresh,
+                  onRefresh: _refreshWeekly,
                 ),
                 ProgressTab(
                   xpHistory: stats.xpHistory,

@@ -1,5 +1,6 @@
 import 'package:homesync_client/features/couple_space/domain/models/couple_connection_summary.dart';
 import 'package:homesync_client/features/couple_space/domain/models/couple_proposal.dart';
+import 'package:homesync_client/features/couple_space/domain/models/household_contribution.dart';
 import 'package:homesync_client/features/couple_space/domain/models/household_fund.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -110,6 +111,18 @@ class CoupleSpaceRepository {
       params: {'p_proposal_id': proposalId},
     );
     return CoupleProposal.fromMap(
+      Map<String, dynamic>.from(response as Map),
+    );
+  }
+
+  /// El reparto de la semana. Contraparte de que el fondo no tenga desglose
+  /// por persona: el desequilibrio se ve acá, en tareas y carga.
+  Future<HouseholdContribution> getContribution(String householdId) async {
+    final response = await _client.rpc(
+      'get_household_contribution_v1',
+      params: {'p_household_id': householdId},
+    );
+    return HouseholdContribution.fromMap(
       Map<String, dynamic>.from(response as Map),
     );
   }

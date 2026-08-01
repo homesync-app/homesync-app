@@ -286,3 +286,83 @@ final class HouseholdFundFamily extends $Family
   @override
   String toString() => r'householdFundProvider';
 }
+
+@ProviderFor(householdContribution)
+final householdContributionProvider = HouseholdContributionFamily._();
+
+final class HouseholdContributionProvider extends $FunctionalProvider<
+        AsyncValue<HouseholdContribution>,
+        HouseholdContribution,
+        FutureOr<HouseholdContribution>>
+    with
+        $FutureModifier<HouseholdContribution>,
+        $FutureProvider<HouseholdContribution> {
+  HouseholdContributionProvider._(
+      {required HouseholdContributionFamily super.from,
+      required String super.argument})
+      : super(
+          retry: null,
+          name: r'householdContributionProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$householdContributionHash();
+
+  @override
+  String toString() {
+    return r'householdContributionProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<HouseholdContribution> $createElement(
+          $ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<HouseholdContribution> create(Ref ref) {
+    final argument = this.argument as String;
+    return householdContribution(
+      ref,
+      argument,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is HouseholdContributionProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$householdContributionHash() =>
+    r'84efd87ef6158079b45d3e64df7e648909203ff5';
+
+final class HouseholdContributionFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<HouseholdContribution>, String> {
+  HouseholdContributionFamily._()
+      : super(
+          retry: null,
+          name: r'householdContributionProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: true,
+        );
+
+  HouseholdContributionProvider call(
+    String householdId,
+  ) =>
+      HouseholdContributionProvider._(argument: householdId, from: this);
+
+  @override
+  String toString() => r'householdContributionProvider';
+}

@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   late String fund;
   late String xp;
+  late String split;
 
   setUpAll(() {
     fund = File(
@@ -14,6 +15,9 @@ void main() {
     ).readAsStringSync();
     xp = File(
       '../supabase/migrations/20260801120000_restore_couple_personal_xp.sql',
+    ).readAsStringSync();
+    split = File(
+      '../supabase/migrations/20260801140000_household_contribution_split.sql',
     ).readAsStringSync();
   });
 
@@ -73,6 +77,24 @@ void main() {
 
   test('changing the goal never spends the fund', () {
     expect(fund, contains("set status = 'cancelled'"));
+  });
+
+  test('the split view names a pattern instead of scoring anyone', () {
+    // Skew needs a big enough sample; flagging noise turns a conversation
+    // starter into nagging.
+    expect(
+      split,
+      contains('c.total >= 3 and c.dominant_count::numeric / c.total >= 0.75'),
+    );
+    // Join order, never "who did more".
+    expect(split, contains('order by row_data.joined_at'));
+    expect(split, isNot(contains('weekly_winners')));
+  });
+
+  test('rhythm is a window of active weeks, never a consecutive streak', () {
+    expect(split, contains("count(distinct date_trunc('week', ha.created_at))"));
+    expect(split, contains("interval '3 weeks'"));
+    expect(split, contains("'rhythm_window', 4"));
   });
 
   test('couple keeps personal XP and loses only the coin economy', () {
