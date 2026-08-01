@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
@@ -12,11 +14,81 @@ import 'package:homesync_client/features/notifications/presentation/utils/notifi
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-class NotificationsScreen extends ConsumerWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  bool _isMarkingAll = false;
+  bool _isRequestingMore = false;
+
+  Future<void> _markAllAsRead() async {
+    if (_isMarkingAll) return;
+
+    final t = AppLocalizations.of(context);
+    setState(() => _isMarkingAll = true);
+    try {
+      await ref.read(notificationsControllerProvider.notifier).markAllAsRead();
+    } catch (error, stackTrace) {
+      log.e(
+        'Error marking all notifications as read',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.notificationsMarkAllReadError),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isMarkingAll = false);
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_isRequestingMore) return;
+
+    final t = AppLocalizations.of(context);
+    _isRequestingMore = true;
+    try {
+      final succeeded =
+          await ref.read(notificationsControllerProvider.notifier).loadMore();
+      if (!succeeded && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.notificationsLoadMoreError),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (error, stackTrace) {
+      log.e(
+        'Unexpected error loading more notifications',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.notificationsLoadMoreError),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      _isRequestingMore = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final notificationsAsync = ref.watch(notificationsControllerProvider);
 
@@ -25,21 +97,14 @@ class NotificationsScreen extends ConsumerWidget {
         title: Text(t.notificationsTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.done_all),
+            icon: _isMarkingAll
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.done_all),
             tooltip: t.notificationsMarkAllReadTooltip,
-            onPressed: () async {
-              try {
-                await ref
-                    .read(notificationsControllerProvider.notifier)
-                    .markAllAsRead();
-              } catch (e, stackTrace) {
-                log.e(
-                  'Error marking all notifications as read: $e',
-                  error: e,
-                  stackTrace: stackTrace,
-                );
-              }
-            },
+            onPressed: _isMarkingAll ? null : _markAllAsRead,
           ),
         ],
       ),
@@ -91,9 +156,7 @@ class NotificationsScreen extends ConsumerWidget {
                   onNotification: (notification) {
                     if (notification.metrics.pixels >=
                         notification.metrics.maxScrollExtent - 200) {
-                      ref
-                          .read(notificationsControllerProvider.notifier)
-                          .loadMore();
+                      unawaited(_loadMore());
                     }
                     return false;
                   },
@@ -138,8 +201,9 @@ class _NotificationCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context);
     final content = localizedNotificationContent(
-      AppLocalizations.of(context),
+      t,
       notification,
     );
     return InkWell(
@@ -158,6 +222,14 @@ class _NotificationCard extends ConsumerWidget {
             error: e,
             stackTrace: stackTrace,
           );
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(t.notificationsMarkReadError),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
         }
       },
       borderRadius: BorderRadius.circular(AppRadii.md),

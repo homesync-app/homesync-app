@@ -10,6 +10,7 @@ import 'package:homesync_client/core/providers/locale_provider.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -361,8 +362,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     // Mismo gate que aplica MaterialApp (main.dart): el picker marca la
     // paleta que realmente se está renderizando, sin fingir.
     final effectiveColor = switch (premiumStatus) {
-      AsyncData(value: false)
-          when !ThemePalette.isFreePrimary(currentColor) =>
+      AsyncData(value: false) when !ThemePalette.isFreePrimary(currentColor) =>
         ThemePalette.fallback.primary,
       _ => currentColor,
     };
@@ -765,11 +765,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
         res.fold(
           (failure) {
+            log.e(
+              'SettingsScreen._resetAccount failed: ${failure.message}',
+            );
             if (mounted) {
               final t = AppLocalizations.of(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(t.commonErrorWithDetails(failure.message)),
+                  content: Text(t.settingsAccountResetError),
                   backgroundColor: theme.error,
                 ),
               );
@@ -794,28 +797,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 );
                 Navigator.pop(context);
               }
-            } else if (mounted) {
+            } else {
+              log.w(
+                'SettingsScreen._resetAccount returned success=false: '
+                '${data['message']}',
+              );
+              if (!mounted) return;
               // Antes un success=false moría en silencio: overlay afuera y
               // ninguna señal de que el reset no ocurrió.
               final t = AppLocalizations.of(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                    (data['message'] as String?) ??
-                        t.settingsAccountResetError,
-                  ),
+                  content: Text(t.settingsAccountResetError),
                   backgroundColor: theme.error,
                 ),
               );
             }
           },
         );
-      } catch (e) {
+      } catch (e, stack) {
+        log.e(
+          'SettingsScreen._resetAccount threw unexpectedly',
+          error: e,
+          stackTrace: stack,
+        );
         if (mounted) {
           final t = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(t.commonErrorWithDetails('$e')),
+              content: Text(t.settingsAccountResetError),
               backgroundColor: theme.error,
             ),
           );

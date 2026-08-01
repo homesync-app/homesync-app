@@ -2461,9 +2461,24 @@ class AppLocalizationsEs extends AppLocalizations {
       'No hay otros miembros en el hogar todavía.';
 
   @override
-  String settingsParentModeSaveError(String message) {
-    return 'No pudimos guardar el cambio: $message';
-  }
+  String get settingsParentModeSaveError =>
+      'No pudimos guardar el cambio. Intentá de nuevo.';
+
+  @override
+  String get settingsParentModeLoadError =>
+      'No pudimos cargar la configuración por integrante.';
+
+  @override
+  String get notificationsMarkReadError =>
+      'No pudimos marcar la notificación como leída.';
+
+  @override
+  String get notificationsMarkAllReadError =>
+      'No pudimos marcar todas las notificaciones como leídas.';
+
+  @override
+  String get notificationsLoadMoreError =>
+      'No pudimos cargar más notificaciones. Intentá de nuevo.';
 
   @override
   String get settingsParentModeMemberTypeChild => 'Hijo/a';

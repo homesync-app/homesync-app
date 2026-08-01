@@ -2453,9 +2453,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'No other members in the household yet.';
 
   @override
-  String settingsParentModeSaveError(String message) {
-    return 'We couldn\'t save the change: $message';
-  }
+  String get settingsParentModeSaveError =>
+      'We couldn\'t save the change. Try again.';
+
+  @override
+  String get settingsParentModeLoadError =>
+      'Couldn\'t load the per-member settings.';
+
+  @override
+  String get notificationsMarkReadError =>
+      'Couldn\'t mark the notification as read.';
+
+  @override
+  String get notificationsMarkAllReadError =>
+      'Couldn\'t mark all notifications as read.';
+
+  @override
+  String get notificationsLoadMoreError =>
+      'Couldn\'t load more notifications. Try again.';
 
   @override
   String get settingsParentModeMemberTypeChild => 'Child';

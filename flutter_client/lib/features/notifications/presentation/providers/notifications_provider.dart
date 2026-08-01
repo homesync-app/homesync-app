@@ -65,6 +65,9 @@ final markAllNotificationsReadUseCaseProvider =
 });
 
 class NotificationsController extends AsyncNotifier<NotificationsState> {
+  final Set<String> _markingIds = <String>{};
+  bool _markingAll = false;
+
   @override
   Future<NotificationsState> build() async {
     return _load();
@@ -87,10 +90,10 @@ class NotificationsController extends AsyncNotifier<NotificationsState> {
     state = await AsyncValue.guard(_load);
   }
 
-  Future<void> loadMore() async {
+  Future<bool> loadMore() async {
     final current = state.value;
     if (current == null || current.isLoadingMore || !current.hasMore) {
-      return;
+      return true;
     }
 
     state = AsyncData(current.copyWith(isLoadingMore: true));
@@ -100,85 +103,132 @@ class NotificationsController extends AsyncNotifier<NotificationsState> {
             limit: _notificationsPageSize,
             offset: current.items.length,
           );
+      final latest = state.value ?? current;
+      final existingIds = latest.items.map((item) => item.id).toSet();
 
       state = AsyncData(
-        current.copyWith(
-          items: [...current.items, ...nextItems],
+        latest.copyWith(
+          items: [
+            ...latest.items,
+            ...nextItems.where((item) => existingIds.add(item.id)),
+          ],
           hasMore: nextItems.length == _notificationsPageSize,
           isLoadingMore: false,
         ),
       );
+      return true;
     } catch (error, stackTrace) {
-      state = AsyncData(current.copyWith(isLoadingMore: false));
+      final latest = state.value ?? current;
+      state = AsyncData(latest.copyWith(isLoadingMore: false));
       log.e(
         'Error loading more notifications: $error',
         error: error,
         stackTrace: stackTrace,
       );
-      rethrow;
+      return false;
     }
   }
 
   Future<void> markAsRead(String notificationId) async {
-    final previous = state.value;
-    if (previous == null) {
-      await ref.read(markNotificationReadUseCaseProvider).call(notificationId);
-      await refresh();
-      return;
-    }
+    if (_markingAll || !_markingIds.add(notificationId)) return;
 
-    state = AsyncData(
-      previous.copyWith(
-        items: [
-          for (final notification in previous.items)
-            if (notification.id == notificationId)
-              notification.copyWith(isRead: true)
-            else
-              notification,
-        ],
-      ),
-    );
+    final previous = state.value;
+    final previousReadState = previous?.items
+        .where((notification) => notification.id == notificationId)
+        .firstOrNull
+        ?.isRead;
+
+    if (previous != null) {
+      state = AsyncData(
+        previous.copyWith(
+          items: [
+            for (final notification in previous.items)
+              if (notification.id == notificationId)
+                notification.copyWith(isRead: true)
+              else
+                notification,
+          ],
+        ),
+      );
+    }
 
     try {
       await ref.read(markNotificationReadUseCaseProvider).call(notificationId);
+      if (previous == null) await refresh();
     } catch (error, stackTrace) {
-      state = AsyncData(previous);
+      final latest = state.value;
+      if (latest != null && previousReadState != null) {
+        state = AsyncData(
+          latest.copyWith(
+            items: [
+              for (final notification in latest.items)
+                if (notification.id == notificationId)
+                  notification.copyWith(isRead: previousReadState)
+                else
+                  notification,
+            ],
+          ),
+        );
+      }
       log.e(
         'Error marking notification as read: $error',
         error: error,
         stackTrace: stackTrace,
       );
       rethrow;
+    } finally {
+      _markingIds.remove(notificationId);
     }
   }
 
   Future<void> markAllAsRead() async {
-    final previous = state.value;
-    if (previous == null) {
-      await ref.read(markAllNotificationsReadUseCaseProvider).call();
-      await refresh();
-      return;
-    }
+    if (_markingAll || _markingIds.isNotEmpty) return;
+    _markingAll = true;
 
-    state = AsyncData(
-      previous.copyWith(
-        items: [
-          for (final notification in previous.items)
-            notification.copyWith(isRead: true),
-        ],
-      ),
-    );
+    final previous = state.value;
+    final affectedIds = previous?.items
+            .where((notification) => !notification.isRead)
+            .map((notification) => notification.id)
+            .toSet() ??
+        <String>{};
+
+    if (previous != null) {
+      state = AsyncData(
+        previous.copyWith(
+          items: [
+            for (final notification in previous.items)
+              notification.copyWith(isRead: true),
+          ],
+        ),
+      );
+    }
 
     try {
       await ref.read(markAllNotificationsReadUseCaseProvider).call();
+      if (previous == null) await refresh();
     } catch (error, stackTrace) {
-      state = AsyncData(previous);
+      final latest = state.value;
+      if (latest != null) {
+        state = AsyncData(
+          latest.copyWith(
+            items: [
+              for (final notification in latest.items)
+                if (affectedIds.contains(notification.id))
+                  notification.copyWith(isRead: false)
+                else
+                  notification,
+            ],
+          ),
+        );
+      }
       log.e(
         'Error marking all notifications as read: $error',
         error: error,
         stackTrace: stackTrace,
       );
       rethrow;
+    } finally {
+      _markingAll = false;
     }
   }
 }

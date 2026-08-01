@@ -34,6 +34,7 @@ import 'package:homesync_client/features/notifications/presentation/screens/noti
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
 import 'package:homesync_client/features/onboarding/presentation/widgets/coachmark_overlay.dart';
+import 'package:homesync_client/features/rewards/presentation/providers/couple_challenge_provider.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/screens/shopping_list_screen.dart';
@@ -271,6 +272,15 @@ class _MainScreenState extends ConsumerState<MainScreen>
   void _refreshRealtimeBackedData() {
     ref.read(tasksProvider.notifier).silentRefresh();
     ref.invalidate(recentActivityProvider);
+
+    final caps = ref.read(householdCapabilitiesProvider);
+    final householdId = ref.read(householdIdProvider).value;
+    if (caps.usesCoupleConnectionExperience &&
+        householdId != null &&
+        householdId.isNotEmpty) {
+      ref.invalidate(coupleConnectionSummaryProvider(householdId));
+      ref.invalidate(coupleChallengeCompletedProvider);
+    }
   }
 
   /// Calienta en segundo plano los providers de la pestaña Finanzas que no

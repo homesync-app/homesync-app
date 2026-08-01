@@ -102,17 +102,18 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
   }
 
   Future<void> _submit() async {
+    if (_isSending) return;
+
     final title = _titleCtrl.text.trim();
     if (title.isEmpty) return;
 
     setState(() => _isSending = true);
-    AppHaptics.success();
 
     try {
       final client = ref.read(supabaseClientProvider);
       final userId = ref.read(currentUserIdProvider);
       final profile = ref.read(userProfileProvider).value;
-      final email = profile?['email'] as String?;
+      final email = profile?['email']?.toString();
       final info = await PackageInfo.fromPlatform();
 
       String? deviceModel;
@@ -158,17 +159,15 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
 
       unawaited(_sendFeedbackAck(client, insertedFeedback['id']));
 
-      setState(() {
-        _isSending = false;
-        _sent = true;
-      });
+      if (!mounted) return;
+      AppHaptics.success();
+      setState(() => _sent = true);
 
-      await Future.delayed(const Duration(milliseconds: 1600));
+      await Future<void>.delayed(const Duration(milliseconds: 1600));
       if (mounted) Navigator.pop(context);
     } catch (e, st) {
       log.e('Error enviando feedback', error: e, stackTrace: st);
       if (!mounted) return;
-      setState(() => _isSending = false);
       final t = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -177,6 +176,8 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           behavior: SnackBarBehavior.floating,
         ),
       );
+    } finally {
+      if (mounted) setState(() => _isSending = false);
     }
   }
 

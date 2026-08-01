@@ -1771,13 +1771,25 @@
   "settingsParentModeAllowanceSubtitle": "Enviá mesadas a adolescentes con finanzas personales.",
   "settingsParentModeAllowanceCta": "Dar mesada",
   "settingsParentModePerMemberEmpty": "No hay otros miembros en el hogar todavía.",
-  "settingsParentModeSaveError": "No pudimos guardar el cambio: {message}",
+  "settingsParentModeSaveError": "No pudimos guardar el cambio. Intentá de nuevo.",
   "@settingsParentModeSaveError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
+    "description": "Mensaje seguro cuando falla un cambio de configuración en Modo Padres."
+  },
+  "settingsParentModeLoadError": "No pudimos cargar la configuración por integrante.",
+  "@settingsParentModeLoadError": {
+    "description": "Estado recuperable cuando falla la carga de aprobaciones por integrante."
+  },
+  "notificationsMarkReadError": "No pudimos marcar la notificación como leída.",
+  "@notificationsMarkReadError": {
+    "description": "Mensaje seguro cuando falla la actualización de una notificación."
+  },
+  "notificationsMarkAllReadError": "No pudimos marcar todas las notificaciones como leídas.",
+  "@notificationsMarkAllReadError": {
+    "description": "Mensaje seguro cuando falla la actualización masiva de notificaciones."
+  },
+  "notificationsLoadMoreError": "No pudimos cargar más notificaciones. Intentá de nuevo.",
+  "@notificationsLoadMoreError": {
+    "description": "Mensaje recuperable cuando falla la siguiente página de notificaciones."
   },
   "settingsParentModeMemberTypeChild": "Hijo/a",
   "@settingsParentModeMemberTypeChild": {

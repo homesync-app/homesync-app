@@ -12,7 +12,7 @@ import 'package:homesync_client/features/couple_space/domain/models/couple_conne
 import 'package:homesync_client/features/couple_space/domain/models/couple_proposal.dart';
 import 'package:homesync_client/features/couple_space/presentation/providers/couple_space_providers.dart';
 import 'package:homesync_client/features/couple_space/presentation/widgets/couple_proposal_sheets.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/domain/models/couple_challenge.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/couple_challenge_provider.dart';
 import 'package:homesync_client/features/rewards/presentation/widgets/couple_challenge_card.dart';
@@ -126,10 +126,12 @@ class _CoupleConnectionScreenState extends ConsumerState<CoupleConnectionScreen>
   }
 
   Future<void> _refresh() async {
+    ref.invalidate(currentHouseholdProvider);
     ref.invalidate(coupleConnectionSummaryProvider(widget.householdId));
     ref.invalidate(coupleProposalsProvider(widget.householdId));
     ref.invalidate(coupleChallengeCompletedProvider);
     await Future.wait([
+      ref.read(currentHouseholdProvider.future),
       ref.read(
         coupleConnectionSummaryProvider(widget.householdId).future,
       ),
@@ -246,48 +248,84 @@ class _CoupleConnectionScreenState extends ConsumerState<CoupleConnectionScreen>
   }
 
   Widget _buildWeeklySpecial(CoupleConnectionSummary? summary) {
-    final household = ref.watch(householdProvider).value;
-    if (household == null) {
-      return const Padding(
+    final t = AppLocalizations.of(context);
+    final householdAsync = ref.watch(currentHouseholdProvider);
+
+    return householdAsync.when(
+      skipLoadingOnReload: true,
+      loading: () => const Padding(
         padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
         child: Center(child: AppLoader()),
-      );
-    }
-
-    final challenge = CoupleChallenge.currentWeeklyChallenge(
-      household.createdAt,
-    );
-    final challengeIndex = CoupleChallenge.currentWeeklyChallengeIndex(
-      household.createdAt,
-    );
-    final weekIndex = CoupleChallenge.currentWeekIndex(household.createdAt);
-    final completed = ref
-            .watch(
-              coupleChallengeCompletedProvider(
-                (householdId: widget.householdId, weekIndex: weekIndex),
-              ),
-            )
-            .value ??
-        false;
-
-    return CoupleChallengeCard(
-      challenge: challenge,
-      challengeNumber: challengeIndex + 1,
-      totalChallenges: CoupleChallenge.allChallenges.length,
-      completedCount: summary?.specialMoments ?? 0,
-      isCompleted: completed,
-      onSkip: () => _skipSpecial(),
-      onComplete: () async {
-        final outcome = await handleCoupleChallengeCompletion(
-          challenge,
-          widget.householdId,
-          weekIndex,
-        );
-        if (outcome == CoupleChallengeOutcome.completed) {
-          ref.invalidate(
-            coupleConnectionSummaryProvider(widget.householdId),
+      ),
+      error: (_, __) => _LoadErrorCard(
+        message: t.coupleSpaceLoadError,
+        action: t.coupleSpaceRetry,
+        onRetry: () async {
+          ref.invalidate(currentHouseholdProvider);
+        },
+      ),
+      data: (household) {
+        if (household == null) {
+          return _LoadErrorCard(
+            message: t.coupleSpaceLoadError,
+            action: t.coupleSpaceRetry,
+            onRetry: () async {
+              ref.invalidate(currentHouseholdProvider);
+            },
           );
         }
+
+        final challenge = CoupleChallenge.currentWeeklyChallenge(
+          household.createdAt,
+        );
+        final challengeIndex = CoupleChallenge.currentWeeklyChallengeIndex(
+          household.createdAt,
+        );
+        final weekIndex = CoupleChallenge.currentWeekIndex(household.createdAt);
+        final completionKey = (
+          householdId: widget.householdId,
+          weekIndex: weekIndex,
+        );
+        final completionAsync = ref.watch(
+          coupleChallengeCompletedProvider(completionKey),
+        );
+
+        return completionAsync.when(
+          skipLoadingOnReload: true,
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            child: Center(child: AppLoader()),
+          ),
+          error: (_, __) => _LoadErrorCard(
+            message: t.coupleSpaceLoadError,
+            action: t.coupleSpaceRetry,
+            onRetry: () async {
+              ref.invalidate(
+                coupleChallengeCompletedProvider(completionKey),
+              );
+            },
+          ),
+          data: (completed) => CoupleChallengeCard(
+            challenge: challenge,
+            challengeNumber: challengeIndex + 1,
+            totalChallenges: CoupleChallenge.allChallenges.length,
+            completedCount: summary?.specialMoments ?? 0,
+            isCompleted: completed,
+            onSkip: () => _skipSpecial(),
+            onComplete: () async {
+              final outcome = await handleCoupleChallengeCompletion(
+                challenge,
+                widget.householdId,
+                weekIndex,
+              );
+              if (outcome == CoupleChallengeOutcome.completed) {
+                ref.invalidate(
+                  coupleConnectionSummaryProvider(widget.householdId),
+                );
+              }
+            },
+          ),
+        );
       },
     );
   }

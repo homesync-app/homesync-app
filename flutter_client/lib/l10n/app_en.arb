@@ -1774,13 +1774,25 @@
   "settingsParentModeAllowanceSubtitle": "Send allowances to teens with personal finances.",
   "settingsParentModeAllowanceCta": "Send allowance",
   "settingsParentModePerMemberEmpty": "No other members in the household yet.",
-  "settingsParentModeSaveError": "We couldn't save the change: {message}",
+  "settingsParentModeSaveError": "We couldn't save the change. Try again.",
   "@settingsParentModeSaveError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
+    "description": "Safe message shown when a Parent Mode setting cannot be saved."
+  },
+  "settingsParentModeLoadError": "Couldn't load the per-member settings.",
+  "@settingsParentModeLoadError": {
+    "description": "Recoverable state shown when per-member approvals cannot load."
+  },
+  "notificationsMarkReadError": "Couldn't mark the notification as read.",
+  "@notificationsMarkReadError": {
+    "description": "Safe message shown when updating one notification fails."
+  },
+  "notificationsMarkAllReadError": "Couldn't mark all notifications as read.",
+  "@notificationsMarkAllReadError": {
+    "description": "Safe message shown when updating all notifications fails."
+  },
+  "notificationsLoadMoreError": "Couldn't load more notifications. Try again.",
+  "@notificationsLoadMoreError": {
+    "description": "Recoverable message shown when the next notification page fails."
   },
   "settingsParentModeMemberTypeChild": "Child",
   "@settingsParentModeMemberTypeChild": {

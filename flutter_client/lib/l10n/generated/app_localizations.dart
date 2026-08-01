@@ -3753,11 +3753,35 @@ abstract class AppLocalizations {
   /// **'No hay otros miembros en el hogar todavía.'**
   String get settingsParentModePerMemberEmpty;
 
-  /// No description provided for @settingsParentModeSaveError.
+  /// Mensaje seguro cuando falla un cambio de configuración en Modo Padres.
   ///
   /// In es, this message translates to:
-  /// **'No pudimos guardar el cambio: {message}'**
-  String settingsParentModeSaveError(String message);
+  /// **'No pudimos guardar el cambio. Intentá de nuevo.'**
+  String get settingsParentModeSaveError;
+
+  /// Estado recuperable cuando falla la carga de aprobaciones por integrante.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar la configuración por integrante.'**
+  String get settingsParentModeLoadError;
+
+  /// Mensaje seguro cuando falla la actualización de una notificación.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos marcar la notificación como leída.'**
+  String get notificationsMarkReadError;
+
+  /// Mensaje seguro cuando falla la actualización masiva de notificaciones.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos marcar todas las notificaciones como leídas.'**
+  String get notificationsMarkAllReadError;
+
+  /// Mensaje recuperable cuando falla la siguiente página de notificaciones.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar más notificaciones. Intentá de nuevo.'**
+  String get notificationsLoadMoreError;
 
   /// Member type label in the per-member approval list. 'Hijo/a' = son/daughter (gender-inclusive).
   ///
