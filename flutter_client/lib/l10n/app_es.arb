@@ -5897,5 +5897,60 @@
   "homeNoHouseholdSubtitle": "Crea o unite a un hogar para comenzar.",
   "mainIdentityLoadError": "Error de carga de identidad. Intenta salir de la app y volver a entrar:",
   "notifLoveNoteTitle": "\ud83d\udc8c Ten\u00e9s una nota especial",
-  "notifLoveNoteBody": "Tu pareja te mand\u00f3 una nota de amor \u2764\ufe0f"
+  "notifLoveNoteBody": "Tu pareja te mand\u00f3 una nota de amor \u2764\ufe0f",
+  "coupleFundTitle": "Nuestro fondo",
+  "@coupleFundTitle": {
+    "description": "Titulo del bloque del fondo compartido en el espacio de pareja."
+  },
+  "coupleFundEyebrow": "LO QUE JUNTAN",
+  "coupleFundBalance": "{amount} sumadas",
+  "@coupleFundBalance": {
+    "description": "Saldo del fondo. Monedas simbolicas, nunca dinero real.",
+    "placeholders": {"amount": {"type": "int"}}
+  },
+  "coupleFundWeekAdded": "{count, plural, =0{Esta semana todav\u00eda no sumaron} =1{Esta semana sumaron 1} other{Esta semana sumaron {count}}}",
+  "@coupleFundWeekAdded": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "coupleFundRhythm": "activos {weeks} de las \u00faltimas {window} semanas",
+  "@coupleFundRhythm": {
+    "description": "Ritmo del hogar: semanas activas sobre la ventana. Nunca 'racha'.",
+    "placeholders": {"weeks": {"type": "int"}, "window": {"type": "int"}}
+  },
+  "coupleFundNoGoalTitle": "Todav\u00eda no eligieron meta",
+  "coupleFundNoGoalBody": "Elijan juntos algo para celebrar. Cada tarea que completan lo acerca.",
+  "coupleFundChooseGoal": "Elegir meta",
+  "coupleFundChangeGoal": "Cambiar meta",
+  "coupleFundToGoal": "{current} / {cost} \u2192 {title}",
+  "@coupleFundToGoal": {
+    "placeholders": {"current": {"type": "int"}, "cost": {"type": "int"}, "title": {"type": "String"}}
+  },
+  "coupleFundRemaining": "{count, plural, =1{Falta 1 para llegar} other{Faltan {count} para llegar}}",
+  "@coupleFundRemaining": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "coupleFundReadyTitle": "\u00a1Llegaron a la meta!",
+  "coupleFundReadyBody": "Elijan juntos c\u00f3mo quieren celebrarlo.",
+  "coupleFundConfirm": "Confirmar",
+  "coupleFundConfirmed": "Confirmaste",
+  "coupleFundWithdrawConfirm": "Retirar mi confirmaci\u00f3n",
+  "coupleFundWaitingOthers": "{count, plural, =1{Falta 1 confirmaci\u00f3n} other{Faltan {count} confirmaciones}}",
+  "@coupleFundWaitingOthers": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "coupleFundUnlockedMessage": "Desbloquearon la meta. Qued\u00f3 una propuesta para acordar cu\u00e1ndo.",
+  "coupleFundPickerTitle": "\u00bfQu\u00e9 quieren desbloquear?",
+  "coupleFundPickerSubtitle": "Una meta por vez. Pueden cambiarla cuando quieran, sin perder lo que juntaron.",
+  "coupleFundCustomOption": "Crear una a medida",
+  "coupleFundCustomTitleLabel": "\u00bfQu\u00e9 quieren celebrar?",
+  "coupleFundCustomCostLabel": "Meta",
+  "coupleFundCustomCostHelper": "Entre 50 y 2000",
+  "coupleFundSave": "Definir meta",
+  "coupleFundError": "No pudimos actualizar el fondo",
+  "coupleFundFromGoalBadge": "Del fondo",
+  "coupleFundCatalogMovieNight": "Noche de cine en casa",
+  "coupleFundCatalogPicnic": "Picnic",
+  "coupleFundCatalogDinnerOut": "Cena afuera",
+  "coupleFundCatalogDayTrip": "Escapada de un d\u00eda",
+  "coupleFundCatalogWeekendAway": "Escapada de fin de semana"
 }

@@ -1,5 +1,6 @@
 import 'package:homesync_client/features/couple_space/domain/models/couple_connection_summary.dart';
 import 'package:homesync_client/features/couple_space/domain/models/couple_proposal.dart';
+import 'package:homesync_client/features/couple_space/domain/models/household_fund.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CoupleSpaceRepository {
@@ -110,6 +111,57 @@ class CoupleSpaceRepository {
     );
     return CoupleProposal.fromMap(
       Map<String, dynamic>.from(response as Map),
+    );
+  }
+
+  // ── Fondo compartido ──────────────────────────────────────────────────────
+
+  Future<HouseholdFund> getFund(String householdId) async {
+    final response = await _client.rpc(
+      'get_household_fund_v1',
+      params: {'p_household_id': householdId},
+    );
+    return HouseholdFund.fromMap(
+      Map<String, dynamic>.from(response as Map),
+    );
+  }
+
+  /// Reemplaza la meta abierta. Cancelar la anterior no gasta el fondo: llegar
+  /// a una meta nunca obliga a canjearla.
+  Future<FundGoal> setActiveGoal({
+    required String householdId,
+    required String title,
+    required int cost,
+    required String icon,
+    String? catalogKey,
+  }) async {
+    final response = await _client.rpc(
+      'set_active_fund_goal_v1',
+      params: {
+        'p_household_id': householdId,
+        'p_title': title,
+        'p_cost': cost,
+        'p_icon': icon,
+        'p_catalog_key': catalogKey,
+      },
+    );
+    return FundGoal.fromMap(Map<String, dynamic>.from(response as Map));
+  }
+
+  Future<FundConfirmationOutcome> confirmGoal(String goalId) async {
+    final response = await _client.rpc(
+      'confirm_fund_goal_v1',
+      params: {'p_goal_id': goalId},
+    );
+    return FundConfirmationOutcome.fromMap(
+      Map<String, dynamic>.from(response as Map),
+    );
+  }
+
+  Future<void> withdrawGoalConfirmation(String goalId) async {
+    await _client.rpc(
+      'withdraw_fund_goal_confirmation_v1',
+      params: {'p_goal_id': goalId},
     );
   }
 }

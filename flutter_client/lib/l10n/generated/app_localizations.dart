@@ -14571,6 +14571,198 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Tu pareja te mandó una nota de amor ❤️'**
   String get notifLoveNoteBody;
+
+  /// Titulo del bloque del fondo compartido en el espacio de pareja.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuestro fondo'**
+  String get coupleFundTitle;
+
+  /// No description provided for @coupleFundEyebrow.
+  ///
+  /// In es, this message translates to:
+  /// **'LO QUE JUNTAN'**
+  String get coupleFundEyebrow;
+
+  /// Saldo del fondo. Monedas simbolicas, nunca dinero real.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} sumadas'**
+  String coupleFundBalance(int amount);
+
+  /// No description provided for @coupleFundWeekAdded.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{Esta semana todavía no sumaron} =1{Esta semana sumaron 1} other{Esta semana sumaron {count}}}'**
+  String coupleFundWeekAdded(int count);
+
+  /// Ritmo del hogar: semanas activas sobre la ventana. Nunca 'racha'.
+  ///
+  /// In es, this message translates to:
+  /// **'activos {weeks} de las últimas {window} semanas'**
+  String coupleFundRhythm(int weeks, int window);
+
+  /// No description provided for @coupleFundNoGoalTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no eligieron meta'**
+  String get coupleFundNoGoalTitle;
+
+  /// No description provided for @coupleFundNoGoalBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Elijan juntos algo para celebrar. Cada tarea que completan lo acerca.'**
+  String get coupleFundNoGoalBody;
+
+  /// No description provided for @coupleFundChooseGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegir meta'**
+  String get coupleFundChooseGoal;
+
+  /// No description provided for @coupleFundChangeGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar meta'**
+  String get coupleFundChangeGoal;
+
+  /// No description provided for @coupleFundToGoal.
+  ///
+  /// In es, this message translates to:
+  /// **'{current} / {cost} → {title}'**
+  String coupleFundToGoal(int current, int cost, String title);
+
+  /// No description provided for @coupleFundRemaining.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{Falta 1 para llegar} other{Faltan {count} para llegar}}'**
+  String coupleFundRemaining(int count);
+
+  /// No description provided for @coupleFundReadyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Llegaron a la meta!'**
+  String get coupleFundReadyTitle;
+
+  /// No description provided for @coupleFundReadyBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Elijan juntos cómo quieren celebrarlo.'**
+  String get coupleFundReadyBody;
+
+  /// No description provided for @coupleFundConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar'**
+  String get coupleFundConfirm;
+
+  /// No description provided for @coupleFundConfirmed.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmaste'**
+  String get coupleFundConfirmed;
+
+  /// No description provided for @coupleFundWithdrawConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Retirar mi confirmación'**
+  String get coupleFundWithdrawConfirm;
+
+  /// No description provided for @coupleFundWaitingOthers.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{Falta 1 confirmación} other{Faltan {count} confirmaciones}}'**
+  String coupleFundWaitingOthers(int count);
+
+  /// No description provided for @coupleFundUnlockedMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquearon la meta. Quedó una propuesta para acordar cuándo.'**
+  String get coupleFundUnlockedMessage;
+
+  /// No description provided for @coupleFundPickerTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué quieren desbloquear?'**
+  String get coupleFundPickerTitle;
+
+  /// No description provided for @coupleFundPickerSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Una meta por vez. Pueden cambiarla cuando quieran, sin perder lo que juntaron.'**
+  String get coupleFundPickerSubtitle;
+
+  /// No description provided for @coupleFundCustomOption.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear una a medida'**
+  String get coupleFundCustomOption;
+
+  /// No description provided for @coupleFundCustomTitleLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué quieren celebrar?'**
+  String get coupleFundCustomTitleLabel;
+
+  /// No description provided for @coupleFundCustomCostLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Meta'**
+  String get coupleFundCustomCostLabel;
+
+  /// No description provided for @coupleFundCustomCostHelper.
+  ///
+  /// In es, this message translates to:
+  /// **'Entre 50 y 2000'**
+  String get coupleFundCustomCostHelper;
+
+  /// No description provided for @coupleFundSave.
+  ///
+  /// In es, this message translates to:
+  /// **'Definir meta'**
+  String get coupleFundSave;
+
+  /// No description provided for @coupleFundError.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos actualizar el fondo'**
+  String get coupleFundError;
+
+  /// No description provided for @coupleFundFromGoalBadge.
+  ///
+  /// In es, this message translates to:
+  /// **'Del fondo'**
+  String get coupleFundFromGoalBadge;
+
+  /// No description provided for @coupleFundCatalogMovieNight.
+  ///
+  /// In es, this message translates to:
+  /// **'Noche de cine en casa'**
+  String get coupleFundCatalogMovieNight;
+
+  /// No description provided for @coupleFundCatalogPicnic.
+  ///
+  /// In es, this message translates to:
+  /// **'Picnic'**
+  String get coupleFundCatalogPicnic;
+
+  /// No description provided for @coupleFundCatalogDinnerOut.
+  ///
+  /// In es, this message translates to:
+  /// **'Cena afuera'**
+  String get coupleFundCatalogDinnerOut;
+
+  /// No description provided for @coupleFundCatalogDayTrip.
+  ///
+  /// In es, this message translates to:
+  /// **'Escapada de un día'**
+  String get coupleFundCatalogDayTrip;
+
+  /// No description provided for @coupleFundCatalogWeekendAway.
+  ///
+  /// In es, this message translates to:
+  /// **'Escapada de fin de semana'**
+  String get coupleFundCatalogWeekendAway;
 }
 
 class _AppLocalizationsDelegate

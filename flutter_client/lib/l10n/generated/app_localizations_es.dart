@@ -9072,4 +9072,134 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notifLoveNoteBody => 'Tu pareja te mandó una nota de amor ❤️';
+
+  @override
+  String get coupleFundTitle => 'Nuestro fondo';
+
+  @override
+  String get coupleFundEyebrow => 'LO QUE JUNTAN';
+
+  @override
+  String coupleFundBalance(int amount) {
+    return '$amount sumadas';
+  }
+
+  @override
+  String coupleFundWeekAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Esta semana sumaron $count',
+      one: 'Esta semana sumaron 1',
+      zero: 'Esta semana todavía no sumaron',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String coupleFundRhythm(int weeks, int window) {
+    return 'activos $weeks de las últimas $window semanas';
+  }
+
+  @override
+  String get coupleFundNoGoalTitle => 'Todavía no eligieron meta';
+
+  @override
+  String get coupleFundNoGoalBody =>
+      'Elijan juntos algo para celebrar. Cada tarea que completan lo acerca.';
+
+  @override
+  String get coupleFundChooseGoal => 'Elegir meta';
+
+  @override
+  String get coupleFundChangeGoal => 'Cambiar meta';
+
+  @override
+  String coupleFundToGoal(int current, int cost, String title) {
+    return '$current / $cost → $title';
+  }
+
+  @override
+  String coupleFundRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Faltan $count para llegar',
+      one: 'Falta 1 para llegar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coupleFundReadyTitle => '¡Llegaron a la meta!';
+
+  @override
+  String get coupleFundReadyBody => 'Elijan juntos cómo quieren celebrarlo.';
+
+  @override
+  String get coupleFundConfirm => 'Confirmar';
+
+  @override
+  String get coupleFundConfirmed => 'Confirmaste';
+
+  @override
+  String get coupleFundWithdrawConfirm => 'Retirar mi confirmación';
+
+  @override
+  String coupleFundWaitingOthers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Faltan $count confirmaciones',
+      one: 'Falta 1 confirmación',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coupleFundUnlockedMessage =>
+      'Desbloquearon la meta. Quedó una propuesta para acordar cuándo.';
+
+  @override
+  String get coupleFundPickerTitle => '¿Qué quieren desbloquear?';
+
+  @override
+  String get coupleFundPickerSubtitle =>
+      'Una meta por vez. Pueden cambiarla cuando quieran, sin perder lo que juntaron.';
+
+  @override
+  String get coupleFundCustomOption => 'Crear una a medida';
+
+  @override
+  String get coupleFundCustomTitleLabel => '¿Qué quieren celebrar?';
+
+  @override
+  String get coupleFundCustomCostLabel => 'Meta';
+
+  @override
+  String get coupleFundCustomCostHelper => 'Entre 50 y 2000';
+
+  @override
+  String get coupleFundSave => 'Definir meta';
+
+  @override
+  String get coupleFundError => 'No pudimos actualizar el fondo';
+
+  @override
+  String get coupleFundFromGoalBadge => 'Del fondo';
+
+  @override
+  String get coupleFundCatalogMovieNight => 'Noche de cine en casa';
+
+  @override
+  String get coupleFundCatalogPicnic => 'Picnic';
+
+  @override
+  String get coupleFundCatalogDinnerOut => 'Cena afuera';
+
+  @override
+  String get coupleFundCatalogDayTrip => 'Escapada de un día';
+
+  @override
+  String get coupleFundCatalogWeekendAway => 'Escapada de fin de semana';
 }

@@ -280,6 +280,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
         householdId.isNotEmpty) {
       ref.invalidate(coupleConnectionSummaryProvider(householdId));
       ref.invalidate(coupleChallengeCompletedProvider);
+      ref.invalidate(householdFundProvider(householdId));
     }
   }
 
@@ -320,6 +321,12 @@ class _MainScreenState extends ConsumerState<MainScreen>
             ..add(
               ref.listenManual(
                 coupleProposalsProvider(householdId),
+                (_, __) {},
+              ),
+            )
+            ..add(
+              ref.listenManual(
+                householdFundProvider(householdId),
                 (_, __) {},
               ),
             );

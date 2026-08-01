@@ -5215,5 +5215,60 @@
   "homeNoHouseholdSubtitle": "Create or join a household to get started.",
   "mainIdentityLoadError": "Identity load error. Try closing and reopening the app:",
   "notifLoveNoteTitle": "\ud83d\udc8c You have a special note",
-  "notifLoveNoteBody": "Your partner sent you a love note \u2764\ufe0f"
+  "notifLoveNoteBody": "Your partner sent you a love note \u2764\ufe0f",
+  "coupleFundTitle": "Our fund",
+  "@coupleFundTitle": {
+    "description": "Titulo del bloque del fondo compartido en el espacio de pareja."
+  },
+  "coupleFundEyebrow": "WHAT YOU BUILD",
+  "coupleFundBalance": "{amount} added",
+  "@coupleFundBalance": {
+    "description": "Saldo del fondo. Monedas simbolicas, nunca dinero real.",
+    "placeholders": {"amount": {"type": "int"}}
+  },
+  "coupleFundWeekAdded": "{count, plural, =0{Nothing added this week yet} =1{Added 1 this week} other{Added {count} this week}}",
+  "@coupleFundWeekAdded": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "coupleFundRhythm": "active {weeks} of the last {window} weeks",
+  "@coupleFundRhythm": {
+    "description": "Ritmo del hogar: semanas activas sobre la ventana. Nunca 'racha'.",
+    "placeholders": {"weeks": {"type": "int"}, "window": {"type": "int"}}
+  },
+  "coupleFundNoGoalTitle": "No goal picked yet",
+  "coupleFundNoGoalBody": "Pick something to celebrate together. Every task you finish gets you closer.",
+  "coupleFundChooseGoal": "Pick a goal",
+  "coupleFundChangeGoal": "Change goal",
+  "coupleFundToGoal": "{current} / {cost} \u2192 {title}",
+  "@coupleFundToGoal": {
+    "placeholders": {"current": {"type": "int"}, "cost": {"type": "int"}, "title": {"type": "String"}}
+  },
+  "coupleFundRemaining": "{count, plural, =1{1 to go} other{{count} to go}}",
+  "@coupleFundRemaining": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "coupleFundReadyTitle": "You reached the goal!",
+  "coupleFundReadyBody": "Decide together how you want to celebrate.",
+  "coupleFundConfirm": "Confirm",
+  "coupleFundConfirmed": "You confirmed",
+  "coupleFundWithdrawConfirm": "Withdraw my confirmation",
+  "coupleFundWaitingOthers": "{count, plural, =1{1 confirmation to go} other{{count} confirmations to go}}",
+  "@coupleFundWaitingOthers": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "coupleFundUnlockedMessage": "Goal unlocked. There's a proposal waiting to agree on when.",
+  "coupleFundPickerTitle": "What do you want to unlock?",
+  "coupleFundPickerSubtitle": "One goal at a time. Change it whenever you like without losing what you built.",
+  "coupleFundCustomOption": "Create your own",
+  "coupleFundCustomTitleLabel": "What do you want to celebrate?",
+  "coupleFundCustomCostLabel": "Goal",
+  "coupleFundCustomCostHelper": "Between 50 and 2000",
+  "coupleFundSave": "Set goal",
+  "coupleFundError": "We couldn't update the fund",
+  "coupleFundFromGoalBadge": "From the fund",
+  "coupleFundCatalogMovieNight": "Movie night at home",
+  "coupleFundCatalogPicnic": "Picnic",
+  "coupleFundCatalogDinnerOut": "Dinner out",
+  "coupleFundCatalogDayTrip": "Day trip",
+  "coupleFundCatalogWeekendAway": "Weekend away"
 }

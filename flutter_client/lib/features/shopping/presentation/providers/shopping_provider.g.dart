@@ -347,7 +347,7 @@ final class ShoppingItemsProvider
   ShoppingItems create() => ShoppingItems();
 }
 
-String _$shoppingItemsHash() => r'7f20095efc247f3eacf1891b8ed8a5c5b592d087';
+String _$shoppingItemsHash() => r'452cf4b1b9829da3e495842b1e7846efece33f14';
 
 abstract class _$ShoppingItems extends $AsyncNotifier<List<ShoppingItemModel>> {
   FutureOr<List<ShoppingItemModel>> build();

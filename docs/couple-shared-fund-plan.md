@@ -4,7 +4,7 @@ Propuesta de rediseño de la economía del modo pareja. Reemplaza el circuito
 actual *"hago tareas → gano moneda personal → compro algo que mi pareja me
 debe"* por un fondo común del hogar y un espacio de propuestas sin precio.
 
-Estado: parcialmente implementado (1.3.0).
+Estado: implementado (1.3.0), salvo las fases 4 y 6.
 
 Ya está en la app y en la base:
 
@@ -17,12 +17,29 @@ Ya está en la app y en la base:
 - El XP sobrevive como progreso personal, tal como argumenta este documento.
   Ojo: la migración original lo había matado junto con las coins; se corrigió
   en `20260801120000_restore_couple_personal_xp.sql`.
+- **El fondo compartido** (`20260801130000_couple_shared_fund.sql`): las tres
+  tablas de §6, la acumulación dentro de la transacción de completar tarea, el
+  ritual de dos llaves, y la celebración que abre una propuesta en vez de
+  comprar el plan. El ritmo (§5) se calcula en `get_household_fund_v1`.
 
-Todavía **no** está implementado lo que le da nombre al plan: **el fondo común
-del hogar**. No existe tabla de fondo, ni catálogo de desbloqueos conjuntos, ni
-aporte del esfuerzo doméstico a un pozo compartido. Hoy el modo pareja quedó en
-"sin economía" — que es la mitad destructiva del plan — y falta la mitad que
-construye.
+Decisiones que este documento dejaba abiertas en §10 y que la implementación
+resolvió — el detalle y el porqué están en el encabezado de la migración:
+
+- La meta se cancela sin gastar el fondo, así que llegar nunca obliga a canjear.
+- El desbloqueo pide confirmación de **todos** los miembros actuales, no de dos.
+- Se puede retirar una confirmación mientras la meta no se haya desbloqueado.
+- Cambiar el tipo de hogar no destruye el fondo: solo deja de acumular.
+- **Los cosméticos premium quedaron fuera del catálogo a propósito.** El propio
+  §10 marca que su solape con lo que vende el paywall es una decisión sin tomar,
+  y regalar paletas premium por tareas la tomaría de hecho. El mecanismo soporta
+  agregarlos cuando esa decisión exista; hoy todas las metas son celebraciones.
+
+Sigue pendiente: **§ Fase 4** (la vista de reparto en Progreso, que es la
+contraparte de haber sacado el desglose por persona del fondo) y **§ Fase 6**
+(reemplazar el duelo por el indicador de ritmo dentro de Stats). La calibración
+de costos de §10 es provisoria: el catálogo va de 150 a 700 contra tareas de 5 a
+50, o sea una meta chica a ~2 semanas de ritmo normal. Hay que mirarla con uso
+real.
 
 Contexto de datos: el owner confirma que la base activa es despreciable, así que
 el esquema puede rehacerse sin plan de migración de usuarios. Ojo con una

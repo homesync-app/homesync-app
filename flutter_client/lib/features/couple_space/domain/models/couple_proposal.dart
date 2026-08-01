@@ -41,6 +41,10 @@ class CoupleProposal {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// `fund_goal` cuando la propuesta nació de desbloquear una meta del fondo,
+  /// `member` cuando la escribió una persona.
+  final String origin;
+
   const CoupleProposal({
     required this.id,
     required this.householdId,
@@ -53,8 +57,10 @@ class CoupleProposal {
     required this.respondedAt,
     required this.createdAt,
     required this.updatedAt,
+    this.origin = 'member',
   });
 
+  bool get isFromFund => origin == 'fund_goal';
   bool isMine(String? currentUserId) => createdBy == currentUserId;
   bool get isPending => status == CoupleProposalStatus.pending;
   bool get isAccepted => status == CoupleProposalStatus.accepted;
@@ -80,6 +86,7 @@ class CoupleProposal {
       updatedAt:
           DateTime.tryParse(map['updated_at']?.toString() ?? '')?.toLocal() ??
               DateTime.now(),
+      origin: map['origin']?.toString() ?? 'member',
     );
   }
 }

@@ -10,7 +10,9 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/couple_space/domain/models/couple_connection_summary.dart';
 import 'package:homesync_client/features/couple_space/domain/models/couple_proposal.dart';
+import 'package:homesync_client/features/couple_space/domain/models/household_fund.dart';
 import 'package:homesync_client/features/couple_space/presentation/providers/couple_space_providers.dart';
+import 'package:homesync_client/features/couple_space/presentation/widgets/couple_fund_widgets.dart';
 import 'package:homesync_client/features/couple_space/presentation/widgets/couple_proposal_sheets.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/domain/models/couple_challenge.dart';
@@ -40,6 +42,7 @@ class _CoupleConnectionScreenState extends ConsumerState<CoupleConnectionScreen>
     with CoupleChallengeCompletionMixin<CoupleConnectionScreen> {
   bool _specialHidden = false;
   bool _proposalMutationRunning = false;
+  bool _fundMutationRunning = false;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +54,7 @@ class _CoupleConnectionScreenState extends ConsumerState<CoupleConnectionScreen>
     final proposalsAsync = ref.watch(
       coupleProposalsProvider(widget.householdId),
     );
+    final fundAsync = ref.watch(householdFundProvider(widget.householdId));
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -74,6 +78,29 @@ class _CoupleConnectionScreenState extends ConsumerState<CoupleConnectionScreen>
                 message: t.coupleSpaceLoadError,
                 action: t.coupleSpaceRetry,
                 onRetry: _refresh,
+              ),
+            ),
+            const SizedBox(height: AppInsets.sectionGap),
+            Text(
+              t.coupleFundTitle,
+              style: AppTypography.sectionTitle.copyWith(
+                color: theme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            fundAsync.when(
+              skipLoadingOnReload: true,
+              data: _buildFund,
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                child: Center(child: AppLoader()),
+              ),
+              error: (error, _) => _LoadErrorCard(
+                message: t.coupleSpaceLoadError,
+                action: t.coupleSpaceRetry,
+                onRetry: () async {
+                  ref.invalidate(householdFundProvider(widget.householdId));
+                },
               ),
             ),
             const SizedBox(height: AppInsets.sectionGap),
@@ -130,13 +157,108 @@ class _CoupleConnectionScreenState extends ConsumerState<CoupleConnectionScreen>
     ref.invalidate(coupleConnectionSummaryProvider(widget.householdId));
     ref.invalidate(coupleProposalsProvider(widget.householdId));
     ref.invalidate(coupleChallengeCompletedProvider);
+    ref.invalidate(householdFundProvider(widget.householdId));
     await Future.wait([
       ref.read(currentHouseholdProvider.future),
       ref.read(
         coupleConnectionSummaryProvider(widget.householdId).future,
       ),
       ref.read(coupleProposalsProvider(widget.householdId).future),
+      ref.read(householdFundProvider(widget.householdId).future),
     ]);
+  }
+
+  Widget _buildFund(HouseholdFund fund) {
+    return CoupleFundCard(
+      fund: fund,
+      currentUserId: ref.watch(currentUserIdProvider),
+      isBusy: _fundMutationRunning,
+      onChooseGoal: _chooseFundGoal,
+      onConfirm: () => _confirmFundGoal(fund),
+      onWithdrawConfirmation: () => _withdrawFundConfirmation(fund),
+    );
+  }
+
+  Future<void> _chooseFundGoal() async {
+    if (_fundMutationRunning) return;
+    AppHaptics.tap();
+    final draft = await showFundGoalPicker(context);
+    if (draft == null || !mounted) return;
+
+    await _runFundMutation(
+      action: () => ref.read(coupleSpaceRepositoryProvider).setActiveGoal(
+            householdId: widget.householdId,
+            title: draft.title,
+            cost: draft.cost,
+            icon: draft.icon,
+            catalogKey: draft.catalogKey,
+          ),
+    );
+  }
+
+  Future<void> _confirmFundGoal(HouseholdFund fund) async {
+    final goal = fund.goal;
+    if (goal == null) return;
+
+    await _runFundMutation(
+      action: () => ref.read(coupleSpaceRepositoryProvider).confirmGoal(goal.id),
+      onSuccess: (result) {
+        // Llegar a la meta no compra el plan: abre una propuesta para acordarlo.
+        if (result is FundConfirmationOutcome && result.unlocked) {
+          ref.invalidate(coupleProposalsProvider(widget.householdId));
+          return AppLocalizations.of(context).coupleFundUnlockedMessage;
+        }
+        return null;
+      },
+    );
+  }
+
+  Future<void> _withdrawFundConfirmation(HouseholdFund fund) async {
+    final goal = fund.goal;
+    if (goal == null) return;
+
+    await _runFundMutation(
+      action: () => ref
+          .read(coupleSpaceRepositoryProvider)
+          .withdrawGoalConfirmation(goal.id),
+    );
+  }
+
+  Future<void> _runFundMutation({
+    required Future<Object?> Function() action,
+    String? Function(Object? result)? onSuccess,
+  }) async {
+    if (_fundMutationRunning) return;
+    setState(() => _fundMutationRunning = true);
+    try {
+      final result = await action();
+      ref.invalidate(householdFundProvider(widget.householdId));
+      if (!mounted) return;
+      final message = onSuccess?.call(result);
+      if (message != null) {
+        AppHaptics.success();
+        AppSnackBar.show(
+          context,
+          message: message,
+          type: AppSnackBarType.success,
+        );
+      } else {
+        AppHaptics.tap();
+      }
+    } catch (error, stackTrace) {
+      log.e('Couple fund mutation failed', error: error, stackTrace: stackTrace);
+      if (!mounted) return;
+      AppSnackBar.show(
+        context,
+        message: friendlyErrorMessage(
+          error,
+          t: AppLocalizations.of(context),
+        ),
+        type: AppSnackBarType.error,
+      );
+    } finally {
+      if (mounted) setState(() => _fundMutationRunning = false);
+    }
   }
 
   Widget _buildWeekCard(CoupleConnectionSummary summary) {
@@ -601,6 +723,11 @@ class _ProposalCard extends StatelessWidget {
                           ),
                           color: AppColors.iconSage,
                         ),
+                        if (proposal.isFromFund)
+                          _ProposalPill(
+                            label: t.coupleFundFromGoalBadge,
+                            color: AppColors.accentGold,
+                          ),
                         if (proposal.isPending && mine)
                           _ProposalPill(
                             label: t.coupleSpaceProposalAwaiting,

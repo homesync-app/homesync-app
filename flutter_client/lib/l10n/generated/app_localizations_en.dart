@@ -9026,4 +9026,135 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifLoveNoteBody => 'Your partner sent you a love note ❤️';
+
+  @override
+  String get coupleFundTitle => 'Our fund';
+
+  @override
+  String get coupleFundEyebrow => 'WHAT YOU BUILD';
+
+  @override
+  String coupleFundBalance(int amount) {
+    return '$amount added';
+  }
+
+  @override
+  String coupleFundWeekAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added $count this week',
+      one: 'Added 1 this week',
+      zero: 'Nothing added this week yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String coupleFundRhythm(int weeks, int window) {
+    return 'active $weeks of the last $window weeks';
+  }
+
+  @override
+  String get coupleFundNoGoalTitle => 'No goal picked yet';
+
+  @override
+  String get coupleFundNoGoalBody =>
+      'Pick something to celebrate together. Every task you finish gets you closer.';
+
+  @override
+  String get coupleFundChooseGoal => 'Pick a goal';
+
+  @override
+  String get coupleFundChangeGoal => 'Change goal';
+
+  @override
+  String coupleFundToGoal(int current, int cost, String title) {
+    return '$current / $cost → $title';
+  }
+
+  @override
+  String coupleFundRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count to go',
+      one: '1 to go',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coupleFundReadyTitle => 'You reached the goal!';
+
+  @override
+  String get coupleFundReadyBody =>
+      'Decide together how you want to celebrate.';
+
+  @override
+  String get coupleFundConfirm => 'Confirm';
+
+  @override
+  String get coupleFundConfirmed => 'You confirmed';
+
+  @override
+  String get coupleFundWithdrawConfirm => 'Withdraw my confirmation';
+
+  @override
+  String coupleFundWaitingOthers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count confirmations to go',
+      one: '1 confirmation to go',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coupleFundUnlockedMessage =>
+      'Goal unlocked. There\'s a proposal waiting to agree on when.';
+
+  @override
+  String get coupleFundPickerTitle => 'What do you want to unlock?';
+
+  @override
+  String get coupleFundPickerSubtitle =>
+      'One goal at a time. Change it whenever you like without losing what you built.';
+
+  @override
+  String get coupleFundCustomOption => 'Create your own';
+
+  @override
+  String get coupleFundCustomTitleLabel => 'What do you want to celebrate?';
+
+  @override
+  String get coupleFundCustomCostLabel => 'Goal';
+
+  @override
+  String get coupleFundCustomCostHelper => 'Between 50 and 2000';
+
+  @override
+  String get coupleFundSave => 'Set goal';
+
+  @override
+  String get coupleFundError => 'We couldn\'t update the fund';
+
+  @override
+  String get coupleFundFromGoalBadge => 'From the fund';
+
+  @override
+  String get coupleFundCatalogMovieNight => 'Movie night at home';
+
+  @override
+  String get coupleFundCatalogPicnic => 'Picnic';
+
+  @override
+  String get coupleFundCatalogDinnerOut => 'Dinner out';
+
+  @override
+  String get coupleFundCatalogDayTrip => 'Day trip';
+
+  @override
+  String get coupleFundCatalogWeekendAway => 'Weekend away';
 }
