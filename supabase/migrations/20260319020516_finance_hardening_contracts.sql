@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260319020516).
+-- Reconstructed from remote migration history (version 20260319020516).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Finance hardening: align RPC contracts with app and return typed feed data

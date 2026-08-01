@@ -16,8 +16,8 @@ BEGIN
     RAISE EXCEPTION 'Missing function: public.get_expense_balance(uuid)';
   END IF;
 
-  IF to_regprocedure('public.save_expense_v4(uuid,uuid,text,numeric,text,uuid,timestamp with time zone,text,text,boolean,text,jsonb,text)') IS NULL THEN
-    RAISE EXCEPTION 'Missing function: public.save_expense_v4(..., p_receipt_path text)';
+  IF to_regprocedure('public.save_expense_v4(uuid,uuid,text,numeric,text,uuid,timestamp with time zone,text,text,boolean,text,jsonb,text,uuid)') IS NULL THEN
+    RAISE EXCEPTION 'Missing function: public.save_expense_v4(..., p_receipt_path text, p_pool_id uuid)';
   END IF;
 
   IF to_regprocedure('public.get_home_bootstrap(integer,integer,integer)') IS NULL THEN

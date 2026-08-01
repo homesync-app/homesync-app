@@ -8,7 +8,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/tasks/domain/models/family_member_dashboard.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/family_member_dashboard_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 /// Sprint 2 Modo Padres: dashboard parental.
@@ -108,9 +108,9 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> {
                   value: DashboardPeriod.week,
                   label: Text(t.familyDashboardWeekFilter),
                 ),
-                const ButtonSegment(
+                ButtonSegment(
                   value: DashboardPeriod.month,
-                  label: Text('Mes'),
+                  label: Text(t.familyDashboardMonthFilter),
                 ),
               ],
               selected: {_period},
@@ -122,15 +122,9 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> {
       body: dashboardAsync.when(
         skipLoadingOnReload: true,
         loading: () => const Center(child: AppLoader()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Text(
-              'No pudimos cargar el dashboard: $e',
-              style: TextStyle(color: theme.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          ),
+        error: (_, __) => AppErrorState(
+          message: t.commonError,
+          onRetry: () => ref.invalidate(familyMemberDashboardProvider(_period)),
         ),
         data: (dashboard) {
           if (dashboard == null || dashboard.members.isEmpty) {
@@ -176,7 +170,7 @@ class _MemberCard extends StatelessWidget {
     final statusLabel = _statusLabel(t, snapshot, hasTasks, rate);
     final statusIcon = _statusIcon(snapshot, hasTasks, rate);
     final progressText = hasTasks
-        ? '${snapshot.tasksDone}/$plannedTotal hechas'
+        ? t.familyDashboardProgress(snapshot.tasksDone, plannedTotal)
         : period == DashboardPeriod.week
             ? t.familyDashboardEmptyWeek
             : t.familyDashboardEmptyMonth;
@@ -287,7 +281,7 @@ class _MemberCard extends StatelessWidget {
                 _MiniMetric(
                   icon: Icons.local_fire_department_rounded,
                   label: snapshot.streakDays > 0
-                      ? '${snapshot.streakDays} días'
+                      ? t.familyDashboardStreakDays(snapshot.streakDays)
                       : t.familyDashboardNoStreak,
                   color: snapshot.streakDays > 0
                       ? AppColors.accentOrange
@@ -317,19 +311,21 @@ class _MemberCard extends StatelessWidget {
                   _Stat(
                     icon: Icons.pending_actions_rounded,
                     color: AppColors.accentBlue,
-                    label: '${snapshot.tasksOpen} pendientes',
+                    label: t.familyDashboardPendingCount(snapshot.tasksOpen),
                   ),
                 if (snapshot.tasksOverdue > 0)
                   _Stat(
                     icon: Icons.error_outline_rounded,
                     color: AppColors.accentRed,
-                    label: '${snapshot.tasksOverdue} atrasadas',
+                    label: t.familyDashboardOverdueCount(snapshot.tasksOverdue),
                   ),
                 if (snapshot.tasksPendingApproval > 0)
                   _Stat(
                     icon: Icons.hourglass_top_rounded,
                     color: AppColors.accentGold,
-                    label: '${snapshot.tasksPendingApproval} a aprobar',
+                    label: t.familyDashboardToApproveCount(
+                      snapshot.tasksPendingApproval,
+                    ),
                   ),
               ],
             ),
@@ -456,7 +452,7 @@ class _DashboardSummary extends StatelessWidget {
         ? dashboard.period == DashboardPeriod.week
             ? t.familyDashboardEmptySubtitleWeek
             : t.familyDashboardEmptySubtitleMonth
-        : '$activeMembers de ${members.length} integrantes tienen tareas activas.';
+        : t.familyDashboardActiveMembers(activeMembers, members.length);
 
     return Container(
       padding: const EdgeInsets.all(18),

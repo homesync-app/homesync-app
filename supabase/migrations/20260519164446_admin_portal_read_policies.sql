@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260519164446).
+-- Reconstructed from remote migration history (version 20260519164446).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Let authenticated app admins inspect the operational tables used by the

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -11,8 +12,8 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
 /// Sprint 1 Modo Padres: bandeja de aprobaciones para adultos owner/admin.
 ///
@@ -73,15 +74,9 @@ class PendingApprovalsScreen extends ConsumerWidget {
       body: approvalsAsync.when(
         skipLoadingOnReload: true,
         loading: () => const Center(child: AppLoader()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Text(
-              t.pendingApprovalsLoadError(e.toString()),
-              style: TextStyle(color: theme.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          ),
+        error: (error, stackTrace) => AppErrorState(
+          message: t.pendingApprovalsLoadError,
+          onRetry: () => ref.invalidate(pendingTaskApprovalsProvider),
         ),
         data: (items) {
           if (items.isEmpty) {
@@ -286,6 +281,18 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
           type: AppSnackBarType.error,
         );
       }
+    } catch (error, stackTrace) {
+      log.e(
+        'Approve pending task failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        _snack(
+          AppLocalizations.of(context).pendingApprovalsApproveErrorRetry,
+          type: AppSnackBarType.error,
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -309,7 +316,12 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
           type: AppSnackBarType.error,
         );
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Reject pending task failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         _snack(
           AppLocalizations.of(context).pendingApprovalsRejectErrorRetry,

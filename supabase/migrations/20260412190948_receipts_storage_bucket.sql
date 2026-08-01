@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260412190948).
+-- Reconstructed from remote migration history (version 20260412190948).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

@@ -205,41 +205,44 @@ class _HouseholdSettingsScreenState
     try {
       final result =
           await ref.read(householdRepositoryProvider).generateInvitationCode();
+      if (!mounted) return;
 
-      if (mounted) {
-        result.fold(
-          (failure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(t.commonErrorWithDetails(failure.message)),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          },
-          (code) {
-            setState(() => _invitationCode = code);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(t.settingsHouseholdCodeGenerated),
-                backgroundColor: AppColors.success,
-              ),
-            );
-          },
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              t.commonErrorWithDetails(
-                e.toString().replaceFirst('Exception: ', ''),
-              ),
+      result.fold(
+        (failure) {
+          log.e(
+            'Household invitation code generation failed',
+            error: failure,
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(t.settingsHouseholdCodeGenerateError),
+              backgroundColor: AppColors.error,
             ),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+          );
+        },
+        (code) {
+          setState(() => _invitationCode = code);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(t.settingsHouseholdCodeGenerated),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        },
+      );
+    } catch (error, stackTrace) {
+      log.e(
+        'Household invitation code generation threw unexpectedly',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.settingsHouseholdCodeGenerateError),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 
@@ -265,7 +268,8 @@ class _HouseholdSettingsScreenState
       return;
     }
 
-    final text = t.settingsInviteWhatsAppMessage(_normalizedHouseholdType, code);
+    final text =
+        t.settingsInviteWhatsAppMessage(_normalizedHouseholdType, code);
     final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
 
     try {
@@ -853,7 +857,7 @@ class _HouseholdSettingsScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(t.membersRoleUpdateError(e.toString())),
+            content: Text(t.membersRoleUpdateError),
             backgroundColor: AppColors.error,
           ),
         );

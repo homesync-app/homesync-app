@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -50,40 +51,46 @@ class _CoupleSplitStrategyScreenState
   }
 
   Future<void> _saveRatio() async {
+    if (_isSaving) return;
+
     setState(() => _isSaving = true);
-    AppHaptics.success();
+    final t = AppLocalizations.of(context);
 
     try {
       final household = ref.read(currentHouseholdProvider).value;
-
-      if (household != null) {
-        final result =
-            await ref.read(updateFinanceSettingsUseCaseProvider).call(
-                  household.id,
-                  financeMode: _financeMode,
-                  defaultSplitRatio: _splitRatio,
-                );
-        result.fold((failure) => throw failure, (_) {});
-        ref.invalidate(currentHouseholdProvider);
-
-        if (mounted) {
-          final t = AppLocalizations.of(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(t.coupleSplitSavedSnack),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-          Navigator.pop(context);
-        }
+      if (household == null) {
+        throw StateError('Cannot save finance settings without a household');
       }
-    } catch (e) {
+
+      final result = await ref.read(updateFinanceSettingsUseCaseProvider).call(
+            household.id,
+            financeMode: _financeMode,
+            defaultSplitRatio: _splitRatio,
+          );
+      result.fold((failure) => throw failure, (_) {});
+      ref.invalidate(currentHouseholdProvider);
+      AppHaptics.success();
+
       if (mounted) {
-        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(t.coupleSplitSaveError(e.toString())),
+            content: Text(t.coupleSplitSavedSnack),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e, stack) {
+      log.e(
+        'CoupleSplitStrategyScreen._saveRatio failed',
+        error: e,
+        stackTrace: stack,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.coupleSplitSaveError),
             backgroundColor: AppColors.error,
           ),
         );

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260310130738).
+-- Reconstructed from remote migration history (version 20260310130738).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- 1. Create expense_templates table

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260508120210).
+-- Reconstructed from remote migration history (version 20260508120210).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create table if not exists public.error_issues (

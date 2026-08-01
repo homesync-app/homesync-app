@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260323170201).
+-- Reconstructed from remote migration history (version 20260323170201).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION public.create_task(

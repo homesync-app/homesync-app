@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/models/task_completion_result.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -44,10 +45,10 @@ mixin TaskCompletionFlowMixin<T extends ConsumerStatefulWidget>
 
       final t = AppLocalizations.of(context);
       if (result == null) {
+        log.w('Task completion returned no result for task ${task.id}');
         AppSnackBar.show(
           context,
-          message: completionErrorMessage ??
-              t.commonErrorWithDetails('completion failed'),
+          message: completionErrorMessage ?? t.tasksSnackCompleteError,
           type: AppSnackBarType.error,
         );
         return;
@@ -60,12 +61,17 @@ mixin TaskCompletionFlowMixin<T extends ConsumerStatefulWidget>
         type: AppSnackBarType.success,
       );
       onCompleted?.call(result);
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Task completion failed for task ${task.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         final t = AppLocalizations.of(context);
         AppSnackBar.show(
           context,
-          message: t.commonErrorWithDetails(e.toString()),
+          message: completionErrorMessage ?? t.tasksSnackCompleteError,
           type: AppSnackBarType.error,
         );
       }

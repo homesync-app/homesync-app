@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260329145744).
+-- Reconstructed from remote migration history (version 20260329145744).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.qa_admin_get_expense_with_splits(

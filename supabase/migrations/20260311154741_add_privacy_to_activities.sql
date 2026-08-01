@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260311154741).
+-- Reconstructed from remote migration history (version 20260311154741).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- 1. Add is_shared column to household_activities

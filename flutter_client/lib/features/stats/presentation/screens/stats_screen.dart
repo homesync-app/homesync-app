@@ -90,8 +90,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final statsAsync = ref.watch(statsControllerProvider);
-    final isSolo =
-        ref.watch(householdCapabilitiesProvider).type == HouseholdType.solo;
+    final caps = ref.watch(householdCapabilitiesProvider);
+    final isSolo = caps.type == HouseholdType.solo;
 
     ref.listen(userProfileProvider, (previous, next) {
       if (next.hasValue && previous?.value != next.value) {
@@ -147,6 +147,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                   xpHistory: stats.xpHistory,
                   coinHistory: stats.coinHistory,
                   memberStats: stats.memberActivity,
+                  showCoins: caps.usesCoinEconomy,
                   onRefresh: ref.read(statsControllerProvider.notifier).refresh,
                 ),
                 AchievementsTab(

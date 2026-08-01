@@ -43,7 +43,7 @@ class HouseholdCapabilities {
   });
 
   bool get showPartnerTab => type != HouseholdType.solo;
-  bool get usesCoupleRewardsExperience => type == HouseholdType.couple;
+  bool get usesCoupleConnectionExperience => type == HouseholdType.couple;
   bool get showExpensesSplit => type != HouseholdType.solo;
   bool get hasSharedTasks => type != HouseholdType.solo;
   bool get showTasks => tasksEnabled;
@@ -55,6 +55,16 @@ class HouseholdCapabilities {
   /// Gamificación con premios/tienda/coins. Solo familia: motiva a chicos.
   /// Convivencia (friends) es entre adultos pares — sin tienda ni premios.
   bool get usesRewardsStore => type == HouseholdType.family;
+
+  /// Economía de coins (ganarlas, mostrarlas, gastarlas). Pareja la perdió a
+  /// propósito: las coins eran convertibles en conducta de la otra persona.
+  /// El XP sobrevive porque es progreso autorreferencial — no compra nada a
+  /// nadie — pero nunca se muestra en marco comparativo.
+  bool get usesCoinEconomy => type != HouseholdType.couple;
+
+  /// Card del duelo semanal en Stats. Es marco competitivo aunque solo muestre
+  /// datos propios, así que no va en pareja.
+  bool get showsWeeklyDuelCard => type != HouseholdType.couple;
 
   /// Ranking competitivo (corona, puntos, posiciones, adultos vs chicos).
   /// Solo familia. Convivencia usa "equilibrio de aporte" neutro en su lugar.

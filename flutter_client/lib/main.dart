@@ -182,10 +182,11 @@ void main() async {
   // falla, PostHogSink queda inerte y la app sigue sin analytics de producto.
   final postHogFuture = PostHogSink.instance.setup();
 
-  // Inicialización de Supabase + auth/rpc. Si no hay red la SDK reintenta
-  // internamente; este try/catch protege el arranque para que un fallo de
-  // DNS o handshake no mate la app antes de runApp. La sesión se reanudará
-  // sola cuando vuelva la conectividad.
+  // Supabase initialization is local when a third-party access token callback
+  // is provided: the SDK skips Supabase Auth session recovery and does not
+  // need network access here. Any exception therefore indicates a fatal
+  // configuration/runtime problem; never continue toward Supabase.instance
+  // after a failed initialization.
   try {
     await PerformanceMonitor.measureFuture(
       'startup.supabase_initialize',
@@ -214,11 +215,12 @@ void main() async {
       warnAfterMs: 700,
     );
   } catch (e, stack) {
-    log.w(
-      'Supabase.initialize failed (offline?). App seguirá arrancando.',
+    log.e(
+      'Supabase.initialize failed. Startup cannot continue.',
       error: e,
       stackTrace: stack,
     );
+    rethrow;
   }
 
   final supabaseClient = Supabase.instance.client;

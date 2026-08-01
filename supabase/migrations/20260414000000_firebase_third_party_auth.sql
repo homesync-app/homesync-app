@@ -110,7 +110,12 @@ begin
     raise exception 'Not authenticated';
   end if;
 
-  if not exists (select 1 from public.users where id = v_uid and is_admin = true) then
+  if not exists (
+    select 1
+    from public.users admin_user
+    where admin_user.id = v_uid
+      and admin_user.is_admin = true
+  ) then
     raise exception 'Admin access required';
   end if;
 

@@ -9,7 +9,9 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
@@ -17,9 +19,9 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -64,6 +66,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   final Map<String, GlobalKey> _taskItemKeys = {};
 
   bool _isLoading = true;
+  bool _loadFailed = false;
   List<TaskModel> _allTasks = [];
   List<Map<String, dynamic>> _members = [];
 
@@ -88,28 +91,45 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadFailed = false;
+    });
     try {
       final householdId = await ref.read(householdIdProvider.future);
-      if (householdId == null) return;
+      if (householdId == null) {
+        throw StateError('CompleteTaskSheet requires a household');
+      }
 
       final taskRepo = ref.read(taskRepositoryProvider);
       final result = await taskRepo.getTasks(householdId, limit: 200);
-
-      // In direct-completion flow we show only tasks that can be completed now.
-      _allTasks = result.getOrElse((_) => []).where((t) => t.isActive).toList();
+      final tasks = result.fold(
+        (failure) => throw failure,
+        (items) => items.where((task) => task.isActive).toList(),
+      );
 
       final householdRepo = ref.read(householdRepositoryProvider);
       final membersResult = await householdRepo.getHouseholdMembersRaw();
-      _members = membersResult.getOrElse((failure) {
-        log.e('Error loading members: ${failure.message}');
-        return [];
-      });
-    } catch (e) {
-      log.e('Error loading data for task sheet: $e', error: e);
-    }
-    if (mounted) {
-      setState(() => _isLoading = false);
+      final members = membersResult.fold(
+        (failure) => throw failure,
+        (items) => items,
+      );
+
+      if (mounted) {
+        setState(() {
+          _allTasks = tasks;
+          _members = members;
+        });
+      }
+    } catch (error, stackTrace) {
+      log.e(
+        'CompleteTaskSheet failed to load data',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) setState(() => _loadFailed = true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -234,17 +254,23 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
         final approvalCount = selectedMembersRequiringApproval.length;
         final directCount = remainingMemberIds.length;
+        final showGamification = ref.read(householdCapabilitiesProvider).type !=
+            HouseholdType.couple;
 
         String message;
-        if (approvalCount > 0 && directCount > 0) {
-          message =
-              '$approvalCount tarea${approvalCount > 1 ? "s" : ""} pendiente${approvalCount > 1 ? "s" : ""} de aprobacion, ⭐ $totalXp XP y $totalCoins Coins!';
+        if (!showGamification) {
+          message = t.coupleSpaceTaskCompletionMessage(selectedTasks.length);
+        } else if (approvalCount > 0 && directCount > 0) {
+          message = t.completeTaskMixedApprovalMessage(
+            approvalCount,
+            totalXp,
+            totalCoins,
+          );
         } else if (approvalCount > 0) {
-          message =
-              '$approvalCount tarea${approvalCount > 1 ? "s" : ""} enviada${approvalCount > 1 ? "s" : ""} para aprobacion';
+          message = t.completeTaskApprovalOnlyMessage(approvalCount);
         } else {
           final verb = t.completeTaskRewardVerb(onlyMe ? 1 : 2);
-          message = '⭐ $verb $totalXp XP y $totalCoins Coins!';
+          message = t.completeTaskRewardMessage(verb, totalXp, totalCoins);
         }
 
         AppSnackBar.show(
@@ -258,14 +284,17 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
         widget.onTasksCompleted();
       }
-    } catch (e) {
-      log.e('Error completing tasks: $e', error: e);
+    } catch (error, stackTrace) {
+      log.e(
+        'CompleteTaskSheet failed to complete tasks',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         setState(() => _isLoading = false);
         AppSnackBar.show(
           context,
-          message:
-              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
+          message: AppLocalizations.of(context).tasksSnackCompleteError,
           type: AppSnackBarType.error,
         );
       }
@@ -457,186 +486,196 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           ? const Center(
               child: AppLoader(),
             )
-          : Column(
-              children: [
-                const SizedBox(height: 12),
-                Container(
-                  width: 48,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: theme.divider,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                  child: Column(
-                    children: [
-                      Row(
+          : _loadFailed
+              ? AppErrorState(
+                  message: AppLocalizations.of(context).tasksLoadError,
+                  onRetry: _loadData,
+                )
+              : Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 48,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: theme.divider,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    Padding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      child: Column(
                         children: [
-                          const Icon(
-                            Icons.task_alt_rounded,
-                            color: AppColors.primary,
-                            size: 28,
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.task_alt_rounded,
+                                color: AppColors.primary,
+                                size: 28,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                AppLocalizations.of(context)
+                                    .completeTaskHeaderTitle,
+                                style: AppTypography.heroAmount.copyWith(
+                                  fontSize: 24,
+                                  color: theme.textPrimary,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            AppLocalizations.of(context)
-                                .completeTaskHeaderTitle,
-                            style: AppTypography.heroAmount.copyWith(
-                              fontSize: 24,
-                              color: theme.textPrimary,
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              AppLocalizations.of(context)
+                                  .completeTaskHeaderSubtitle,
+                              style: AppTypography.caption.copyWith(
+                                fontSize: 13,
+                                height: 1.35,
+                                color: theme.textSecondary,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          AppLocalizations.of(context)
-                              .completeTaskHeaderSubtitle,
-                          style: AppTypography.caption.copyWith(
-                            fontSize: 13,
-                            height: 1.35,
-                            color: theme.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Expanded(
-                  child: ListView(
-                    controller: _scrollController,
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: EdgeInsets.only(
-                      bottom: _selectedTaskIds.isEmpty || _isLoading
-                          ? AppSpacing.xxl
-                          : AppSpacing.sm,
                     ),
-                    children: [
-                      if (ref.watch(parentModeAvailableProvider)) ...[
-                        _buildSectionHeader(
-                          Icons.people_alt_rounded,
-                          AppLocalizations.of(context).completeTaskWhoTitle,
-                          AppLocalizations.of(context).completeTaskWhoSubtitle,
+                    const SizedBox(height: 24),
+                    Expanded(
+                      child: ListView(
+                        controller: _scrollController,
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: EdgeInsets.only(
+                          bottom: _selectedTaskIds.isEmpty || _isLoading
+                              ? AppSpacing.xxl
+                              : AppSpacing.sm,
                         ),
-                        _buildMembersSelection(),
-                        const SizedBox(height: 32),
-                      ],
-                      _buildSectionHeader(
-                        Icons.schedule_rounded,
-                        AppLocalizations.of(context).completeTaskWhenTitle,
-                        AppLocalizations.of(context).completeTaskWhenSubtitle,
+                        children: [
+                          if (ref.watch(parentModeAvailableProvider)) ...[
+                            _buildSectionHeader(
+                              Icons.people_alt_rounded,
+                              AppLocalizations.of(context).completeTaskWhoTitle,
+                              AppLocalizations.of(context)
+                                  .completeTaskWhoSubtitle,
+                            ),
+                            _buildMembersSelection(),
+                            const SizedBox(height: 32),
+                          ],
+                          _buildSectionHeader(
+                            Icons.schedule_rounded,
+                            AppLocalizations.of(context).completeTaskWhenTitle,
+                            AppLocalizations.of(context)
+                                .completeTaskWhenSubtitle,
+                          ),
+                          _buildDateSelection(),
+                          const SizedBox(height: 32),
+                          _buildSectionHeader(
+                            Icons.layers_rounded,
+                            AppLocalizations.of(context).completeTaskTasksTitle,
+                            AppLocalizations.of(context)
+                                .completeTaskTasksSubtitle,
+                          ),
+                          _buildCategoryAndSearch(categories),
+                          const SizedBox(height: 16),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.lg,
+                            ),
+                            child: Column(
+                              children: [
+                                ..._buildGroupedTasksInFull(tasks, categories),
+                                const SizedBox(height: AppSpacing.lg),
+                                _buildAddTaskPrompt(),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      _buildDateSelection(),
-                      const SizedBox(height: 32),
-                      _buildSectionHeader(
-                        Icons.layers_rounded,
-                        AppLocalizations.of(context).completeTaskTasksTitle,
-                        AppLocalizations.of(context).completeTaskTasksSubtitle,
-                      ),
-                      _buildCategoryAndSearch(categories),
-                      const SizedBox(height: 16),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.lg,
-                        ),
-                        child: Column(
-                          children: [
-                            ..._buildGroupedTasksInFull(tasks, categories),
-                            const SizedBox(height: AppSpacing.lg),
-                            _buildAddTaskPrompt(),
+                    ),
+                    if (_selectedTaskIds.isNotEmpty && !_isLoading)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: theme.surface.withValues(alpha: 0.98),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 20,
+                              offset: const Offset(0, -10),
+                            ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (_selectedTaskIds.isNotEmpty && !_isLoading)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: theme.surface.withValues(alpha: 0.98),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 20,
-                          offset: const Offset(0, -10),
+                        padding: EdgeInsets.fromLTRB(
+                          24,
+                          18,
+                          24,
+                          20 + MediaQuery.viewPaddingOf(context).bottom,
                         ),
-                      ],
-                    ),
-                    padding: EdgeInsets.fromLTRB(
-                      24,
-                      18,
-                      24,
-                      20 + MediaQuery.viewPaddingOf(context).bottom,
-                    ),
-                    child: Builder(
-                      builder: (context) {
-                        final canSubmit = !_isLoading &&
-                            _selectedTaskIds.isNotEmpty &&
-                            _selectedMemberIds.isNotEmpty;
-                        // CTA héroe con press-morph M3 Expressive: el radio
-                        // se contrae al presionar sobre el mismo spring del
-                        // squash (patrón bunpod / _GridButton).
-                        return AnimatedPress(
-                          scale: 0.97,
-                          haptic: AppPressHaptic.light,
-                          onTap: canSubmit ? _submitCompletedTasks : null,
-                          pressBuilder: (context, t, child) => Container(
-                            width: double.infinity,
-                            height: 58,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: theme.primary
-                                  .withValues(alpha: canSubmit ? 1 : 0.45),
-                              borderRadius: BorderRadius.circular(
-                                22 + (14 - 22) * t.clamp(0.0, 1.2),
-                              ),
-                            ),
-                            child: child,
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
+                        child: Builder(
+                          builder: (context) {
+                            final canSubmit = !_isLoading &&
+                                _selectedTaskIds.isNotEmpty &&
+                                _selectedMemberIds.isNotEmpty;
+                            // CTA héroe con press-morph M3 Expressive: el radio
+                            // se contrae al presionar sobre el mismo spring del
+                            // squash (patrón bunpod / _GridButton).
+                            return AnimatedPress(
+                              scale: 0.97,
+                              haptic: AppPressHaptic.light,
+                              onTap: canSubmit ? _submitCompletedTasks : null,
+                              pressBuilder: (context, t, child) => Container(
+                                width: double.infinity,
+                                height: 58,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: theme.primary
+                                      .withValues(alpha: canSubmit ? 1 : 0.45),
+                                  borderRadius: BorderRadius.circular(
+                                    22 + (14 - 22) * t.clamp(0.0, 1.2),
                                   ),
-                                )
-                              : Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(
-                                      Icons.check_circle_rounded,
-                                      size: 20,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      _selectedTaskIds.length == 1
-                                          ? 'Completar 1 tarea'
-                                          : 'Completar ${_selectedTaskIds.length} tareas',
-                                      style: AppTypography.cardTitle.copyWith(
-                                        fontSize: 17,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
                                 ),
-                        );
-                      },
-                    ),
-                  ),
-              ],
-            ),
+                                child: child,
+                              ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.check_circle_rounded,
+                                          size: 20,
+                                          color: Colors.white,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          _selectedTaskIds.length == 1
+                                              ? 'Completar 1 tarea'
+                                              : 'Completar ${_selectedTaskIds.length} tareas',
+                                          style:
+                                              AppTypography.cardTitle.copyWith(
+                                            fontSize: 17,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
     );
   }
 
@@ -1141,6 +1180,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   Widget _buildTaskSelectionItem(TaskModel task, Color catColor) {
     final theme = context.theme;
     final isSelected = _selectedTaskIds.contains(task.id);
+    final showGamification =
+        ref.watch(householdCapabilitiesProvider).type != HouseholdType.couple;
     final itemKey = _taskItemKeys.putIfAbsent(task.id, GlobalKey.new);
 
     return KeyedSubtree(
@@ -1184,7 +1225,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                   ),
                 ),
               ),
-              if (task.xpReward > 0)
+              if (showGamification && task.xpReward > 0)
                 Text(
                   '${task.xpReward} XP',
                   style: AppTypography.caption.copyWith(

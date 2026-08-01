@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260323175657).
+-- Reconstructed from remote migration history (version 20260323175657).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Fix Task Persistence and Complete Task Tx

@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -227,10 +228,15 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                   duration: const Duration(milliseconds: 1400),
                 );
               }
-            } catch (e) {
+            } catch (error, stackTrace) {
+              log.e(
+                'TasksScreen failed to update task schedule',
+                error: error,
+                stackTrace: stackTrace,
+              );
               if (mounted) {
                 _showSnack(
-                  t.commonErrorWithDetails(e.toString()),
+                  t.commonError,
                   AppSnackBarType.error,
                 );
               }

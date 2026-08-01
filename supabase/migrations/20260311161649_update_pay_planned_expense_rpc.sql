@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260311161649).
+-- Reconstructed from remote migration history (version 20260311161649).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION public.pay_planned_expense(

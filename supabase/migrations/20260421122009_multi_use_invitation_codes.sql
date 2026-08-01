@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260421122009).
+-- Reconstructed from remote migration history (version 20260421122009).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Couple households: single-use codes (max 2 members total)

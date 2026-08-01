@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260425234403).
+-- Reconstructed from remote migration history (version 20260425234403).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- tabla para reportes de bugs y sugerencias de mejoras enviados desde la app

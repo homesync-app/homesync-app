@@ -300,7 +300,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                         if (!_isExpanded && _isSubmitting) ...[
                           const SizedBox(width: 10),
                           _completionBadge(categoryColor),
-                        ] else if (!_isExpanded &&
+                        ] else if (caps.type != HouseholdType.couple &&
+                            !_isExpanded &&
                             (task.xpReward > 0 || displayCoins > 0)) ...[
                           const SizedBox(width: 10),
                           _rewardBadge(task.xpReward, displayCoins),
@@ -824,14 +825,18 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         type: AppSnackBarType.info,
         duration: const Duration(milliseconds: 1500),
       );
-    } catch (e) {
+    } catch (error, stackTrace) {
       // El notifier relanza el fallo: sin este catch el spinner se reseteaba
       // sin ningún aviso y el error moría como excepción async sin manejar.
+      log.e(
+        'TasksScreen failed to submit task for approval',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         AppSnackBar.show(
           context,
-          message:
-              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
+          message: AppLocalizations.of(context).commonError,
           type: AppSnackBarType.error,
         );
       }
@@ -925,10 +930,10 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   /// de AppColors: XP en dorado, coins en verde — igual que en el Home.
   Widget _rewardBadge(int xp, int coins) {
     TextStyle style(Color color) => AppTypography.caption.copyWith(
-      fontSize: 11,
-      fontWeight: FontWeight.w700,
-      color: color,
-    );
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: color,
+        );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

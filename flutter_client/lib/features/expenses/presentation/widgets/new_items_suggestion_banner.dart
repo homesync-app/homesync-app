@@ -1,30 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/receipt_matcher.dart';
-import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/shopping/presentation/widgets/shopping_icon.dart';
 import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 class NewItemsSuggestionBanner extends ConsumerStatefulWidget {
   final int animationTrigger;
   final List<String> items;
-  final String householdId;
   final VoidCallback onDismiss;
-  final void Function(List<ShoppingItemModel> added)? onItemsAdded;
 
   const NewItemsSuggestionBanner({
     super.key,
     this.animationTrigger = 0,
     required this.items,
-    required this.householdId,
     required this.onDismiss,
-    this.onItemsAdded,
   });
 
   @override
@@ -76,57 +73,70 @@ class _NewItemsSuggestionBannerState
     if (_selected.isEmpty || _isAdding) return;
     setState(() => _isAdding = true);
 
+    final t = AppLocalizations.of(context);
+    final attemptedNames = _selected.toList(growable: false);
+    final successfulNames = <String>{};
+    final failedNames = <String>{};
+
     try {
       final notifier = ref.read(shoppingItemsProvider.notifier);
-      final addedItems = <ShoppingItemModel>[];
 
-      for (final rawName in _selected) {
+      for (final rawName in attemptedNames) {
         final predefined = ReceiptMatcher.findPredefined(rawName);
         final displayName =
             predefined?.name ?? ReceiptMatcher.cleanName(rawName);
         if (displayName.isEmpty) continue;
 
-        await notifier.addItem(
+        final succeeded = await notifier.addItem(
           name: displayName,
           emoji: predefined?.emoji ?? '\u{1F6D2}',
           category: predefined?.category ?? 'general',
         );
+        if (!succeeded) {
+          failedNames.add(rawName);
+          continue;
+        }
 
-        addedItems.add(
-          ShoppingItemModel(
-            id: 'temp_${displayName.toLowerCase().replaceAll(' ', '_')}',
-            name: displayName,
-            emoji: predefined?.emoji ?? '\u{1F6D2}',
-            category: predefined?.category ?? 'general',
-            householdId: widget.householdId,
-            createdAt: DateTime.now(),
-          ),
-        );
+        successfulNames.add(rawName);
       }
 
-      if (mounted) {
-        final t = AppLocalizations.of(context);
-        widget.onItemsAdded?.call(addedItems);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(t.expensesNewItemsAddedCount(_selected.length)),
-            backgroundColor: AppColors.success,
-            duration: const Duration(seconds: 2),
-          ),
+      if (!mounted) return;
+      if (failedNames.isNotEmpty) {
+        setState(() {
+          _selected
+            ..clear()
+            ..addAll(failedNames);
+        });
+        AppSnackBar.show(
+          context,
+          message: t.expensesNewItemsAddError,
+          type: AppSnackBarType.error,
         );
-        widget.onDismiss();
+        return;
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context).commonErrorWithDetails('$e'),
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+
+      AppSnackBar.show(
+        context,
+        message: t.expensesNewItemsAddedCount(successfulNames.length),
+        type: AppSnackBarType.success,
+        duration: const Duration(seconds: 2),
+      );
+      widget.onDismiss();
+    } catch (error, stackTrace) {
+      log.e(
+        'Adding receipt suggestions to shopping failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) return;
+      setState(() {
+        _selected.removeAll(successfulNames);
+      });
+      AppSnackBar.show(
+        context,
+        message: t.expensesNewItemsAddError,
+        type: AppSnackBarType.error,
+      );
     } finally {
       if (mounted) setState(() => _isAdding = false);
     }

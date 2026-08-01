@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260325112522).
+-- Reconstructed from remote migration history (version 20260325112522).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Add is_admin column to users table

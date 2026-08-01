@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260512113655).
+-- Reconstructed from remote migration history (version 20260512113655).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 revoke execute on all functions in schema public from anon;

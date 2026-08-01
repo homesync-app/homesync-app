@@ -3,13 +3,16 @@
 //
 // The app ships in es + en via ARB files; any user-facing Spanish literal in
 // lib/ leaks Spanish into the English UI. This guard scans Dart string
-// literals (not comments) for Spanish-marker characters (á é í ó ú ñ ¿ ¡) and
-// fails when NEW ones appear outside l10n/.
+// literals (not comments) for Spanish-marker characters (á é í ó ú ñ ¿ ¡)
+// and for a conservative list of high-confidence Spanish UI words, then fails
+// when NEW ones appear outside l10n/.
 //
-// It's a heuristic: unaccented Spanish ("Hogar no encontrado") slips through,
-// and some accented literals are legitimate data (accent-normalization maps,
-// legacy avatar aliases, timeago config). Pre-existing/legit entries live in
-// test/hardcoded_spanish_baseline.txt — same pattern as l10n_parity_test.
+// It's a heuristic: not every unaccented Spanish phrase can be identified
+// without false positives. The extra patterns intentionally target common UI
+// leaks seen in this app: "Reintentar", a standalone "Mes", interpolated
+// pending/overdue counters, "a aprobar" and minimum-selection guidance.
+// Accented literals and pre-existing/legitimate data (normalization maps,
+// legacy avatar aliases, timeago config) live in the baseline file.
 //
 // To accept a new legit literal, add its `path|literal` line to the baseline.
 // To fix a real leak, move the copy to app_es.arb/app_en.arb.
@@ -20,7 +23,13 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-final _spanishMarker = RegExp('[áéíóúñÁÉÍÓÚÑ¿¡]');
+final _accentedSpanishMarker = RegExp('[áéíóúñÁÉÍÓÚÑ¿¡]');
+final _unaccentedSpanishMarker = RegExp(
+  r'''\breintentar\b|^(?:'Mes'|"Mes")$|'''
+  r'''(?:\d+|\})\s+(?:pendientes?|atrasad(?:a|as|o|os))\b|'''
+  r'''\ba aprobar\b|\bnecesitas al menos\b''',
+  caseSensitive: false,
+);
 final _stringLiteral = RegExp(
   r"'(?:[^'\\\n]|\\.)*'" '|"(?:[^"\\\\\n]|\\\\.)*"',
 );
@@ -92,14 +101,16 @@ void main() {
 
         for (final match in _stringLiteral.allMatches(line)) {
           final literal = match.group(0)!;
-          if (!_spanishMarker.hasMatch(literal)) continue;
+          final hasSpanishMarker = _accentedSpanishMarker.hasMatch(literal) ||
+              _unaccentedSpanishMarker.hasMatch(literal);
+          if (!hasSpanishMarker) continue;
           findings.add('$normalized|$literal');
         }
       }
     }
 
-    final newFindings =
-        findings.where((f) => !baseline.contains(f)).toList()..sort();
+    final newFindings = findings.where((f) => !baseline.contains(f)).toList()
+      ..sort();
     expect(
       newFindings,
       isEmpty,

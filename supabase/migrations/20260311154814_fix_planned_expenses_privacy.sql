@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260311154814).
+-- Reconstructed from remote migration history (version 20260311154814).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Update planned_expenses RLS to handle personal/gift privacy

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260306234403).
+-- Reconstructed from remote migration history (version 20260306234403).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Refine Finance Logic V13 - Include Avatars

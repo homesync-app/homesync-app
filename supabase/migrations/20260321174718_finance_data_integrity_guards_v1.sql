@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260321174718).
+-- Reconstructed from remote migration history (version 20260321174718).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Data integrity guards for finance tables

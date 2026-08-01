@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -15,9 +16,9 @@ import 'package:homesync_client/features/expenses/presentation/providers/pool_pr
 import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_amount.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -60,9 +61,12 @@ class PoolDetailSheet extends ConsumerWidget {
           height: 260,
           child: Center(child: AppLoader()),
         ),
-        error: (e, _) => SizedBox(
-          height: 200,
-          child: Center(child: Text(t.commonErrorWithDetails('$e'))),
+        error: (error, stackTrace) => SizedBox(
+          height: 220,
+          child: AppErrorState(
+            message: t.poolsDetailLoadError,
+            onRetry: () => ref.invalidate(poolSummaryProvider(poolId)),
+          ),
         ),
         data: (summary) {
           if (summary == null) {
@@ -94,6 +98,7 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
   bool _isClosing = false;
 
   Future<void> _settle(SimplifiedDebt debt) async {
+    if (_settlingKey != null || _isClosing) return;
     final t = AppLocalizations.of(context);
     final currency = ref.read(currencyProvider);
     final theme = context.theme;
@@ -160,11 +165,16 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
         type: AppSnackBarType.success,
         duration: const Duration(milliseconds: 1500),
       );
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Pool settlement failed for ${widget.summary.pool.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        message: t.settleError(e.toString()),
+        message: t.poolsSettleError,
         type: AppSnackBarType.error,
       );
     } finally {
@@ -173,6 +183,7 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
   }
 
   Future<void> _closePool() async {
+    if (_isClosing || _settlingKey != null) return;
     final t = AppLocalizations.of(context);
     final theme = context.theme;
 
@@ -225,11 +236,16 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
         type: AppSnackBarType.success,
         duration: const Duration(milliseconds: 1800),
       );
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Pool close failed for ${widget.summary.pool.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        message: t.commonErrorWithDetails('$e'),
+        message: t.poolsCloseError,
         type: AppSnackBarType.error,
       );
     } finally {
@@ -437,8 +453,7 @@ class _PoolDetailBodyState extends ConsumerState<_PoolDetailBody> {
                       // involucrados (mismo criterio que el settle global).
                       if (currentUserId == debt.fromUserId ||
                           currentUserId == debt.toUserId)
-                        _settlingKey ==
-                                '${debt.fromUserId}->${debt.toUserId}'
+                        _settlingKey == '${debt.fromUserId}->${debt.toUserId}'
                             ? const SizedBox(
                                 width: 26,
                                 height: 26,

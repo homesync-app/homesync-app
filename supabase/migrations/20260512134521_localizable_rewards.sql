@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260512134521).
+-- Reconstructed from remote migration history (version 20260512134521).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Make system rewards localizable without changing user-authored custom rewards.

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260402232946).
+-- Reconstructed from remote migration history (version 20260402232946).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.qa_admin_complete_tasks_batch(

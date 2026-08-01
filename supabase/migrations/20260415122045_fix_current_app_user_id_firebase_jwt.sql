@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260415122045).
+-- Reconstructed from remote migration history (version 20260415122045).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.current_app_user_id()

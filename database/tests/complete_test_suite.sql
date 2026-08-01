@@ -303,7 +303,7 @@ BEGIN
   );
   
   -- Get debts
-  SELECT COUNT(*), COALESCE(SUM(debt_amount), 0) INTO v_debt_count, v_debt_amount
+  SELECT COUNT(*), COALESCE(SUM(amount), 0) INTO v_debt_count, v_debt_amount
   FROM public.get_debts(v_household_id);
   
   IF v_debt_count = 0 THEN

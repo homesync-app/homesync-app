@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260308185044).
+-- Reconstructed from remote migration history (version 20260308185044).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 UPDATE ledger_entries 

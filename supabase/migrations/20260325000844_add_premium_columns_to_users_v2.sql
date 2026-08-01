@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260325000844).
+-- Reconstructed from remote migration history (version 20260325000844).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 ALTER TABLE public.users 

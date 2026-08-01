@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260302144110).
+-- Reconstructed from remote migration history (version 20260302144110).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Allow authenticated users to insert weekly winners (for weekly winner function)

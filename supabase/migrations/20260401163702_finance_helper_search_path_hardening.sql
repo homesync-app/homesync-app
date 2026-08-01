@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260401163702).
+-- Reconstructed from remote migration history (version 20260401163702).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Harden helper functions introduced for recurring runtime alignment.

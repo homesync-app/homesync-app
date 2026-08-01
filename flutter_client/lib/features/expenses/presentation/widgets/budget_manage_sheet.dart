@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -11,9 +12,9 @@ import 'package:homesync_client/features/expenses/presentation/providers/budget_
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_data.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:intl/intl.dart';
 
 /// Gestión de presupuestos: lista con topes actuales y alta de categorías
@@ -62,9 +63,12 @@ class BudgetManageSheet extends ConsumerWidget {
           height: 200,
           child: Center(child: AppLoader()),
         ),
-        error: (e, _) => SizedBox(
-          height: 160,
-          child: Center(child: Text(t.commonErrorWithDetails('$e'))),
+        error: (error, stackTrace) => SizedBox(
+          height: 200,
+          child: AppErrorState(
+            message: t.budgetsLoadError,
+            onRetry: () => ref.invalidate(categoryBudgetsProvider),
+          ),
         ),
         data: (budgets) {
           final budgetedIds = budgets.map((b) => b.category).toSet();
@@ -303,6 +307,7 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
   }
 
   Future<void> _save() async {
+    if (_isSaving) return;
     final t = AppLocalizations.of(context);
     final amount = _parseAmount(_amountController.text);
     if (amount == null || amount <= 0 || _selectedCategory == null) return;
@@ -324,11 +329,16 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
       if (!mounted) return;
       AppHaptics.success();
       Navigator.pop(context);
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Budget save failed for ${widget.budget?.id ?? _selectedCategory}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        message: t.commonErrorWithDetails('$e'),
+        message: t.budgetsSaveError,
         type: AppSnackBarType.error,
       );
     } finally {
@@ -337,6 +347,7 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
   }
 
   Future<void> _delete() async {
+    if (_isSaving) return;
     final t = AppLocalizations.of(context);
     final theme = context.theme;
     final categoryName =
@@ -380,17 +391,20 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
 
     setState(() => _isSaving = true);
     try {
-      await ref
-          .read(categoryBudgetMutationsProvider)
-          .delete(widget.budget!.id);
+      await ref.read(categoryBudgetMutationsProvider).delete(widget.budget!.id);
       if (!mounted) return;
       AppHaptics.success();
       Navigator.pop(context);
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Budget delete failed for ${widget.budget!.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        message: t.commonErrorWithDetails('$e'),
+        message: t.budgetsDeleteError,
         type: AppSnackBarType.error,
       );
     } finally {
@@ -470,8 +484,7 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
                   final isSelected = _selectedCategory == id;
                   return ChoiceChip(
                     selected: isSelected,
-                    onSelected: (_) =>
-                        setState(() => _selectedCategory = id),
+                    onSelected: (_) => setState(() => _selectedCategory = id),
                     showCheckmark: false,
                     label: Text(
                       '${category['icon']} '
@@ -552,14 +565,12 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
                             color: AppColors.error.withValues(alpha: 0.45),
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadii.lg),
+                            borderRadius: BorderRadius.circular(AppRadii.lg),
                           ),
                         ),
                         child: Text(
                           t.commonDelete,
-                          style:
-                              const TextStyle(fontWeight: FontWeight.w800),
+                          style: const TextStyle(fontWeight: FontWeight.w800),
                         ),
                       ),
                     ),

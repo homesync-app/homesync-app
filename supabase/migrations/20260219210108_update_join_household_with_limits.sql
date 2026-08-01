@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260219210108).
+-- Reconstructed from remote migration history (version 20260219210108).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION public.join_household(

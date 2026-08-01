@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260313153421).
+-- Reconstructed from remote migration history (version 20260313153421).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Truncate and refill reward templates with the new tier-based system requested by the user

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260521121302).
+-- Reconstructed from remote migration history (version 20260521121302).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create table if not exists public.app_runtime_config (

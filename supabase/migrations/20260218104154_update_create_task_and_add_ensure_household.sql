@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260218104154).
+-- Reconstructed from remote migration history (version 20260218104154).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Update create_task function to remove description parameter

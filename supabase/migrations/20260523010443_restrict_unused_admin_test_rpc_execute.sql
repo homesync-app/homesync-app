@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260523010443).
+-- Reconstructed from remote migration history (version 20260523010443).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- These admin/test RPCs are not called by the current app or admin console.

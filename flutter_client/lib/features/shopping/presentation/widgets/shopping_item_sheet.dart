@@ -60,6 +60,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
   late String _category;
   late String _emoji;
   bool _didLocalizeInitialName = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -173,7 +174,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
               if (widget.item != null)
                 IconButton(
                   tooltip: t.shoppingDeleteTooltip,
-                  onPressed: _delete,
+                  onPressed: _isSaving ? null : _delete,
                   icon: const Icon(
                     Icons.delete_outline_rounded,
                     color: AppColors.error,
@@ -245,7 +246,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: _save,
+              onPressed: _isSaving ? null : _save,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -254,15 +255,23 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                 ),
                 elevation: 0,
               ),
-              child: Text(
-                widget.item == null
-                    ? t.shoppingAddToList
-                    : t.shoppingSaveChanges,
-                style:
-                    AppTypography.cardTitle.copyWith(
-                      fontWeight: FontWeight.w800,
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      widget.item == null
+                          ? t.shoppingAddToList
+                          : t.shoppingSaveChanges,
+                      style: AppTypography.cardTitle.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-              ),
             ),
           ),
         ],
@@ -270,31 +279,65 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
     );
   }
 
-  void _save() {
-    if (_nameController.text.trim().isEmpty) return;
-
-    if (widget.item == null) {
-      ref.read(shoppingItemsProvider.notifier).addItem(
-            name: _nameController.text.trim(),
-            category: _category,
-            emoji: _emoji,
-          );
-    } else {
-      ref.read(shoppingItemsProvider.notifier).updateItem(
-            itemId: widget.item!.id,
-            name: _nameController.text.trim(),
-            category: _category,
-            emoji: _emoji,
-          );
-    }
-
-    Navigator.pop(context);
+  void _showMutationError() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context).commonError)),
+    );
   }
 
-  void _delete() {
-    if (widget.item != null) {
-      ref.read(shoppingItemsProvider.notifier).deleteItem(widget.item!.id);
+  Future<void> _save() async {
+    if (_isSaving || _nameController.text.trim().isEmpty) return;
+    setState(() => _isSaving = true);
+
+    var succeeded = false;
+    try {
+      if (widget.item == null) {
+        succeeded = await ref.read(shoppingItemsProvider.notifier).addItem(
+              name: _nameController.text.trim(),
+              category: _category,
+              emoji: _emoji,
+            );
+      } else {
+        succeeded = await ref.read(shoppingItemsProvider.notifier).updateItem(
+              itemId: widget.item!.id,
+              name: _nameController.text.trim(),
+              category: _category,
+              emoji: _emoji,
+            );
+      }
+    } catch (_) {
+      succeeded = false;
+    }
+
+    if (!mounted) return;
+    if (succeeded) {
       Navigator.pop(context);
+    } else {
+      setState(() => _isSaving = false);
+      _showMutationError();
+    }
+  }
+
+  Future<void> _delete() async {
+    final item = widget.item;
+    if (_isSaving || item == null) return;
+    setState(() => _isSaving = true);
+
+    var succeeded = false;
+    try {
+      succeeded =
+          await ref.read(shoppingItemsProvider.notifier).deleteItem(item.id);
+    } catch (_) {
+      succeeded = false;
+    }
+
+    if (!mounted) return;
+    if (succeeded) {
+      Navigator.pop(context);
+    } else {
+      setState(() => _isSaving = false);
+      _showMutationError();
     }
   }
 }

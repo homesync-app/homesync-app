@@ -140,74 +140,95 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isSubmitting || !_formKey.currentState!.validate()) return;
     AppHaptics.success();
 
+    final t = AppLocalizations.of(context);
     final authController = ref.read(authControllerProvider.notifier);
     setState(() => _isSubmitting = true);
 
-    await authController.signInWithEmail(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
-
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-
-    final authState = ref.read(authControllerProvider);
-    if (authState.hasError) {
-      _showError(authState.error.toString());
+    try {
+      await authController.signInWithEmail(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+      if (!mounted) return;
+      if (ref.read(authControllerProvider).hasError) {
+        _showError(t.authSignInError);
+      }
+    } catch (error, stackTrace) {
+      log.e(
+        'Login screen email sign-in failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) _showError(t.authSignInError);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
   Future<void> _handleSignUp() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isSubmitting || !_formKey.currentState!.validate()) return;
     AppHaptics.success();
 
+    final t = AppLocalizations.of(context);
     final fullName = _nameController.text.trim();
     final authController = ref.read(authControllerProvider.notifier);
     setState(() => _isSubmitting = true);
 
-    await authController.signUpWithEmail(
-      _emailController.text.trim(),
-      _passwordController.text,
-      fullName.isEmpty ? null : fullName,
-    );
-
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-
-    final authState = ref.read(authControllerProvider);
-    if (authState.hasError) {
-      _showError(authState.error.toString());
-    } else {
-      _showSuccess(AppLocalizations.of(context).authSignUpEmailSent);
+    try {
+      await authController.signUpWithEmail(
+        _emailController.text.trim(),
+        _passwordController.text,
+        fullName.isEmpty ? null : fullName,
+      );
+      if (!mounted) return;
+      if (ref.read(authControllerProvider).hasError) {
+        _showError(t.authSignUpError);
+      } else {
+        _showSuccess(t.authSignUpEmailSent);
+      }
+    } catch (error, stackTrace) {
+      log.e(
+        'Login screen email sign-up failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) _showError(t.authSignUpError);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
   Future<void> _handleGoogleSignIn() async {
+    if (_isSubmitting) return;
     AppHaptics.success();
 
+    final t = AppLocalizations.of(context);
     final authController = ref.read(authControllerProvider.notifier);
     setState(() => _isSubmitting = true);
 
-    final success = await authController.signInWithGoogle();
-
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-
-    if (!success) {
-      final authState = ref.read(authControllerProvider);
-      if (authState.hasError) {
-        final error = authState.error.toString();
-        if (!error.contains('Cancelado')) {
-          _showError(error);
-        }
+    try {
+      final success = await authController.signInWithGoogle();
+      if (!mounted || success) return;
+      if (ref.read(authControllerProvider).hasError) {
+        _showError(t.authGoogleSignInError);
       }
+    } catch (error, stackTrace) {
+      log.e(
+        'Login screen Google sign-in failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) _showError(t.authGoogleSignInError);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
   Future<void> _handleForgotPassword() async {
+    if (_isSubmitting) return;
     AppHaptics.tap();
     final t = AppLocalizations.of(context);
     final emailController = TextEditingController(
@@ -312,16 +333,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final authController = ref.read(authControllerProvider.notifier);
     setState(() => _isSubmitting = true);
 
-    await authController.resetPassword(email);
-
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-
-    final authState = ref.read(authControllerProvider);
-    if (authState.hasError) {
-      _showError(authState.error.toString());
-    } else {
-      _showSuccess(t.authForgotEmailSent);
+    try {
+      await authController.resetPassword(email);
+      if (!mounted) return;
+      if (ref.read(authControllerProvider).hasError) {
+        _showError(t.authPasswordResetError);
+      } else {
+        _showSuccess(t.authForgotEmailSent);
+      }
+    } catch (error, stackTrace) {
+      log.e(
+        'Login screen password reset failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) _showError(t.authPasswordResetError);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 

@@ -27,6 +27,21 @@ class AuthController extends _$AuthController {
 
   AuthRepository get _repository => ref.read(authRepositoryProvider);
 
+  Future<void> _trackAnalytics(
+    String event,
+    Future<void> Function() callback,
+  ) async {
+    try {
+      await callback();
+    } catch (error, stackTrace) {
+      log.w(
+        'Auth analytics failed for $event',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   Future<void> signInWithEmail(String email, String password) async {
     final analytics = ref.read(analyticsServiceProvider);
     final isAdminTestingLogin =
@@ -35,11 +50,14 @@ class AuthController extends _$AuthController {
                 AppEnvironment.adminTestingUsername.toLowerCase() &&
             password == AppEnvironment.adminTestingPassword;
 
+    state = const AsyncValue.loading();
     if (isAdminTestingLogin) {
       log.i('Admin Testing login detected');
-      state = const AsyncValue.loading();
       try {
-        await analytics.trackAuthStarted(method: 'admin_testing');
+        await _trackAnalytics(
+          'admin_testing_started',
+          () => analytics.trackAuthStarted(method: 'admin_testing'),
+        );
         if (AppEnvironment.adminTestingAutoAdminSessionEnabled) {
           await ref.read(qaSessionServiceProvider).signInAsAdminPreviewSession(
                 email: AppEnvironment.adminTestingBaseEmail,
@@ -51,44 +69,76 @@ class AuthController extends _$AuthController {
         state = const AsyncValue.data(
           AuthState(AuthChangeEvent.signedIn, null),
         );
-        await analytics.trackAuthSucceeded(method: 'admin_testing');
+        await _trackAnalytics(
+          'admin_testing_succeeded',
+          () => analytics.trackAuthSucceeded(method: 'admin_testing'),
+        );
       } catch (error, stackTrace) {
         log.e(
-          'Admin testing login error: $error',
+          'Admin testing login error',
           error: error,
           stackTrace: stackTrace,
         );
-        await analytics.trackAuthFailed(
-          method: 'admin_testing',
-          reason: error.toString(),
+        await _trackAnalytics(
+          'admin_testing_failed',
+          () => analytics.trackAuthFailed(
+            method: 'admin_testing',
+            reason: error.toString(),
+          ),
         );
         state = AsyncValue.error(error, stackTrace);
       }
       return;
     }
 
-    state = const AsyncValue.loading();
-    await analytics.trackAuthStarted(method: 'email');
-    final result =
-        await _repository.signInWithEmail(email: email, password: password);
+    try {
+      await _trackAnalytics(
+        'email_sign_in_started',
+        () => analytics.trackAuthStarted(method: 'email'),
+      );
+      final result =
+          await _repository.signInWithEmail(email: email, password: password);
 
-    await result.fold(
-      (failure) async {
-        log.setCustomKey('auth_flow', 'email_sign_in');
-        log.setCustomKey('auth_email', email);
-        log.e('Login error: ${failure.message}');
-        await analytics.trackAuthFailed(
+      await result.fold(
+        (failure) async {
+          log.setCustomKey('auth_flow', 'email_sign_in');
+          log.setCustomKey('auth_email', email);
+          log.e('Login error: ${failure.message}', error: failure);
+          await _trackAnalytics(
+            'email_sign_in_failed',
+            () => analytics.trackAuthFailed(
+              method: 'email',
+              reason: failure.message,
+            ),
+          );
+          state = AsyncValue.error(failure, StackTrace.current);
+        },
+        (_) async {
+          log.i('Login successful for $email');
+          state = const AsyncValue.data(
+            AuthState(AuthChangeEvent.signedIn, null),
+          );
+          await _trackAnalytics(
+            'email_sign_in_succeeded',
+            () => analytics.trackAuthSucceeded(method: 'email'),
+          );
+        },
+      );
+    } catch (error, stackTrace) {
+      log.e(
+        'Email sign-in threw unexpectedly',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      await _trackAnalytics(
+        'email_sign_in_exception',
+        () => analytics.trackAuthFailed(
           method: 'email',
-          reason: failure.message,
-        );
-        state = AsyncValue.error(failure.message, StackTrace.current);
-      },
-      (_) async {
-        // The stream will automatically update the state
-        log.i('Login successful for $email');
-        await analytics.trackAuthSucceeded(method: 'email');
-      },
-    );
+          reason: error.toString(),
+        ),
+      );
+      state = AsyncValue.error(error, stackTrace);
+    }
   }
 
   Future<void> signUpWithEmail(
@@ -98,66 +148,129 @@ class AuthController extends _$AuthController {
   ) async {
     final analytics = ref.read(analyticsServiceProvider);
     state = const AsyncValue.loading();
-    await analytics.trackAuthStarted(method: 'email', isSignUp: true);
-    final result = await _repository.signUpWithEmail(
-      email: email,
-      password: password,
-      fullName: fullName,
-    );
+    try {
+      await _trackAnalytics(
+        'email_sign_up_started',
+        () => analytics.trackAuthStarted(method: 'email', isSignUp: true),
+      );
+      final result = await _repository.signUpWithEmail(
+        email: email,
+        password: password,
+        fullName: fullName,
+      );
 
-    await result.fold(
-      (failure) async {
-        log.setCustomKey('auth_flow', 'email_sign_up');
-        log.setCustomKey('auth_email', email);
-        log.e('Registration error: ${failure.message}');
-        await analytics.trackAuthFailed(
+      await result.fold(
+        (failure) async {
+          log.setCustomKey('auth_flow', 'email_sign_up');
+          log.setCustomKey('auth_email', email);
+          log.e('Registration error: ${failure.message}', error: failure);
+          await _trackAnalytics(
+            'email_sign_up_failed',
+            () => analytics.trackAuthFailed(
+              method: 'email',
+              reason: failure.message,
+              isSignUp: true,
+            ),
+          );
+          state = AsyncValue.error(failure, StackTrace.current);
+        },
+        (_) async {
+          log.i('Registration successful for $email');
+          state = const AsyncValue.data(
+            AuthState(AuthChangeEvent.initialSession, null),
+          );
+          await _trackAnalytics(
+            'email_sign_up_succeeded',
+            () => analytics.trackAuthSucceeded(
+              method: 'email',
+              isSignUp: true,
+            ),
+          );
+        },
+      );
+    } catch (error, stackTrace) {
+      log.e(
+        'Email sign-up threw unexpectedly',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      await _trackAnalytics(
+        'email_sign_up_exception',
+        () => analytics.trackAuthFailed(
           method: 'email',
-          reason: failure.message,
+          reason: error.toString(),
           isSignUp: true,
-        );
-        state = AsyncValue.error(failure.message, StackTrace.current);
-      },
-      (_) async {
-        log.i('Registration successful for $email');
-        await analytics.trackAuthSucceeded(method: 'email', isSignUp: true);
-      },
-    );
+        ),
+      );
+      state = AsyncValue.error(error, stackTrace);
+    }
   }
 
   Future<bool> signInWithGoogle() async {
     final analytics = ref.read(analyticsServiceProvider);
     state = const AsyncValue.loading();
-    await analytics.trackAuthStarted(method: 'google');
-    final result = await _repository.signInWithGoogle();
+    try {
+      await _trackAnalytics(
+        'google_sign_in_started',
+        () => analytics.trackAuthStarted(method: 'google'),
+      );
+      final result = await _repository.signInWithGoogle();
 
-    return result.fold(
-      (failure) async {
-        log.setCustomKey('auth_flow', 'google_sign_in');
-        log.e('Google Sign-In error: ${failure.message}');
-        await analytics.trackAuthFailed(
+      return result.fold(
+        (failure) async {
+          log.setCustomKey('auth_flow', 'google_sign_in');
+          log.e('Google Sign-In error: ${failure.message}', error: failure);
+          await _trackAnalytics(
+            'google_sign_in_failed',
+            () => analytics.trackAuthFailed(
+              method: 'google',
+              reason: failure.message,
+            ),
+          );
+          state = AsyncValue.error(failure, StackTrace.current);
+          return false;
+        },
+        (success) async {
+          if (success) {
+            log.i('Google Sign-In successful');
+            state = const AsyncValue.data(
+              AuthState(AuthChangeEvent.signedIn, null),
+            );
+            await _trackAnalytics(
+              'google_sign_in_succeeded',
+              () => analytics.trackAuthSucceeded(method: 'google'),
+            );
+          } else {
+            await _trackAnalytics(
+              'google_sign_in_cancelled',
+              () => analytics.trackAuthFailed(
+                method: 'google',
+                reason: 'cancelled_or_incomplete',
+              ),
+            );
+            state = const AsyncValue.data(
+              AuthState(AuthChangeEvent.initialSession, null),
+            );
+          }
+          return success;
+        },
+      );
+    } catch (error, stackTrace) {
+      log.e(
+        'Google Sign-In threw unexpectedly',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      await _trackAnalytics(
+        'google_sign_in_exception',
+        () => analytics.trackAuthFailed(
           method: 'google',
-          reason: failure.message,
-        );
-        state = AsyncValue.error(failure.message, StackTrace.current);
-        return false;
-      },
-      (success) async {
-        if (success) {
-          log.i('Google Sign-In successful');
-          await analytics.trackAuthSucceeded(method: 'google');
-        } else {
-          // Case where user cancelled or something went wrong without a hard failure
-          await analytics.trackAuthFailed(
-            method: 'google',
-            reason: 'cancelled_or_incomplete',
-          );
-          state = const AsyncValue.data(
-            AuthState(AuthChangeEvent.initialSession, null),
-          );
-        }
-        return success;
-      },
-    );
+          reason: error.toString(),
+        ),
+      );
+      state = AsyncValue.error(error, stackTrace);
+      return false;
+    }
   }
 
   Future<void> signOut() async {
@@ -241,22 +354,31 @@ class AuthController extends _$AuthController {
 
   Future<void> resetPassword(String email) async {
     state = const AsyncValue.loading();
-    final result = await _repository.resetPassword(email);
+    try {
+      final result = await _repository.resetPassword(email);
 
-    result.fold(
-      (failure) {
-        log.setCustomKey('auth_flow', 'reset_password');
-        log.setCustomKey('auth_email', email);
-        log.e('Reset password error: ${failure.message}');
-        state = AsyncValue.error(failure.message, StackTrace.current);
-      },
-      (_) {
-        log.i('Reset password email sent to $email');
-        state = const AsyncValue.data(
-          AuthState(AuthChangeEvent.initialSession, null),
-        );
-      },
-    );
+      result.fold(
+        (failure) {
+          log.setCustomKey('auth_flow', 'reset_password');
+          log.setCustomKey('auth_email', email);
+          log.e('Reset password error: ${failure.message}', error: failure);
+          state = AsyncValue.error(failure, StackTrace.current);
+        },
+        (_) {
+          log.i('Reset password email sent to $email');
+          state = const AsyncValue.data(
+            AuthState(AuthChangeEvent.initialSession, null),
+          );
+        },
+      );
+    } catch (error, stackTrace) {
+      log.e(
+        'Reset password threw unexpectedly',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      state = AsyncValue.error(error, stackTrace);
+    }
   }
 }
 

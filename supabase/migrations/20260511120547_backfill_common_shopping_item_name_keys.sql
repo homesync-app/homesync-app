@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260511120547).
+-- Reconstructed from remote migration history (version 20260511120547).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 with catalog(name_key, es_name, en_name) as (

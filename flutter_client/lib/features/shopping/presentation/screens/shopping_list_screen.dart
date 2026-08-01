@@ -11,6 +11,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_completion_feedback.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
 
 import '../../data/shopping_predefined.dart';
@@ -159,13 +160,31 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
   // -- Actions --------------------------------------------------------------
 
-  Future<void> _toggleItem(ShoppingItemModel item) async {
+  void _showMutationError() {
+    if (!mounted) return;
+    final t = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(t.commonError)),
+    );
+  }
+
+  Future<bool> _toggleItem(ShoppingItemModel item) async {
     AppHaptics.tap();
     final willBeCompleted = !item.completed;
-    ref.read(shoppingItemsProvider.notifier).toggleItem(
-          item.id,
-          willBeCompleted,
-        );
+    var succeeded = false;
+    try {
+      succeeded = await ref.read(shoppingItemsProvider.notifier).toggleItem(
+            item.id,
+            willBeCompleted,
+          );
+    } catch (_) {
+      succeeded = false;
+    }
+    if (!mounted) return succeeded;
+    if (!succeeded) {
+      _showMutationError();
+      return false;
+    }
     setState(() {
       if (willBeCompleted) {
         _completedThisSession.add(item.id);
@@ -173,11 +192,23 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         _completedThisSession.remove(item.id);
       }
     });
+    return true;
   }
 
   Future<void> _deleteItem(ShoppingItemModel item) async {
-    AppHaptics.success();
-    ref.read(shoppingItemsProvider.notifier).deleteItem(item.id);
+    var succeeded = false;
+    try {
+      succeeded =
+          await ref.read(shoppingItemsProvider.notifier).deleteItem(item.id);
+    } catch (_) {
+      succeeded = false;
+    }
+    if (!mounted) return;
+    if (succeeded) {
+      AppHaptics.success();
+    } else {
+      _showMutationError();
+    }
   }
 
   void _toggleSection(String id) {
@@ -237,8 +268,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
       if (preserveCatalogScroll) {
         _preserveCatalogViewportAfterPendingInsert(pending.length);
       }
-      await _toggleItem(doneMatch);
-      _triggerAddSuccessFeedback();
+      final succeeded = await _toggleItem(doneMatch);
+      if (succeeded) _triggerAddSuccessFeedback();
       return;
     }
 
@@ -262,13 +293,23 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     if (preserveCatalogScroll) {
       _preserveCatalogViewportAfterPendingInsert(pending.length);
     }
-    ref.read(shoppingItemsProvider.notifier).addItem(
-          name: val,
-          nameKey: effectiveNameKey,
-          category: categoryId,
-          emoji: finalEmoji,
-        );
-    _triggerAddSuccessFeedback();
+    var succeeded = false;
+    try {
+      succeeded = await ref.read(shoppingItemsProvider.notifier).addItem(
+            name: val,
+            nameKey: effectiveNameKey,
+            category: categoryId,
+            emoji: finalEmoji,
+          );
+    } catch (_) {
+      succeeded = false;
+    }
+    if (!mounted) return;
+    if (succeeded) {
+      _triggerAddSuccessFeedback();
+    } else {
+      _showMutationError();
+    }
   }
 
   // -- Build -----------------------------------------------------------------
@@ -418,10 +459,13 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         child: Row(
           children: [
             if (emoji != null) ...[
-              Text(emoji, style: AppTypography.body.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.w400,
-              ),),
+              Text(
+                emoji,
+                style: AppTypography.body.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
               const SizedBox(width: 10),
             ],
             Expanded(
@@ -737,11 +781,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
       body: shoppingState.when(
         skipLoadingOnReload: true,
         loading: () => _buildShimmerGrid(),
-        error: (err, stack) => Center(
-          child: Text(
-            t.commonErrorWithDetails(err.toString()),
-            style: const TextStyle(color: AppColors.error),
-          ),
+        error: (error, stackTrace) => AppErrorState(
+          message: t.commonError,
+          onRetry: () => ref.invalidate(shoppingItemsProvider),
         ),
         data: (items) {
           final pending = items.where((i) => !i.completed).toList();
@@ -847,10 +889,12 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                                     : t.shoppingEmptyFirstLineBought,
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: AppTypography.cardTitle.copyWith(
+                                                style: AppTypography.cardTitle
+                                                    .copyWith(
                                                   fontSize: 15.5,
                                                   height: 1.2,
-                                                  color: context.theme.textPrimary,
+                                                  color:
+                                                      context.theme.textPrimary,
                                                 ),
                                               ),
                                               const SizedBox(height: 3),
@@ -858,7 +902,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                                 t.shoppingEmptyHint,
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: AppTypography.caption.copyWith(
+                                                style: AppTypography.caption
+                                                    .copyWith(
                                                   fontSize: 12.5,
                                                   height: 1.3,
                                                   color: context

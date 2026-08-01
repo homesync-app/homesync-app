@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260403142220).
+-- Reconstructed from remote migration history (version 20260403142220).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.qa_admin_seed_default_rewards(

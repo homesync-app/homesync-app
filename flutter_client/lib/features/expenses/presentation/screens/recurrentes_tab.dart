@@ -11,7 +11,7 @@ import 'package:homesync_client/features/expenses/domain/models/expense_template
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
@@ -39,8 +39,9 @@ class RecurrentesTab extends ConsumerWidget {
 
     return templatesAsync.when(
       loading: () => const Center(child: AppLoader()),
-      error: (e, _) => Center(
-        child: Text(AppLocalizations.of(context).commonErrorWithDetails('$e')),
+      error: (error, stackTrace) => AppErrorState(
+        message: t.expensesRecurringLoadError,
+        onRetry: () => ref.invalidate(expenseTemplateControllerProvider),
       ),
       data: (templates) {
         final incomes = templates.where((t) => t.isIncome).toList();
@@ -421,7 +422,8 @@ class RecurrentesTab extends ConsumerWidget {
             const SizedBox(height: 28),
             Builder(
               builder: (context) => ElevatedButton(
-                onPressed: () => PremiumPaywall.show(context, source: 'recurring_expenses'),
+                onPressed: () =>
+                    PremiumPaywall.show(context, source: 'recurring_expenses'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: gold,
                   foregroundColor: Colors.white,

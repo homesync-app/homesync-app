@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260313120455).
+-- Reconstructed from remote migration history (version 20260313120455).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Add created_by_id to tasks and setup for approval logic

@@ -142,7 +142,7 @@ void main() {
     expect(fakeRepo.didCallSignIn, isFalse);
   });
 
-  testWidgets('LoginScreen submits credentials and surfaces auth failures',
+  testWidgets('LoginScreen submits credentials and shows a safe auth error',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(600, 1000);
     tester.view.devicePixelRatio = 1.0;
@@ -173,7 +173,9 @@ void main() {
     expect(fakeRepo.didCallSignIn, isTrue);
     expect(fakeRepo.lastEmailed, 'test@test.com');
     expect(
-      find.textContaining('Credenciales'),
+      find.text(
+        'No pudimos iniciar sesión. Revisá tus datos e intentá de nuevo.',
+      ),
       findsOneWidget,
     );
   });

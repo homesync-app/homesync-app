@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260316233808).
+-- Reconstructed from remote migration history (version 20260316233808).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- 1. Update get_combined_feed to include gifts for non-payers

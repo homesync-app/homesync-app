@@ -10,24 +10,29 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/shopping/presentation/widgets/shopping_icon.dart';
 import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class HomeShoppingPreviewCard extends ConsumerWidget {
-  final String title;
-  final String ctaLabel;
-  final String emptyMessage;
+  final String? title;
+  final String? ctaLabel;
+  final String? emptyMessage;
   final int maxItems;
 
   const HomeShoppingPreviewCard({
     super.key,
-    this.title = 'Lista actual',
-    this.ctaLabel = 'Abrir compras',
-    this.emptyMessage = 'No hay productos pendientes.',
+    this.title,
+    this.ctaLabel,
+    this.emptyMessage,
     this.maxItems = 4,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    final resolvedTitle = title ?? t.shoppingListTitle;
+    final resolvedCtaLabel = ctaLabel ?? t.homeShoppingPreviewOpen;
+    final resolvedEmptyMessage = emptyMessage ?? t.homeShoppingPreviewEmpty;
     final caps = ref.watch(householdCapabilitiesProvider);
     final shoppingAsync = ref.watch(shoppingItemsProvider);
 
@@ -45,7 +50,7 @@ class HomeShoppingPreviewCard extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              title,
+              resolvedTitle,
               style: AppTypography.sectionTitle.copyWith(
                 fontSize: 22,
                 color: theme.textPrimary,
@@ -54,7 +59,7 @@ class HomeShoppingPreviewCard extends ConsumerWidget {
             TextButton(
               onPressed: openShopping,
               child: Text(
-                ctaLabel,
+                resolvedCtaLabel,
                 style: TextStyle(
                   color: theme.primary,
                   fontWeight: FontWeight.w700,
@@ -68,13 +73,13 @@ class HomeShoppingPreviewCard extends ConsumerWidget {
           loading: () => _ShoppingPreviewLoading(theme: theme),
           error: (error, _) => _ShoppingPreviewError(
             onTap: openShopping,
-            message: 'No pudimos cargar la lista.',
+            message: t.homeShoppingPreviewLoadError,
           ),
           data: (items) {
             final pending = items.where((item) => !item.completed).toList();
             if (pending.isEmpty) {
               return _ShoppingPreviewEmpty(
-                message: emptyMessage,
+                message: resolvedEmptyMessage,
                 onTap: openShopping,
               );
             }
@@ -116,7 +121,7 @@ class HomeShoppingPreviewCard extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            '${pending.length} pendiente${pending.length == 1 ? '' : 's'}',
+                            t.homeShoppingPreviewPendingCount(pending.length),
                             style: AppTypography.caption.copyWith(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -166,7 +171,9 @@ class HomeShoppingPreviewCard extends ConsumerWidget {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          '+${pending.length - maxItems} más en la lista',
+                          t.homeShoppingPreviewMoreItems(
+                            pending.length - maxItems,
+                          ),
                           style: AppTypography.caption.copyWith(
                             fontWeight: FontWeight.w700,
                             color: theme.textSecondary,

@@ -9,7 +9,7 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/tasks/domain/models/weekly_family_summary.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/weekly_family_summary_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 String _formatMoney(num value) {
@@ -84,15 +84,9 @@ class WeeklyFamilySummaryScreen extends ConsumerWidget {
       ),
       body: summaryAsync.when(
         loading: () => const Center(child: AppLoader()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Text(
-              'No pudimos cargar el resumen: $e',
-              style: TextStyle(color: theme.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          ),
+        error: (error, stackTrace) => AppErrorState(
+          message: t.tasksLoadError,
+          onRetry: () => ref.invalidate(weeklyFamilySummaryProvider),
         ),
         data: (summary) {
           if (summary == null) return _EmptyState(theme: theme);
@@ -469,13 +463,13 @@ class _MvpCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return _StoryCard(
       accent: AppColors.accentGold,
       icon: Icons.emoji_events_rounded,
       eyebrow: 'MVP',
-      title: '${member.fullName} se llevo la semana',
-      subtitle:
-          'Completo ${member.count} tarea${member.count == 1 ? "" : "s"} en el hogar.',
+      title: t.weeklySummaryMvpTitle(member.fullName),
+      subtitle: t.weeklySummaryMvpSubtitle(member.count),
       trailing: CustomUserAvatar(
         avatarUrl: member.avatarUrl,
         name: member.fullName,
@@ -492,13 +486,13 @@ class _SlackerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return _StoryCard(
       accent: AppColors.accentBlue,
       icon: Icons.support_rounded,
-      eyebrow: AppLocalizations.of(context).weeklySummaryEyebrowNeedsBoost,
-      title: '${member.fullName} se quedo con tareas pendientes',
-      subtitle:
-          '${member.count} tarea${member.count == 1 ? "" : "s"} atrasada${member.count == 1 ? "" : "s"}. Quiza esta semana puedas ayudarle a destrabar.',
+      eyebrow: t.weeklySummaryEyebrowNeedsBoost,
+      title: t.weeklySummaryNeedsBoostTitle(member.fullName),
+      subtitle: t.weeklySummaryNeedsBoostSubtitle(member.count),
       trailing: CustomUserAvatar(
         avatarUrl: member.avatarUrl,
         name: member.fullName,

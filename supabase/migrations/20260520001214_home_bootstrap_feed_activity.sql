@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260520001214).
+-- Reconstructed from remote migration history (version 20260520001214).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Extend Home startup bootstrap with below-the-fold Home data so the first

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260308165437).
+-- Reconstructed from remote migration history (version 20260308165437).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION public.add_savings_contribution(

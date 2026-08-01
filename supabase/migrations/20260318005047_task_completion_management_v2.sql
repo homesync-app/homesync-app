@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260318005047).
+-- Reconstructed from remote migration history (version 20260318005047).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- 1. Create undo_task_completion RPC

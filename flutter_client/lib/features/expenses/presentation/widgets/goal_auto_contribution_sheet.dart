@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -11,9 +12,9 @@ import 'package:homesync_client/features/expenses/domain/models/expense_template
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -96,7 +97,11 @@ class _GoalAutoContributionSheetState
     final now = DateTime.now();
     if (day >= now.day) {
       final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-      return DateTime(now.year, now.month, day > daysInMonth ? daysInMonth : day);
+      return DateTime(
+        now.year,
+        now.month,
+        day > daysInMonth ? daysInMonth : day,
+      );
     }
     final daysInNextMonth = DateTime(now.year, now.month + 2, 0).day;
     return DateTime(
@@ -107,16 +112,26 @@ class _GoalAutoContributionSheetState
   }
 
   Future<void> _save(ExpenseTemplateModel? existing) async {
+    if (_isSaving) return;
     final t = AppLocalizations.of(context);
     final amount = _parseAmount(_amountController.text);
     if (amount == null || amount <= 0) return;
 
-    final householdId = await ref.read(householdIdProvider.future);
-    final userId = ref.read(currentUserIdProvider);
-    if (householdId == null || userId == null || !mounted) return;
-
     setState(() => _isSaving = true);
     try {
+      final householdId = await ref.read(householdIdProvider.future);
+      final userId = ref.read(currentUserIdProvider);
+      if (householdId == null || userId == null) {
+        if (mounted) {
+          AppSnackBar.show(
+            context,
+            message: t.commonError,
+            type: AppSnackBarType.error,
+          );
+        }
+        return;
+      }
+
       final template = ExpenseTemplateModel(
         id: existing?.id ?? const Uuid().v4(),
         householdId: householdId,
@@ -146,11 +161,16 @@ class _GoalAutoContributionSheetState
         type: AppSnackBarType.success,
         duration: const Duration(milliseconds: 1800),
       );
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Goal auto-contribution save failed for ${widget.goal.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        message: t.commonErrorWithDetails('$e'),
+        message: t.commonError,
         type: AppSnackBarType.error,
       );
     } finally {
@@ -159,6 +179,7 @@ class _GoalAutoContributionSheetState
   }
 
   Future<void> _disable(ExpenseTemplateModel existing) async {
+    if (_isSaving) return;
     final t = AppLocalizations.of(context);
     setState(() => _isSaving = true);
     try {
@@ -174,11 +195,16 @@ class _GoalAutoContributionSheetState
         type: AppSnackBarType.neutral,
         duration: const Duration(milliseconds: 1800),
       );
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'Goal auto-contribution disable failed for ${widget.goal.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        message: t.commonErrorWithDetails('$e'),
+        message: t.commonError,
         type: AppSnackBarType.error,
       );
     } finally {
@@ -209,9 +235,12 @@ class _GoalAutoContributionSheetState
           height: 200,
           child: Center(child: AppLoader()),
         ),
-        error: (e, _) => SizedBox(
-          height: 160,
-          child: Center(child: Text(t.commonErrorWithDetails('$e'))),
+        error: (error, stackTrace) => SizedBox(
+          height: 200,
+          child: AppErrorState(
+            message: t.commonError,
+            onRetry: () => ref.invalidate(expenseTemplateControllerProvider),
+          ),
         ),
         data: (templates) {
           final existing = _linkedTemplate(templates);
@@ -391,8 +420,7 @@ class _GoalAutoContributionSheetState
                       child: SizedBox(
                         height: 54,
                         child: ElevatedButton(
-                          onPressed:
-                              _isSaving ? null : () => _save(existing),
+                          onPressed: _isSaving ? null : () => _save(existing),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: theme.primary,
                             foregroundColor: Colors.white,

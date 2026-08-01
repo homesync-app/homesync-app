@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260222233614).
+-- Reconstructed from remote migration history (version 20260222233614).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Add Alias/CVU to users table

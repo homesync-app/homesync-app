@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260308165731).
+-- Reconstructed from remote migration history (version 20260308165731).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION public.test_finalize_weekly_duel(p_household_id UUID)

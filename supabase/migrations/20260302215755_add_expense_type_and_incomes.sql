@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260302215755).
+-- Reconstructed from remote migration history (version 20260302215755).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- 1. Create enum for transaction type

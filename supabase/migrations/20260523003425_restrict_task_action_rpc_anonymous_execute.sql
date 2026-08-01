@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260523003425).
+-- Reconstructed from remote migration history (version 20260523003425).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Action RPCs are SECURITY DEFINER and must not be callable with only the

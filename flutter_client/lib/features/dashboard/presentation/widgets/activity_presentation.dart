@@ -101,6 +101,7 @@ Color activityAccent(
 }) {
   if (type == 'expense') return const Color(0xFFF08B49);
   if (type == 'reward') return AppColors.accentGold;
+  if (type == 'couple_challenge') return AppColors.iconSage;
   if (resolvedCategoryColor != null) return resolvedCategoryColor;
   return dashboardCategoryAccent(context, category);
 }
@@ -116,6 +117,8 @@ IconData activityIcon(
       return Icons.receipt_long_rounded;
     case 'reward':
       return Icons.card_giftcard_rounded;
+    case 'couple_challenge':
+      return Icons.favorite_rounded;
     case 'task':
       return dashboardCategoryIcon(category);
     default:

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260508170920).
+-- Reconstructed from remote migration history (version 20260508170920).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create table if not exists public.custom_avatar_monthly_usage (

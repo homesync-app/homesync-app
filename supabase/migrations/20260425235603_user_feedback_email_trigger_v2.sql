@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260425235603).
+-- Reconstructed from remote migration history (version 20260425235603).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- reemplaza la funciâ”œâ”‚n sin depender de service_role_key (la edge function no requiere JWT)

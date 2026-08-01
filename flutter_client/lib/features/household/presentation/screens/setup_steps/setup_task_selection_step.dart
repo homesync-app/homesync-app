@@ -14,27 +14,37 @@ import '../setup_widgets.dart';
 /// Paso 7: elegir las tareas iniciales del hogar.
 class SetupTaskSelectionStep extends ConsumerWidget {
   final bool isLoadingTemplates;
+  final bool hasTemplatesError;
   final bool isSaving;
   final List<Category> categories;
   final Map<String, List<TaskTemplate>> templatesByCategory;
+  final VoidCallback onRetryTemplates;
   final VoidCallback onFinish;
 
   const SetupTaskSelectionStep({
     required this.isLoadingTemplates,
+    required this.hasTemplatesError,
     required this.isSaving,
     required this.categories,
     required this.templatesByCategory,
+    required this.onRetryTemplates,
     required this.onFinish,
     super.key,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context);
     if (isLoadingTemplates) {
       return const AppLoadingState();
     }
+    if (hasTemplatesError) {
+      return AppErrorState(
+        message: t.setupTemplatesLoadError,
+        onRetry: onRetryTemplates,
+      );
+    }
 
-    final t = AppLocalizations.of(context);
     final theme = context.theme;
     final wizard = ref.watch(setupWizardControllerProvider);
     final modeKey = wizard.selectedMode ?? 'couple';

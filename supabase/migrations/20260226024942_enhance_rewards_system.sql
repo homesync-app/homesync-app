@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260226024942).
+-- Reconstructed from remote migration history (version 20260226024942).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Enhance rewards table to support suggestions

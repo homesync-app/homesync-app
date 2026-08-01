@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260303002903).
+-- Reconstructed from remote migration history (version 20260303002903).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 DROP FUNCTION IF EXISTS public.get_expense_balance(uuid);

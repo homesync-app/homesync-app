@@ -6,6 +6,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/premium_avatar_motion_cache.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 import 'app_smooth_network_image.dart';
 import 'premium_animated_avatar.dart';
@@ -169,6 +170,33 @@ class UserAvatar {
   }
 }
 
+Widget _buildAccessibleAvatarButton(
+  BuildContext context, {
+  required String? name,
+  required VoidCallback onTap,
+  required Widget child,
+}) {
+  final t = AppLocalizations.of(context);
+  final safeName = name?.trim();
+  final label = safeName == null || safeName.isEmpty
+      ? t.setupProfileAvatarLabel
+      : '${t.setupProfileAvatarLabel}: $safeName';
+
+  return Semantics(
+    button: true,
+    label: label,
+    child: Material(
+      type: MaterialType.transparency,
+      child: InkResponse(
+        onTap: onTap,
+        excludeFromSemantics: true,
+        highlightShape: BoxShape.circle,
+        child: child,
+      ),
+    ),
+  );
+}
+
 class CustomUserAvatar extends ConsumerWidget {
   final String? name;
   final String? userId;
@@ -217,6 +245,7 @@ class CustomUserAvatar extends ConsumerWidget {
     Widget avatarContent;
     if (isSticker && !forceCircular) {
       avatarContent = _PremiumCharacterAvatar(
+        name: name,
         url: avatarUrl!,
         radius: radius,
         isAnimated: isAnimated,
@@ -539,8 +568,10 @@ class _AvatarContent extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
+      return _buildAccessibleAvatarButton(
+        context,
+        name: name,
+        onTap: onTap!,
         child: avatarWidget,
       );
     }
@@ -574,6 +605,7 @@ class _InitialAvatarFallback extends StatelessWidget {
 }
 
 class _PremiumCharacterAvatar extends ConsumerWidget {
+  final String? name;
   final String url;
   final double radius;
   final bool isAnimated;
@@ -584,6 +616,7 @@ class _PremiumCharacterAvatar extends ConsumerWidget {
   final bool allowMotion;
 
   const _PremiumCharacterAvatar({
+    this.name,
     required this.url,
     required this.radius,
     required this.isAnimated,
@@ -625,7 +658,12 @@ class _PremiumCharacterAvatar extends ConsumerWidget {
         );
       }
       if (onTap != null) {
-        return GestureDetector(onTap: onTap, child: webpContent);
+        return _buildAccessibleAvatarButton(
+          context,
+          name: name,
+          onTap: onTap!,
+          child: webpContent,
+        );
       }
       return webpContent;
     }
@@ -725,7 +763,12 @@ class _PremiumCharacterAvatar extends ConsumerWidget {
     }
 
     if (onTap != null) {
-      return GestureDetector(onTap: onTap, child: content);
+      return _buildAccessibleAvatarButton(
+        context,
+        name: name,
+        onTap: onTap!,
+        child: content,
+      );
     }
 
     return content;

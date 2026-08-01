@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -69,7 +70,13 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
       if (mounted && count != _unreadNotificationCount) {
         setState(() => _unreadNotificationCount = count);
       }
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      log.w(
+        'HomeFriendsView failed to load unread notification count',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   @override
@@ -279,10 +286,13 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: Text(t.commonRetry, style: AppTypography.caption.copyWith(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),),
+            child: Text(
+              t.commonRetry,
+              style: AppTypography.caption.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),

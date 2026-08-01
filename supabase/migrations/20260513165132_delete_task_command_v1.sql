@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260513165132).
+-- Reconstructed from remote migration history (version 20260513165132).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 create or replace function public.delete_task_v1(

@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260304164420).
+-- Reconstructed from remote migration history (version 20260304164420).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 ALTER TYPE public.transaction_type ADD VALUE IF NOT EXISTS 'settlement';

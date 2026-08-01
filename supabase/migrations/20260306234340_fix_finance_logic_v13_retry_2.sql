@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260306234340).
+-- Reconstructed from remote migration history (version 20260306234340).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Definitive Finance Logic Fix V13

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/errors/error_messages.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -14,6 +14,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/design/app_button.dart';
 import 'package:homesync_client/shared/widgets/design/app_sheet_shell.dart';
 import 'package:homesync_client/shared/widgets/inline_error_banner.dart';
@@ -43,6 +44,7 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
   final _noteController = TextEditingController();
   String? _recipientId;
   bool _loading = false;
+  bool _isDisablingSchedule = false;
   String? _errorMessage;
 
   /// Mesada recurrente: repetir todos los meses el día elegido (fase 3 del
@@ -67,16 +69,14 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
       members.where((m) => m.isTeen).toList();
 
   Future<void> _send() async {
+    if (_loading) return;
     final t = AppLocalizations.of(context);
-    final householdId = ref.read(householdIdProvider).value;
     // es-AR sin centavos: coma = decimal al parsear, pero se redondea.
-    final amount = double
-        .tryParse(
-          _amountController.text.replaceAll('.', '').replaceAll(',', '.'),
-        )
-        ?.roundToDouble();
+    final amount = double.tryParse(
+      _amountController.text.replaceAll('.', '').replaceAll(',', '.'),
+    )?.roundToDouble();
 
-    if (householdId == null || _recipientId == null) {
+    if (_recipientId == null) {
       setState(() => _errorMessage = t.allowanceRecipientRequired);
       return;
     }
@@ -91,6 +91,11 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
       _errorMessage = null;
     });
     try {
+      final householdId = await ref.read(householdIdProvider.future);
+      if (householdId == null) {
+        throw StateError('Cannot send an allowance without a household');
+      }
+
       final result = await ref.read(supabaseClientProvider).rpc(
         'transfer_to_member',
         params: {
@@ -105,20 +110,21 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
       );
 
       final ok = result is Map && result['success'] == true;
-      if (!mounted) return;
       if (!ok) {
-        final msg = (result is Map ? result['message'] : null)?.toString() ??
-            t.allowanceSendGenericError;
-        setState(() {
-          _loading = false;
-          _errorMessage = msg;
-        });
+        log.w(
+          'Allowance transfer returned an unsuccessful result',
+          error: result,
+        );
+        if (mounted) {
+          setState(() => _errorMessage = t.allowanceSendGenericError);
+        }
         return;
       }
 
       // Mesada recurrente: dejamos programados los meses siguientes (el
       // envío de HOY ya salió arriba; last_run_month evita el doble envío).
       var scheduled = false;
+      var scheduleFailed = false;
       if (_repeatMonthly) {
         try {
           await ref.read(allowanceScheduleMutationsProvider).upsert(
@@ -130,15 +136,13 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
                     : _noteController.text.trim(),
               );
           scheduled = true;
-        } catch (e) {
-          // La transferencia YA salió: avisamos que la programación falló
-          // sin deshacer nada.
-          if (mounted) {
-            _snack(
-              t.allowanceScheduleError(friendlyErrorMessage(e, t: t)),
-              AppSnackBarType.error,
-            );
-          }
+        } catch (error, stackTrace) {
+          log.e(
+            'Allowance transfer succeeded but schedule creation failed',
+            error: error,
+            stackTrace: stackTrace,
+          );
+          scheduleFailed = true;
         }
       }
 
@@ -146,18 +150,31 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
       ref.invalidate(userBalanceProvider);
       ref.invalidate(expenseControllerProvider);
       Navigator.of(context).pop(true);
-      // Success snackbar is fine: the sheet has popped, so it is no longer
-      // hidden behind a modal barrier.
-      _snack(
-        scheduled ? t.allowanceScheduledSnack(_repeatDay) : t.allowanceSentSnack,
-        AppSnackBarType.success,
+      // The transfer is already committed. Report a scheduling failure as a
+      // partial success instead of replacing it with a generic success snack.
+      if (scheduleFailed) {
+        _snack(
+          t.allowanceSentScheduleFailed,
+          AppSnackBarType.error,
+        );
+      } else {
+        _snack(
+          scheduled
+              ? t.allowanceScheduledSnack(_repeatDay)
+              : t.allowanceSentSnack,
+          AppSnackBarType.success,
+        );
+      }
+    } catch (error, stackTrace) {
+      log.e(
+        'Allowance transfer failed',
+        error: error,
+        stackTrace: stackTrace,
       );
-    } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _errorMessage = t.allowanceSendError(friendlyErrorMessage(e, t: t));
-      });
+      setState(() => _errorMessage = t.allowanceSendGenericError);
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -171,9 +188,10 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
     final t = AppLocalizations.of(context);
     final theme = context.theme;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-    final members = ref.watch(householdMembersProvider).value ?? const [];
+    final membersAsync = ref.watch(householdMembersProvider);
+    final members = membersAsync.value ?? const <MemberModel>[];
     final recipients = _recipients(members);
-    final canSubmit = recipients.isNotEmpty;
+    final canSubmit = membersAsync.hasValue && recipients.isNotEmpty;
 
     return AnimatedPadding(
       duration: AppMotion.normal,
@@ -205,7 +223,17 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (recipients.isEmpty)
+                  if (membersAsync.isLoading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 28),
+                      child: Center(child: AppLoader()),
+                    )
+                  else if (membersAsync.hasError)
+                    AppErrorState(
+                      message: t.allowanceMembersLoadError,
+                      onRetry: () => ref.invalidate(householdMembersProvider),
+                    )
+                  else if (recipients.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       child: Text(
@@ -290,8 +318,7 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
   /// Toggle de mesada mensual + día, y banner de la programación activa
   /// hacia el teen seleccionado (con desactivar).
   Widget _buildRepeatSection(AppLocalizations t, AppThemeColors theme) {
-    final schedules =
-        ref.watch(myAllowanceSchedulesProvider).value ?? const [];
+    final schedules = ref.watch(myAllowanceSchedulesProvider).value ?? const [];
     AllowanceScheduleModel? activeForRecipient;
     for (final schedule in schedules) {
       if (schedule.toUserId == _recipientId) {
@@ -337,37 +364,53 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () async {
-                    final id = activeForRecipient!.id;
-                    try {
-                      await ref
-                          .read(allowanceScheduleMutationsProvider)
-                          .deactivate(id);
-                      if (!mounted) return;
-                      _snack(
-                        t.allowanceScheduleDisabledSnack,
-                        AppSnackBarType.neutral,
-                      );
-                    } catch (e) {
-                      if (!mounted) return;
-                      _snack(
-                        t.allowanceScheduleError(
-                          friendlyErrorMessage(e, t: t),
-                        ),
-                        AppSnackBarType.error,
-                      );
-                    }
-                  },
+                  onPressed: _isDisablingSchedule
+                      ? null
+                      : () async {
+                          final id = activeForRecipient!.id;
+                          setState(() => _isDisablingSchedule = true);
+                          try {
+                            await ref
+                                .read(allowanceScheduleMutationsProvider)
+                                .deactivate(id);
+                            if (!mounted) return;
+                            _snack(
+                              t.allowanceScheduleDisabledSnack,
+                              AppSnackBarType.neutral,
+                            );
+                          } catch (error, stackTrace) {
+                            log.e(
+                              'Allowance schedule deactivation failed for $id',
+                              error: error,
+                              stackTrace: stackTrace,
+                            );
+                            if (!mounted) return;
+                            _snack(
+                              t.allowanceScheduleDisableError,
+                              AppSnackBarType.error,
+                            );
+                          } finally {
+                            if (mounted) {
+                              setState(() => _isDisablingSchedule = false);
+                            }
+                          }
+                        },
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.error,
                     visualDensity: VisualDensity.compact,
                   ),
-                  child: Text(
-                    t.allowanceScheduleDisable,
-                    style: AppTypography.caption.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  child: _isDisablingSchedule
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          t.allowanceScheduleDisable,
+                          style: AppTypography.caption.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                 ),
               ],
             ),

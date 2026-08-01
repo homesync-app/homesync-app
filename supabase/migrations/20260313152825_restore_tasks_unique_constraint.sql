@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260313152825).
+-- Reconstructed from remote migration history (version 20260313152825).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Restore unique constraint for tasks that are currently active or pending

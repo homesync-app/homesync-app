@@ -7,12 +7,14 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/utils/date_extensions.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:intl/intl.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -177,11 +179,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         loading: () => const Center(
           child: AppLoader(),
         ),
-        error: (err, _) => Center(
-          child: Text(
-            'Error: $err',
-            style: const TextStyle(color: AppColors.error),
-          ),
+        error: (error, stackTrace) => AppErrorState(
+          message: AppLocalizations.of(context).tasksLoadError,
+          onRetry: () => ref.invalidate(tasksProvider),
         ),
         data: (tasks) {
           final scheduledTasks = _groupTasks(tasks);
@@ -429,6 +429,8 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
     final theme = context.theme;
     final isCompleted = task.isVerified;
     final xp = task.xpReward;
+    final showGamification =
+        ref.watch(householdCapabilitiesProvider).type != HouseholdType.couple;
     final category = task.category ?? 'general';
     final normalizedCategory = CategoryMapping.normaliseCategory(category);
 
@@ -532,15 +534,16 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Text(
-                              '+$xp XP',
-                              style: AppTypography.caption.copyWith(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.accentGold,
+                            if (showGamification)
+                              Text(
+                                '+$xp XP',
+                                style: AppTypography.caption.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.accentGold,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
+                            if (showGamification) const SizedBox(width: 8),
                             if (task.recurrenceType != null)
                               Container(
                                 padding: const EdgeInsets.symmetric(

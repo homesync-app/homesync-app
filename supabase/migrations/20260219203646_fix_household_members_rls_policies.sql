@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260219203646).
+-- Reconstructed from remote migration history (version 20260219203646).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 ALTER TABLE public.household_members ENABLE ROW LEVEL SECURITY;

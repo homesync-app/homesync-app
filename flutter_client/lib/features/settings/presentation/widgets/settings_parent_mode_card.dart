@@ -16,6 +16,7 @@ import 'package:homesync_client/features/tasks/presentation/screens/family_dashb
 import 'package:homesync_client/features/tasks/presentation/screens/pending_approvals_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/weekly_family_summary_screen.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/design/app_button.dart';
 
 /// Sprint 1 Modo Padres: card de configuracion del bundle "Modo Padres".
@@ -167,13 +168,16 @@ class _SettingsParentModeCardState
   }
 
   Future<void> _persistMode(String mode) async {
+    if (_saving) return;
+
     final householdId = await ref.read(householdIdProvider.future);
-    if (householdId == null) return;
+    if (householdId == null || !mounted) return;
     setState(() => _saving = true);
     try {
       await ref.read(supabaseClientProvider).from('households').update(
         {'task_approval_mode': mode},
       ).eq('id', householdId);
+      if (!mounted) return;
       ref.invalidate(currentHouseholdProvider);
       ref.invalidate(taskApprovalEnabledProvider);
       ref.invalidate(pendingTaskApprovalsProvider);
@@ -187,9 +191,7 @@ class _SettingsParentModeCardState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context).settingsParentModeSaveError(
-                e.toString(),
-              ),
+              AppLocalizations.of(context).settingsParentModeSaveError,
             ),
           ),
         );
@@ -602,6 +604,7 @@ class _PerMemberToggleList extends ConsumerStatefulWidget {
 
 class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
   Future<List<_MemberApprovalRow>>? _future;
+  final Set<String> _savingMemberIds = <String>{};
 
   @override
   void initState() {
@@ -610,32 +613,61 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
   }
 
   Future<List<_MemberApprovalRow>> _load() async {
-    final memberFallbackName =
-        AppLocalizations.of(context).settingsHouseholdMemberFallbackName;
-    final householdId = await ref.read(householdIdProvider.future);
-    if (householdId == null) return const [];
-    final client = ref.read(supabaseClientProvider);
-    final rows = await client
-        .from('household_members')
-        .select(
-          'id, user_id, role, member_type, requires_task_approval, '
-          'users(full_name, email, avatar_url)',
-        )
-        .eq('household_id', householdId)
-        .order('joined_at', ascending: true);
-    return (rows as List)
-        .map(
-          (r) => _MemberApprovalRow.fromMap(
-            Map<String, dynamic>.from(r as Map),
-            memberFallbackName: memberFallbackName,
-          ),
-        )
-        .where((row) => row.isMinor)
-        .toList();
+    try {
+      final memberFallbackName =
+          AppLocalizations.of(context).settingsHouseholdMemberFallbackName;
+      final householdId = await ref.read(householdIdProvider.future);
+      if (householdId == null || !mounted) return const [];
+      final client = ref.read(supabaseClientProvider);
+      final Object response = await client
+          .from('household_members')
+          .select(
+            'id, user_id, role, member_type, requires_task_approval, '
+            'users(full_name, email, avatar_url)',
+          )
+          .eq('household_id', householdId)
+          .order('joined_at', ascending: true);
+      if (response is! List) {
+        throw const FormatException('Expected a list of household members');
+      }
+
+      final parsedRows = <_MemberApprovalRow>[];
+      for (final rawRow in response) {
+        if (rawRow is! Map) {
+          log.w('Skipping malformed household member approval row');
+          continue;
+        }
+        try {
+          parsedRows.add(
+            _MemberApprovalRow.fromMap(
+              Map<String, dynamic>.from(rawRow),
+              memberFallbackName: memberFallbackName,
+            ),
+          );
+        } catch (error, stackTrace) {
+          log.w(
+            'Skipping invalid household member approval row',
+            error: error,
+            stackTrace: stackTrace,
+          );
+        }
+      }
+      return parsedRows.where((row) => row.isMinor).toList();
+    } catch (error, stackTrace) {
+      log.e(
+        'Failed to load per-member task approval settings',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
   }
 
   Future<void> _toggle(_MemberApprovalRow row, bool requires) async {
+    if (_savingMemberIds.contains(row.id)) return;
+
     setState(() {
+      _savingMemberIds.add(row.id);
       row.requiresApproval = requires;
     });
     try {
@@ -646,6 +678,7 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
           'p_requires_task_approval': requires,
         },
       );
+      if (!mounted) return;
       ref.invalidate(pendingTaskApprovalsProvider);
     } catch (e, stack) {
       log.e(
@@ -653,20 +686,18 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
         error: e,
         stackTrace: stack,
       );
-      // Revert UI optimistic.
-      setState(() {
-        row.requiresApproval = !requires;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context).settingsParentModeSaveError(
-                e.toString(),
-              ),
-            ),
+      if (!mounted) return;
+      setState(() => row.requiresApproval = !requires);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).settingsParentModeSaveError,
           ),
-        );
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _savingMemberIds.remove(row.id));
       }
     }
   }
@@ -687,6 +718,12 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
+          );
+        }
+        if (snapshot.hasError) {
+          return AppErrorState(
+            message: AppLocalizations.of(context).settingsParentModeLoadError,
+            onRetry: () => setState(() => _future = _load()),
           );
         }
         final rows = snapshot.data ?? const <_MemberApprovalRow>[];
@@ -750,7 +787,9 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
                     ),
                     Switch.adaptive(
                       value: row.requiresApproval,
-                      onChanged: (v) => _toggle(row, v),
+                      onChanged: _savingMemberIds.contains(row.id)
+                          ? null
+                          : (value) => _toggle(row, value),
                       activeThumbColor: AppColors.primary,
                     ),
                   ],
@@ -835,13 +874,16 @@ class _AllowanceToggleState extends ConsumerState<_AllowanceToggle> {
   bool _saving = false;
 
   Future<void> _set(bool value) async {
+    if (_saving) return;
+
     final householdId = await ref.read(householdIdProvider.future);
-    if (householdId == null) return;
+    if (householdId == null || !mounted) return;
     setState(() => _saving = true);
     try {
       await ref.read(supabaseClientProvider).from('households').update(
         {'allowance_enabled': value},
       ).eq('id', householdId);
+      if (!mounted) return;
       ref.invalidate(currentHouseholdProvider);
     } catch (e, stack) {
       log.e('Failed to update allowance_enabled', error: e, stackTrace: stack);
@@ -849,9 +891,7 @@ class _AllowanceToggleState extends ConsumerState<_AllowanceToggle> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context).settingsParentModeSaveError(
-                e.toString(),
-              ),
+              AppLocalizations.of(context).settingsParentModeSaveError,
             ),
           ),
         );

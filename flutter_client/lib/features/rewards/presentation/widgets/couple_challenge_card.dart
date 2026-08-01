@@ -11,7 +11,9 @@ class CoupleChallengeCard extends StatefulWidget {
   final CoupleChallenge challenge;
   final int challengeNumber;
   final int totalChallenges;
+  final int completedCount;
   final VoidCallback onComplete;
+  final VoidCallback? onSkip;
 
   /// El hogar ya registró este desafío esta semana: se muestra el estado
   /// completado y no se puede volver a completar.
@@ -22,7 +24,9 @@ class CoupleChallengeCard extends StatefulWidget {
     required this.challenge,
     required this.challengeNumber,
     required this.totalChallenges,
+    this.completedCount = 0,
     required this.onComplete,
+    this.onSkip,
     this.isCompleted = false,
   });
 
@@ -308,6 +312,28 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                     ],
                   ),
           ),
+          if (!widget.isCompleted && widget.onSkip != null) ...[
+            const SizedBox(height: 6),
+            Center(
+              child: TextButton(
+                onPressed: widget.onSkip,
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.textSecondary,
+                  minimumSize: const Size(
+                    AppControlSizes.minTapTarget,
+                    AppControlSizes.minTapTarget,
+                  ),
+                ),
+                child: Text(
+                  t.coupleSpaceSkipWeek,
+                  style: AppTypography.caption.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -343,7 +369,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
         ),
         const SizedBox(height: 4),
         Text(
-          t.coupleChallengeSharedRewardBody(widget.challenge.coinReward),
+          t.coupleChallengeSharedRewardBody(widget.completedCount),
           style: AppTypography.cardTitle.copyWith(
             fontSize: 14,
             fontWeight: FontWeight.w800,

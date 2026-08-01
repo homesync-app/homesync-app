@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260227224950).
+-- Reconstructed from remote migration history (version 20260227224950).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Table to store savings goals for households

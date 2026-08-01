@@ -2,17 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+
+const int _maxTaskXpReward = 50;
+const int _maxTaskCoinReward = 5;
 
 class EditTaskSheet extends ConsumerStatefulWidget {
   final TaskModel task;
@@ -68,6 +73,26 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
       return;
     }
 
+    final isCouple =
+        ref.read(householdCapabilitiesProvider).type == HouseholdType.couple;
+    final xpReward = isCouple ? 0 : int.tryParse(_xpController.text);
+    final coinReward = isCouple ? 0 : int.tryParse(_coinController.text);
+    if (xpReward == null ||
+        coinReward == null ||
+        xpReward < 0 ||
+        xpReward > _maxTaskXpReward ||
+        coinReward < 0 ||
+        coinReward > _maxTaskCoinReward) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).createTaskValidationRewardRange,
+          ),
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -76,8 +101,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
       await ref.read(tasksProvider.notifier).editTask(widget.task.id, {
         'title': title,
         'category': _selectedCategory,
-        'xp_reward': int.tryParse(_xpController.text) ?? 0,
-        'coin_reward': int.tryParse(_coinController.text) ?? 0,
+        'xp_reward': xpReward,
+        'coin_reward': coinReward,
         if (changedCatalogIdentity) ...{
           'source_template_id': null,
           'title_key': null,
@@ -87,13 +112,16 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
       if (mounted) {
         Navigator.pop(context, true);
       }
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'EditTaskSheet failed to save task ${widget.task.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
-            ),
+            content: Text(AppLocalizations.of(context).editTaskSaveError),
             backgroundColor: AppColors.error,
           ),
         );
@@ -226,13 +254,16 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
       if (mounted) {
         Navigator.pop(context, true);
       }
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'EditTaskSheet failed to delete task ${widget.task.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
-            ),
+            content: Text(AppLocalizations.of(context).editTaskDeleteError),
             backgroundColor: AppColors.error,
           ),
         );
@@ -275,12 +306,17 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
           ),
         );
       }
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'EditTaskSheet failed to complete task ${widget.task.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
+              AppLocalizations.of(context).tasksSnackCompleteError,
             ),
             backgroundColor: AppColors.error,
           ),
@@ -295,6 +331,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
     final theme = context.theme;
+    final showGamification =
+        ref.watch(householdCapabilitiesProvider).type != HouseholdType.couple;
     final currentCategories = categoriesAsync.maybeWhen(
       data: (list) => list
           .map(
@@ -486,77 +524,80 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                         }).toList(),
                       ),
                     ),
-                    const SizedBox(height: 22),
-                    _buildSectionLabel(
-                      AppLocalizations.of(context).editTaskSectionRewardEyebrow,
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildInputCard(
-                            theme,
-                            icon: Icons.star_rounded,
-                            iconColor: AppColors.xpGold,
-                            child: TextField(
-                              controller: _xpController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                hintText: 'XP',
-                                hintStyle: TextStyle(
-                                  color: theme.textMuted,
-                                  fontWeight: FontWeight.w600,
+                    if (showGamification) ...[
+                      const SizedBox(height: 22),
+                      _buildSectionLabel(
+                        AppLocalizations.of(context)
+                            .editTaskSectionRewardEyebrow,
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildInputCard(
+                              theme,
+                              icon: Icons.star_rounded,
+                              iconColor: AppColors.xpGold,
+                              child: TextField(
+                                controller: _xpController,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  hintText: 'XP',
+                                  hintStyle: TextStyle(
+                                    color: theme.textMuted,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  disabledBorder: InputBorder.none,
+                                  errorBorder: InputBorder.none,
+                                  focusedErrorBorder: InputBorder.none,
+                                  isCollapsed: true,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.zero,
                                 ),
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                disabledBorder: InputBorder.none,
-                                errorBorder: InputBorder.none,
-                                focusedErrorBorder: InputBorder.none,
-                                isCollapsed: true,
-                                isDense: true,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              style: AppTypography.cardTitle.copyWith(
-                                color: theme.textPrimary,
+                                style: AppTypography.cardTitle.copyWith(
+                                  color: theme.textPrimary,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: _buildInputCard(
-                            theme,
-                            icon: Icons.monetization_on_rounded,
-                            iconColor: AppColors.coinGreen,
-                            child: TextField(
-                              controller: _coinController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                hintText: AppLocalizations.of(context)
-                                    .createTaskFieldCoinsLabel,
-                                hintStyle: TextStyle(
-                                  color: theme.textMuted,
-                                  fontWeight: FontWeight.w600,
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: _buildInputCard(
+                              theme,
+                              icon: Icons.monetization_on_rounded,
+                              iconColor: AppColors.coinGreen,
+                              child: TextField(
+                                controller: _coinController,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  hintText: AppLocalizations.of(context)
+                                      .createTaskFieldCoinsLabel,
+                                  hintStyle: TextStyle(
+                                    color: theme.textMuted,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  disabledBorder: InputBorder.none,
+                                  errorBorder: InputBorder.none,
+                                  focusedErrorBorder: InputBorder.none,
+                                  isCollapsed: true,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.zero,
                                 ),
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                disabledBorder: InputBorder.none,
-                                errorBorder: InputBorder.none,
-                                focusedErrorBorder: InputBorder.none,
-                                isCollapsed: true,
-                                isDense: true,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              style: AppTypography.cardTitle.copyWith(
-                                color: theme.textPrimary,
+                                style: AppTypography.cardTitle.copyWith(
+                                  color: theme.textPrimary,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

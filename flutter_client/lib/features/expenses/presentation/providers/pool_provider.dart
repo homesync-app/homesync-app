@@ -52,7 +52,11 @@ class PoolMutations {
   Future<void> create({required String name, required String emoji}) async {
     final householdId = await _ref.read(householdIdProvider.future);
     final userId = _ref.read(currentUserIdProvider);
-    if (householdId == null || userId == null) return;
+    if (householdId == null || userId == null) {
+      throw StateError(
+        'Cannot create a pool without an authenticated household',
+      );
+    }
 
     await Supabase.instance.client.from('expense_pools').insert({
       'household_id': householdId,

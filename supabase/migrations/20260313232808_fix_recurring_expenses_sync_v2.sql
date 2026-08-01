@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260313232808).
+-- Reconstructed from remote migration history (version 20260313232808).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- 1. Redefine ensure_planned_expenses to support filtering by household

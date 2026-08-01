@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260223002746).
+-- Reconstructed from remote migration history (version 20260223002746).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Create table for logging Mercado Pago webhooks

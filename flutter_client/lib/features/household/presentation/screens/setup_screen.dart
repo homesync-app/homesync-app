@@ -71,6 +71,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   List<Category> _categories = [];
   Map<String, List<TaskTemplate>> _templatesByCategory = {};
   bool _isLoadingTemplates = true;
+  bool _templatesLoadFailed = false;
   bool _isSaving = false;
   TemplateService get _templateService => ref.read(templateServiceProvider);
 
@@ -190,6 +191,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   Future<void> _loadTemplates() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingTemplates = true;
+        _templatesLoadFailed = false;
+      });
+    }
+
     try {
       final categories = await _templateService.getCategories();
       final templates = await _templateService.getTemplates();
@@ -210,8 +218,18 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         _templatesByCategory = templatesByCategory;
         _isLoadingTemplates = false;
       });
-    } catch (e) {
-      if (mounted) setState(() => _isLoadingTemplates = false);
+    } catch (e, stack) {
+      log.e(
+        'SetupScreen._loadTemplates failed',
+        error: e,
+        stackTrace: stack,
+      );
+      if (mounted) {
+        setState(() {
+          _isLoadingTemplates = false;
+          _templatesLoadFailed = true;
+        });
+      }
     }
   }
 
@@ -268,10 +286,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   Future<void> _handleCreateTeam() async {
+    if (_isGeneratingCode) return;
+
     AppHaptics.success();
-    setState(() {
-      _isGeneratingCode = true;
-    });
+    setState(() => _isGeneratingCode = true);
 
     try {
       // Guard: el wizard puede aparecer por un falso negativo de
@@ -304,10 +322,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               final prefs = await SharedPreferences.getInstance();
               await prefs.setBool('setup_completed', true);
             }
-            if (mounted) {
-              setState(() => _isGeneratingCode = false);
-              _notifySetupComplete();
-            }
+            if (mounted) _notifySetupComplete();
             return;
           }
         }
@@ -329,43 +344,49 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
       final result =
           await ref.read(generateInvitationCodeUseCaseProvider).call();
-      if (mounted) {
-        result.fold(
-          (failure) {
-            setState(() => _isGeneratingCode = false);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  AppLocalizations.of(context)
-                      .commonErrorWithDetails(failure.message),
-                ),
-                backgroundColor: AppColors.error,
+      result.fold(
+        (failure) {
+          log.e(
+            'SetupScreen._handleCreateTeam: invitation generation failed: '
+            '${failure.message}',
+          );
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context).setupCreateHouseholdError,
               ),
-            );
-          },
-          (code) {
-            setState(() {
-              _myInviteCode = code;
-              _isGeneratingCode = false;
-            });
-            _wizard.goTo(SetupStep.inviteCode);
-          },
-        );
-      }
-    } catch (e) {
+              backgroundColor: AppColors.error,
+            ),
+          );
+        },
+        (code) {
+          if (!mounted) return;
+          setState(() => _myInviteCode = code);
+          _wizard.goTo(SetupStep.inviteCode);
+        },
+      );
+    } catch (e, stack) {
       // Creation failed — clear the in-progress guard so the router can show
       // the normal setup entry point again instead of being stuck.
       ref.read(setupInProgressProvider.notifier).finish();
+      log.e(
+        'SetupScreen._handleCreateTeam failed',
+        error: e,
+        stackTrace: stack,
+      );
       if (mounted) {
-        setState(() => _isGeneratingCode = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text(AppLocalizations.of(context).setupGenerateCodeError('$e')),
+            content: Text(
+              AppLocalizations.of(context).setupCreateHouseholdError,
+            ),
             backgroundColor: AppColors.error,
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isGeneratingCode = false);
     }
   }
 
@@ -390,7 +411,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           : 'parent';
 
   String get _creatorDisplayRoleForOnboarding =>
-      _wizardState.selectedMode == 'family' ? _wizardState.familyRole : 'Adulto';
+      _wizardState.selectedMode == 'family'
+          ? _wizardState.familyRole
+          : 'Adulto';
 
   String? _memberOnboardingErrorMessage(
     Object? rpcResult,
@@ -424,9 +447,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
     // Only update household type when the user CREATED the household.
     // Joiners don't own the household and RLS blocks the update.
-    if (householdId != null &&
-        _wizardState.selectedMode != null &&
-        createNew) {
+    if (householdId != null && _wizardState.selectedMode != null && createNew) {
       final result = await ref
           .read(updateHouseholdTypeUseCaseProvider)
           .call(householdId, selectedMode);
@@ -440,10 +461,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   Future<void> _handleJoinTeam() async {
+    if (_isJoining) return;
+
     AppHaptics.success();
+    final t = AppLocalizations.of(context);
     final code = _codeController.text.trim().toUpperCase();
     if (code.length != 6) {
-      _wizard.setJoinError('El código debe tener 6 caracteres');
+      _wizard.setJoinError(t.setupJoinCodeLengthError);
       return;
     }
 
@@ -452,15 +476,17 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
     try {
       final result = await ref.read(joinHouseholdUseCaseProvider).call(code);
-      final joinError = result.fold<String?>(
-        (failure) => failure.message,
-        (_) => null,
+      final joined = result.fold(
+        (failure) {
+          log.w(
+            'SetupScreen._handleJoinTeam rejected code: ${failure.message}',
+          );
+          return false;
+        },
+        (_) => true,
       );
-      if (joinError != null) {
-        if (mounted) {
-          setState(() => _isJoining = false);
-          _wizard.setJoinError(joinError);
-        }
+      if (!joined) {
+        if (mounted) _wizard.setJoinError(t.setupJoinHouseholdError);
         return;
       }
 
@@ -494,7 +520,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       // falla y el flujo cae al catch.
       final joinedMode = _wizardState.selectedMode ?? 'unknown';
       unawaited(
-        ref.read(analyticsServiceProvider).trackInviteAccepted(mode: joinedMode),
+        ref
+            .read(analyticsServiceProvider)
+            .trackInviteAccepted(mode: joinedMode),
       );
       unawaited(
         ref
@@ -509,27 +537,29 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       ref.invalidate(householdMembersProvider);
       ref.invalidate(memberOnboardingProvider);
 
+      if (!widget.isAdminPreview) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('setup_completed', true);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text(AppLocalizations.of(context).setupSnackJoinedHousehold),
+            content: Text(t.setupSnackJoinedHousehold),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
           ),
         );
-        setState(() => _isJoining = false);
-        if (!widget.isAdminPreview) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool('setup_completed', true);
-        }
-        if (mounted) _notifySetupComplete();
+        _notifySetupComplete();
       }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isJoining = false);
-        _wizard.setJoinError(e.toString().replaceFirst('Exception: ', ''));
-      }
+    } catch (e, stack) {
+      log.e(
+        'SetupScreen._handleJoinTeam failed',
+        error: e,
+        stackTrace: stack,
+      );
+      if (mounted) _wizard.setJoinError(t.setupJoinHouseholdError);
+    } finally {
+      if (mounted) setState(() => _isJoining = false);
     }
   }
 
@@ -600,41 +630,46 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
             await ref.read(updateFinanceSettingsUseCaseProvider).call(
                   householdId,
                   financeMode: financeMode,
-                  defaultSplitRatio:
-                      financeMode == 'shared' ? 0.5 : splitRatio,
+                  defaultSplitRatio: financeMode == 'shared' ? 0.5 : splitRatio,
                 );
         result.fold((failure) => throw failure, (_) {});
       }
-    } catch (e) {
-      // Ignore error
+    } catch (e, stack) {
+      log.w(
+        'SetupScreen._saveFinanceSettings failed; continuing setup',
+        error: e,
+        stackTrace: stack,
+      );
     }
     await _advanceToTaskSelectionOrComplete();
   }
 
   Future<void> _saveAndComplete() async {
-    final t = AppLocalizations.of(context);
-    final tasksEnabled = await _isTasksEnabledForCurrentHousehold();
-    if (!mounted) return;
-    final selectedTemplateIds = _wizardState.selectedTemplateIds;
-    if (tasksEnabled && selectedTemplateIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.setupSnackPickAtLeastOneTask),
-        ),
-      );
-      return;
-    }
+    if (_isSaving) return;
 
+    final t = AppLocalizations.of(context);
     setState(() => _isSaving = true);
 
-    // Guard the whole completion flow: for solo / "configure later" paths the
-    // household is created here (inside _ensureHouseholdForSetupCompletion), so
-    // keep the wizard mounted until we finish persisting profile/tasks.
-    ref.read(setupInProgressProvider.notifier).begin();
-
-    final client = ref.read(supabaseClientProvider);
-
     try {
+      final tasksEnabled = await _isTasksEnabledForCurrentHousehold();
+      if (!mounted) return;
+      final selectedTemplateIds = _wizardState.selectedTemplateIds;
+      if (tasksEnabled && selectedTemplateIds.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.setupSnackPickAtLeastOneTask),
+          ),
+        );
+        return;
+      }
+
+      // Guard the whole completion flow: for solo / "configure later" paths the
+      // household is created here (inside _ensureHouseholdForSetupCompletion), so
+      // keep the wizard mounted until we finish persisting profile/tasks.
+      ref.read(setupInProgressProvider.notifier).begin();
+
+      final client = ref.read(supabaseClientProvider);
+
       log.i(
         'SetupScreen._saveAndComplete: starting '
         'mode=${_wizardState.selectedMode ?? 'solo'} '
@@ -720,9 +755,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               'complete_member_onboarding (creator) returned: $onboardingError',
             );
             if (mounted) {
-              setState(() => _isSaving = false);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(onboardingError)),
+                SnackBar(content: Text(t.setupSnackOnboardingFailed)),
               );
             }
             return;
@@ -734,7 +768,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
             stackTrace: stack,
           );
           if (mounted) {
-            setState(() => _isSaving = false);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(t.setupSnackOnboardingFailed)),
             );
@@ -766,16 +799,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         await _showCompletionCelebration();
       }
       if (mounted) _notifySetupComplete();
-    } catch (e) {
+    } catch (e, stack) {
+      log.e(
+        'SetupScreen._saveAndComplete failed',
+        error: e,
+        stackTrace: stack,
+      );
       if (mounted) {
-        setState(() => _isSaving = false);
-        log.e('_saveAndComplete error: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(t.commonErrorWithDetails(e.toString())),
-          ),
+          SnackBar(content: Text(t.setupCompleteError)),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -845,8 +881,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   textAlign: TextAlign.center,
                   style: AppTypography.body.copyWith(
                     fontWeight: FontWeight.w600,
-                    color:
-                        context.theme.textSecondary.withValues(alpha: 0.88),
+                    color: context.theme.textSecondary.withValues(alpha: 0.88),
                   ),
                 ),
               ],
@@ -924,7 +959,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           }
         }
       }
-    } catch (e) {
+    } catch (e, stack) {
+      log.w(
+        'SetupScreen._shareViaWhatsApp failed; copying code instead',
+        error: e,
+        stackTrace: stack,
+      );
       _copyCode();
     }
   }
@@ -1067,9 +1107,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                                 SetupStep.taskSelection =>
                                   SetupTaskSelectionStep(
                                     isLoadingTemplates: _isLoadingTemplates,
+                                    hasTemplatesError: _templatesLoadFailed,
                                     isSaving: _isSaving,
                                     categories: _categories,
                                     templatesByCategory: _templatesByCategory,
+                                    onRetryTemplates: _loadTemplates,
                                     onFinish: _saveAndComplete,
                                   ),
                               },
@@ -1110,9 +1152,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               height: 6,
               margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
-                color: isActive
-                    ? accent
-                    : theme.border.withValues(alpha: 0.9),
+                color: isActive ? accent : theme.border.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(999),
                 boxShadow: index == wizard.progressIndex
                     ? [

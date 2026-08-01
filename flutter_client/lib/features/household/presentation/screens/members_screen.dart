@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -12,8 +13,8 @@ import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/widgets/invitation_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
 class MembersScreen extends ConsumerStatefulWidget {
   const MembersScreen({super.key});
@@ -40,7 +41,17 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
           skipLoadingOnReload: true,
           data: (members) => _buildContent(members, theme),
           loading: () => const Center(child: AppLoader()),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (error, stack) {
+            log.e(
+              'MembersScreen: failed to load household members',
+              error: error,
+              stackTrace: stack,
+            );
+            return AppErrorState(
+              message: AppLocalizations.of(context).membersLoadError,
+              onRetry: () => ref.invalidate(householdMembersProvider),
+            );
+          },
         ),
       ),
     );
@@ -254,9 +265,13 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     if (!mounted) return;
     result.fold(
       (failure) {
+        log.e(
+          'MembersScreen: failed to update role for ${member.userId}: '
+          '${failure.message}',
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(t.membersRoleUpdateError(failure.message)),
+            content: Text(t.membersRoleUpdateError),
             backgroundColor: AppColors.error,
           ),
         );

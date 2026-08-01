@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260317161134).
+-- Reconstructed from remote migration history (version 20260317161134).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Clear and reset templates

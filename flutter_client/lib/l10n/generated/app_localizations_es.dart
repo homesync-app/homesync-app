@@ -70,6 +70,43 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonNoConnection => 'Sin conexión a internet';
 
   @override
+  String get offlineDisconnectedMessage =>
+      'Sin conexión · Los cambios se guardarán cuando vuelvas a estar online';
+
+  @override
+  String get offlineSyncingMessage => 'Sincronizando cambios...';
+
+  @override
+  String offlinePendingShort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pendientes',
+      one: '1 pendiente',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String offlinePendingChanges(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cambios pendientes de sincronizar',
+      one: '1 cambio pendiente de sincronizar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get offlineSyncedMessage => 'Sincronizado';
+
+  @override
+  String offlineSyncButton(int count) {
+    return 'Sincronizar ($count)';
+  }
+
+  @override
   String get commonConfirm => 'Confirmar';
 
   @override
@@ -524,6 +561,25 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get authSignUpEmailSent =>
       '¡Revisá tu correo para confirmar tu cuenta!';
+
+  @override
+  String get authSignInError =>
+      'No pudimos iniciar sesión. Revisá tus datos e intentá de nuevo.';
+
+  @override
+  String get authSignUpError => 'No pudimos crear tu cuenta. Intentá de nuevo.';
+
+  @override
+  String get authPasswordResetError =>
+      'No pudimos enviar el correo de recuperación. Intentá de nuevo.';
+
+  @override
+  String get authGoogleSignInError =>
+      'No pudimos ingresar con Google. Intentá de nuevo.';
+
+  @override
+  String get invitationLoadError =>
+      'No pudimos generar el código de invitación.';
 
   @override
   String commonErrorWithDetails(String message) {
@@ -1106,6 +1162,37 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get homeCoupleShoppingListTitle => 'Lista actual';
+
+  @override
+  String get homeShoppingPreviewOpen => 'Abrir compras';
+
+  @override
+  String get homeShoppingPreviewEmpty => 'No hay productos pendientes.';
+
+  @override
+  String get homeShoppingPreviewLoadError => 'No pudimos cargar la lista.';
+
+  @override
+  String homeShoppingPreviewPendingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pendientes',
+      one: '1 pendiente',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeShoppingPreviewMoreItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count más en la lista',
+      one: '+1 más en la lista',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get homeCoupleTasksTitle => 'Hoy en casa';
@@ -2374,9 +2461,24 @@ class AppLocalizationsEs extends AppLocalizations {
       'No hay otros miembros en el hogar todavía.';
 
   @override
-  String settingsParentModeSaveError(String message) {
-    return 'No pudimos guardar el cambio: $message';
-  }
+  String get settingsParentModeSaveError =>
+      'No pudimos guardar el cambio. Intentá de nuevo.';
+
+  @override
+  String get settingsParentModeLoadError =>
+      'No pudimos cargar la configuración por integrante.';
+
+  @override
+  String get notificationsMarkReadError =>
+      'No pudimos marcar la notificación como leída.';
+
+  @override
+  String get notificationsMarkAllReadError =>
+      'No pudimos marcar todas las notificaciones como leídas.';
+
+  @override
+  String get notificationsLoadMoreError =>
+      'No pudimos cargar más notificaciones. Intentá de nuevo.';
 
   @override
   String get settingsParentModeMemberTypeChild => 'Hijo/a';
@@ -2450,9 +2552,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleSplitSavedSnack => 'Configuración guardada correctamente';
 
   @override
-  String coupleSplitSaveError(String message) {
-    return 'Error al guardar: $message';
-  }
+  String get coupleSplitSaveError =>
+      'No pudimos guardar la configuración. Intentá de nuevo.';
+
+  @override
+  String get setupTemplatesLoadError =>
+      'No pudimos cargar las tareas sugeridas.';
 
   @override
   String get coupleSplitFamilyHowTitle => 'Cómo se registran los gastos';
@@ -2732,6 +2837,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Elegí al menos una fecha del mes.';
 
   @override
+  String get createTaskValidationInterval =>
+      'El intervalo debe ser de al menos 1 día.';
+
+  @override
   String get createTaskValidationTitleRequired => 'Título requerido';
 
   @override
@@ -2739,6 +2848,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get createTaskValidationNotNegative => 'No puede ser negativo';
+
+  @override
+  String get createTaskValidationRewardRange =>
+      'Usá entre 0 y 50 XP y entre 0 y 5 coins.';
 
   @override
   String get createTaskSnackCategoryNotReady =>
@@ -2830,6 +2943,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get createTaskSectionRotationSubtitle =>
       'Elegí al menos dos. Cada vez que se complete, le toca al siguiente.';
+
+  @override
+  String get createTaskRotationMinimumPeople =>
+      'Elegí al menos 2 personas para armar el turno.';
 
   @override
   String get createTaskCustomTabWeekdays => 'Por día';
@@ -2971,6 +3088,33 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String completeTaskMixedApprovalMessage(int count, int xp, int coins) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tareas pendientes de aprobación',
+      one: '1 tarea pendiente de aprobación',
+    );
+    return '$_temp0, ⭐ $xp XP y $coins Coins!';
+  }
+
+  @override
+  String completeTaskApprovalOnlyMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tareas enviadas para aprobación',
+      one: '1 tarea enviada para aprobación',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String completeTaskRewardMessage(String verb, int xp, int coins) {
+    return '⭐ $verb $xp XP y $coins Coins!';
+  }
+
+  @override
   String get editTaskHeaderTitle => 'Editar tarea';
 
   @override
@@ -3080,6 +3224,75 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get familyDashboardWeekFilter => 'Semana';
+
+  @override
+  String get familyDashboardMonthFilter => 'Mes';
+
+  @override
+  String familyDashboardProgress(int done, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done de $total hechas',
+      one: '1 de $total hecha',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String familyDashboardStreakDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count días',
+      one: '1 día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String familyDashboardPendingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pendientes',
+      one: '1 pendiente',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String familyDashboardOverdueCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count atrasadas',
+      one: '1 atrasada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String familyDashboardToApproveCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count a aprobar',
+      one: '1 a aprobar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String familyDashboardActiveMembers(int active, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      active,
+      locale: localeName,
+      other: '$active de $total integrantes tienen tareas activas.',
+      one: '1 de $total integrante tiene tareas activas.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get familyDashboardEmptyWeek => 'Sin tareas esta semana';
@@ -3195,6 +3408,39 @@ class AppLocalizationsEs extends AppLocalizations {
   String get weeklySummaryEyebrowNeedsBoost => 'Necesita un empujón';
 
   @override
+  String weeklySummaryMvpTitle(String name) {
+    return '$name se llevó la semana';
+  }
+
+  @override
+  String weeklySummaryMvpSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Completó $count tareas en el hogar.',
+      one: 'Completó 1 tarea en el hogar.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weeklySummaryNeedsBoostTitle(String name) {
+    return '$name se quedó con tareas pendientes';
+  }
+
+  @override
+  String weeklySummaryNeedsBoostSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count tareas atrasadas. Quizá esta semana puedas ayudarle a destrabar.',
+      one: '1 tarea atrasada. Quizá esta semana puedas ayudarle a destrabar.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get weeklySummaryEyebrowMostForgotten => 'La más olvidada';
 
   @override
@@ -3296,9 +3542,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pendingApprovalsRejectButton => 'Rechazar';
 
   @override
-  String pendingApprovalsLoadError(Object message) {
-    return 'No pudimos cargar las aprobaciones: $message';
-  }
+  String get pendingApprovalsLoadError =>
+      'No pudimos cargar las aprobaciones pendientes.';
 
   @override
   String pendingApprovalsApprovedSnack(Object coins) {
@@ -3479,6 +3724,29 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get budgetsManageTitle => 'Presupuestos';
+
+  @override
+  String get budgetsLoadError => 'No pudimos cargar tus presupuestos.';
+
+  @override
+  String get budgetsSaveError =>
+      'No pudimos guardar el presupuesto. Intentá de nuevo.';
+
+  @override
+  String get budgetsDeleteError =>
+      'No pudimos eliminar el presupuesto. Intentá de nuevo.';
+
+  @override
+  String get expensesPlannedPaymentError =>
+      'No pudimos registrar el pago. Intentá de nuevo.';
+
+  @override
+  String get expensesPlannedPaymentMembersLoadError =>
+      'No pudimos cargar los integrantes.';
+
+  @override
+  String get settingsHouseholdCodeGenerateError =>
+      'No pudimos generar el código. Intentá de nuevo.';
 
   @override
   String get budgetsManageSubtitleShared =>
@@ -3731,6 +3999,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get poolsCreateCta => 'Crear fondo';
+
+  @override
+  String get poolsLoadError => 'No pudimos cargar los fondos.';
+
+  @override
+  String get poolsCreateError => 'No pudimos crear el fondo. Intentá de nuevo.';
+
+  @override
+  String get poolsDetailLoadError => 'No pudimos cargar este fondo.';
+
+  @override
+  String get poolsSettleError =>
+      'No pudimos registrar el pago. Intentá de nuevo.';
+
+  @override
+  String get poolsCloseError => 'No pudimos cerrar el fondo. Intentá de nuevo.';
 
   @override
   String get poolsDetailNotFound => 'Este fondo ya no existe';
@@ -4093,6 +4377,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get allowanceSendGenericError => 'No se pudo enviar la mesada.';
+
+  @override
+  String get allowanceMembersLoadError =>
+      'No pudimos cargar los destinatarios.';
+
+  @override
+  String get allowanceSentScheduleFailed =>
+      'La mesada se envió, pero no pudimos programar la repetición.';
+
+  @override
+  String get allowanceScheduleDisableError =>
+      'No pudimos desactivar la mesada programada. Intentá de nuevo.';
 
   @override
   String get allowanceSentSnack => 'Mesada enviada.';
@@ -4480,7 +4776,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get faqTasksBasicsAnswer =>
-      'Creá tareas puntuales o recurrentes (diarias, semanales, mensuales), asignalas a alguien o dejalas libres para quien las agarre. Cada tarea da XP y coins al completarse, el calendario muestra lo que viene, y las recurrentes se reprograman solas.';
+      'Creá tareas puntuales o recurrentes (diarias, semanales, mensuales), asignalas a alguien o dejalas libres para quien las agarre. El calendario muestra lo que viene y las recurrentes se reprograman solas. En Pareja, completarlas actualiza el progreso compartido sin XP ni coins.';
 
   @override
   String get faqApprovals => '¿Cómo funcionan las aprobaciones de tareas?';
@@ -4521,18 +4817,18 @@ class AppLocalizationsEs extends AppLocalizations {
         'family':
             'Los coins son la moneda del hogar: los chicos los ganan completando tareas y los canjean en la tienda de premios por las recompensas que crearon los adultos — una salida, tiempo de pantalla, su comida favorita.',
         'other':
-            'Los coins que ganás completando tareas se canjean en Premios por los vouchers que crea tu pareja: una cena, un masaje, una salida sorpresa. La idea es premiarse mutuamente por bancar el hogar.',
+            'En modo Pareja no se usan coins: las tareas muestran cómo se reparte el trabajo y las propuestas se conversan sin precio, deuda ni obligación. Los coins quedan reservados para la dinámica familiar con chicos.',
       },
     );
     return '$_temp0';
   }
 
   @override
-  String get faqWhatWeeklyDuels => '¿Qué son los Duelos Semanales?';
+  String get faqWhatWeeklyDuels => '¿Hay un duelo semanal en Pareja?';
 
   @override
   String get faqWhatWeeklyDuelsAnswer =>
-      'Cada semana arranca un duelo de XP contra tu pareja con marcador oculto: ves tu propio avance, pero el resultado real se descubre recién al cierre del domingo. Quien más sumó se lleva la corona y un bonus de coins.';
+      'No. En modo Pareja la semana se mira como un esfuerzo compartido: pueden ver cuántas tareas hicieron y cómo se repartieron, sin ganador, marcador ni bonus.';
 
   @override
   String get faqFamilyRanking => '¿Cómo funciona el ranking familiar?';
@@ -4546,7 +4842,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get faqWhatSpecialEventsAnswer =>
-      'Cada semana aparece un desafío pensado para los dos: recrear la primera cita, cocinar juntos, una noche sin pantallas. Al completarlo, ambos reciben coins y el evento queda marcado como logrado para los dos hasta que llegue el siguiente.';
+      'Cada semana aparece una propuesta pensada para los dos: recrear la primera cita, cocinar juntos o pasar una noche sin pantallas. Al completarla guardan un momento compartido y avanzan en sus logros de pareja, sin coins ni obligaciones.';
 
   @override
   String get faqContributionBalance => '¿Qué es el equilibrio de aporte?';
@@ -4770,12 +5066,29 @@ class AppLocalizationsEs extends AppLocalizations {
       'Solo completa sus tareas, siempre bajo revisión.';
 
   @override
-  String membersRoleUpdateError(String message) {
-    return 'No se pudo cambiar el rol: $message';
-  }
+  String get membersRoleUpdateError =>
+      'No pudimos cambiar el rol. Intentá de nuevo.';
 
   @override
   String get membersRoleUpdated => 'Rol actualizado';
+
+  @override
+  String get membersLoadError => 'No pudimos cargar los integrantes del hogar.';
+
+  @override
+  String get setupCreateHouseholdError =>
+      'No pudimos crear el hogar o generar el código. Intentá de nuevo.';
+
+  @override
+  String get setupJoinCodeLengthError => 'El código debe tener 6 caracteres.';
+
+  @override
+  String get setupJoinHouseholdError =>
+      'No pudimos unirte al hogar. Revisá el código e intentá de nuevo.';
+
+  @override
+  String get setupCompleteError =>
+      'No pudimos terminar la configuración. Intentá de nuevo.';
 
   @override
   String get membersInviteTitle => 'Invitar miembro';
@@ -5276,22 +5589,265 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallengeShowMore => 'Ver detalles completos';
 
   @override
-  String get coupleChallengeSharedReward => 'Recompensa compartida';
+  String get coupleChallengeSharedReward => 'Un momento de los dos';
 
   @override
   String coupleChallengeSharedRewardBody(int count) {
-    return 'Si lo completan, ambos reciben $count coins.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count momentos compartidos',
+      one: '1 momento compartido',
+      zero: 'Todavía no guardaron momentos especiales',
+    );
+    return '$_temp0';
   }
 
   @override
   String get coupleChallengeWeDidIt => 'Lo hicimos';
 
   @override
-  String get coupleChallengeDoneThisWeek => '¡Completado esta semana!';
+  String get coupleChallengeDoneThisWeek => 'Guardado como momento compartido';
 
   @override
   String get coupleChallengeAlreadyDone =>
-      'Ya completaron el desafío de esta semana 💚';
+      'Ya guardaron el especial de esta semana.';
+
+  @override
+  String get coupleSpaceWeekEyebrow => 'NUESTRA SEMANA';
+
+  @override
+  String coupleSpaceTasksReady(int done, int total) {
+    return '$done de $total tareas listas';
+  }
+
+  @override
+  String get coupleSpaceNoTasksPlanned => 'Una semana tranquila por ahora';
+
+  @override
+  String coupleSpaceRemainingTasks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Quedan $count pendientes',
+      one: 'Queda 1 pendiente',
+      zero: 'No quedan tareas pendientes',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String coupleSpaceNeedsAttention(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count necesitan atención',
+      one: '1 necesita atención',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coupleSpaceWeekSupport =>
+      'El hogar avanza cuando se reparten lo que pesa.';
+
+  @override
+  String get coupleSpaceTaskEffortEyebrow => 'ESFUERZO';
+
+  @override
+  String get coupleSpaceTaskEffortTitle => 'Qué tan demandante es';
+
+  @override
+  String get coupleSpaceTaskEffortSubtitle =>
+      'La dificultad ayuda a repartir mejor las tareas; no genera puntos ni coins.';
+
+  @override
+  String coupleSpaceTaskCompletionMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tareas completadas. La semana avanzó un poco más.',
+      one: 'Tarea completada. La semana avanzó un poco más.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coupleSpaceDistributionAction => 'Ver cómo se repartió';
+
+  @override
+  String get coupleSpaceDistributionTitle => 'Cómo se repartió la semana';
+
+  @override
+  String get coupleSpaceDistributionSubtitle =>
+      'Una foto para conversar, sin ganadores ni puntajes.';
+
+  @override
+  String coupleSpaceTasksDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tareas completadas',
+      one: '1 tarea completada',
+      zero: 'Sin tareas completadas',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coupleSpaceForConnection => 'Para conectar';
+
+  @override
+  String get coupleSpaceSpecialMemoryBody =>
+      'Al completarlo, guardan el recuerdo y avanzan juntos en sus logros de pareja.';
+
+  @override
+  String get coupleSpaceSkipWeek => 'Pasar esta semana';
+
+  @override
+  String get coupleSpaceSkipToast =>
+      'Lo dejamos para otro momento. No afecta ningún logro.';
+
+  @override
+  String get coupleSpaceUndo => 'Ver de nuevo';
+
+  @override
+  String get coupleSpaceSpecialConfirmTitle => '¿Guardamos este momento?';
+
+  @override
+  String get coupleSpaceSpecialConfirmBody =>
+      'Confirmá solo si los dos participaron y se sintieron cómodos. No suma coins ni genera ninguna deuda.';
+
+  @override
+  String get coupleSpaceSpecialCompletedTitle => 'Un momento más de ustedes';
+
+  @override
+  String get coupleSpaceSpecialCompletedBody =>
+      'Quedó guardado en su historia compartida.';
+
+  @override
+  String get coupleSpacePlansTitle => 'Planes y deseos';
+
+  @override
+  String get coupleSpacePlansSubtitle =>
+      'Propuestas gratuitas: se pueden aceptar, posponer o retirar sin consecuencias.';
+
+  @override
+  String get coupleSpaceProposeAction => 'Proponer algo';
+
+  @override
+  String get coupleSpaceProposalsEmptyTitle => 'Todavía no hay propuestas';
+
+  @override
+  String get coupleSpaceProposalsEmptyBody =>
+      'Podés abrir una conversación, sugerir un plan o pedir apoyo sin ponerle precio.';
+
+  @override
+  String get coupleSpaceProposalAwaiting => 'Esperando respuesta';
+
+  @override
+  String get coupleSpaceProposalRespond => 'Responder';
+
+  @override
+  String get coupleSpaceProposalAccepted => 'Acordado';
+
+  @override
+  String get coupleSpaceProposalDeferred => 'Para después';
+
+  @override
+  String get coupleSpaceProposalMine => 'Tu propuesta';
+
+  @override
+  String get coupleSpaceProposalCategoryTalk => 'Para charlar';
+
+  @override
+  String get coupleSpaceProposalCategoryPlan => 'Plan juntos';
+
+  @override
+  String get coupleSpaceProposalCategoryAffection => 'Afecto';
+
+  @override
+  String get coupleSpaceProposalCategorySupport => 'Apoyo';
+
+  @override
+  String get coupleSpaceNewProposalTitle => 'Proponer algo';
+
+  @override
+  String get coupleSpaceNewProposalBody =>
+      'No tiene precio ni crea una obligación. La otra persona siempre puede decir “ahora no”.';
+
+  @override
+  String get coupleSpaceProposalTitleLabel => '¿Qué te gustaría proponer?';
+
+  @override
+  String get coupleSpaceProposalTitleHint => 'Ej.: Cocinar algo nuevo juntos';
+
+  @override
+  String get coupleSpaceProposalDescriptionLabel =>
+      'Contá un poco más (opcional)';
+
+  @override
+  String get coupleSpaceProposalDescriptionHint =>
+      'Qué imaginás, cuándo podría ser o qué necesitás';
+
+  @override
+  String get coupleSpaceProposalCategoryLabel => 'Tipo de propuesta';
+
+  @override
+  String get coupleSpaceProposalSend => 'Enviar propuesta';
+
+  @override
+  String get coupleSpaceProposalTitleValidation =>
+      'Escribí al menos 3 caracteres.';
+
+  @override
+  String get coupleSpaceProposalCreated =>
+      'Propuesta enviada. No genera ninguna deuda.';
+
+  @override
+  String get coupleSpaceProposalResponseTitle => 'Responder la propuesta';
+
+  @override
+  String get coupleSpaceProposalResponseBody =>
+      'Elegí con libertad. Decir “ahora no” no resta puntos ni requiere explicación.';
+
+  @override
+  String get coupleSpaceProposalAccept => 'Dale';
+
+  @override
+  String get coupleSpaceProposalDefer => 'Para después';
+
+  @override
+  String get coupleSpaceProposalDecline => 'Ahora no';
+
+  @override
+  String get coupleSpaceProposalWithdraw => 'Retirar propuesta';
+
+  @override
+  String get coupleSpaceProposalArchive => 'Archivar';
+
+  @override
+  String get coupleSpaceProposalAcceptedToast => 'Quedó como un plan acordado.';
+
+  @override
+  String get coupleSpaceProposalDeferredToast =>
+      'Quedó guardada para retomarla cuando quieran.';
+
+  @override
+  String get coupleSpaceProposalDeclinedToast =>
+      'Respuesta guardada sin penalizaciones.';
+
+  @override
+  String get coupleSpaceProposalWithdrawnToast => 'Retiraste la propuesta.';
+
+  @override
+  String get coupleSpaceProposalArchivedToast => 'Plan archivado.';
+
+  @override
+  String get coupleSpaceLoadError => 'No pudimos cargar este espacio.';
+
+  @override
+  String get coupleSpaceRetry => 'Reintentar';
 
   @override
   String tourStepLabel(int current, int total) {
@@ -5321,19 +5877,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tourCoupleWelcomeBody =>
-      'Les muestro lo esencial: tareas, monedas, duelo y gastos. Corto y al punto.';
+      'Les muestro lo esencial: tareas compartidas, propuestas, momentos especiales y gastos. Corto y al punto.';
 
   @override
   String tourCoupleWelcomeBodyNamed(String partnerName) {
-    return 'Te muestro lo esencial para organizar todo con $partnerName: tareas, monedas, duelo y gastos.';
+    return 'Te muestro lo esencial para organizar todo con $partnerName: tareas compartidas, propuestas, momentos especiales y gastos.';
   }
 
   @override
-  String get tourTasksTitleHas => 'Hacé tareas, ganá puntos';
+  String get tourTasksTitleHas => 'Las tareas, entre los dos';
 
   @override
   String get tourTasksBodyHas =>
-      'Tocá ✓ para completar. Cada tarea suma monedas y XP solo para vos.';
+      'Tocá ✓ para completar. El progreso semanal ayuda a ver lo que falta y a repartir mejor el trabajo.';
 
   @override
   String get tourTasksTitleEmpty => 'Hoy en casa está vacío';
@@ -5354,9 +5910,9 @@ class AppLocalizationsEs extends AppLocalizations {
       mode,
       {
         'shared':
-            'Tienen economía integrada: acá no hay deudas entre ustedes. Ven cuánto gastó el hogar este mes y, abajo, los puntos de cada uno.',
+            'Tienen economía integrada: acá no hay deudas entre ustedes y ven cuánto gastó el hogar este mes.',
         'other':
-            'Acá ven cuánto se deben en gastos compartidos y, abajo, lo que ganó cada uno. Con “Equilibrar” saldan cuentas en un toque.',
+            'Acá ven cuánto se deben por gastos compartidos. Con “Equilibrar” pueden saldar las cuentas reales en un toque.',
       },
     );
     return '$_temp0';
@@ -6303,6 +6859,23 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get addTaskOptionsAddError => 'No pudimos agregar la tarea.';
+
+  @override
+  String get editTaskSaveError => 'No pudimos guardar los cambios.';
+
+  @override
+  String get editTaskDeleteError => 'No pudimos eliminar la tarea.';
+
+  @override
+  String get recurringExpenseSaveError =>
+      'No pudimos guardar este registro recurrente.';
+
+  @override
+  String get recurringExpenseMembersLoadError =>
+      'No pudimos cargar los integrantes del hogar.';
+
+  @override
   String get recurringExpenseValidationTitleAmount =>
       'Completá título y monto válido.';
 
@@ -6463,6 +7036,26 @@ class AppLocalizationsEs extends AppLocalizations {
   String expensesNewItemsAddToList(int count) {
     return 'Agregar $count a lista';
   }
+
+  @override
+  String get expensesNewItemsAddError =>
+      'No pudimos agregar todos los productos. Reintentá los que quedaron.';
+
+  @override
+  String get expensesRecurringLoadError =>
+      'No pudimos cargar tus gastos recurrentes.';
+
+  @override
+  String get expensesFormSaveError =>
+      'No pudimos guardar el movimiento. Intentá de nuevo.';
+
+  @override
+  String get expensesFormMembersLoadError =>
+      'No pudimos cargar los integrantes.';
+
+  @override
+  String get expensesDeleteError =>
+      'No pudimos eliminar el movimiento. Intentá de nuevo.';
 
   @override
   String expensesPlannedPaymentTitle(String type) {
@@ -7562,15 +8155,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge27Timing => 'Sorpresa';
 
   @override
-  String get coupleChallenge28Title => 'Al servicio del amor';
+  String get coupleChallenge28Title => 'Un gesto de cuidado';
 
   @override
   String get coupleChallenge28Description =>
-      'Turnarse para \"cuidar\" al otro por un rato: preparar un baño, dar un masaje o cocinar mientras el otro no hace nada.\n\nNo se trata de servir, se trata de cuidar con ternura e intención.';
+      'Pregúntense qué gesto simple les haría bien hoy: preparar un mate, cocinar algo rico o dar un masaje, solo si nace y ambos se sienten cómodos.\n\nNo es una deuda ni un turno obligatorio. Es una invitación a cuidar con ternura y libertad.';
 
   @override
   String get coupleChallenge28Motivation =>
-      'Cuidar es una forma silenciosa y poderosa de amar.';
+      'El cuidado se siente mejor cuando se ofrece y se recibe con libertad.';
 
   @override
   String get coupleChallenge28Category => 'Cotidiano';
@@ -7606,7 +8199,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get coupleChallenge30Description =>
-      'Elijan tres sabores, como vino, chocolate o queso, y con cada uno compartan un recuerdo personal: un viaje, una etapa, una persona.\n\nDejen que el sabor despierte historias que todavía no se contaron.';
+      'Elijan tres sabores, como una infusión, chocolate, fruta o queso, y con cada uno compartan un recuerdo personal: un viaje, una etapa, una persona.\n\nDejen que el sabor despierte historias que todavía no se contaron.';
 
   @override
   String get coupleChallenge30Motivation =>
@@ -7686,11 +8279,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get coupleChallenge34Description =>
-      'Preparen una mesa con texturas, aromas y sabores sorpresa. Con los ojos cerrados, el otro adivina qué está sintiendo.\n\nUna dinámica para entregarse a las sensaciones sin necesitar muchas palabras.';
+      'Elijan juntos texturas, aromas y sabores que sean seguros para ambos. Quien adivina puede cerrar los ojos si quiere, y cualquiera puede pausar o cambiar algo en cualquier momento.\n\nUna dinámica suave para prestar atención a las sensaciones, sin presión.';
 
   @override
   String get coupleChallenge34Motivation =>
-      'El amor se saborea, se huele y se toca.';
+      'La curiosidad compartida también puede ser una forma de conexión.';
 
   @override
   String get coupleChallenge34Category => 'Sensoral';

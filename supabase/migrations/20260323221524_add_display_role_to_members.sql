@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260323221524).
+-- Reconstructed from remote migration history (version 20260323221524).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 ALTER TABLE public.household_members ADD COLUMN IF NOT EXISTS display_role text;

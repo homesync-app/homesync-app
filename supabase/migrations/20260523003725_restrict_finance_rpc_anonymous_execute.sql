@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260523003725).
+-- Reconstructed from remote migration history (version 20260523003725).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Finance mutation RPCs are SECURITY DEFINER and must require an authenticated

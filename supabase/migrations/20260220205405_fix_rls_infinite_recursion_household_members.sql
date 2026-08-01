@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260220205405).
+-- Reconstructed from remote migration history (version 20260220205405).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 

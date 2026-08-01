@@ -7,6 +7,7 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
@@ -42,6 +43,7 @@ class WeeklyProgressTab extends ConsumerWidget {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     final isPremium = ref.watch(premiumProvider).value ?? false;
+    final caps = ref.watch(householdCapabilitiesProvider);
 
     return RefreshIndicator(
       onRefresh: onRefresh,
@@ -58,7 +60,7 @@ class WeeklyProgressTab extends ConsumerWidget {
             _WeeklyHeaderCard(weekRange: weekRange),
             const SizedBox(height: AppSpacing.lg),
           ],
-          if (weeklyRanking.isNotEmpty) ...[
+          if (caps.showsWeeklyDuelCard && weeklyRanking.isNotEmpty) ...[
             AIFaceoffWidget(
               weeklyRanking: weeklyRanking,
               duelHistory: duelHistory,
@@ -94,15 +96,17 @@ class WeeklyProgressTab extends ConsumerWidget {
                     color: AppColors.accentGold,
                   ),
                 ),
-                _metricDivider(context),
-                Expanded(
-                  child: _SummaryMetric(
-                    icon: '💰',
-                    value: '$totalCoins',
-                    label: t.statsCoins,
-                    color: AppColors.accentTeal,
+                if (caps.usesCoinEconomy) ...[
+                  _metricDivider(context),
+                  Expanded(
+                    child: _SummaryMetric(
+                      icon: '💰',
+                      value: '$totalCoins',
+                      label: t.statsCoins,
+                      color: AppColors.accentTeal,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

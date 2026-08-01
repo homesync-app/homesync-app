@@ -81,6 +81,13 @@ final List<_FaqCategory> _faqCategories = [
         answer: (t, mode, role) => t.faqHowSharedHomeAnswer(mode),
       ),
       _FaqEntry(
+        icon: Icons.auto_awesome_rounded,
+        question: (t) => t.faqWhatSpecialEvents,
+        answer: (t, mode, role) => t.faqWhatSpecialEventsAnswer,
+        modes: {HouseholdType.couple},
+        needsTasks: true,
+      ),
+      _FaqEntry(
         icon: Icons.qr_code_rounded,
         question: (t) => t.faqInviteMembers,
         answer: (t, mode, role) => t.faqInviteMembersAnswer(mode),
@@ -131,20 +138,14 @@ final List<_FaqCategory> _faqCategories = [
         icon: Icons.bolt_rounded,
         question: (t) => t.faqHowEarnXp,
         answer: (t, mode, role) => t.faqHowEarnXpAnswer,
+        modes: {HouseholdType.solo, HouseholdType.family},
         needsTasks: true,
       ),
       _FaqEntry(
         icon: Icons.monetization_on_rounded,
         question: (t) => t.faqWhatCoins,
         answer: (t, mode, role) => t.faqWhatCoinsAnswer(mode),
-        modes: {HouseholdType.couple, HouseholdType.family},
-        needsTasks: true,
-      ),
-      _FaqEntry(
-        icon: Icons.sports_kabaddi_rounded,
-        question: (t) => t.faqWhatWeeklyDuels,
-        answer: (t, mode, role) => t.faqWhatWeeklyDuelsAnswer,
-        modes: {HouseholdType.couple},
+        modes: {HouseholdType.family},
         needsTasks: true,
       ),
       _FaqEntry(
@@ -152,13 +153,6 @@ final List<_FaqCategory> _faqCategories = [
         question: (t) => t.faqFamilyRanking,
         answer: (t, mode, role) => t.faqFamilyRankingAnswer,
         modes: {HouseholdType.family},
-        needsTasks: true,
-      ),
-      _FaqEntry(
-        icon: Icons.auto_awesome_rounded,
-        question: (t) => t.faqWhatSpecialEvents,
-        answer: (t, mode, role) => t.faqWhatSpecialEventsAnswer,
-        modes: {HouseholdType.couple},
         needsTasks: true,
       ),
       _FaqEntry(

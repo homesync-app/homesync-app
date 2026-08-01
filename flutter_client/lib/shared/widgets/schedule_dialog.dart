@@ -261,6 +261,29 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
     );
   }
 
+  Widget _buildAccessibleSelector({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+    required BorderRadius borderRadius,
+    required Widget child,
+  }) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: borderRadius,
+          excludeFromSemantics: true,
+          child: child,
+        ),
+      ),
+    );
+  }
+
   Widget _buildRepeatOptions(AppThemeColors theme) {
     final t = AppLocalizations.of(context);
     return Wrap(
@@ -308,8 +331,11 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
     IconData icon,
   ) {
     final isSelected = _selectedMode == mode;
-    return GestureDetector(
+    return _buildAccessibleSelector(
+      label: label,
+      selected: isSelected,
       onTap: () => setState(() => _selectedMode = mode),
+      borderRadius: BorderRadius.circular(18),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
@@ -496,8 +522,11 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
 
   Widget _buildCustomModeTab(AppThemeColors theme, String label, String mode) {
     final isSelected = _customRecurrenceMode == mode;
-    return GestureDetector(
+    return _buildAccessibleSelector(
+      label: label,
+      selected: isSelected,
       onTap: () => setState(() => _customRecurrenceMode = mode),
+      borderRadius: BorderRadius.circular(AppRadii.md),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
@@ -659,8 +688,11 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
     required bool selected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return _buildAccessibleSelector(
+      label: label,
+      selected: selected,
       onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         width: 40,
@@ -694,8 +726,11 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
     required bool selected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return _buildAccessibleSelector(
+      label: label,
+      selected: selected,
       onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadii.sm),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         width: 38,
@@ -766,8 +801,11 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
     String? avatarName,
     String? avatarUrl,
   }) {
-    return GestureDetector(
+    return _buildAccessibleSelector(
+      label: '$label. $subtitle',
+      selected: selected,
       onTap: onTap,
+      borderRadius: BorderRadius.circular(22),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         margin: const EdgeInsets.only(bottom: 10),

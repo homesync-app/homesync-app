@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260424113126).
+-- Reconstructed from remote migration history (version 20260424113126).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION public.complete_tasks_batch(

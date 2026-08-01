@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260417190234).
+-- Reconstructed from remote migration history (version 20260417190234).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION public.ensure_household_for_user(

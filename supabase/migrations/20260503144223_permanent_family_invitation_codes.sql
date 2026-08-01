@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260503144223).
+-- Reconstructed from remote migration history (version 20260503144223).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Family/friends invitation codes are permanent and multi-use.

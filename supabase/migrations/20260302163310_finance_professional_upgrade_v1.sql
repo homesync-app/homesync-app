@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260302163310).
+-- Reconstructed from remote migration history (version 20260302163310).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Add is_shared column if it doesn't exist

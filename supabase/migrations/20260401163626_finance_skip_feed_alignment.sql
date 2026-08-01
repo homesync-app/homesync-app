@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260401163626).
+-- Reconstructed from remote migration history (version 20260401163626).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Align skipped planned expenses with current HomeSync UX:

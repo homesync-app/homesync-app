@@ -10,6 +10,8 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/data/repositories/supabase_task_repository.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
@@ -21,6 +23,20 @@ import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
+
+String? _readString(Object? value) {
+  if (value is! String) return null;
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
+}
+
+Map<String, dynamic>? _readStringKeyedMap(Object? value) {
+  if (value is! Map) return null;
+  return <String, dynamic>{
+    for (final entry in value.entries)
+      if (entry.key is String) entry.key as String: entry.value,
+  };
+}
 
 class TaskDetailSheet extends ConsumerStatefulWidget {
   final Map<String, dynamic> taskData;
@@ -63,14 +79,15 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
         widget.taskData['coins_per_user'],
         widget.taskData['coins'],
       );
-  String? get _activityId => widget.taskData['activity_id'] as String?;
-  String? get _comment => widget.taskData['objection_reason'] as String?;
+  String? get _activityId => _readString(widget.taskData['activity_id']);
+  String? get _comment => _readString(widget.taskData['objection_reason']);
 
-  Map? get _completedUser => widget.taskData['completed_user'] as Map?;
+  Map<String, dynamic>? get _completedUser =>
+      _readStringKeyedMap(widget.taskData['completed_user']);
   String _completedByName(AppLocalizations t) =>
-      (_completedUser?['full_name'] as String?) ?? t.taskDetailFallbackUser;
-  String? get _completedByAvatar => _completedUser?['avatar_url'] as String?;
-  String? get _completedById => _completedUser?['id'] as String?;
+      _readString(_completedUser?['full_name']) ?? t.taskDetailFallbackUser;
+  String? get _completedByAvatar => _readString(_completedUser?['avatar_url']);
+  String? get _completedById => _readString(_completedUser?['id']);
   String get _currentUserId => ref.read(currentUserIdProvider) ?? '';
   bool get _isAuthor => _completedById == _currentUserId;
   DateTime? get _completedAt => _readDate(
@@ -232,6 +249,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
     final theme = Theme.of(context);
     final appTheme = context.theme;
     final t = AppLocalizations.of(context);
+    final showGamification =
+        ref.watch(householdCapabilitiesProvider).type != HouseholdType.couple;
     final (statusLabel, statusColor, statusIcon) = _statusInfo(t);
     final categoryColor = CategoryMapping.getCategoryColor(_category);
     final categoryIcon = CategoryMapping.getCategoryMaterialIcon(_category);
@@ -395,24 +414,26 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                     spacing: 6,
                                     runSpacing: 6,
                                     children: [
-                                      _buildChip(
-                                        icon: Icons.star_rounded,
-                                        label: '+$_xpReward XP',
-                                        color: AppColors.xpGold,
-                                        textColor: appTheme.textPrimary,
-                                        background: AppColors.accentGold
-                                            .withValues(alpha: 0.10),
-                                      ),
-                                      _buildChip(
-                                        icon: Icons.monetization_on_rounded,
-                                        label: t.taskDetailCoinsAwarded(
-                                          _coinReward,
+                                      if (showGamification) ...[
+                                        _buildChip(
+                                          icon: Icons.star_rounded,
+                                          label: '+$_xpReward XP',
+                                          color: AppColors.xpGold,
+                                          textColor: appTheme.textPrimary,
+                                          background: AppColors.accentGold
+                                              .withValues(alpha: 0.10),
                                         ),
-                                        color: AppColors.coinGreen,
-                                        textColor: appTheme.textPrimary,
-                                        background: AppColors.coinGreen
-                                            .withValues(alpha: 0.12),
-                                      ),
+                                        _buildChip(
+                                          icon: Icons.monetization_on_rounded,
+                                          label: t.taskDetailCoinsAwarded(
+                                            _coinReward,
+                                          ),
+                                          color: AppColors.coinGreen,
+                                          textColor: appTheme.textPrimary,
+                                          background: AppColors.coinGreen
+                                              .withValues(alpha: 0.12),
+                                        ),
+                                      ],
                                       if (_task.isRecurring)
                                         _buildChip(
                                           icon: Icons.event_repeat_rounded,

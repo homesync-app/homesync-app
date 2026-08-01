@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260304123345).
+-- Reconstructed from remote migration history (version 20260304123345).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION public.get_filtered_expenses(

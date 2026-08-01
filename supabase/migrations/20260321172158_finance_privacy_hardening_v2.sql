@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260321172158).
+-- Reconstructed from remote migration history (version 20260321172158).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Finance privacy hardening v2

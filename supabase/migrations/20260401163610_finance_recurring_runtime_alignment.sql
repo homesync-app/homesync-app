@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260401163610).
+-- Reconstructed from remote migration history (version 20260401163610).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- Align recurring runtime contract with documented HomeSync behavior.

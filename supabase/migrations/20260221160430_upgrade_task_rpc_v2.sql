@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260221160430).
+-- Reconstructed from remote migration history (version 20260221160430).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 -- UPGRADE TASK COMPLETION TO PROFESSIONAL EVENT-BASED LOGIC

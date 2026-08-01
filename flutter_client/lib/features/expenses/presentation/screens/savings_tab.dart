@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -19,8 +20,9 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/design/app_section_header.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
 import 'package:homesync_client/shared/widgets/expressive/expressive.dart';
@@ -38,7 +40,10 @@ class SavingsTab extends ConsumerWidget {
 
     return goalsAsync.when(
       loading: () => const Center(child: AppLoader()),
-      error: (e, _) => Center(child: Text(t.savingsLoadError(e.toString()))),
+      error: (error, stackTrace) => AppErrorState(
+        message: t.commonError,
+        onRetry: () => ref.invalidate(savingsGoalsProvider),
+      ),
       data: (goals) {
         final perms = ref.watch(savingsPermissionsProvider);
         final activeGoals = goals.where((goal) => !goal.isReached).toList();
@@ -156,11 +161,13 @@ class SavingsTab extends ConsumerWidget {
               color: AppColors.primary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
-            child:
-                Text(icon, style: AppTypography.body.copyWith(
-                  fontSize: 48,
-                  fontWeight: FontWeight.w400,
-                ),).animatePulse(),
+            child: Text(
+              icon,
+              style: AppTypography.body.copyWith(
+                fontSize: 48,
+                fontWeight: FontWeight.w400,
+              ),
+            ).animatePulse(),
           ),
           const SizedBox(height: 24),
           Text(

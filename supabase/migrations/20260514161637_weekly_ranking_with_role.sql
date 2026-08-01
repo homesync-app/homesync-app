@@ -1,4 +1,4 @@
-﻿-- Reconstructed from remote migration history (version 20260514161637).
+-- Reconstructed from remote migration history (version 20260514161637).
 -- Source: supabase_migrations.schema_migrations on project tfavamqszdkoeabpyxms.
 
 CREATE OR REPLACE FUNCTION public.get_weekly_ranking(p_household_id uuid)

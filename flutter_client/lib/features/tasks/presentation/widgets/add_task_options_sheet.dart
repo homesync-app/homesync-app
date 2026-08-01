@@ -8,7 +8,9 @@ import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -157,11 +159,16 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         type: AppSnackBarType.success,
         duration: const Duration(milliseconds: 1500),
       );
-    } catch (e) {
+    } catch (error, stackTrace) {
+      log.e(
+        'AddTaskOptionsSheet failed to add template ${template.id}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        message: 'Error: $e',
+        message: AppLocalizations.of(context).addTaskOptionsAddError,
         type: AppSnackBarType.error,
       );
     } finally {
@@ -643,35 +650,39 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
             color: isAdded ? theme.textSecondary : theme.textPrimary,
           ),
         ),
-        subtitle: Row(
-          children: [
-            Icon(
-              Icons.star_rounded,
-              size: 13,
-              color: isAdded ? AppColors.textMuted : AppColors.xpGold,
-            ),
-            const SizedBox(width: 3),
-            Text(
-              '${template.xpReward} XP',
-              style: AppTypography.caption.copyWith(
-                color: isAdded ? AppColors.textMuted : AppColors.xpGold,
+        subtitle: ref.watch(householdCapabilitiesProvider).type ==
+                HouseholdType.couple
+            ? null
+            : Row(
+                children: [
+                  Icon(
+                    Icons.star_rounded,
+                    size: 13,
+                    color: isAdded ? AppColors.textMuted : AppColors.xpGold,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    '${template.xpReward} XP',
+                    style: AppTypography.caption.copyWith(
+                      color: isAdded ? AppColors.textMuted : AppColors.xpGold,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Icon(
+                    Icons.monetization_on_rounded,
+                    size: 13,
+                    color: isAdded ? AppColors.textMuted : AppColors.coinGreen,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    '${template.coinReward}',
+                    style: AppTypography.caption.copyWith(
+                      color:
+                          isAdded ? AppColors.textMuted : AppColors.coinGreen,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 10),
-            Icon(
-              Icons.monetization_on_rounded,
-              size: 13,
-              color: isAdded ? AppColors.textMuted : AppColors.coinGreen,
-            ),
-            const SizedBox(width: 3),
-            Text(
-              '${template.coinReward}',
-              style: AppTypography.caption.copyWith(
-                color: isAdded ? AppColors.textMuted : AppColors.coinGreen,
-              ),
-            ),
-          ],
-        ),
         trailing: isAdded
             ? Container(
                 padding: const EdgeInsets.all(AppSpacing.xs),
