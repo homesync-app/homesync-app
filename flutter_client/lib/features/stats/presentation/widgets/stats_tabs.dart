@@ -2,282 +2,25 @@ import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/utils/app_haptics.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_amount.dart';
-import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
-import 'category_widgets.dart';
-import 'love_note_dialog.dart';
 import 'personal_metric_card.dart';
 import 'stats_shared_widgets.dart';
-
-class WeeklyTab extends ConsumerWidget {
-  final List<Map<String, dynamic>> weeklyRanking;
-  final List<Map<String, dynamic>> memberStats;
-  final List<Map<String, dynamic>> duelHistory;
-  final String weekRange;
-  final int totalTasks;
-  final int totalXp;
-  final int totalCoins;
-  final Future<void> Function() onRefresh;
-
-  const WeeklyTab({
-    super.key,
-    required this.weeklyRanking,
-    required this.memberStats,
-    required this.duelHistory,
-    required this.weekRange,
-    required this.totalTasks,
-    required this.totalXp,
-    required this.totalCoins,
-    required this.onRefresh,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-    final isPremium = ref.watch(premiumProvider).value ?? false;
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      color: AppColors.primary,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.lg,
-          AppSpacing.lg,
-          AppSpacing.jumbo,
-        ),
-        children: [
-          // ── Weekly Duel ──────────────────────────────────────────────────
-          SectionLabel(label: t.statsWeeklyDuel, icon: '⚔️'),
-          const SizedBox(height: AppSpacing.md),
-
-          if (weeklyRanking.isNotEmpty) ...[
-            AIFaceoffWidget(weeklyRanking: weeklyRanking),
-            const SizedBox(height: AppSpacing.xl),
-          ],
-
-          // ── Summary row (Global context) ──────────────────────────────────
-          Text(
-            t.statsHouseholdSummary,
-            style: AppTypography.cardTitle.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary.withValues(alpha: 0.9),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppRadii.modal),
-              border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
-              boxShadow: theme.cardShadow,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: SummaryMetric(
-                    icon: '🔥',
-                    value: '$totalTasks',
-                    label: t.statsTasks,
-                    color: AppColors.primary,
-                  ),
-                ),
-                Container(
-                  width: 1,
-                  height: 50,
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-                Expanded(
-                  child: SummaryMetric(
-                    icon: '✨',
-                    value: '$totalXp',
-                    label: t.statsXP,
-                    color: AppColors.accentGold,
-                  ),
-                ),
-                Container(
-                  width: 1,
-                  height: 50,
-                  color: Colors.black.withValues(alpha: 0.06),
-                ),
-                Expanded(
-                  child: SummaryMetric(
-                    icon: '💰',
-                    value: '$totalCoins',
-                    label: t.statsCoins,
-                    color: AppColors.accentTeal,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-
-          GestureDetector(
-            onTap: () {
-              if (!isPremium) {
-                PremiumPaywall.show(context, source: 'stats_tabs');
-              } else {
-                AppHaptics.tap();
-                showLoveNoteDialog(context: context, ref: ref);
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isPremium
-                      ? [const Color(0xFFFEE2E2), Colors.white]
-                      : [Colors.white, Colors.white],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(AppRadii.modal),
-                border: Border.all(
-                  color: isPremium
-                      ? const Color(0xFFFCA5A5).withValues(alpha: 0.5)
-                      : Colors.black.withValues(alpha: 0.04),
-                ),
-                boxShadow: theme.cardShadow,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: isPremium
-                          ? const Color(0xFFFECACA)
-                          : Colors.black.withValues(alpha: 0.05),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isPremium ? Icons.favorite_rounded : Icons.lock_rounded,
-                      color: isPremium
-                          ? const Color(0xFFEF4444)
-                          : AppColors.textMuted,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.loveNoteSendTitle,
-                          style: AppTypography.cardTitle.copyWith(
-                            color: isPremium
-                                ? const Color(0xFF991B1B)
-                                : AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isPremium
-                              ? t.loveNoteSendSubtitle
-                              : t.loveNotePremiumFeature,
-                          style: AppTypography.caption.copyWith(
-                            fontSize: 13,
-                            color: isPremium
-                                ? const Color(0xFFB91C1C).withValues(alpha: 0.7)
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (!isPremium)
-                    const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 16,
-                      color: AppColors.textMuted,
-                    ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-
-          // ── Duel History ─────────────────────────────────────────────────
-          if (duelHistory.isNotEmpty) ...[
-            SectionLabel(label: t.statsVictoryHistory, icon: '🏆'),
-            const SizedBox(height: AppSpacing.md),
-            DuelHistoryWidget(duelHistory: duelHistory),
-            const SizedBox(height: AppSpacing.xl),
-          ],
-
-          // ── Activity Placeholder ──────────────────────────────────────────
-          PrivacyBadge(text: t.statsPrivacyFull),
-        ],
-      ),
-    );
-  }
-}
-
-class SummaryMetric extends StatelessWidget {
-  final String icon;
-  final String value;
-  final String label;
-  final Color color;
-
-  const SummaryMetric({
-    super.key,
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(icon, style: AppTypography.body.copyWith(
-          fontSize: 18,
-          fontWeight: FontWeight.w400,
-        ),),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          value,
-          style: AppTypography.sectionTitle.copyWith(
-            fontSize: 22,
-            letterSpacing: -0.8,
-            height: 1,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label.toUpperCase(),
-          style: AppTypography.caption.copyWith(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.6,
-            color: color.withValues(alpha: 0.8),
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 class ProgressTab extends StatefulWidget {
   final List<Map<String, dynamic>> xpHistory;
   final List<Map<String, dynamic>> coinHistory;
   final List<Map<String, dynamic>> memberStats;
+
+  /// En pareja no hay economía de coins, así que la curva queda solo en XP y
+  /// el toggle desaparece en vez de ofrecer una serie siempre en cero.
+  final bool showCoins;
   final Future<void> Function() onRefresh;
 
   const ProgressTab({
@@ -286,6 +29,7 @@ class ProgressTab extends StatefulWidget {
     required this.coinHistory,
     required this.memberStats,
     required this.onRefresh,
+    this.showCoins = true,
   });
 
   @override
@@ -293,7 +37,11 @@ class ProgressTab extends StatefulWidget {
 }
 
 class _ProgressTabState extends State<ProgressTab> {
-  bool _showXp = true; // toggle between XP and Coins
+  bool _showXpState = true; // toggle between XP and Coins
+
+  /// Sin economía de coins la única serie posible es XP, sin importar lo que
+  /// haya quedado guardado en el toggle antes de cambiar de hogar.
+  bool get _showXp => widget.showCoins ? _showXpState : true;
 
   List<FlSpot> _buildSpots(List<Map<String, dynamic>> history) {
     if (history.isEmpty) return [const FlSpot(0, 0)];
@@ -336,24 +84,26 @@ class _ProgressTabState extends State<ProgressTab> {
           const SizedBox(height: AppSpacing.md),
 
           // ── XP / Coins toggle ────────────────────────────────────────────
-          Row(
-            children: [
-              XPToggleButton(
-                label: t.statsXP,
-                isSelected: _showXp,
-                color: AppColors.accentGold,
-                onTap: () => setState(() => _showXp = true),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              XPToggleButton(
-                label: t.statsCoins,
-                isSelected: !_showXp,
-                color: AppColors.accentTeal,
-                onTap: () => setState(() => _showXp = false),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
+          if (widget.showCoins) ...[
+            Row(
+              children: [
+                XPToggleButton(
+                  label: t.statsXP,
+                  isSelected: _showXp,
+                  color: AppColors.accentGold,
+                  onTap: () => setState(() => _showXpState = true),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                XPToggleButton(
+                  label: t.statsCoins,
+                  isSelected: !_showXp,
+                  color: AppColors.accentTeal,
+                  onTap: () => setState(() => _showXpState = false),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
 
           // ── Chart ──────────────────────────────────────────────────────
           Container(
@@ -517,171 +267,6 @@ class _ProgressTabState extends State<ProgressTab> {
 
           // ── Privacy assurance ───────────────────────────────────────────
           PrivacyBadge(text: t.statsPrivacyDetailed),
-        ],
-      ),
-    );
-  }
-}
-
-class CategoriesTab extends StatelessWidget {
-  final List<Map<String, dynamic>> taskStats;
-  final Future<void> Function() onRefresh;
-
-  const CategoriesTab({
-    super.key,
-    required this.taskStats,
-    required this.onRefresh,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
-    if (taskStats.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.05),
-                shape: BoxShape.circle,
-              ),
-              child: Text('📊', style: AppTypography.body.copyWith(
-                fontSize: 48,
-                fontWeight: FontWeight.w400,
-              ),),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.insights_outlined,
-                  size: 18,
-                  color: AppColors.textMuted.withValues(alpha: 0.5),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Icon(
-                  Icons.favorite_border_rounded,
-                  size: 18,
-                  color: AppColors.textMuted.withValues(alpha: 0.5),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Icon(
-                  Icons.auto_graph_outlined,
-                  size: 18,
-                  color: AppColors.textMuted.withValues(alpha: 0.5),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              t.statsNoDataTitle,
-              style: AppTypography.cardTitle.copyWith(
-                fontSize: 18,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              t.statsNoDataSubtitle,
-              textAlign: TextAlign.center,
-              style:
-                  const TextStyle(color: AppColors.textSecondary, height: 1.4),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            ElevatedButton(
-              onPressed: onRefresh,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.sm,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadii.md),
-                ),
-              ),
-              child: Text(t.commonRefresh),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      color: AppColors.primary,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.lg,
-          AppSpacing.lg,
-          AppSpacing.jumbo,
-        ),
-        children: [
-          // ── Premium Dominance Header ─────────────────────────────────────
-          SectionLabel(label: t.categoriesDominance, icon: '💎'),
-          const SizedBox(height: AppSpacing.lg),
-
-          // ── Horizontal bar chart (Modernized) ────────────────────────────
-          CategoryBarChart(taskStats: taskStats),
-          const SizedBox(height: AppSpacing.xl),
-
-          // ── Elegant breakdown list ───────────────────────────────────────
-          SectionLabel(label: t.categoriesBreakdown, icon: '✨'),
-          const SizedBox(height: AppSpacing.md),
-          ...taskStats.map((stat) => CategoryDetailCard(stat: stat)),
-
-          const SizedBox(height: AppSpacing.lg),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.05),
-                  AppColors.primary.withValues(alpha: 0.02),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(AppRadii.xxl),
-              border:
-                  Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                      ),
-                    ],
-                  ),
-                  child: Text('💡', style: AppTypography.body.copyWith(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w400,
-                  ),),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Text(
-                    t.categoriesBalanceTip,
-                    style: AppTypography.caption.copyWith(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      height: 1.5,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
