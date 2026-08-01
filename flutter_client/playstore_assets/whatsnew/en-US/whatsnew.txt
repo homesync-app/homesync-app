@@ -1,0 +1,11 @@
+Couple mode, rebuilt.
+
+Housework now feeds a shared household fund. You pick a goal together, and unlocking it takes both confirmations: nobody spends it alone.
+
+Coins, the rewards store and the weekly duel are gone: in couple mode they created debts between you. Your personal XP is unchanged.
+
+New: Proposals, for asking each other for things with no price and "not now" always available.
+
+Progress now shows how the week was split, no winners.
+
+Also: push notifications fixed.

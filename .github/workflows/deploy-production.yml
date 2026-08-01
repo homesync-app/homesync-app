@@ -210,13 +210,36 @@ jobs:
           path: flutter_client/build/symbols
           if-no-files-found: warn
 
+      # Las notas versionadas mandan. El texto generico solo cubre el caso en
+      # que alguien olvide actualizarlas: una release que le saca funciones al
+      # usuario no se puede anunciar como "correcciones de errores".
       - name: Create release notes
         if: env.KEYSTORE_AVAILABLE == 'true'
         run: |
-          mkdir -p whatsnew/en-US
-          mkdir -p whatsnew/es-AR
-          echo "Bug fixes, performance improvements and UI enhancements." > whatsnew/en-US/whatsnew.txt
-          echo "Correcciones de errores, mejoras de rendimiento y mejoras de interfaz." > whatsnew/es-AR/whatsnew.txt
+          mkdir -p whatsnew/en-US whatsnew/es-AR
+          SRC=flutter_client/playstore_assets/whatsnew
+
+          for locale in en-US es-AR; do
+            if [ -s "$SRC/$locale/whatsnew.txt" ]; then
+              cp "$SRC/$locale/whatsnew.txt" "whatsnew/$locale/whatsnew.txt"
+              echo "✅ $locale: notas versionadas"
+            elif [ "$locale" = "es-AR" ]; then
+              echo "⚠️ es-AR sin notas versionadas — usando texto generico"
+              echo "Correcciones de errores, mejoras de rendimiento y mejoras de interfaz." \
+                > "whatsnew/$locale/whatsnew.txt"
+            else
+              echo "⚠️ en-US sin notas versionadas — usando texto generico"
+              echo "Bug fixes, performance improvements and UI enhancements." \
+                > "whatsnew/$locale/whatsnew.txt"
+            fi
+
+            # Play rechaza la subida por encima de 500 caracteres.
+            count=$(wc -m < "whatsnew/$locale/whatsnew.txt")
+            if [ "$count" -gt 500 ]; then
+              echo "❌ $locale: $count caracteres, el limite de Play es 500"
+              exit 1
+            fi
+          done
 
       # Publicacion directa: track production con status completed. La release
       # queda enviada a revision de Google y se publica sola al aprobarse

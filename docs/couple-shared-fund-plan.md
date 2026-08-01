@@ -4,7 +4,7 @@ Propuesta de rediseño de la economía del modo pareja. Reemplaza el circuito
 actual *"hago tareas → gano moneda personal → compro algo que mi pareja me
 debe"* por un fondo común del hogar y un espacio de propuestas sin precio.
 
-Estado: implementado (1.3.0).
+Estado: implementado (1.4.0).
 
 Ya está en la app y en la base:
 

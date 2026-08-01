@@ -112,3 +112,6 @@ supabase/.env.claude
 
 # Impeccable (design critique) — snapshots locales regenerables
 .impeccable/
+
+# Kotlin build session data generada por `flutter build` (Gradle/KGP)
+flutter_client/android/.kotlin/
