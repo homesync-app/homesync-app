@@ -13,6 +13,11 @@ class AchievementsTab extends StatelessWidget {
   final List<Map<String, dynamic>> memberStats;
   final List<Map<String, dynamic>> taskStats;
   final bool isSolo;
+
+  /// Cuando viene con valor, el XP se cuenta solo de esa persona en vez de
+  /// sumarse entre miembros. En pareja el XP es estrictamente personal, y un
+  /// total del hogar deja deducir el del otro restando el propio.
+  final String? xpScopeUserId;
   final Future<void> Function() onRefresh;
 
   const AchievementsTab({
@@ -20,6 +25,7 @@ class AchievementsTab extends StatelessWidget {
     required this.memberStats,
     required this.taskStats,
     this.isSolo = false,
+    this.xpScopeUserId,
     required this.onRefresh,
   });
 
@@ -37,7 +43,12 @@ class AchievementsTab extends StatelessWidget {
     );
     final totalTasks =
         totalTasksByCategory > 0 ? totalTasksByCategory : totalTasksByMember;
-    final totalXp = memberStats.fold<int>(
+    final scopedMemberStats = xpScopeUserId == null
+        ? memberStats
+        : memberStats
+            .where((item) => item['user_id']?.toString() == xpScopeUserId)
+            .toList(growable: false);
+    final totalXp = scopedMemberStats.fold<int>(
       0,
       (sum, item) => sum + ((item['xp_earned'] as num?)?.toInt() ?? 0),
     );

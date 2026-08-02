@@ -62,9 +62,15 @@ class HouseholdCapabilities {
   /// nadie — pero nunca se muestra en marco comparativo.
   bool get usesCoinEconomy => type != HouseholdType.couple;
 
-  /// Card del duelo semanal en Stats. Es marco competitivo aunque solo muestre
-  /// datos propios, así que no va en pareja.
+  /// Card e historial del duelo semanal en Stats. Es marco competitivo aunque
+  /// solo muestre datos propios, así que no va en pareja.
   bool get showsWeeklyDuelCard => type != HouseholdType.couple;
+
+  /// Totales de XP sumados entre miembros. En pareja el XP es estrictamente
+  /// personal: visible solo para uno mismo, nunca al lado del de la pareja y
+  /// nunca en una vista compartida. Un total del hogar viola las dos últimas,
+  /// porque el otro se deduce restando.
+  bool get showsHouseholdXpTotals => type != HouseholdType.couple;
 
   /// Ranking competitivo (corona, puntos, posiciones, adultos vs chicos).
   /// Solo familia. Convivencia usa "equilibrio de aporte" neutro en su lugar.

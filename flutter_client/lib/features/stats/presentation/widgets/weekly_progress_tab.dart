@@ -96,15 +96,17 @@ class WeeklyProgressTab extends ConsumerWidget {
                     color: AppColors.primary,
                   ),
                 ),
-                _metricDivider(context),
-                Expanded(
-                  child: _SummaryMetric(
-                    icon: '✨',
-                    value: '$totalXp',
-                    label: t.statsXP,
-                    color: AppColors.accentGold,
+                if (caps.showsHouseholdXpTotals) ...[
+                  _metricDivider(context),
+                  Expanded(
+                    child: _SummaryMetric(
+                      icon: '✨',
+                      value: '$totalXp',
+                      label: t.statsXP,
+                      color: AppColors.accentGold,
+                    ),
                   ),
-                ),
+                ],
                 if (caps.usesCoinEconomy) ...[
                   _metricDivider(context),
                   Expanded(
@@ -224,7 +226,11 @@ class WeeklyProgressTab extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          if (duelHistory.isNotEmpty) ...[
+          // El historial de duelos muestra "tu XP - el de tu pareja" con un
+          // ganador. Los hogares de pareja conservan filas viejas en
+          // weekly_duel_history para auditoría, así que sin este gate el duelo
+          // sigue a la vista aunque ya no se generen duelos nuevos.
+          if (caps.showsWeeklyDuelCard && duelHistory.isNotEmpty) ...[
             SectionLabel(label: t.statsWeeklyHistory, icon: '•'),
             const SizedBox(height: AppSpacing.md),
             DuelHistoryWidget(duelHistory: duelHistory),

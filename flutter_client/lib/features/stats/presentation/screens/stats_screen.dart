@@ -165,6 +165,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                   memberStats: stats.memberActivity,
                   taskStats: stats.taskStats,
                   isSolo: isSolo,
+                  xpScopeUserId: caps.showsHouseholdXpTotals
+                      ? null
+                      : ref.watch(currentUserIdProvider),
                   onRefresh: ref.read(statsControllerProvider.notifier).refresh,
                 ),
               ],
