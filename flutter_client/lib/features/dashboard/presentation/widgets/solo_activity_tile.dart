@@ -39,6 +39,7 @@ class SoloActivityTile extends ConsumerWidget {
       t,
       localizedActivityTitle(t, data),
       category,
+      isExpense: type == 'expense',
     );
     final xpReward = activityReadInt(
       data['xp_reward'] ?? data['xp_per_user'] ?? data['xp'],

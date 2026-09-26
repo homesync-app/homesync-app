@@ -472,6 +472,8 @@ class _MyAppState extends ConsumerState<MyApp> {
     ref.read(authBootstrapProvider);
     unawaited(_configureAnalytics());
     _wireAnalyticsContext();
+    // Arranca el reloj de "una semana de uso" antes de pedir una reseña.
+    unawaited(ref.read(reviewPromptServiceProvider).markFirstSeen());
 
     if (AppEnvironment.adminTestingAutoLogin) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

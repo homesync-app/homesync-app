@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/models/task_completion_result.dart';
+import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
@@ -61,6 +64,7 @@ mixin TaskCompletionFlowMixin<T extends ConsumerStatefulWidget>
         type: AppSnackBarType.success,
       );
       onCompleted?.call(result);
+      _countCompletionForReview();
     } catch (error, stackTrace) {
       log.e(
         'Task completion failed for task ${task.id}',
@@ -79,6 +83,16 @@ mixin TaskCompletionFlowMixin<T extends ConsumerStatefulWidget>
       if (mounted) {
         setState(() => completingTaskIds.remove(task.id));
       }
+    }
+  }
+
+  /// Cuenta la tarea para el pedido de reseña (a la décima). Aislado: un
+  /// problema acá nunca puede convertir una tarea completada en un error.
+  void _countCompletionForReview() {
+    try {
+      unawaited(ref.read(reviewPromptServiceProvider).onTaskCompleted());
+    } catch (error) {
+      log.w('Review prompt skipped after task completion: $error');
     }
   }
 }

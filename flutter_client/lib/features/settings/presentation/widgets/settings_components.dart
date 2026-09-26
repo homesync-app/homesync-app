@@ -226,7 +226,10 @@ class SettingsThemePalettePicker extends StatelessWidget {
                       // del color de la paleta (visible en claro y oscuro;
                       // el anillo surface-sobre-surface era invisible).
                       border: isSelected
-                          ? Border.all(color: theme.scaffoldBackground, width: 3)
+                          ? Border.all(
+                              color: theme.scaffoldBackground,
+                              width: 3,
+                            )
                           : null,
                       boxShadow: [
                         if (isSelected)
@@ -406,6 +409,18 @@ class SettingsLanguageCard extends StatelessWidget {
   }
 }
 
+String _currencyName(AppLocalizations t, AppCurrency currency) {
+  return switch (currency.code) {
+    'ARS' => t.currencyNameArs,
+    'USD' => t.currencyNameUsd,
+    'EUR' => t.currencyNameEur,
+    'BRL' => t.currencyNameBrl,
+    'CLP' => t.currencyNameClp,
+    'UYU' => t.currencyNameUyu,
+    _ => currency.code,
+  };
+}
+
 class SettingsCurrencyCard extends StatelessWidget {
   final AppCurrency currentCurrency;
   final ValueChanged<AppCurrency> onCurrencyChanged;
@@ -420,7 +435,6 @@ class SettingsCurrencyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
-    final languageCode = Localizations.localeOf(context).languageCode;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -509,12 +523,13 @@ class SettingsCurrencyCard extends StatelessWidget {
                         style: AppTypography.caption.copyWith(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: isSelected ? theme.primary : theme.textSecondary,
+                          color:
+                              isSelected ? theme.primary : theme.textSecondary,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        currency.label(languageCode),
+                        '${currency.code} · ${_currencyName(t, currency)}',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight:
@@ -1077,4 +1092,3 @@ class SettingsProfileActionButton extends StatelessWidget {
     );
   }
 }
-

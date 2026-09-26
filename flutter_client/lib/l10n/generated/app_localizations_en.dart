@@ -8171,4 +8171,71 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get premiumBenefitBudgetsRecapDesc =>
       'Set limits per category and see each month\'s wrap-up: where the money went and who paid for what.';
+
+  @override
+  String get currencyNameArs => 'Argentine peso';
+
+  @override
+  String get currencyNameUsd => 'US dollar';
+
+  @override
+  String get currencyNameEur => 'Euro';
+
+  @override
+  String get currencyNameBrl => 'Brazilian real';
+
+  @override
+  String get currencyNameClp => 'Chilean peso';
+
+  @override
+  String get currencyNameUyu => 'Uruguayan peso';
+
+  @override
+  String get categoryLabelHome => 'Home';
+
+  @override
+  String get categoryLabelOther => 'Other';
+
+  @override
+  String weeklySummaryTasksDoneBody(int planned, int done) {
+    String _temp0 = intl.Intl.pluralLogic(
+      planned,
+      locale: localeName,
+      other: '$done of $planned tasks done.',
+      one: '$done of 1 task done.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weeklySummaryCompletionTitle(int planned, int done, int pct) {
+    String _temp0 = intl.Intl.pluralLogic(
+      planned,
+      locale: localeName,
+      other: '$done of $planned tasks · $pct%',
+      one: '$done of 1 task · $pct%',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weeklySummaryVsLastWeek(String delta) {
+    return '$delta vs. last week';
+  }
+
+  @override
+  String weeklySummaryExpensesThisWeek(String amount) {
+    return '$amount this week';
+  }
+
+  @override
+  String weeklySummaryTopCategoryBody(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$amount across $count expenses.',
+      one: '$amount across 1 expense.',
+    );
+    return '$_temp0';
+  }
 }

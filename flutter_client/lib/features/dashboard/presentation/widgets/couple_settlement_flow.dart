@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/settlement_confirm_dialog.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -72,7 +75,19 @@ Future<void> showCoupleSettlementDialog({
               : t.homeCoupleSettlementSuccessReceive(partnerName),
           type: AppSnackBarType.success,
         );
+        _askForReviewAfterSettle(ref);
       },
     ),
   );
+}
+
+/// Dejar el balance en cero es un momento de alivio: el mejor para pedir la
+/// reseña. El servicio decide si corresponde; si falla, el equilibrio igual
+/// quedó registrado y no se muestra nada.
+void _askForReviewAfterSettle(WidgetRef ref) {
+  try {
+    unawaited(ref.read(reviewPromptServiceProvider).onSettleUp());
+  } catch (error) {
+    log.w('Review prompt skipped after settle-up: $error');
+  }
 }

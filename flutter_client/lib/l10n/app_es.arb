@@ -5768,5 +5768,94 @@
   "premiumBenefitBudgetsRecapDesc": "Poné topes por categoría y mirá el cierre de cada mes: en qué se fue la plata y quién puso qué.",
   "@premiumBenefitBudgetsRecapDesc": {
     "description": "Premium benefit description on the paywall for budgets and the monthly recap."
+  },
+  "currencyNameArs": "Peso argentino",
+  "@currencyNameArs": {
+    "description": "Currency name in the Settings currency picker (ARS)."
+  },
+  "currencyNameUsd": "Dólar estadounidense",
+  "@currencyNameUsd": {
+    "description": "Currency name in the Settings currency picker (USD)."
+  },
+  "currencyNameEur": "Euro",
+  "@currencyNameEur": {
+    "description": "Currency name in the Settings currency picker (EUR)."
+  },
+  "currencyNameBrl": "Real brasileño",
+  "@currencyNameBrl": {
+    "description": "Currency name in the Settings currency picker (BRL)."
+  },
+  "currencyNameClp": "Peso chileno",
+  "@currencyNameClp": {
+    "description": "Currency name in the Settings currency picker (CLP)."
+  },
+  "currencyNameUyu": "Peso uruguayo",
+  "@currencyNameUyu": {
+    "description": "Currency name in the Settings currency picker (UYU)."
+  },
+  "categoryLabelHome": "Hogar",
+  "@categoryLabelHome": {
+    "description": "Generic household category label for tasks or activity without a specific category."
+  },
+  "categoryLabelOther": "Otros",
+  "@categoryLabelOther": {
+    "description": "Fallback category label when an item has no known category."
+  },
+  "weeklySummaryTasksDoneBody": "{planned, plural, =1{{done} de 1 tarea completada.} other{{done} de {planned} tareas completadas.}}",
+  "@weeklySummaryTasksDoneBody": {
+    "description": "Weekly family summary hero subtitle: tasks done out of tasks planned this week.",
+    "placeholders": {
+      "planned": {
+        "type": "int"
+      },
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "weeklySummaryCompletionTitle": "{planned, plural, =1{{done} de 1 tarea · {pct}%} other{{done} de {planned} tareas · {pct}%}}",
+  "@weeklySummaryCompletionTitle": {
+    "description": "Weekly family summary completion card title: tasks done, tasks planned and completion percentage.",
+    "placeholders": {
+      "planned": {
+        "type": "int"
+      },
+      "done": {
+        "type": "int"
+      },
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "weeklySummaryVsLastWeek": "{delta} vs. la semana anterior",
+  "@weeklySummaryVsLastWeek": {
+    "description": "Change in completed tasks versus the previous week. {delta} is a signed number such as +2 or -1.",
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "weeklySummaryExpensesThisWeek": "{amount} esta semana",
+  "@weeklySummaryExpensesThisWeek": {
+    "description": "Weekly family summary spending card title. {amount} is the formatted shared spending.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "weeklySummaryTopCategoryBody": "{count, plural, =1{{amount} en 1 gasto.} other{{amount} en {count} gastos.}}",
+  "@weeklySummaryTopCategoryBody": {
+    "description": "Weekly family summary top category card subtitle: total spent and number of expenses in that category.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
   }
 }

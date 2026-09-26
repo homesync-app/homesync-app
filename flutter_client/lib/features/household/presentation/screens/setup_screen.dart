@@ -128,8 +128,41 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         UserAvatar.defaultAvatars.first['emoji'] as String,
       );
       _prefillIdentityFromAuth();
+      unawaited(_prefillInviteCodeFromInstall());
     });
     _loadTemplates();
+  }
+
+  /// Quien instaló desde el link de invitación trae el código en el referrer
+  /// de Play: se abre "Tengo un código" ya completo para que solo toque
+  /// "Unirme".
+  Future<void> _prefillInviteCodeFromInstall() async {
+    if (widget.isAdminPreview) return;
+    final String? code;
+    try {
+      code = await ref.read(installReferrerServiceProvider).takeInviteCode();
+    } catch (error, stackTrace) {
+      log.w(
+        'SetupScreen install referrer failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return;
+    }
+    if (code == null || !mounted) return;
+    // No pisar lo que la persona ya empezó: si avanzó a crear su hogar o
+    // escribió otro código, se respeta.
+    if (_wizardState.step != SetupStep.start ||
+        _codeController.text.trim().isNotEmpty) {
+      return;
+    }
+    _codeController.text = code;
+    _wizard.setCreateNew(false);
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .trackInviteCodePrefilled(source: 'install_referrer'),
+    );
   }
 
   @override

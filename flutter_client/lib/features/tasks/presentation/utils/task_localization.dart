@@ -1,5 +1,6 @@
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -218,8 +219,81 @@ String localizedTaskCategoryFromKey(
       return localizedTaskCategoryName(t, category);
     }
   }
+  return localizedCategoryName(t, rawKey);
+}
+
+/// Nombre visible de una categoría a partir de su clave cruda, sea de tareas
+/// (`cocina`, `kitchen`, `baño`…) o de finanzas (`supermarket`, `rent`…).
+///
+/// Actividades y resúmenes guardan la clave, no el texto: sin esto la UI en
+/// inglés mostraba "Cocina" o "Supermercado". [preferFinance] resuelve a favor
+/// de finanzas las claves que existen en los dos catálogos (`compras`), para
+/// contextos de gastos.
+String localizedCategoryName(
+  AppLocalizations t,
+  String? rawKey, {
+  bool preferFinance = false,
+}) {
+  final token = normalizeFinanceToken(rawKey);
+  if (token.isEmpty) return t.categoryLabelOther;
+
+  if (preferFinance && isKnownFinanceCategory(token)) {
+    return localizedFinanceCategoryName(t, token);
+  }
+  final taskKey = _taskCategoryKeysByToken[token];
+  if (taskKey != null) {
+    return localizedTaskCatalogText(t, taskKey, rawKey!.trim());
+  }
+  if (isKnownFinanceCategory(token)) {
+    return localizedFinanceCategoryName(t, token);
+  }
+  switch (token) {
+    case 'general':
+    case 'hogar':
+      return t.categoryLabelHome;
+    case 'otros':
+    case 'varios':
+      return t.categoryLabelOther;
+  }
   return CategoryMapping.displayName(rawKey);
 }
+
+/// Claves crudas de categorías de tareas (ids de la DB, alias en inglés y los
+/// nombres en español que se guardaron en datos viejos), normalizadas sin
+/// tildes, hacia su clave del ARB.
+const _taskCategoryKeysByToken = <String, String>{
+  'limpieza': 'taskCategoryCleaningGeneral',
+  'limpieza general': 'taskCategoryCleaningGeneral',
+  'cleaning': 'taskCategoryCleaningGeneral',
+  'cocina': 'taskCategoryKitchen',
+  'kitchen': 'taskCategoryKitchen',
+  'dormitorio': 'taskCategoryBedroom',
+  'bedroom': 'taskCategoryBedroom',
+  'bano': 'taskCategoryBathroom',
+  'bathroom': 'taskCategoryBathroom',
+  'sala': 'taskCategoryCommonSpaces',
+  'espacios comunes': 'taskCategoryCommonSpaces',
+  'ropa': 'taskCategoryLaundry',
+  'laundry': 'taskCategoryLaundry',
+  'residuos': 'taskCategoryTrashRecycling',
+  'basura': 'taskCategoryTrashRecycling',
+  'basura / reciclaje': 'taskCategoryTrashRecycling',
+  'compras': 'taskCategoryShoppingOrganization',
+  'compras / organizacion': 'taskCategoryShoppingOrganization',
+  'mascotas': 'taskCategoryPets',
+  'pets': 'taskCategoryPets',
+  'exterior': 'taskCategoryOutdoorGarden',
+  'exterior / jardin': 'taskCategoryOutdoorGarden',
+  'jardin': 'taskCategoryOutdoorGarden',
+  'garden': 'taskCategoryOutdoorGarden',
+  'outdoor': 'taskCategoryOutdoorGarden',
+  'mantenimiento': 'taskCategoryHomeMaintenance',
+  'mantenimiento del hogar': 'taskCategoryHomeMaintenance',
+  'ninos': 'taskCategoryKidsCare',
+  'ninos / cuidado': 'taskCategoryKidsCare',
+  'administracion': 'taskCategoryHomeAdmin',
+  'administracion del hogar': 'taskCategoryHomeAdmin',
+};
 
 String localizedTaskTemplateTitle(AppLocalizations t, TaskTemplate template) {
   return localizedTaskCatalogText(t, template.translationKey, template.title);

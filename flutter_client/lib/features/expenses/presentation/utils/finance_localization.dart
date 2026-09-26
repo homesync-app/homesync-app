@@ -171,6 +171,42 @@ String financeTitleKeyForSave(String title, {String? category, String? type}) {
       '';
 }
 
+/// true si [categoryId] es una categoría de finanzas con nombre traducido
+/// (gasto o ingreso, incluidos alias viejos como `compras` o `alquiler`).
+bool isKnownFinanceCategory(String? categoryId) {
+  final normalized = _normalizeFinanceToken(categoryId);
+  if (normalized.isEmpty) return false;
+  final id = _categoryAliases[normalized] ?? normalized;
+  return _labeledFinanceCategoryIds.contains(id);
+}
+
+/// Ids que tienen caso propio en `localizedExpenseCategoryName` o
+/// `localizedIncomeCategoryName`. Mantener sincronizado con esos switches.
+const _labeledFinanceCategoryIds = {
+  'supermarket',
+  'utilities',
+  'rent',
+  'restaurants',
+  'transport',
+  'entertainment',
+  'health',
+  'finanzas',
+  'settlement',
+  'mercadolibre',
+  'pets',
+  'clothing',
+  'electronics',
+  'education',
+  'other',
+  'salary',
+  'freelance',
+  'ventas',
+  'bonus',
+  'reembolso',
+  'gift',
+  'investment',
+};
+
 const _incomeCategoryIds = {
   'salary',
   'freelance',
@@ -186,6 +222,7 @@ const _categoryAliases = {
   'groceries': 'supermarket',
   'shopping': 'supermarket',
   'compras': 'supermarket',
+  'ropa': 'clothing',
   'mercado libre': 'mercadolibre',
   'servicios': 'utilities',
   'facturas': 'utilities',

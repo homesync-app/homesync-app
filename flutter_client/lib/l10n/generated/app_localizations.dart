@@ -13011,6 +13011,84 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Poné topes por categoría y mirá el cierre de cada mes: en qué se fue la plata y quién puso qué.'**
   String get premiumBenefitBudgetsRecapDesc;
+
+  /// Currency name in the Settings currency picker (ARS).
+  ///
+  /// In es, this message translates to:
+  /// **'Peso argentino'**
+  String get currencyNameArs;
+
+  /// Currency name in the Settings currency picker (USD).
+  ///
+  /// In es, this message translates to:
+  /// **'Dólar estadounidense'**
+  String get currencyNameUsd;
+
+  /// Currency name in the Settings currency picker (EUR).
+  ///
+  /// In es, this message translates to:
+  /// **'Euro'**
+  String get currencyNameEur;
+
+  /// Currency name in the Settings currency picker (BRL).
+  ///
+  /// In es, this message translates to:
+  /// **'Real brasileño'**
+  String get currencyNameBrl;
+
+  /// Currency name in the Settings currency picker (CLP).
+  ///
+  /// In es, this message translates to:
+  /// **'Peso chileno'**
+  String get currencyNameClp;
+
+  /// Currency name in the Settings currency picker (UYU).
+  ///
+  /// In es, this message translates to:
+  /// **'Peso uruguayo'**
+  String get currencyNameUyu;
+
+  /// Generic household category label for tasks or activity without a specific category.
+  ///
+  /// In es, this message translates to:
+  /// **'Hogar'**
+  String get categoryLabelHome;
+
+  /// Fallback category label when an item has no known category.
+  ///
+  /// In es, this message translates to:
+  /// **'Otros'**
+  String get categoryLabelOther;
+
+  /// Weekly family summary hero subtitle: tasks done out of tasks planned this week.
+  ///
+  /// In es, this message translates to:
+  /// **'{planned, plural, =1{{done} de 1 tarea completada.} other{{done} de {planned} tareas completadas.}}'**
+  String weeklySummaryTasksDoneBody(int planned, int done);
+
+  /// Weekly family summary completion card title: tasks done, tasks planned and completion percentage.
+  ///
+  /// In es, this message translates to:
+  /// **'{planned, plural, =1{{done} de 1 tarea · {pct}%} other{{done} de {planned} tareas · {pct}%}}'**
+  String weeklySummaryCompletionTitle(int planned, int done, int pct);
+
+  /// Change in completed tasks versus the previous week. {delta} is a signed number such as +2 or -1.
+  ///
+  /// In es, this message translates to:
+  /// **'{delta} vs. la semana anterior'**
+  String weeklySummaryVsLastWeek(String delta);
+
+  /// Weekly family summary spending card title. {amount} is the formatted shared spending.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} esta semana'**
+  String weeklySummaryExpensesThisWeek(String amount);
+
+  /// Weekly family summary top category card subtitle: total spent and number of expenses in that category.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{{amount} en 1 gasto.} other{{amount} en {count} gastos.}}'**
+  String weeklySummaryTopCategoryBody(int count, String amount);
 }
 
 class _AppLocalizationsDelegate

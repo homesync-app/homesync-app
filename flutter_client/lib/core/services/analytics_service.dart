@@ -188,6 +188,18 @@ class AnalyticsService {
     );
   }
 
+  /// El código llegó precargado desde el link de invitación de Play Store.
+  /// Comparado con `invite_accepted`, mide cuánto ayuda el link frente a
+  /// tipear el código a mano.
+  Future<void> trackInviteCodePrefilled({required String source}) async {
+    await logEvent(
+      'invite_code_prefilled',
+      parameters: {
+        'source': source,
+      },
+    );
+  }
+
   /// El hogar dejó de estar solo. Se emite una única vez por dispositivo:
   /// mide el hito, no el tamaño del hogar.
   Future<void> trackHouseholdSecondMemberJoined({

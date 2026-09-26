@@ -46,6 +46,7 @@ class ActivityChatBubble extends ConsumerWidget {
       t,
       localizedActivityTitle(t, data),
       category,
+      isExpense: type == 'expense',
     );
     final userName = (data['user_name'] as String?)?.trim();
     final avatarUrl =

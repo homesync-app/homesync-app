@@ -58,16 +58,30 @@ String localizedActivityTitle(
 String activityDisplayTitle(
   AppLocalizations t,
   Object? rawTitle,
-  String? category,
-) {
+  String? category, {
+  bool isExpense = false,
+}) {
   final normalized = _normalizedText('${rawTitle ?? ''}');
   if (normalized.isEmpty) return t.activityFallbackTitle;
 
+  // Cuando el título es solo la categoría (su clave, o el nombre en español
+  // que arma el repositorio para un gasto sin título) se muestra la categoría
+  // en el idioma de la UI en vez del texto guardado. [isExpense] desempata
+  // claves que existen en tareas y en finanzas (`compras`).
   final lower = normalized.toLowerCase();
-  final categoryLower = category?.trim().toLowerCase();
-  if (lower == categoryLower ||
-      CategoryMapping.categoryNames.containsKey(lower)) {
-    return CategoryMapping.displayName(normalized);
+  final categoryKey = category?.trim() ?? '';
+  if (categoryKey.isNotEmpty &&
+      (lower == categoryKey.toLowerCase() ||
+          lower == CategoryMapping.displayName(categoryKey).toLowerCase())) {
+    final localized =
+        localizedCategoryName(t, categoryKey, preferFinance: isExpense);
+    // Clave desconocida: se conserva el título tal como vino.
+    return localized == categoryKey
+        ? CategoryMapping.displayName(normalized)
+        : localized;
+  }
+  if (CategoryMapping.categoryNames.containsKey(lower)) {
+    return localizedCategoryName(t, lower, preferFinance: isExpense);
   }
   return normalized;
 }
