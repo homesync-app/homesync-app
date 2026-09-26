@@ -27,7 +27,11 @@ class AppSectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        // Con solo el título, la acción va centrada con él: alineada abajo, el
+        // TextButton (48 dp de alto) quedaba flotando por encima del título.
+        crossAxisAlignment: eyebrow == null && subtitle == null
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.end,
         children: [
           Expanded(
             child: Column(

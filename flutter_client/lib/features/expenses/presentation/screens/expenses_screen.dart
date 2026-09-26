@@ -25,6 +25,7 @@ import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/app_swipe_to_delete.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
 import 'package:homesync_client/shared/widgets/expressive/expressive.dart';
@@ -147,6 +148,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   Widget _buildMovimientosTab() {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final summaryAsync = ref.watch(personalFinanceSummaryProvider);
     final feedAsync = ref.watch(combinedFeedControllerProvider);
     final projectionAsync = ref.watch(monthlyProjectionProvider);
@@ -188,7 +190,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 ),
                 child: summaryAsync.when(
                   loading: () => _buildSummaryLoadingCard(),
-                  error: (e, _) => Center(child: Text('Error: $e')),
+                  error: (_, __) => AppInlineError(
+                    message: t.expensesSummaryLoadError,
+                    onRetry: () =>
+                        ref.invalidate(personalFinanceSummaryProvider),
+                  ),
                   data: (summary) {
                     // v2 RPC (posición neta, month-scoped): income/expense son
                     // del mes y expense ya es MI parte de los compartidos.
@@ -250,9 +256,20 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             // 4. FEED & FUTURE EXPENSES
             feedAsync.when(
               loading: () => _buildFeedLoadingSliver(),
-              error: (e, _) => SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(child: Text('Error: $e')),
+              error: (_, __) => SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppInsets.screenHorizontal,
+                    AppSpacing.md,
+                    AppInsets.screenHorizontal,
+                    0,
+                  ),
+                  child: AppInlineError(
+                    message: t.expensesFeedLoadError,
+                    onRetry: () =>
+                        ref.invalidate(combinedFeedControllerProvider),
+                  ),
+                ),
               ),
               data: (feedItems) {
                 final filteredItems =
@@ -370,12 +387,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           padding: const EdgeInsets.symmetric(
                             vertical: AppSpacing.xxl,
                           ),
-                          child: _buildEmptyState(
-                            AppLocalizations.of(context).expensesActivityEmpty,
-                            actionLabel:
-                                AppLocalizations.of(context).expensesEmptyCta,
-                            onAction: () => _showExpenseSheet(),
-                          ),
+                          // Sin botón propio: el FAB "Movimiento" ya está en
+                          // pantalla y dos CTAs iguales compiten entre sí.
+                          child: _buildEmptyState(t.expensesActivityEmpty),
                         ),
                       ),
                     const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -627,7 +641,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               value: amount.toDouble(),
               locale: ref.watch(currencyProvider).locale,
               prefix: ref.watch(currencyProvider).inputPrefix(),
-              style: (isBold ? AppTypography.sectionTitle : AppTypography.cardTitle)
+              style: (isBold
+                      ? AppTypography.sectionTitle
+                      : AppTypography.cardTitle)
                   .copyWith(
                 color: isBold ? theme.textPrimary : color,
                 fontSize: isBold ? 20 : 17,
@@ -1235,8 +1251,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       children: [
         Text(
           label,
-          style: (isFinal ? AppTypography.cardTitle : AppTypography.body)
-              .copyWith(
+          style:
+              (isFinal ? AppTypography.cardTitle : AppTypography.body).copyWith(
             color: isFinal ? theme.textPrimary : theme.textSecondary,
             fontSize: isFinal ? 18 : 16,
           ),
@@ -2243,12 +2259,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     return ref.read(currencyProvider).format(amount, signed: signed);
   }
 
-  Widget _buildEmptyState(
-    String message, {
-    String? subtitle,
-    String? actionLabel,
-    VoidCallback? onAction,
-  }) {
+  Widget _buildEmptyState(String message, {String? subtitle}) {
     final theme = context.theme;
 
     return Center(
@@ -2292,27 +2303,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               ),
             ),
           ),
-          if (actionLabel != null && onAction != null) ...[
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: onAction,
-              icon: const Icon(Icons.add_rounded),
-              label: Text(actionLabel),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xl,
-                  vertical: AppSpacing.md,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadii.pill),
-                ),
-                textStyle: AppTypography.bodyStrong.copyWith(fontSize: 15),
-              ),
-            ),
-          ],
         ],
       ),
     ).animateEntrance();

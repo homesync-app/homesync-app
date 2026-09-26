@@ -11,8 +11,8 @@ colors:
   elevated-surface: "#FDF6EF"
   nav-surface: "#FFFBF7"
   text-primary: "#4A4443"
-  text-secondary: "#8E8480"
-  text-muted: "#B2AAA6"
+  text-secondary: "#756C68"
+  text-muted: "#968D89"
   text-on-primary: "#FFFFFF"
   divider: "#F0E4D9"
   border: "#F0E4D9"
@@ -179,7 +179,7 @@ The palette avoids sterile white and harsh black. It uses warm off-white backgro
 - **Warm Paper (`#FFFCF9`):** Default app background. It should make screens feel light, domestic, and readable.
 - **Soft Cream Surface (`#FFF8F2`):** Default card, sheet, and grouped-content surface.
 - **Warm Ink (`#4A4443`):** Main text color. Prefer this over pure black.
-- **Muted Taupe (`#8E8480`, `#B2AAA6`):** Secondary text, metadata, helper copy, inactive labels, and quieter icons.
+- **Muted Taupe (`#756C68`, `#968D89`):** Secondary text, metadata, helper copy, inactive labels, and quieter icons. `#756C68` clears 4.5:1 on every light surface, so it is safe for body-size secondary copy. `#968D89` clears 3:1 only: use it for large text, icons, and non-essential metadata, never for copy someone needs to read to act.
 - **Sage (`#84A59D`):** Collaborative or reassuring accent, especially for positive household progress, calm states, and non-primary reinforcement.
 - **Success Green (`#22C55E`):** Completed states, positive balances, successful sync, and confirmation.
 - **Gold (`#FFBD3D`):** Rewards, coins, premium cues, and celebratory indicators.

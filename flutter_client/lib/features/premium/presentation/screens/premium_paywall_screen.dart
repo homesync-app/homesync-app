@@ -14,9 +14,12 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/mascot_motion_provider.dart';
+import 'package:homesync_client/features/premium/domain/premium_pricing.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_amount.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/design/app_button.dart';
 import 'package:homesync_client/shared/widgets/premium_animated_avatar.dart';
 import 'package:purchases_flutter/purchases_flutter.dart' as rc;
 
@@ -187,8 +190,8 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
                     ),
                   ),
                 ),
-                error: (err, _) => _PanelShell(
-                  child: _StoreError(error: err.toString()),
+                error: (_, __) => const _PanelShell(
+                  child: _StoreUnavailable(storeError: true),
                 ),
               ),
             ),
@@ -339,11 +342,14 @@ class _BenefitsCard extends StatelessWidget {
         t.premiumBenefitShoppingFinanceSync,
         t.premiumBenefitShoppingFinanceSyncDesc,
       ),
+      // Antes decía "Estadísticas avanzadas", pero no había nada de
+      // estadísticas detrás de Premium. Presupuestos y el resumen del mes sí
+      // son exclusivos.
       (
-        Icons.insights_rounded,
+        Icons.donut_small_rounded,
         AppColors.accentBlue,
-        t.premiumBenefitAdvancedStats,
-        t.premiumBenefitAdvancedStatsDesc,
+        t.premiumBenefitBudgetsRecap,
+        t.premiumBenefitBudgetsRecapDesc,
       ),
       (
         Icons.palette_rounded,
@@ -502,9 +508,30 @@ class _PurchasePanel extends ConsumerStatefulWidget {
 class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
   rc.Package? _selectedPackage;
 
-  bool _isAnnual(rc.Package package) {
-    return package.packageType == rc.PackageType.annual ||
-        package.storeProduct.identifier.contains(':annual');
+  /// Compra o restore en curso. Un segundo toque mientras la tienda responde
+  /// abría otro diálogo de pago encima del primero.
+  bool _busy = false;
+
+  bool _isAnnual(rc.Package package) => _isAnnualPackage(package);
+
+  /// Cuánto se ahorra el anual contra 12 meses del mensual, redondeado hacia
+  /// abajo para no prometer de más. Antes el badge decía siempre 20%, fuera
+  /// cual fuera el precio real de la tienda.
+  int? _annualSavePercent() {
+    final annual = widget.products.where(_isAnnual).firstOrNull;
+    final monthly = widget.products
+        .where((package) => !_isAnnual(package))
+        .where(
+          (package) =>
+              package.packageType == rc.PackageType.monthly ||
+              package.storeProduct.identifier.contains(':monthly'),
+        )
+        .firstOrNull;
+    if (annual == null || monthly == null) return null;
+    return annualSavingsPercent(
+      annualPrice: annual.storeProduct.price,
+      monthlyPrice: monthly.storeProduct.price,
+    );
   }
 
   rc.Package _defaultPackage() {
@@ -526,8 +553,9 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
   }
 
   Future<void> _buy(rc.Package package) async {
+    if (_busy) return;
     final t = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
     try {
       final isPremium =
           await ref.read(premiumProvider.notifier).buyProduct(package);
@@ -542,14 +570,26 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
       // Purchase errors (billing unavailable, DEVELOPER_ERROR on
       // non-Play builds, region issues, etc.) must never crash the
       // app — buyProduct already logs them. Show a friendly notice.
-      messenger.showSnackBar(SnackBar(content: Text(t.commonError)));
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: t.commonError,
+          type: AppSnackBarType.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
   Future<void> _restore() async {
-    final isPremium =
-        await ref.read(premiumProvider.notifier).restorePurchases();
-    if (isPremium && mounted) Navigator.pop(context);
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await _restorePurchasesWithFeedback(context, ref);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -557,53 +597,14 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
 
+    // Sin productos no hay nada que vender: antes quedaba un "Prueba gratis
+    // disponible" con un botón deshabilitado en producción, sin salida.
     if (widget.products.isEmpty) {
-      return _PanelShell(
-        child: Column(
-          children: [
-            Text(
-              t.premiumFreeTrialAvailable,
-              style: TextStyle(
-                color: theme.textPrimary,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadii.lg),
-                ),
-              ),
-              onPressed: AppEnvironment.isProduction
-                  ? null
-                  : () async {
-                      await ref
-                          .read(premiumProvider.notifier)
-                          .togglePremiumMock();
-                      if (context.mounted) Navigator.pop(context);
-                    },
-              child: Text(t.premiumActivateButton),
-            ),
-            if (!AppEnvironment.isProduction) ...[
-              const SizedBox(height: 8),
-              Text(
-                t.premiumTestingModeLabel,
-                style: AppTypography.caption.copyWith(
-                  fontSize: 11,
-                  color: theme.textMuted,
-                ),
-              ),
-            ],
-          ],
-        ),
-      );
+      return const _PanelShell(child: _StoreUnavailable(storeError: false));
     }
 
     final selectedPackage = _selectedPackage ?? _defaultPackage();
+    final savePercent = _annualSavePercent();
     final sortedProducts = [...widget.products]..sort((a, b) {
         final aAnnual = _isAnnual(a);
         final bAnnual = _isAnnual(b);
@@ -627,6 +628,8 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
                     child: _PlanCard(
                       package: sortedProducts[i],
                       isAnnual: _isAnnual(sortedProducts[i]),
+                      savePercent:
+                          _isAnnual(sortedProducts[i]) ? savePercent : null,
                       isSelected: sortedProducts[i].identifier ==
                           selectedPackage.identifier,
                       onTap: () {
@@ -642,33 +645,49 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
             ),
           ),
           const SizedBox(height: 14),
-          AnimatedPress(
-            scale: 0.98,
-            haptic: AppPressHaptic.light,
-            onTap: () => _buy(selectedPackage),
-            child: Container(
-              height: 56,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [AppColors.primary, AppColors.primaryDark],
-                ),
-                borderRadius: BorderRadius.circular(AppRadii.pill),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.34),
-                    blurRadius: 22,
-                    offset: const Offset(0, 10),
+          MergeSemantics(
+            child: Semantics(
+              button: true,
+              enabled: !_busy,
+              child: AnimatedPress(
+                scale: 0.98,
+                haptic: AppPressHaptic.light,
+                onTap: _busy ? null : () => _buy(selectedPackage),
+                child: Container(
+                  height: 56,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [AppColors.primary, AppColors.primaryDark],
+                    ),
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.34),
+                        blurRadius: 22,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Text(
-                t.premiumContinueWithPlan,
-                style: AppTypography.cardTitle.copyWith(
-                  fontSize: 16.5,
-                  color: Colors.white,
+                  child: _busy
+                      ? SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            color: Colors.white,
+                            semanticsLabel: t.commonLoading,
+                          ),
+                        )
+                      : Text(
+                          t.premiumContinueWithPlan,
+                          style: AppTypography.cardTitle.copyWith(
+                            fontSize: 16.5,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -701,7 +720,7 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
                   ),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                onPressed: _restore,
+                onPressed: _busy ? null : _restore,
                 child: Text(
                   t.premiumRestorePurchases,
                   style: AppTypography.caption.copyWith(
@@ -723,12 +742,17 @@ class _PlanCard extends StatelessWidget {
   final rc.Package package;
   final bool isSelected;
   final bool isAnnual;
+
+  /// Ahorro real del anual; null oculta el badge (sin mensual para comparar
+  /// o ahorro chico).
+  final int? savePercent;
   final VoidCallback onTap;
 
   const _PlanCard({
     required this.package,
     required this.isSelected,
     required this.isAnnual,
+    required this.savePercent,
     required this.onTap,
   });
 
@@ -817,7 +841,7 @@ class _PlanCard extends StatelessWidget {
               ],
             ),
           ),
-          if (isAnnual)
+          if (savePercent != null)
             Positioned(
               top: -9,
               left: 12,
@@ -831,7 +855,7 @@ class _PlanCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadii.pill),
                 ),
                 child: Text(
-                  t.premiumSavePercent,
+                  t.premiumSavePercent(savePercent!),
                   style: AppTypography.caption.copyWith(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -1018,45 +1042,115 @@ class _PremiumActiveHero extends StatelessWidget {
   }
 }
 
-class _StoreError extends ConsumerWidget {
-  final String error;
-  const _StoreError({required this.error});
+/// La tienda no respondió o no devolvió planes. Siempre deja una salida:
+/// reintentar, o restaurar si la persona ya había pagado. Antes mostraba el
+/// texto crudo de la excepción.
+class _StoreUnavailable extends ConsumerStatefulWidget {
+  /// true: falló la conexión con la tienda; false: respondió sin planes.
+  final bool storeError;
+
+  const _StoreUnavailable({required this.storeError});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_StoreUnavailable> createState() => _StoreUnavailableState();
+}
+
+class _StoreUnavailableState extends ConsumerState<_StoreUnavailable> {
+  bool _restoring = false;
+
+  Future<void> _restore() async {
+    if (_restoring) return;
+    setState(() => _restoring = true);
+    try {
+      await _restorePurchasesWithFeedback(context, ref);
+    } finally {
+      if (mounted) setState(() => _restoring = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Icon(
           Icons.cloud_off_rounded,
           color: theme.textSecondary,
-          size: 48,
+          size: 36,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.sm),
         Text(
-          t.premiumStoreErrorTitle,
-          style: TextStyle(
-            color: theme.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
+          widget.storeError
+              ? t.premiumStoreErrorTitle
+              : t.premiumProductsUnavailableTitle,
+          textAlign: TextAlign.center,
+          style: AppTypography.cardTitle.copyWith(color: theme.textPrimary),
         ),
+        const SizedBox(height: AppSpacing.xxs),
         Text(
-          error,
-          style: AppTypography.caption.copyWith(
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-            color: theme.textMuted,
-          ),
+          t.premiumProductsUnavailableBody,
+          textAlign: TextAlign.center,
+          style: AppTypography.body.copyWith(color: theme.textSecondary),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.md),
+        AppButton(
+          label: t.commonRetry,
+          icon: Icons.refresh_rounded,
+          isFullWidth: true,
+          isDisabled: _restoring,
+          onTap: () => ref.invalidate(premiumProductsProvider),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        TextButton(
+          onPressed: _restoring ? null : _restore,
+          child: Text(t.premiumRestorePurchases),
+        ),
         if (!AppEnvironment.isProduction)
-          ElevatedButton(
-            onPressed: () =>
-                ref.read(premiumProvider.notifier).togglePremiumMock(),
+          TextButton(
+            onPressed: () async {
+              await ref.read(premiumProvider.notifier).togglePremiumMock();
+              if (context.mounted) Navigator.pop(context);
+            },
             child: Text(t.premiumDeveloperModeButton),
           ),
       ],
+    );
+  }
+}
+
+bool _isAnnualPackage(rc.Package package) {
+  return package.packageType == rc.PackageType.annual ||
+      package.storeProduct.identifier.contains(':annual');
+}
+
+/// Restaura una compra previa y siempre avisa el resultado. Antes, si no
+/// había nada que restaurar, el botón no hacía nada visible.
+Future<void> _restorePurchasesWithFeedback(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  final t = AppLocalizations.of(context);
+  try {
+    final isPremium =
+        await ref.read(premiumProvider.notifier).restorePurchases();
+    if (!context.mounted) return;
+    if (isPremium) {
+      Navigator.pop(context);
+      return;
+    }
+    AppSnackBar.show(
+      context,
+      message: t.premiumRestoreNothing,
+      type: AppSnackBarType.neutral,
+    );
+  } catch (_) {
+    if (!context.mounted) return;
+    AppSnackBar.show(
+      context,
+      message: t.premiumRestoreError,
+      type: AppSnackBarType.error,
     );
   }
 }

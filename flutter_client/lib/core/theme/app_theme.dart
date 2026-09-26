@@ -109,7 +109,10 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
+          // El textStyle del botón reemplaza al del tema (no se mezcla), así
+          // que sin la familia explícita los botones salían en Roboto.
           textStyle: const TextStyle(
+            fontFamily: 'Outfit',
             fontSize: 17,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.1,
@@ -127,7 +130,10 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
+          // El textStyle del botón reemplaza al del tema (no se mezcla), así
+          // que sin la familia explícita los botones salían en Roboto.
           textStyle: const TextStyle(
+            fontFamily: 'Outfit',
             fontSize: 17,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.1,
@@ -143,7 +149,10 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
+          // El textStyle del botón reemplaza al del tema (no se mezcla), así
+          // que sin la familia explícita los botones salían en Roboto.
           textStyle: const TextStyle(
+            fontFamily: 'Outfit',
             fontSize: 17,
             fontWeight: FontWeight.w700,
           ),
@@ -154,6 +163,7 @@ class AppTheme {
           foregroundColor: primary,
           minimumSize: const Size(0, 48),
           textStyle: const TextStyle(
+            fontFamily: 'Outfit',
             fontSize: 15,
             fontWeight: FontWeight.w700,
           ),
@@ -311,7 +321,10 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
+          // El textStyle del botón reemplaza al del tema (no se mezcla), así
+          // que sin la familia explícita los botones salían en Roboto.
           textStyle: const TextStyle(
+            fontFamily: 'Outfit',
             fontSize: 17,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.1,
@@ -329,7 +342,10 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
+          // El textStyle del botón reemplaza al del tema (no se mezcla), así
+          // que sin la familia explícita los botones salían en Roboto.
           textStyle: const TextStyle(
+            fontFamily: 'Outfit',
             fontSize: 17,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.1,
@@ -345,7 +361,10 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
+          // El textStyle del botón reemplaza al del tema (no se mezcla), así
+          // que sin la familia explícita los botones salían en Roboto.
           textStyle: const TextStyle(
+            fontFamily: 'Outfit',
             fontSize: 17,
             fontWeight: FontWeight.w700,
           ),
@@ -356,6 +375,7 @@ class AppTheme {
           foregroundColor: primary,
           minimumSize: const Size(0, 48),
           textStyle: const TextStyle(
+            fontFamily: 'Outfit',
             fontSize: 15,
             fontWeight: FontWeight.w700,
           ),

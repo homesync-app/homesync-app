@@ -141,12 +141,18 @@ class _CustomBottomNavTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final foreground = isSelected ? theme.primary : theme.textMuted;
+    // textSecondary y no textMuted: los tabs no seleccionados tienen que
+    // leerse igual (textMuted no llega a contraste AA sobre la barra).
+    final foreground = isSelected ? theme.primary : theme.textSecondary;
 
+    // Un solo nodo por tab: sin excludeSemantics el lector leía la etiqueta
+    // dos veces (la del Semantics y la del Text de abajo).
     return Semantics(
       button: true,
       selected: isSelected,
       label: item.label,
+      onTap: onTap,
+      excludeSemantics: true,
       child: AnimatedPress(
         key: item.anchorKey,
         scale: 0.94,
@@ -155,7 +161,7 @@ class _CustomBottomNavTile extends StatelessWidget {
           duration: AppMotion.normal,
           curve: AppMotion.standard,
           margin: const EdgeInsets.symmetric(horizontal: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 7),
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.primary
@@ -182,14 +188,18 @@ class _CustomBottomNavTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                item.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: foreground,
-                  fontSize: 9.5,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+              // En pantallas de 360 dp "Finanzas" no entra a 11 sp: se achica
+              // un poco antes que cortarse con puntos suspensivos.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  item.label,
+                  maxLines: 1,
+                  style: TextStyle(
+                    color: foreground,
+                    fontSize: 11,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  ),
                 ),
               ),
             ],

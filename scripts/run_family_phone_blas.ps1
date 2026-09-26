@@ -38,11 +38,7 @@ try {
         --dart-define=ENABLE_ADMIN_TESTING=true `
         --dart-define=ADMIN_TESTING_AUTO_LOGIN=true `
         --dart-define=ADMIN_TESTING_AUTO_SCENARIO_ID=$scenarioId `
-        --dart-define=ADMIN_TESTING_AUTO_VIEWER_USER_ID=$viewerUserId `
-        --dart-define=ADMIN_TESTING_BASE_EMAIL=test@homesync.com `
-        --dart-define=ADMIN_TESTING_BASE_PASSWORD=qapass123 `
-        --dart-define=ADMIN_TESTING_USERNAME=admin `
-        --dart-define=ADMIN_TESTING_PASSWORD=superadmin
+        --dart-define=ADMIN_TESTING_AUTO_VIEWER_USER_ID=$viewerUserId
 }
 finally {
     Pop-Location

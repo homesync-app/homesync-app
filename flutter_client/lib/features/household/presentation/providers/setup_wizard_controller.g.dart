@@ -8,7 +8,7 @@ part of 'setup_wizard_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Dueño único de `currentStep` + estado del formulario del wizard de setup.
+/// Dueño único del paso actual + estado del formulario del wizard de setup.
 ///
 /// Los side effects (crear hogar, unirse, clonar tareas, guardar perfil)
 /// siguen en `SetupScreen` porque necesitan `BuildContext`/snackbars; este
@@ -18,7 +18,7 @@ part of 'setup_wizard_controller.dart';
 @ProviderFor(SetupWizardController)
 final setupWizardControllerProvider = SetupWizardControllerProvider._();
 
-/// Dueño único de `currentStep` + estado del formulario del wizard de setup.
+/// Dueño único del paso actual + estado del formulario del wizard de setup.
 ///
 /// Los side effects (crear hogar, unirse, clonar tareas, guardar perfil)
 /// siguen en `SetupScreen` porque necesitan `BuildContext`/snackbars; este
@@ -26,7 +26,7 @@ final setupWizardControllerProvider = SetupWizardControllerProvider._();
 /// que es lo que hace testeable el flujo de navegación.
 final class SetupWizardControllerProvider
     extends $NotifierProvider<SetupWizardController, SetupWizardState> {
-  /// Dueño único de `currentStep` + estado del formulario del wizard de setup.
+  /// Dueño único del paso actual + estado del formulario del wizard de setup.
   ///
   /// Los side effects (crear hogar, unirse, clonar tareas, guardar perfil)
   /// siguen en `SetupScreen` porque necesitan `BuildContext`/snackbars; este
@@ -60,9 +60,9 @@ final class SetupWizardControllerProvider
 }
 
 String _$setupWizardControllerHash() =>
-    r'9b101dc4581a8cb0f54a391318a1db8af2f408fc';
+    r'8b8ec3164722c50a4d2561e0b290a1f51b45ff9c';
 
-/// Dueño único de `currentStep` + estado del formulario del wizard de setup.
+/// Dueño único del paso actual + estado del formulario del wizard de setup.
 ///
 /// Los side effects (crear hogar, unirse, clonar tareas, guardar perfil)
 /// siguen en `SetupScreen` porque necesitan `BuildContext`/snackbars; este

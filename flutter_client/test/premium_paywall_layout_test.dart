@@ -44,11 +44,13 @@ void main() {
     // ignore: avoid_print
     print('hero rect: $heroRect');
 
-    // Panel vacio (sin productos) muestra el bloque de testing.
-    final panelText = find.textContaining('Prueba Gratis');
-    final panelTextEn = find.textContaining('Free Trial');
-    final marker = panelText.evaluate().isNotEmpty ? panelText : panelTextEn;
+    // Sin productos el panel explica qué pasó y deja salida: reintentar o
+    // restaurar (antes era un "Prueba gratis" sin acción en producción).
+    final t = AppLocalizations.of(tester.element(heroFinder));
+    final marker = find.text(t.premiumProductsUnavailableTitle);
     expect(marker, findsOneWidget);
+    expect(find.text(t.commonRetry), findsOneWidget);
+    expect(find.text(t.premiumRestorePurchases), findsOneWidget);
     final panelRect = tester.getRect(marker);
     // ignore: avoid_print
     print('panel marker rect: $panelRect');

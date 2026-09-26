@@ -65,11 +65,9 @@ $flutterArgs = @(
     "--dart-define=ENABLE_ADMIN_TESTING=true",
     "--dart-define=ADMIN_TESTING_AUTO_LOGIN=true",
     "--dart-define=ADMIN_TESTING_AUTO_SCENARIO_ID=$Scenario",
-    "--dart-define=ADMIN_TESTING_AUTO_VIEWER_USER_ID=$ViewerUserId",
-    "--dart-define=ADMIN_TESTING_BASE_EMAIL=test@homesync.com",
-    "--dart-define=ADMIN_TESTING_BASE_PASSWORD=qapass123",
-    "--dart-define=ADMIN_TESTING_USERNAME=admin",
-    "--dart-define=ADMIN_TESTING_PASSWORD=superadmin"
+    # Credenciales QA (ADMIN_TESTING_BASE_*, ADMIN_TESTING_USERNAME/PASSWORD,
+    # QA_TESTING_PASSWORD) salen de .env.local, que no se versiona.
+    "--dart-define=ADMIN_TESTING_AUTO_VIEWER_USER_ID=$ViewerUserId"
 )
 
 if ($RealQaSession) {

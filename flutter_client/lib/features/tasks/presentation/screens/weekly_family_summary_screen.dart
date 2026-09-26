@@ -1,29 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/tasks/domain/models/weekly_family_summary.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/weekly_family_summary_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
-
-String _formatMoney(num value) {
-  final rounded = value.round().abs().toString();
-  final buffer = StringBuffer();
-  for (var i = 0; i < rounded.length; i++) {
-    final fromEnd = rounded.length - i;
-    buffer.write(rounded[i]);
-    if (fromEnd > 1 && fromEnd % 3 == 1) {
-      buffer.write('.');
-    }
-  }
-  return '\$${buffer.toString()}';
-}
 
 /// Sprint 4 Modo Padres: pantalla con el resumen semanal del hogar.
 ///
@@ -152,7 +140,7 @@ class _WeeklyReadoutHero extends StatelessWidget {
                 ? t.weeklySummaryTitleQuietWithExpenses
                 : t.weeklySummaryTitleQuiet;
     final subtitle = hasTasks
-        ? '${summary.tasksDone} de ${summary.tasksPlanned} tareas completadas.'
+        ? t.weeklySummaryTasksDoneBody(summary.tasksPlanned, summary.tasksDone)
         : hasSpending
             ? t.weeklySummaryBodyExpensesNoTasks
             : t.weeklySummaryBodyNoActivity;
@@ -219,14 +207,15 @@ class _WeeklyReadoutHero extends StatelessWidget {
   }
 }
 
-class _WeeklyMetrics extends StatelessWidget {
+class _WeeklyMetrics extends ConsumerWidget {
   const _WeeklyMetrics({required this.summary});
 
   final WeeklyFamilySummary summary;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = AppLocalizations.of(context);
+    final currency = ref.watch(currencyProvider);
     final hasTasks = summary.tasksPlanned > 0;
     final pct = hasTasks
         ? '${(summary.completionRate * 100).round()}%'
@@ -246,7 +235,7 @@ class _WeeklyMetrics extends StatelessWidget {
         Expanded(
           child: _MetricTile(
             label: t.weeklySummaryMetricExpenses,
-            value: _formatMoney(summary.spendingTotal),
+            value: currency.format(summary.spendingTotal),
             icon: Icons.payments_rounded,
             color: AppColors.primary,
           ),
@@ -412,19 +401,19 @@ class _CompletionCard extends StatelessWidget {
             : pct >= 50
                 ? AppColors.accentGold
                 : AppColors.accentRed;
-    final trailingText = !hasTasks
+    final trailingText = !hasTasks || delta == 0
         ? null
-        : delta == 0
-            ? null
-            : delta > 0
-                ? '+$delta vs sem. anterior'
-                : '$delta vs sem. anterior';
+        : t.weeklySummaryVsLastWeek(delta > 0 ? '+$delta' : '$delta');
     return _StoryCard(
       accent: accent,
       icon: Icons.task_alt_rounded,
       eyebrow: t.weeklySummaryEyebrowCompletion,
       title: hasTasks
-          ? '${summary.tasksDone} de ${summary.tasksPlanned} tareas - $pct%'
+          ? t.weeklySummaryCompletionTitle(
+              summary.tasksPlanned,
+              summary.tasksDone,
+              pct,
+            )
           : t.weeklySummaryCompletionEmpty,
       subtitle: hasTasks
           ? trailingText ?? t.weeklySummaryCompletionGoodPace
@@ -524,13 +513,14 @@ class _ForgottenCard extends StatelessWidget {
   }
 }
 
-class _SpendingCard extends StatelessWidget {
+class _SpendingCard extends ConsumerWidget {
   const _SpendingCard({required this.summary});
   final WeeklyFamilySummary summary;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = AppLocalizations.of(context);
+    final currency = ref.watch(currencyProvider);
     final delta = summary.spendingDelta;
     final accent = delta < 0
         ? AppColors.accentGreen
@@ -542,34 +532,39 @@ class _SpendingCard extends StatelessWidget {
         : summary.spendingLastWeek == 0
             ? t.weeklySummaryExpensesFirst
             : delta < 0
-                ? t.weeklySummaryExpensesLess(_formatMoney(delta.abs()))
+                ? t.weeklySummaryExpensesLess(currency.format(delta.abs()))
                 : delta > 0
-                    ? t.weeklySummaryExpensesMore(_formatMoney(delta))
+                    ? t.weeklySummaryExpensesMore(currency.format(delta))
                     : t.weeklySummaryExpensesSame;
     return _StoryCard(
       accent: accent,
       icon: Icons.payments_rounded,
       eyebrow: t.weeklySummaryEyebrowExpenses,
-      title: '${_formatMoney(summary.spendingTotal)} esta semana',
+      title: t.weeklySummaryExpensesThisWeek(
+        currency.format(summary.spendingTotal),
+      ),
       subtitle: deltaLabel,
     );
   }
 }
 
-class _TopCategoryCard extends StatelessWidget {
+class _TopCategoryCard extends ConsumerWidget {
   const _TopCategoryCard({required this.top});
   final TopCategorySpend top;
 
   @override
-  Widget build(BuildContext context) {
-    final categoryName = CategoryMapping.displayName(top.category);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context);
+    final currency = ref.watch(currencyProvider);
     return _StoryCard(
       accent: AppColors.accentPurple,
       icon: Icons.category_rounded,
-      eyebrow: AppLocalizations.of(context).weeklySummaryEyebrowTopCategory,
-      title: categoryName,
-      subtitle:
-          '${_formatMoney(top.total)} en ${top.count} gasto${top.count == 1 ? "" : "s"}.',
+      eyebrow: t.weeklySummaryEyebrowTopCategory,
+      title: localizedCategoryName(t, top.category, preferFinance: true),
+      subtitle: t.weeklySummaryTopCategoryBody(
+        top.count,
+        currency.format(top.total),
+      ),
     );
   }
 }

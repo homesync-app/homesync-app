@@ -2,7 +2,7 @@
 
 ## Stack
 
-- **Frontend**: Flutter 3.41+ / Dart 3.11+ con Riverpod 2.x
+- **Frontend**: Flutter 3.47.5 / Dart 3.13 con Riverpod 3.x. CI (`tests.yml`) y el deploy (`deploy-production.yml`, `shorebird release --flutter-version=3.47.5`) fijan la misma versión: para subir Flutter, cambiar los dos workflows juntos y confirmar que Shorebird la soporta.
 - **Backend**: Supabase (Postgres + Edge Functions + Storage + Realtime)
 - **Auth**: Firebase Auth (Google + email/password) → Supabase Third-Party Auth (JWT de Firebase como access token de Supabase)
 - **OCR**: Edge Function `scan-receipt` → Gemini 3.1 Flash-Lite (migrado desde 2.5 Flash, deprecado 17-jun-2026). Usa structured output (`responseSchema`) y `thinkingLevel` (serie 3.x; NO `thinkingBudget`).
@@ -109,6 +109,17 @@ un error `permission denied for function` indica grants/permisos.
   o la Management API, leer ese archivo y exportar `SUPABASE_ACCESS_TOKEN` (y `SUPABASE_DB_URL` si
   hay que correr SQL directo). No pedir al usuario que genere tokens nuevos: el token es fijo.
 - Ejemplo (bash): `export $(grep -v '^#' supabase/.env.claude | xargs)`
+- La contraseña de la base se rotó el 2026-09-26: la vigente está solo en `SUPABASE_DB_URL` de
+  `supabase/.env.claude` y en el secret `PROD_DATABASE_URL` de GitHub. Si se vuelve a rotar,
+  actualizar los dos.
+- Credenciales QA (cuenta admin base, cuentas `qa.*@homesync.local`, gate del panel admin): solo
+  en `flutter_client/.env.local` (gitignored). `.env.example` lista las claves sin valores. Nunca
+  commitearlas en scripts, docs ni defaults de código.
+- Los sign-ups nativos de Supabase están desactivados (`disable_signup=true`): el alta real pasa
+  por Firebase. Las cuentas QA solo inician sesión.
+- `.github/workflows/supabase-keepalive.yml` consulta PostgREST cada 3 días para que el plan Free
+  no pause el proyecto. GitHub apaga los workflows programados tras 60 días sin commits: si pasa,
+  reactivarlo desde Actions.
 
 ## Proyecto
 
@@ -187,3 +198,16 @@ dart run arb_translate
 - `ensure_user_profile` usa `coalesce` — no sobreescribe datos existentes con nulls
 - Tipos de hogar: `couple` (max 2, código single-use), `family`/`friends` (sin límite, código multi-use)
 - Admin testing solo cuando `APP_ENV != production` Y `ENABLE_ADMIN_TESTING=true`
+- Plata: siempre `currencyProvider` (`AppCurrency.format` / `formatCompact`), nunca un `$` armado a
+  mano. `intl` no trae datos de es_AR/es_CL/es_UY y caería en `12.500 $`; esas monedas usan
+  `symbolFirst` para mostrar `$ 12.500`.
+- Categorías guardadas como clave (`cocina`, `supermarket`…): mostrarlas con
+  `localizedCategoryName` (`task_localization.dart`), no con `CategoryMapping.displayName`, que
+  devuelve español fijo.
+- La tab Progreso (`MainTab.stats` / `StatsScreen`) está oculta del bottom nav desde 115cf9e2
+  (2026-04-04). Los providers de stats siguen en uso (ranking, resumen semanal, dashboards): no
+  borrar la feature sin revisar esas dependencias.
+- Install Referrer (`InstallReferrerService`): el código de invitación del link de Play precarga
+  "Tengo un código" en el setup, una sola vez por instalación. Solo Android.
+- Pedido de reseña (`ReviewPromptService`): tras dejar el balance en cero o a la décima tarea,
+  con al menos 7 días de uso y 120 días entre pedidos. Play aplica su propia cuota encima.

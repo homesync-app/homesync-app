@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/couple_space/presentation/screens/couple_connection_screen.dart';
+import 'package:homesync_client/features/couple_space/presentation/screens/couple_week_screen.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
@@ -28,8 +28,8 @@ class CoupleSpaceScreen extends ConsumerWidget {
           );
         }
 
-        return CoupleConnectionScreen(
-          key: ValueKey<String>('couple_connection_$householdId'),
+        return CoupleWeekScreen(
+          key: ValueKey<String>('couple_week_$householdId'),
           householdId: householdId,
         );
       },

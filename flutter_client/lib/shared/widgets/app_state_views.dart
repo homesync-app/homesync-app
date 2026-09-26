@@ -5,6 +5,7 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_loader.dart';
+import 'package:homesync_client/shared/widgets/design/app_card.dart';
 
 export 'package:homesync_client/shared/widgets/app_loader.dart';
 
@@ -105,6 +106,50 @@ class AppErrorState extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Error compacto con reintento para un bloque dentro de una pantalla, así un
+/// bloque caído no se lleva puesta toda la vista. Para pantallas enteras usar
+/// [AppErrorState].
+///
+/// Nunca mostrar acá el texto crudo de la excepción: el mensaje tiene que ser
+/// algo que la persona entienda y pueda resolver.
+class AppInlineError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const AppInlineError({
+    super.key,
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    return AppCard(
+      variant: AppCardVariant.subtle,
+      padding: AppInsets.compactCard,
+      child: Row(
+        children: [
+          Icon(
+            Icons.cloud_off_rounded,
+            color: theme.textSecondary,
+            size: AppControlSizes.iconMd,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTypography.body.copyWith(color: theme.textPrimary),
+            ),
+          ),
+          TextButton(onPressed: onRetry, child: Text(t.commonRetry)),
+        ],
       ),
     );
   }

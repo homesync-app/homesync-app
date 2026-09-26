@@ -80,6 +80,10 @@ class TaskCategoryFilter extends _$TaskCategoryFilter {
 
   void clear() => state = {};
 
+  /// Deja el filtro en una sola categoría (p. ej. al llegar desde el reparto
+  /// de la semana con "Ver tareas").
+  void showOnly(String category) => state = {category};
+
   /// Descarta del filtro las categorías que ya no tienen tareas activas.
   /// Sin esto, al completarse la última tarea de una categoría filtrada su
   /// chip desaparecía pero el filtro seguía vivo: lista vacía "filtrada" sin
@@ -428,7 +432,10 @@ class Tasks extends _$Tasks {
 
       if (result.isRight()) {
         if (!ref.mounted) {
-          return result.fold((_) => null, (data) => data);
+          return result.fold<TaskCompletionResult?>(
+            (_) => null,
+            (data) => data,
+          );
         }
         final isOnline = ref.read(isOnlineProvider);
         final queued = result.fold(
@@ -480,7 +487,7 @@ class Tasks extends _$Tasks {
         }
       }
 
-      return result.fold(
+      return result.fold<TaskCompletionResult?>(
         (failure) {
           state = AsyncValue.data(oldState!);
           return null;
@@ -578,7 +585,7 @@ class Tasks extends _$Tasks {
         completedAt: effectiveCompletedAt,
       );
       if (!ref.mounted) {
-        return result.fold((_) => null, (data) => data);
+        return result.fold<Map<String, dynamic>?>((_) => null, (data) => data);
       }
 
       if (result.isRight()) {
@@ -606,7 +613,7 @@ class Tasks extends _$Tasks {
         }
       }
 
-      return result.fold(
+      return result.fold<Map<String, dynamic>?>(
         (failure) {
           if (oldState != null) state = AsyncValue.data(oldState);
           return null;

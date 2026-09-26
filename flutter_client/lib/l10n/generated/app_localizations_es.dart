@@ -165,7 +165,8 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.selectLogic(
       type,
       {
-        'couple': 'Desafíos, premios y pequeñas recompensas para compartir.',
+        'couple':
+            'El repaso de la semana, la plata entre los dos y lo que se proponen.',
         'family':
             'Coordinación, miembros y acuerdos del hogar para toda la familia.',
         'friends': 'Organización, convivencia y reparto claro para el piso.',
@@ -345,9 +346,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get settingsPremiumFeatureRecurringPayments =>
       'Pagos Recurrentes (Suscripciones)';
-
-  @override
-  String get settingsPremiumFeatureLoveNotes => 'Notas de Amor en Dashboard';
 
   @override
   String get settingsPremiumFeatureExclusiveAvatars => 'Avatares Exclusivos';
@@ -1725,101 +1723,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get setupValuePropEyebrow => 'Tu hogar, sincronizado';
-
-  @override
-  String get setupValuePropTagline => 'El hogar mejor organizado empieza aquí.';
-
-  @override
-  String get setupValuePropStartButton => 'Comenzar';
-
-  @override
-  String get setupValuePropTimeHint => 'Te llevará menos de 2 minutos';
-
-  @override
-  String get setupFeatureTasksTitle => 'Tareas compartidas';
-
-  @override
-  String get setupFeatureTasksDesc =>
-      'Organizá tareas del hogar y repartí responsabilidades sin fricción.';
-
-  @override
-  String get setupFeatureExpensesTitle => 'Gastos en equipo';
-
-  @override
-  String get setupFeatureExpensesDesc =>
-      'Registrá gastos, dividí cuentas y mantené el balance siempre claro.';
-
-  @override
-  String get setupFeatureGamificationTitle => 'Gamificación real';
-
-  @override
-  String get setupFeatureGamificationDesc =>
-      'Convertí la organización diaria en progreso, premios y motivación.';
-
-  @override
-  String get setupFeatureShoppingTitle => 'Compras sincronizadas';
-
-  @override
-  String get setupFeatureShoppingDesc =>
-      'Listas compartidas en tiempo real para que nadie compre dos veces.';
-
-  @override
-  String get setupWelcomeTitle => '¡Bienvenido!';
-
-  @override
-  String get setupWelcomeBody =>
-      'Vamos a dejar tu hogar listo para empezar con tareas, gastos y compras compartidas desde el primer día.';
-
-  @override
-  String get setupWelcomeBulletQuick =>
-      'Configuración rápida de menos de 1 minuto.';
-
-  @override
-  String get setupWelcomeBulletJoin =>
-      'Podés crear un hogar nuevo o sumarte con un código.';
-
-  @override
-  String get setupWelcomeStartButton => 'Configurar mi hogar';
-
-  @override
-  String get setupProfileEyebrow => 'Tu perfil';
-
-  @override
-  String get setupProfileTitle => '¿Cómo te llamas?';
-
-  @override
-  String get setupProfileSubtitle =>
-      'Personalizá tu perfil para que tu equipo te identifique mejor.';
-
-  @override
-  String get setupProfileGoogleAvatarHint =>
-      'Usamos tu foto de Google como punto de partida. Si querés, podés cambiarla por uno de nuestros avatares.';
-
-  @override
-  String get setupProfileEmptyAvatarHint =>
-      'Elegí un avatar y un nombre para empezar con una identidad clara dentro del hogar.';
-
-  @override
   String get setupProfileAvatarLabel => 'Avatar';
 
   @override
-  String get setupModePickerEyebrow => 'Tipo de hogar';
-
-  @override
-  String get setupModePickerTitle => '¡Comencemos!';
-
-  @override
-  String get setupModePickerSubtitle => '¿Cómo vas a organizar tu hogar?';
-
-  @override
   String get setupSignOutLink => 'Cerrar sesión';
-
-  @override
-  String get setupSeeFeaturesLink => 'Ver características';
-
-  @override
-  String get setupHouseholdDefaultName => 'Mi Hogar';
 
   @override
   String get setupFamilyDefaultName => 'Mi familia';
@@ -1841,110 +1748,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get setupSnackCodeCopied => '¡Código copiado al portapapeles! 📋';
 
   @override
-  String get setupSnackWhatsappFailed =>
-      'No se pudo abrir WhatsApp. Código copiado.';
-
-  @override
-  String get setupJoinCodeTitle => 'Ingresa el código';
-
-  @override
-  String get setupConnectEyebrow => 'Conectar el hogar';
-
-  @override
-  String get setupConnectTitle => 'Conecta tu hogar';
-
-  @override
-  String get setupConnectSubtitle =>
-      'Podés crear un nuevo equipo o sumarte con un código de invitación.';
-
-  @override
-  String get setupConnectCreateTitle => 'Crear nuevo hogar';
-
-  @override
-  String get setupConnectCreateDesc =>
-      'Generá un código para invitar a quienes comparten este espacio.';
-
-  @override
-  String get setupConnectJoinTitle => 'Tengo un código';
-
-  @override
-  String get setupConnectJoinDesc => 'Ingresá el código para sumarte al hogar.';
-
-  @override
-  String get setupConnectCodeInputLabel => 'Ingresá el código';
-
-  @override
-  String get setupConnectCreateButton => 'Crear mi hogar';
-
-  @override
-  String get setupConnectJoinButton => 'Unirme ahora';
-
-  @override
-  String get setupConnectBackButton => 'Volver atrás';
-
-  @override
-  String get setupInvitationEyebrow => 'Invitación';
-
-  @override
-  String setupInvitationTitle(String mode) {
-    String _temp0 = intl.Intl.selectLogic(
-      mode,
-      {
-        'family': 'Familia creada',
-        'friends': 'Convivencia creada',
-        'couple': 'Hogar creado',
-        'solo': 'Hogar creado',
-        'other': 'Hogar creado',
-      },
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String setupInvitationSubtitle(String mode) {
-    String _temp0 = intl.Intl.selectLogic(
-      mode,
-      {
-        'family': 'Compartí este código con quienes forman parte del hogar.',
-        'friends': 'Compartí este código con tus compañeros de convivencia.',
-        'couple': 'Compartí este código para invitar a la otra persona.',
-        'solo': 'Compartí este código para invitar a la otra persona.',
-        'other': 'Compartí este código para invitar a la otra persona.',
-      },
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get setupInvitationCodeEyebrow => 'CODIGO DE INVITACION';
-
-  @override
-  String get setupInvitationFooter =>
-      'Podés copiarlo o compartirlo ahora. Más adelante también lo vas a encontrar en ajustes.';
-
-  @override
-  String get setupInvitationCopyButton => 'Copiar';
-
-  @override
-  String get setupInvitationShareButton => 'Compartir';
-
-  @override
-  String get setupFamilyBaseEyebrow => 'Base familiar';
-
-  @override
-  String get setupFamilyBaseTitle => 'Base del hogar familiar';
-
-  @override
-  String get setupFamilyBaseSubtitle =>
-      'Antes de empezar, definamos cómo se organiza esta familia.';
-
-  @override
-  String get setupFamilyHouseholdNameLabel => 'Nombre del hogar';
-
-  @override
-  String get setupFamilyHouseholdNameHint => 'Ej: Casa de los Gómez';
-
-  @override
   String get setupFamilyRoleLabel => 'Tu rol visible';
 
   @override
@@ -1960,102 +1763,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get setupFamilyRoleTeen => 'Adolescente';
 
   @override
-  String get setupSaveAndContinue => 'Guardar y continuar';
-
-  @override
-  String get setupConfigureLater => 'Configurar luego';
-
-  @override
-  String get setupExpensesEyebrow => 'Gastos del hogar';
-
-  @override
-  String get setupExpensesTitle => 'División de gastos';
-
-  @override
-  String get setupFriendsExpensesSubtitle =>
-      'En un piso compartido, lo más simple es dividir todo en partes iguales.';
-
-  @override
-  String get setupFriendsExpensesCardTitle => 'Reparto equitativo';
-
-  @override
-  String get setupFriendsExpensesCardBody =>
-      'Cada compañero paga la misma proporción. Pueden ajustar gastos individuales más adelante.';
-
-  @override
-  String get setupFriendsExpensesTipTitle => 'Equitativo por defecto';
-
-  @override
-  String get setupFriendsExpensesTipDesc =>
-      'Ideal para compañeros que comparten gastos del piso.';
-
-  @override
-  String setupCoupleFamilyExpensesSubtitle(String mode) {
-    String _temp0 = intl.Intl.selectLogic(
-      mode,
-      {
-        'couple': 'Configuremos una base simple para dividir gastos en pareja.',
-        'other':
-            'Configuremos una base simple para dividir gastos en convivencia.',
-      },
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String setupCoupleFamilyExpensesNote(String mode) {
-    String _temp0 = intl.Intl.selectLogic(
-      mode,
-      {
-        'couple':
-            'Pueden cambiar esto después en ajustes. Como base arrancamos con una división 50/50.',
-        'other':
-            'Pueden cambiar esto después en ajustes. Como base arrancamos con una división equitativa.',
-      },
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String setupCoupleFamilyExpensesSplitLabel(String mode) {
-    String _temp0 = intl.Intl.selectLogic(
-      mode,
-      {
-        'couple': 'VOS / PAREJA',
-        'other': 'VOS / OTROS',
-      },
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get setupCoupleFamilyTipEqualTitle => 'Igualitario (50/50)';
-
-  @override
-  String get setupCoupleFamilyTipEqualDescCouple =>
-      'Ideal para ingresos y responsabilidades similares.';
-
-  @override
-  String get setupCoupleFamilyTipEqualDescOther =>
-      'Ideal para hogares donde los gastos se reparten parejo.';
-
-  @override
-  String get setupCoupleFamilyTipProportionalTitle => 'Proporcional';
-
-  @override
-  String get setupCoupleFamilyTipProportionalDesc =>
-      'Ajustado a lo que cada persona puede aportar.';
-
-  @override
-  String get setupFirstTasksEyebrow => 'Primeras tareas';
-
-  @override
   String setupFirstTasksTitle(String mode) {
     String _temp0 = intl.Intl.selectLogic(
       mode,
       {
         'family': 'Primeras tareas para la familia',
-        'other': 'Personaliza tu hogar',
+        'solo': '¿Qué querés tener en orden?',
+        'other': '¿Qué tareas se reparten?',
       },
     );
     return '$_temp0';
@@ -2291,23 +2005,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get settingsHouseholdJoinCodeLength =>
       'El código debe tener 6 caracteres';
-
-  @override
-  String settingsInviteWhatsAppMessage(String mode, String code) {
-    String _temp0 = intl.Intl.selectLogic(
-      mode,
-      {
-        'couple':
-            '¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.',
-        'family':
-            '¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.',
-        'friends':
-            '¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.',
-        'other': '¡Hola! Te invito a unirte a nuestro hogar en HomeSync.',
-      },
-    );
-    return '$_temp0\n\nDescarga la app e ingresa este código: *$code*\n\n¡Organicemos nuestro hogar juntos!';
-  }
 
   @override
   String get settingsHouseholdRoleUpdated => '✅ Rol actualizado';
@@ -3595,9 +3292,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get expensesFabMovement => 'Movimiento';
 
   @override
-  String get expensesEmptyCta => 'Registrar un movimiento';
-
-  @override
   String get expensesFabNewSubscription => 'Nueva Suscripción';
 
   @override
@@ -4583,7 +4277,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get premiumPaywallSubtitle =>
-      'Pagos, compras y estadísticas trabajando juntos para que el balance esté siempre claro.';
+      'Pagos, compras y presupuestos trabajando juntos para que el balance esté siempre claro.';
 
   @override
   String get premiumBenefitRecurringPayments => 'Pagos recurrentes';
@@ -4601,13 +4295,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Vinculá productos de la lista con gastos reales y evitá cargar la misma compra dos veces.';
 
   @override
-  String get premiumBenefitAdvancedStats => 'Estadísticas avanzadas';
-
-  @override
-  String get premiumBenefitAdvancedStatsDesc =>
-      'Analizá gastos, tareas y progreso con vistas más profundas por categoría y período.';
-
-  @override
   String get premiumBenefitFullCustomization => 'Personalización completa';
 
   @override
@@ -4621,16 +4308,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get premiumCancelAnytime => 'Cancelá cuando quieras';
 
   @override
-  String get premiumFreeTrialAvailable => 'Prueba Gratis Disponible';
-
-  @override
-  String get premiumActivateButton => 'Activar Premium';
-
-  @override
-  String get premiumTestingModeLabel => 'Modo testing · sin cargo';
-
-  @override
-  String get premiumSavePercent => 'Ahorrá 20%';
+  String premiumSavePercent(int percent) {
+    return 'Ahorrá $percent%';
+  }
 
   @override
   String get premiumChoosePlanTitle => 'Elegí tu plan';
@@ -4678,7 +4358,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get premiumDeactivateTesting => 'Desactivar Premium (testing)';
 
   @override
-  String get premiumStoreErrorTitle => 'Error al conectar con la tienda';
+  String get premiumStoreErrorTitle => 'No pudimos conectar con la tienda';
 
   @override
   String get premiumDeveloperModeButton =>
@@ -4838,11 +4518,11 @@ class AppLocalizationsEs extends AppLocalizations {
       'Cada semana la familia compite sano: el ranking muestra quién sumó más XP completando tareas. Al cierre hay un ganador con corona y bonus, y el resumen semanal les cuenta cómo le fue a cada uno.';
 
   @override
-  String get faqWhatSpecialEvents => '¿Qué es el evento semanal de pareja?';
+  String get faqWhatSpecialEvents => '¿Qué hay en la pestaña Pareja?';
 
   @override
   String get faqWhatSpecialEventsAnswer =>
-      'Cada semana aparece una propuesta pensada para los dos: recrear la primera cita, cocinar juntos o pasar una noche sin pantallas. Al completarla guardan un momento compartido y avanzan en sus logros de pareja, sin coins ni obligaciones.';
+      'Es el repaso de la semana de los dos: cómo se repartieron las tareas (sin ganadores), cómo está la plata entre ustedes y las propuestas pendientes. Si algo cayó siempre del mismo lado, te sugiere proponer turnarse. También podés mandarle una nota a tu pareja.';
 
   @override
   String get faqContributionBalance => '¿Qué es el equilibrio de aporte?';
@@ -5111,7 +4791,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get shoppingEmptyFirstLineDone =>
-      'La heladera está llena.\n¿Necesitás algo hoy?';
+      'La lista está vacía.\n¿Qué falta en casa?';
 
   @override
   String get shoppingEmptyFirstLineBought =>
@@ -5299,36 +4979,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rewardsEmptyNoChildStore => 'Todavía no hay premios en tu tienda.';
 
   @override
-  String get rewardsChallengeCompletePrompt => '¿Completaron el desafío?';
-
-  @override
-  String rewardsChallengeCompleteBody(int count) {
-    return 'Qué alegría. Al confirmar, ambos recibirán $count coins.';
-  }
-
-  @override
   String get rewardsNotYet => 'Aún no';
 
   @override
   String get rewardsYesWeDid => 'Sí, lo hicimos';
-
-  @override
-  String rewardsChallengeTitle(String title) {
-    return 'Desafío: $title';
-  }
-
-  @override
-  String get rewardsChallengeCompleted => 'Desafío completado';
-
-  @override
-  String rewardsChallengeCompletedBody(int count) {
-    return 'Ambos ganaron $count coins. Sigan cultivando su conexión.';
-  }
-
-  @override
-  String rewardsChallengeError(String error) {
-    return 'Error al completar el desafío: $error';
-  }
 
   @override
   String get rewardsDeletePrompt => '¿Eliminar premio?';
@@ -5575,83 +5229,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String coupleChallengeWeeklyPill(int number, int total) {
-    return 'Especial semanal $number de $total';
-  }
-
-  @override
-  String get coupleChallengeExpandTooltip => 'Expandir';
-
-  @override
-  String get coupleChallengeShowLess => 'Ver menos';
-
-  @override
-  String get coupleChallengeShowMore => 'Ver detalles completos';
-
-  @override
-  String get coupleChallengeSharedReward => 'Un momento de los dos';
-
-  @override
-  String coupleChallengeSharedRewardBody(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count momentos compartidos',
-      one: '1 momento compartido',
-      zero: 'Todavía no guardaron momentos especiales',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get coupleChallengeWeDidIt => 'Lo hicimos';
-
-  @override
-  String get coupleChallengeDoneThisWeek => 'Guardado como momento compartido';
-
-  @override
-  String get coupleChallengeAlreadyDone =>
-      'Ya guardaron el especial de esta semana.';
-
-  @override
-  String get coupleSpaceWeekEyebrow => 'NUESTRA SEMANA';
-
-  @override
-  String coupleSpaceTasksReady(int done, int total) {
-    return '$done de $total tareas listas';
-  }
-
-  @override
-  String get coupleSpaceNoTasksPlanned => 'Una semana tranquila por ahora';
-
-  @override
-  String coupleSpaceRemainingTasks(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Quedan $count pendientes',
-      one: 'Queda 1 pendiente',
-      zero: 'No quedan tareas pendientes',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String coupleSpaceNeedsAttention(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count necesitan atención',
-      one: '1 necesita atención',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get coupleSpaceWeekSupport =>
-      'El hogar avanza cuando se reparten lo que pesa.';
-
-  @override
   String get coupleSpaceTaskEffortEyebrow => 'ESFUERZO';
 
   @override
@@ -5673,62 +5250,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get coupleSpaceDistributionAction => 'Ver cómo se repartió';
-
-  @override
-  String get coupleSpaceDistributionTitle => 'Cómo se repartió la semana';
-
-  @override
-  String get coupleSpaceDistributionSubtitle =>
-      'Una foto para conversar, sin ganadores ni puntajes.';
-
-  @override
-  String coupleSpaceTasksDone(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count tareas completadas',
-      one: '1 tarea completada',
-      zero: 'Sin tareas completadas',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get coupleSpaceForConnection => 'Para conectar';
-
-  @override
-  String get coupleSpaceSpecialMemoryBody =>
-      'Al completarlo, guardan el recuerdo y avanzan juntos en sus logros de pareja.';
-
-  @override
-  String get coupleSpaceSkipWeek => 'Pasar esta semana';
-
-  @override
-  String get coupleSpaceSkipToast =>
-      'Lo dejamos para otro momento. No afecta ningún logro.';
-
-  @override
-  String get coupleSpaceUndo => 'Ver de nuevo';
-
-  @override
-  String get coupleSpaceSpecialConfirmTitle => '¿Guardamos este momento?';
-
-  @override
-  String get coupleSpaceSpecialConfirmBody =>
-      'Confirmá solo si los dos participaron y se sintieron cómodos. No suma coins ni genera ninguna deuda.';
-
-  @override
-  String get coupleSpaceSpecialCompletedTitle => 'Un momento más de ustedes';
-
-  @override
-  String get coupleSpaceSpecialCompletedBody =>
-      'Quedó guardado en su historia compartida.';
-
-  @override
-  String get coupleSpacePlansTitle => 'Planes y deseos';
-
-  @override
   String get coupleSpacePlansSubtitle =>
       'Propuestas gratuitas: se pueden aceptar, posponer o retirar sin consecuencias.';
 
@@ -5736,26 +5257,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleSpaceProposeAction => 'Proponer algo';
 
   @override
-  String get coupleSpaceProposalsEmptyTitle => 'Todavía no hay propuestas';
-
-  @override
-  String get coupleSpaceProposalsEmptyBody =>
-      'Podés abrir una conversación, sugerir un plan o pedir apoyo sin ponerle precio.';
-
-  @override
-  String get coupleSpaceProposalAwaiting => 'Esperando respuesta';
-
-  @override
-  String get coupleSpaceProposalRespond => 'Responder';
-
-  @override
   String get coupleSpaceProposalAccepted => 'Acordado';
 
   @override
   String get coupleSpaceProposalDeferred => 'Para después';
-
-  @override
-  String get coupleSpaceProposalMine => 'Tu propuesta';
 
   @override
   String get coupleSpaceProposalCategoryTalk => 'Para charlar';
@@ -5845,9 +5350,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get coupleSpaceLoadError => 'No pudimos cargar este espacio.';
-
-  @override
-  String get coupleSpaceRetry => 'Reintentar';
 
   @override
   String tourStepLabel(int current, int total) {
@@ -6154,24 +5656,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get weeklyWinnerContinue => 'Continuar';
 
   @override
-  String get loveNoteDialogTitle => 'Nueva nota de amor';
-
-  @override
   String get loveNoteHint => 'Escribí algo tierno...';
 
   @override
   String get loveNoteSent => 'Nota enviada con amor';
-
-  @override
-  String get loveNoteSendMessageTitle => 'Enviar mensaje a tu pareja';
-
-  @override
-  String get loveNotePremiumHintActive =>
-      'Sorprendé con una nota especial hoy ✨';
-
-  @override
-  String get loveNotePremiumHintInactive =>
-      'Función Premium. Desbloqueala para enviar notas.';
 
   @override
   String get weeklyProgressTitle => 'Progreso semanal';
@@ -6289,16 +5777,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Contá un poco más para que sea fácil evaluarlo.';
 
   @override
-  String get loveNoteSendTitle => 'Enviar mensaje a tu pareja';
-
-  @override
-  String get loveNoteSendSubtitle => 'Sorprendé con una nota especial hoy.';
-
-  @override
-  String get loveNotePremiumFeature =>
-      'Función premium. Desbloqueala para enviar notas.';
-
-  @override
   String get statsWeeklyProgressTitle => 'Progreso semanal';
 
   @override
@@ -6411,9 +5889,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get commonRefresh => 'Actualizar datos';
-
-  @override
-  String get rewardsChallengeCompleteConfirm => 'Sí, lo hicimos';
 
   @override
   String get rewardsWaitingResponse => 'esperando respuesta';
@@ -7682,19 +7157,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get invitationTitle => 'Invitar al hogar';
 
   @override
-  String get invitationSubtitleFamily =>
-      'Comparte este código con los miembros de tu familia.';
+  String get invitationSubtitleFamily => 'Compartí este código con tu familia.';
 
   @override
   String get invitationSubtitleFriends =>
-      'Comparte este código con tus compañeros para sumarlos a la convivencia.';
+      'Compartí este código con quienes viven con vos.';
 
   @override
   String get invitationSubtitleDefault =>
-      'Comparte este código para que alguien se una a tu hogar.';
+      'Compartí este código para que alguien se sume a tu hogar.';
 
   @override
-  String get invitationTapToCopy => 'Toca para copiar';
+  String get invitationTapToCopy => 'Tocá para copiar';
 
   @override
   String get invitationCopied => 'Código copiado al portapapeles';
@@ -7706,29 +7180,20 @@ class AppLocalizationsEs extends AppLocalizations {
   String get invitationRetry => 'Reintentar generar código';
 
   @override
-  String get invitationWhatsAppFailed =>
-      'No se pudo abrir WhatsApp. Código copiado.';
-
-  @override
   String get invitationIntroCouple =>
-      '¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.';
+      '¡Hola! Sumate conmigo a HomeSync así organizamos las tareas y los gastos de la casa.';
 
   @override
   String get invitationIntroFamily =>
-      '¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.';
+      '¡Hola! Te invito a sumarte a nuestro hogar familiar en HomeSync.';
 
   @override
   String get invitationIntroFriends =>
-      '¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.';
+      '¡Hola! Sumate a nuestra convivencia en HomeSync así organizamos mejor la casa.';
 
   @override
   String get invitationIntroDefault =>
-      '¡Hola! Te invito a unirte a nuestro hogar en HomeSync.';
-
-  @override
-  String invitationShareBody(String intro, String code) {
-    return '$intro\n\nDescarga la app e ingresa este código: *$code*\n\n¡Organicemos nuestro hogar juntos!';
-  }
+      '¡Hola! Te invito a sumarte a nuestro hogar en HomeSync.';
 
   @override
   String get avatarPickerTitle => 'Tu Identidad Visual';
@@ -7828,791 +7293,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String settingsMemberRemoved(String name) {
     return '✅ $name ha sido quitado del hogar';
   }
-
-  @override
-  String setupGenerateCodeError(String error) {
-    return 'Error al generar código: $error';
-  }
-
-  @override
-  String get coupleChallenge1Title => 'Recreando la primera cita';
-
-  @override
-  String get coupleChallenge1Description =>
-      'Vuelvan al lugar donde todo empezó.\n\nIntenten recrear esos detalles chiquitos: la comida, la ropa, las frases, los nervios.\n\nCharlen sobre cómo eran en ese momento y cuánto crecieron juntos.\n\nVa a ser imposible no reírse de los recuerdos y agradecer todo lo que vivieron.';
-
-  @override
-  String get coupleChallenge1Motivation =>
-      'A veces volver atrás es la mejor forma de ver cuánto han avanzado juntos.';
-
-  @override
-  String get coupleChallenge1Category => 'Experiencial';
-
-  @override
-  String get coupleChallenge1Location => 'Exterior';
-
-  @override
-  String get coupleChallenge1Timing => 'Cualquier momento';
-
-  @override
-  String get coupleChallenge2Title => 'Cena a la luz de las velas';
-
-  @override
-  String get coupleChallenge2Description =>
-      'Solo necesitan unas velas o luces cálidas, una comida y algo rico para tomar.\n\nApaguen las luces, bajen el ritmo y dejen que el silencio se llene de música suave y miradas largas.\n\nNo importa tanto el menú como la presencia del otro.';
-
-  @override
-  String get coupleChallenge2Motivation =>
-      'Una cita perfecta para reconectar sin distracciones y recordar por qué se eligen cada día.';
-
-  @override
-  String get coupleChallenge2Category => 'Romántico';
-
-  @override
-  String get coupleChallenge2Location => 'En casa';
-
-  @override
-  String get coupleChallenge2Timing => 'Noche';
-
-  @override
-  String get coupleChallenge3Title => 'Lista de sueños compartidos';
-
-  @override
-  String get coupleChallenge3Description =>
-      'Agarren papel y lápiz. Anoten al menos 10 cosas que les gustaría lograr como pareja: viajes, metas o sueños.\n\nLéanlas en voz alta y guarden esa lista como recordatorio.';
-
-  @override
-  String get coupleChallenge3Motivation =>
-      'Tener sueños en común no solo une, sino que da dirección a su historia.';
-
-  @override
-  String get coupleChallenge3Category => 'Emocional';
-
-  @override
-  String get coupleChallenge3Location => 'En casa';
-
-  @override
-  String get coupleChallenge3Timing => 'Tarde';
-
-  @override
-  String get coupleChallenge4Title => 'Karaoke casero';
-
-  @override
-  String get coupleChallenge4Description =>
-      'Suban el volumen, elijan canciones y que empiece la diversión. No hace falta micrófono ni voz perfecta, solo actitud.\n\nEntre risas, van a descubrir lo liberador que es reírse juntos.';
-
-  @override
-  String get coupleChallenge4Motivation =>
-      'El amor también se canta desafinando, pero al mismo ritmo.';
-
-  @override
-  String get coupleChallenge4Category => 'Lúdico';
-
-  @override
-  String get coupleChallenge4Location => 'En casa';
-
-  @override
-  String get coupleChallenge4Timing => 'Noche';
-
-  @override
-  String get coupleChallenge5Title => 'Pintando juntos';
-
-  @override
-  String get coupleChallenge5Description =>
-      'Consigan hojas y pinceles. No importa si no saben dibujar: la idea es soltar la mente, reírse de los trazos y disfrutar del color.\n\nPinten algo que los represente como pareja.';
-
-  @override
-  String get coupleChallenge5Motivation =>
-      'Porque el arte no busca perfección, busca conexión.';
-
-  @override
-  String get coupleChallenge5Category => 'Creativo';
-
-  @override
-  String get coupleChallenge5Location => 'En casa';
-
-  @override
-  String get coupleChallenge5Timing => 'A definir';
-
-  @override
-  String get coupleChallenge6Title => 'Maratón de películas';
-
-  @override
-  String get coupleChallenge6Description =>
-      'Armen su propio cine en casa: luz tenue, mantas, snacks y una lista de pelis elegidas por los dos.\n\nVer películas juntos también es cruzar miradas y reírse en sincronía.';
-
-  @override
-  String get coupleChallenge6Motivation =>
-      'Pequeñas cosas que hacen grande el amor.';
-
-  @override
-  String get coupleChallenge6Category => 'Relajado';
-
-  @override
-  String get coupleChallenge6Location => 'En casa';
-
-  @override
-  String get coupleChallenge6Timing => 'Noche';
-
-  @override
-  String get coupleChallenge7Title => 'Caminata fotográfica';
-
-  @override
-  String get coupleChallenge7Description =>
-      'Salgan a caminar sin plan y traten de capturar lo que normalmente pasa desapercibido: una sombra, una sonrisa, un reflejo.\n\nSaquen fotos de todo lo que los haga frenar un segundo.';
-
-  @override
-  String get coupleChallenge7Motivation =>
-      'A veces mirar el mundo a través del lente es la mejor forma de volver a mirarse entre sí.';
-
-  @override
-  String get coupleChallenge7Category => 'Aventura';
-
-  @override
-  String get coupleChallenge7Location => 'Ciudad';
-
-  @override
-  String get coupleChallenge7Timing => 'Tarde';
-
-  @override
-  String get coupleChallenge8Title => 'Picnic improvisado';
-
-  @override
-  String get coupleChallenge8Description =>
-      'Una manta, algo para picar, bebidas frías y ganas de compartir el momento.\n\nBusquen un parque, una plaza o incluso el patio de casa, acomódense y dejen que la charla fluya.\n\nSumen un juego de cartas, un libro o simplemente miren el cielo juntos.';
-
-  @override
-  String get coupleChallenge8Motivation =>
-      'No hace falta ir lejos para sentir que se escapan del mundo.';
-
-  @override
-  String get coupleChallenge8Category => 'Experiencial';
-
-  @override
-  String get coupleChallenge8Location => 'Al aire libre';
-
-  @override
-  String get coupleChallenge8Timing => 'Tarde';
-
-  @override
-  String get coupleChallenge9Title => 'Cartas que no se borran';
-
-  @override
-  String get coupleChallenge9Description =>
-      'Escríbanse una carta. No en el celular: en papel y tinta.\n\nPongan música suave, preparen algo rico y déjense llevar.\n\nEscriban qué admiran, qué agradecen y qué sueñan.\n\nAl final, intercámbienlas y léanlas en voz alta.';
-
-  @override
-  String get coupleChallenge9Motivation =>
-      'Las cartas quedan, las palabras se leen, pero lo que más perdura es cómo te hacen sentir.';
-
-  @override
-  String get coupleChallenge9Category => 'Emocional';
-
-  @override
-  String get coupleChallenge9Location => 'En casa';
-
-  @override
-  String get coupleChallenge9Timing => 'Noche';
-
-  @override
-  String get coupleChallenge10Title => 'Desconexión total';
-
-  @override
-  String get coupleChallenge10Description =>
-      'Apaguen celulares, TV y cualquier notificación por una noche.\n\nLean, cocinen, charlen, jueguen o simplemente abrácense sin interrupciones.\n\nCuando baja el ruido digital, aparece otro silencio: el que deja espacio para estar presentes.';
-
-  @override
-  String get coupleChallenge10Motivation =>
-      'Esta cita no se mide en minutos, sino en conexión real.';
-
-  @override
-  String get coupleChallenge10Category => 'Emocional';
-
-  @override
-  String get coupleChallenge10Location => 'En casa';
-
-  @override
-  String get coupleChallenge10Timing => 'Noche';
-
-  @override
-  String get coupleChallenge11Title => 'Frasco de preguntas';
-
-  @override
-  String get coupleChallenge11Description =>
-      'Llenen un frasco con papelitos que tengan preguntas divertidas o profundas.\n\n\"¿Qué fue lo primero que pensaste cuando me conociste?\" o \"¿Qué sueño todavía no te animaste a contarme?\"\n\nSaquen una al azar y respondan sin filtros. Van a terminar entre risas y miradas largas.';
-
-  @override
-  String get coupleChallenge11Motivation =>
-      'Algunas charlas no surgen hasta que se invitan.';
-
-  @override
-  String get coupleChallenge11Category => 'Lúdico';
-
-  @override
-  String get coupleChallenge11Location => 'En casa';
-
-  @override
-  String get coupleChallenge11Timing => 'Cualquier momento';
-
-  @override
-  String get coupleChallenge23Title => 'Desayuno con vista';
-
-  @override
-  String get coupleChallenge23Description =>
-      'Cambien la escena del desayuno: preparen algo rico y salgan a buscar una buena vista. Puede ser un parque, una terraza o un banco en la plaza.\n\nTómense el tiempo para disfrutar el aire fresco y el café sin mirar el reloj.';
-
-  @override
-  String get coupleChallenge23Motivation =>
-      'El café sabe mejor cuando el horizonte es el límite.';
-
-  @override
-  String get coupleChallenge23Category => 'Exploración';
-
-  @override
-  String get coupleChallenge23Location => 'Exterior';
-
-  @override
-  String get coupleChallenge23Timing => 'Mañana';
-
-  @override
-  String get coupleChallenge24Title => 'A la orilla del mundo';
-
-  @override
-  String get coupleChallenge24Description =>
-      'Elijan un lugar donde el horizonte se sienta infinito: costa, río o laguna. Lleven algo para sentarse y miren cómo cae el sol.\n\nEscriban juntos una nota con lo que sueñan y guárdenla para el futuro.';
-
-  @override
-  String get coupleChallenge24Motivation =>
-      'El silencio compartido frente al agua dice más que mil palabras.';
-
-  @override
-  String get coupleChallenge24Category => 'Emocional';
-
-  @override
-  String get coupleChallenge24Location => 'Naturaleza';
-
-  @override
-  String get coupleChallenge24Timing => 'Atardecer';
-
-  @override
-  String get coupleChallenge25Title => 'Destino incierto';
-
-  @override
-  String get coupleChallenge25Description =>
-      'Salgan a caminar sin mapa ni GPS. Elijan una dirección al azar y cada cinco cuadras uno decide hacia dónde doblar.\n\nDescubran rincones nuevos de su ciudad como si fueran turistas perdidos.';
-
-  @override
-  String get coupleChallenge25Motivation =>
-      'Perderse juntos es la mejor forma de encontrarse.';
-
-  @override
-  String get coupleChallenge25Category => 'Exploración';
-
-  @override
-  String get coupleChallenge25Location => 'Ciudad';
-
-  @override
-  String get coupleChallenge25Timing => 'Tarde';
-
-  @override
-  String get coupleChallenge26Title => 'Ritual del presente';
-
-  @override
-  String get coupleChallenge26Description =>
-      'Armen un espacio con luz cálida y música suave. Cada uno anota tres cosas que quiere dejar atrás, como miedos o enojo, y tres cosas que agradece del otro.\n\nQuemen lo que quieren soltar y guarden las notas de gratitud en un frasco.';
-
-  @override
-  String get coupleChallenge26Motivation =>
-      'Limpiar el pasado deja lugar para un futuro más brillante.';
-
-  @override
-  String get coupleChallenge26Category => 'Emocional';
-
-  @override
-  String get coupleChallenge26Location => 'En casa';
-
-  @override
-  String get coupleChallenge26Timing => 'Noche';
-
-  @override
-  String get coupleChallenge27Title => 'Arquitecto de sorpresas';
-
-  @override
-  String get coupleChallenge27Description =>
-      'Uno de los dos prepara una sorpresa pequeña: una nota en la almohada, una comida favorita cocinada en secreto o una pista para una mini aventura.\n\nLa clave está en el misterio y en el detalle pensado solo para el otro.';
-
-  @override
-  String get coupleChallenge27Motivation =>
-      'El amor vive en los detalles que dicen \"pensé en vos\".';
-
-  @override
-  String get coupleChallenge27Category => 'Detallista';
-
-  @override
-  String get coupleChallenge27Location => 'Cualquier lugar';
-
-  @override
-  String get coupleChallenge27Timing => 'Sorpresa';
-
-  @override
-  String get coupleChallenge28Title => 'Un gesto de cuidado';
-
-  @override
-  String get coupleChallenge28Description =>
-      'Pregúntense qué gesto simple les haría bien hoy: preparar un mate, cocinar algo rico o dar un masaje, solo si nace y ambos se sienten cómodos.\n\nNo es una deuda ni un turno obligatorio. Es una invitación a cuidar con ternura y libertad.';
-
-  @override
-  String get coupleChallenge28Motivation =>
-      'El cuidado se siente mejor cuando se ofrece y se recibe con libertad.';
-
-  @override
-  String get coupleChallenge28Category => 'Cotidiano';
-
-  @override
-  String get coupleChallenge28Location => 'En casa';
-
-  @override
-  String get coupleChallenge28Timing => 'Noche';
-
-  @override
-  String get coupleChallenge29Title => 'Historias en escena';
-
-  @override
-  String get coupleChallenge29Description =>
-      'Elijan una escena famosa de una peli e intenten recrearla con lo que tengan en casa. No busquen perfección: busquen risas y complicidad.\n\nAl final, inventen juntos su propio final.';
-
-  @override
-  String get coupleChallenge29Motivation =>
-      'Jugar a ser otros ayuda a redescubrir quiénes son ustedes.';
-
-  @override
-  String get coupleChallenge29Category => 'Lúdico';
-
-  @override
-  String get coupleChallenge29Location => 'En casa';
-
-  @override
-  String get coupleChallenge29Timing => 'Cualquier momento';
-
-  @override
-  String get coupleChallenge30Title => 'Sabores con historia';
-
-  @override
-  String get coupleChallenge30Description =>
-      'Elijan tres sabores, como una infusión, chocolate, fruta o queso, y con cada uno compartan un recuerdo personal: un viaje, una etapa, una persona.\n\nDejen que el sabor despierte historias que todavía no se contaron.';
-
-  @override
-  String get coupleChallenge30Motivation =>
-      'Cada bocado es una puerta abierta a un recuerdo.';
-
-  @override
-  String get coupleChallenge30Category => 'Experiencial';
-
-  @override
-  String get coupleChallenge30Location => 'Cualquier lugar';
-
-  @override
-  String get coupleChallenge30Timing => 'Noche';
-
-  @override
-  String get coupleChallenge31Title => 'El arte de no hacer nada';
-
-  @override
-  String get coupleChallenge31Description =>
-      'Apaguen alarmas y suelten la lista de pendientes. Pasen un día sin horarios: leer en la cama, mirar series viejas o charlar sin destino.\n\nDense el lujo de habitar el tiempo sin presión por producir.';
-
-  @override
-  String get coupleChallenge31Motivation =>
-      'El tiempo \"perdido\" juntos es tiempo ganado en conexión.';
-
-  @override
-  String get coupleChallenge31Category => 'Relajado';
-
-  @override
-  String get coupleChallenge31Location => 'En casa';
-
-  @override
-  String get coupleChallenge31Timing => 'Todo el día';
-
-  @override
-  String get coupleChallenge32Title => 'Domingo de mercado';
-
-  @override
-  String get coupleChallenge32Description =>
-      'Vayan a una feria de barrio con bolsas de tela y mate. No se enfoquen en comprar mucho: miren colores, olores y gente.\n\nElijan un ingrediente raro y cocinen algo nuevo al volver a casa.';
-
-  @override
-  String get coupleChallenge32Motivation =>
-      'La rutina también tiene su propia magia artesanal.';
-
-  @override
-  String get coupleChallenge32Category => 'Exploración';
-
-  @override
-  String get coupleChallenge32Location => 'Ciudad';
-
-  @override
-  String get coupleChallenge32Timing => 'Mañana';
-
-  @override
-  String get coupleChallenge33Title => 'Bajo las estrellas';
-
-  @override
-  String get coupleChallenge33Description =>
-      'Busquen un lugar lejos de las luces de la ciudad. Lleven manta, cielo abierto y silencio.\n\nCuenten estrellas, inventen constelaciones o simplemente sientan la inmensidad juntos.';
-
-  @override
-  String get coupleChallenge33Motivation =>
-      'El universo entero cabe en el espacio entre los dos.';
-
-  @override
-  String get coupleChallenge33Category => 'Romántico';
-
-  @override
-  String get coupleChallenge33Location => 'Naturaleza';
-
-  @override
-  String get coupleChallenge33Timing => 'Noche';
-
-  @override
-  String get coupleChallenge34Title => 'Noche de los sentidos';
-
-  @override
-  String get coupleChallenge34Description =>
-      'Elijan juntos texturas, aromas y sabores que sean seguros para ambos. Quien adivina puede cerrar los ojos si quiere, y cualquiera puede pausar o cambiar algo en cualquier momento.\n\nUna dinámica suave para prestar atención a las sensaciones, sin presión.';
-
-  @override
-  String get coupleChallenge34Motivation =>
-      'La curiosidad compartida también puede ser una forma de conexión.';
-
-  @override
-  String get coupleChallenge34Category => 'Sensoral';
-
-  @override
-  String get coupleChallenge34Location => 'En casa';
-
-  @override
-  String get coupleChallenge34Timing => 'Noche';
-
-  @override
-  String get coupleChallenge35Title => 'Lectura compartida';
-
-  @override
-  String get coupleChallenge35Description =>
-      'Elijan un libro, poema o artículo y léanlo en voz alta, alternando partes. Escuchen el tono y las pausas del otro.\n\nAl terminar, compartan qué les hizo pensar o sentir esa historia.';
-
-  @override
-  String get coupleChallenge35Motivation =>
-      'Las palabras son el puente que une dos mentes.';
-
-  @override
-  String get coupleChallenge35Category => 'Intelectual';
-
-  @override
-  String get coupleChallenge35Location => 'Tranquilo';
-
-  @override
-  String get coupleChallenge35Timing => 'Noche';
-
-  @override
-  String get coupleChallenge36Title => 'Microteatro en pareja';
-
-  @override
-  String get coupleChallenge36Description =>
-      'Busquen una obra de microteatro o una función breve. Vivan la intensidad de una historia cercana y viva.\n\nDespués, salgan a caminar y charlen sobre lo que los hizo reír, llorar o pensar.';
-
-  @override
-  String get coupleChallenge36Motivation =>
-      'Vivir mil vidas en una noche, siempre de la mano.';
-
-  @override
-  String get coupleChallenge36Category => 'Cultural';
-
-  @override
-  String get coupleChallenge36Location => 'Ciudad';
-
-  @override
-  String get coupleChallenge36Timing => 'Noche';
-
-  @override
-  String get coupleChallenge37Title => 'Viaje sin maletas';
-
-  @override
-  String get coupleChallenge37Description =>
-      'Elijan un país y transformen su casa en ese destino por una noche: comida típica, música y clima de ese lugar.\n\nViajen sin pasaporte e imaginen qué harían si estuvieran ahí de verdad.';
-
-  @override
-  String get coupleChallenge37Motivation =>
-      'El mejor destino es aquel que crean entre los dos.';
-
-  @override
-  String get coupleChallenge37Category => 'Creativo';
-
-  @override
-  String get coupleChallenge37Location => 'En casa';
-
-  @override
-  String get coupleChallenge37Timing => 'Noche';
-
-  @override
-  String get coupleChallenge38Title => 'El sobre secreto';
-
-  @override
-  String get coupleChallenge38Description =>
-      'Uno prepara tres sobres con instrucciones para abrir por etapas: un look, un punto de encuentro y un cierre especial.\n\nLa magia está en la expectativa de no saber qué viene después.';
-
-  @override
-  String get coupleChallenge38Motivation =>
-      'Cada sobre es un \"te pensé\" esperando ser abierto.';
-
-  @override
-  String get coupleChallenge38Category => 'Aventura';
-
-  @override
-  String get coupleChallenge38Location => 'Sorpresa';
-
-  @override
-  String get coupleChallenge38Timing => 'Toda la tarde';
-
-  @override
-  String get coupleChallenge39Title => 'Propósitos al alba';
-
-  @override
-  String get coupleChallenge39Description =>
-      'Vayan a un lugar alto para ver salir el sol. Cuando aparezca el primer rayo, prometan una cosa chiquita para la relación.\n\nUn hábito, un deseo o un cambio para empezar con el nuevo día.';
-
-  @override
-  String get coupleChallenge39Motivation =>
-      'Cada amanecer es la oportunidad de empezar de nuevo.';
-
-  @override
-  String get coupleChallenge39Category => 'Emocional';
-
-  @override
-  String get coupleChallenge39Location => 'Exterior';
-
-  @override
-  String get coupleChallenge39Timing => 'Alba';
-
-  @override
-  String get coupleChallenge40Title => 'Construyendo paciencia';
-
-  @override
-  String get coupleChallenge40Description =>
-      'Pasen la tarde armando un rompecabezas lado a lado, con mate o vino cerca.\n\nEntre pieza y pieza, dejen que aparezcan charlas tranquilas y silencios cómodos.';
-
-  @override
-  String get coupleChallenge40Motivation =>
-      'Armar lo pequeño es practicar la paciencia para lo grande.';
-
-  @override
-  String get coupleChallenge40Category => 'Relajado';
-
-  @override
-  String get coupleChallenge40Location => 'En casa';
-
-  @override
-  String get coupleChallenge40Timing => 'Tarde';
-
-  @override
-  String get coupleChallenge41Title => 'Día de gratitud absoluta';
-
-  @override
-  String get coupleChallenge41Description =>
-      'El desafío de hoy: pasar 24 horas sin quejarse. Cada vez que alguien se queje, lo compensa con algo que agradece.\n\nAl final del día, repasen todo lo bueno que registraron.';
-
-  @override
-  String get coupleChallenge41Motivation =>
-      'Cambiar el foco cambia la relación entera.';
-
-  @override
-  String get coupleChallenge41Category => 'Emocional';
-
-  @override
-  String get coupleChallenge41Location => 'Cualquier lugar';
-
-  @override
-  String get coupleChallenge41Timing => 'Todo el día';
-
-  @override
-  String get coupleChallenge42Title => 'Cápsula del tiempo';
-
-  @override
-  String get coupleChallenge42Description =>
-      'Elijan cinco objetos que representen su presente: una foto, un ticket, una nota. Guárdenlos en una caja y ciérrenla con fecha de apertura futura.\n\nEscriban una carta para ustedes del futuro contando cómo se sienten hoy.';
-
-  @override
-  String get coupleChallenge42Motivation =>
-      'Guardar el presente es dejarle un regalo al futuro.';
-
-  @override
-  String get coupleChallenge42Category => 'Emocional';
-
-  @override
-  String get coupleChallenge42Location => 'En casa';
-
-  @override
-  String get coupleChallenge42Timing => 'Noche';
-
-  @override
-  String get coupleChallenge43Title => 'Pintura a ciegas';
-
-  @override
-  String get coupleChallenge43Description =>
-      'Una persona se tapa los ojos y la otra la guía con la voz para dibujar líneas y colores en una hoja. Después inviertan roles.\n\nConfíen en la voz del otro y ríanse del resultado abstracto que crearon juntos.';
-
-  @override
-  String get coupleChallenge43Motivation =>
-      'El amor también se pinta con los ojos cerrados.';
-
-  @override
-  String get coupleChallenge43Category => 'Lúdico';
-
-  @override
-  String get coupleChallenge43Location => 'En casa';
-
-  @override
-  String get coupleChallenge43Timing => 'Cualquier momento';
-
-  @override
-  String get coupleChallenge44Title => 'Nuestro propio Podcast';
-
-  @override
-  String get coupleChallenge44Description =>
-      'Grábense como si estuvieran haciendo un podcast. Elijan tema: su historia, un viaje o lo que les enseñó el amor.\n\nNo intenten sonar perfectos; intenten sonar reales. Guárdenlo como cápsula de voz.';
-
-  @override
-  String get coupleChallenge44Motivation =>
-      'Grabar la voz del amor es guardar una memoria viva.';
-
-  @override
-  String get coupleChallenge44Category => 'Creativo';
-
-  @override
-  String get coupleChallenge44Location => 'Tranquilo';
-
-  @override
-  String get coupleChallenge44Timing => 'Cualquier momento';
-
-  @override
-  String get coupleChallenge45Title => 'Mensajes diferidos';
-
-  @override
-  String get coupleChallenge45Description =>
-      'Cada uno escribe una carta para el otro, pero no la lean ahora. Intercámbienlas y fijen una fecha dentro de una semana para abrirlas.\n\nDisfruten la espera y la calma de saber que hay un mensaje de amor esperándolos.';
-
-  @override
-  String get coupleChallenge45Motivation =>
-      'El amor también se escribe en tiempo diferido.';
-
-  @override
-  String get coupleChallenge45Category => 'Emocional';
-
-  @override
-  String get coupleChallenge45Location => 'En casa';
-
-  @override
-  String get coupleChallenge45Timing => 'Noche';
-
-  @override
-  String get coupleChallenge46Title => 'Proyección de recuerdos';
-
-  @override
-  String get coupleChallenge46Description =>
-      'Busquen fotos, videos y mensajes de cuando se conocieron. Miren juntos cuánto crecieron y qué obstáculos superaron.\n\nRedescubran el camino que los trajo hasta hoy.';
-
-  @override
-  String get coupleChallenge46Motivation =>
-      'Mirar atrás es la mejor forma de valorar el presente.';
-
-  @override
-  String get coupleChallenge46Category => 'Emocional';
-
-  @override
-  String get coupleChallenge46Location => 'En casa';
-
-  @override
-  String get coupleChallenge46Timing => 'Noche';
-
-  @override
-  String get coupleChallenge47Title => 'El día del \"Sí\"';
-
-  @override
-  String get coupleChallenge47Description =>
-      'Por un día entero, la regla es decir sí a toda propuesta razonable del otro: helado, paseo, siesta.\n\nDéjense llevar por el flujo de un día sin tantos no.';
-
-  @override
-  String get coupleChallenge47Motivation =>
-      'La estructura cansa, la fluidez conecta.';
-
-  @override
-  String get coupleChallenge47Category => 'Lúdico';
-
-  @override
-  String get coupleChallenge47Location => 'Cualquier lugar';
-
-  @override
-  String get coupleChallenge47Timing => 'Todo el día';
-
-  @override
-  String get coupleChallenge48Title => 'Brindis por el futuro';
-
-  @override
-  String get coupleChallenge48Description =>
-      'Preparen su bebida favorita y brinden mirándose a los ojos. Anoten una intención para la etapa que viene: un viaje o una meta compartida.\n\nSellen el brindis con una sonrisa que diga \"gracias por estar\".';
-
-  @override
-  String get coupleChallenge48Motivation =>
-      'Brindar por lo que viene es honrar lo que ya son.';
-
-  @override
-  String get coupleChallenge48Category => 'Emocional';
-
-  @override
-  String get coupleChallenge48Location => 'Cualquier lugar';
-
-  @override
-  String get coupleChallenge48Timing => 'Noche';
-
-  @override
-  String get coupleChallenge49Title => 'Cocina experimental';
-
-  @override
-  String get coupleChallenge49Description =>
-      'Elijan tres ingredientes al azar que ya tengan en casa e intenten crear un plato nuevo juntos.\n\nSin buscar recetas: usen intuición, prueben sobre la marcha y ríanse si sale raro.';
-
-  @override
-  String get coupleChallenge49Motivation =>
-      'El sabor de lo improvisado siempre tiene un toque especial.';
-
-  @override
-  String get coupleChallenge49Category => 'Creativo';
-
-  @override
-  String get coupleChallenge49Location => 'Cocina';
-
-  @override
-  String get coupleChallenge49Timing => 'Almuerzo/Cena';
-
-  @override
-  String get coupleChallenge50Title => 'Muro de los deseos';
-
-  @override
-  String get coupleChallenge50Description =>
-      'Peguen notas con deseos, agradecimientos o metas en una pared o espejo. Dejen que ese muro crezca durante la semana.\n\nAl final, lean cada nota y guárdenlas como testigos de sus intenciones.';
-
-  @override
-  String get coupleChallenge50Motivation =>
-      'Hacer visible el deseo es empezar a cumplirlo.';
-
-  @override
-  String get coupleChallenge50Category => 'Detallista';
-
-  @override
-  String get coupleChallenge50Location => 'En casa';
-
-  @override
-  String get coupleChallenge50Timing => 'Toda la semana';
 
   @override
   String get rewardCategoryTreats => 'Mimos';
@@ -9074,140 +7754,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notifLoveNoteBody => 'Tu pareja te mandó una nota de amor ❤️';
 
   @override
-  String get coupleFundTitle => 'Nuestro fondo';
-
-  @override
-  String get coupleFundEyebrow => 'LO QUE JUNTAN';
-
-  @override
-  String coupleFundBalance(int amount) {
-    return '$amount sumadas';
-  }
-
-  @override
-  String coupleFundWeekAdded(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Esta semana sumaron $count',
-      one: 'Esta semana sumaron 1',
-      zero: 'Esta semana todavía no sumaron',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String coupleFundRhythm(int weeks, int window) {
-    return 'activos $weeks de las últimas $window semanas';
-  }
-
-  @override
-  String get coupleFundNoGoalTitle => 'Todavía no eligieron meta';
-
-  @override
-  String get coupleFundNoGoalBody =>
-      'Elijan juntos algo para celebrar. Cada tarea que completan lo acerca.';
-
-  @override
-  String get coupleFundChooseGoal => 'Elegir meta';
-
-  @override
-  String get coupleFundChangeGoal => 'Cambiar meta';
-
-  @override
-  String coupleFundToGoal(int current, int cost, String title) {
-    return '$current / $cost → $title';
-  }
-
-  @override
-  String coupleFundRemaining(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Faltan $count para llegar',
-      one: 'Falta 1 para llegar',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get coupleFundReadyTitle => '¡Llegaron a la meta!';
-
-  @override
-  String get coupleFundReadyBody => 'Elijan juntos cómo quieren celebrarlo.';
-
-  @override
-  String get coupleFundConfirm => 'Confirmar';
-
-  @override
-  String get coupleFundConfirmed => 'Confirmaste';
-
-  @override
-  String get coupleFundWithdrawConfirm => 'Retirar mi confirmación';
-
-  @override
-  String coupleFundWaitingOthers(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Faltan $count confirmaciones',
-      one: 'Falta 1 confirmación',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get coupleFundUnlockedMessage =>
-      'Desbloquearon la meta. Quedó una propuesta para acordar cuándo.';
-
-  @override
-  String get coupleFundPickerTitle => '¿Qué quieren desbloquear?';
-
-  @override
-  String get coupleFundPickerSubtitle =>
-      'Una meta por vez. Pueden cambiarla cuando quieran, sin perder lo que juntaron.';
-
-  @override
-  String get coupleFundCustomOption => 'Crear una a medida';
-
-  @override
-  String get coupleFundCustomTitleLabel => '¿Qué quieren celebrar?';
-
-  @override
-  String get coupleFundCustomCostLabel => 'Meta';
-
-  @override
-  String get coupleFundCustomCostHelper => 'Entre 50 y 2000';
-
-  @override
-  String get coupleFundSave => 'Definir meta';
-
-  @override
-  String get coupleFundError => 'No pudimos actualizar el fondo';
-
-  @override
-  String get coupleFundFromGoalBadge => 'Del fondo';
-
-  @override
-  String get coupleFundCatalogMovieNight => 'Noche de cine en casa';
-
-  @override
-  String get coupleFundCatalogPicnic => 'Picnic';
-
-  @override
-  String get coupleFundCatalogDinnerOut => 'Cena afuera';
-
-  @override
-  String get coupleFundCatalogDayTrip => 'Escapada de un día';
-
-  @override
-  String get coupleFundCatalogWeekendAway => 'Escapada de fin de semana';
-
-  @override
   String get contributionTitle => 'Cómo se repartió';
-
-  @override
-  String get contributionEyebrow => 'LA SEMANA';
 
   @override
   String get contributionEmpty =>
@@ -9220,10 +7767,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String contributionRhythmValue(int weeks, int window) {
     return '$weeks de las últimas $window semanas';
   }
-
-  @override
-  String get contributionRhythmHint =>
-      'No es una racha: una semana tranquila lo baja sin romper nada.';
 
   @override
   String contributionTasksLabel(int count) {
@@ -9250,14 +7793,498 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String contributionSkewed(String category) {
-    return 'Las de $category cayeron siempre del mismo lado.';
+  String coupleWeekOf(String date) {
+    return 'Semana del $date';
   }
 
   @override
-  String get contributionBalanced => 'Esta semana se repartió parejo.';
+  String get coupleWeekYou => 'Vos';
 
   @override
-  String get contributionNoDurationNote =>
-      'El reparto se mide en tareas y en cuántas de las pesadas tomó cada uno.';
+  String coupleWeekSplitSemantics(int mine, String name, int theirs) {
+    return 'Reparto de la semana: vos $mine, $name $theirs.';
+  }
+
+  @override
+  String get coupleWeekReadingBalanced =>
+      'Viene parejo: se repartieron bien la semana.';
+
+  @override
+  String coupleWeekReadingCategoryPartner(String category, String name) {
+    return '$category: esta semana lo hizo casi todo $name.';
+  }
+
+  @override
+  String coupleWeekReadingCategoryMe(String category) {
+    return '$category: esta semana lo hiciste casi todo vos.';
+  }
+
+  @override
+  String coupleWeekReadingOverallPartner(String name) {
+    return 'Esta semana la mayoría de las tareas las hizo $name.';
+  }
+
+  @override
+  String get coupleWeekReadingOverallMe =>
+      'Esta semana la mayoría de las tareas las hiciste vos.';
+
+  @override
+  String get coupleWeekProposeTurns => 'Proponer turnarse';
+
+  @override
+  String get coupleWeekOfferHand => 'Ofrecer una mano';
+
+  @override
+  String coupleWeekTurnsProposalTitle(String category) {
+    return '¿Nos turnamos con $category?';
+  }
+
+  @override
+  String coupleWeekOfferProposalTitle(String category) {
+    return 'Esta semana me encargo yo de $category';
+  }
+
+  @override
+  String get coupleWeekTurnsProposalTitleGeneral =>
+      '¿Nos repartimos mejor las tareas de la semana?';
+
+  @override
+  String get coupleWeekOfferProposalTitleGeneral =>
+      'Esta semana me pongo con más tareas';
+
+  @override
+  String get coupleWeekSeeTasks => 'Ver tareas';
+
+  @override
+  String coupleWeekRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Quedan $count tareas para esta semana',
+      one: 'Queda 1 tarea para esta semana',
+      zero: 'No queda nada pendiente esta semana',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String coupleWeekOverdue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count vencidas',
+      one: '1 vencida',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coupleWeekMoneyTitle => 'La plata';
+
+  @override
+  String get coupleWeekMoneySeeAll => 'Ver movimientos';
+
+  @override
+  String get coupleWeekMoneyEven => 'Están a mano.';
+
+  @override
+  String coupleWeekMoneyYouOwe(String amount, String name) {
+    return 'Le debés $amount a $name.';
+  }
+
+  @override
+  String coupleWeekMoneyTheyOwe(String name, String amount) {
+    return '$name te debe $amount.';
+  }
+
+  @override
+  String coupleWeekMoneyPaid(String mine, String name, String theirs) {
+    return 'Este mes pusiste $mine y $name puso $theirs en gastos compartidos.';
+  }
+
+  @override
+  String get coupleWeekMoneyNoExpenses =>
+      'Todavía no cargaron gastos compartidos este mes.';
+
+  @override
+  String coupleWeekMoneySharedTotal(String amount) {
+    return 'Este mes gastaron $amount entre los dos.';
+  }
+
+  @override
+  String coupleWeekMoneySharedPaid(String mine, String name, String theirs) {
+    return 'Pagaste $mine · $name pagó $theirs';
+  }
+
+  @override
+  String get coupleWeekMoneySettle => 'Saldar';
+
+  @override
+  String get coupleWeekMoneyRecordPayment => 'Registrar pago';
+
+  @override
+  String get coupleWeekMoneyError => 'No pudimos cargar la plata de este mes.';
+
+  @override
+  String get coupleWeekAsksTitle => 'Entre ustedes';
+
+  @override
+  String get coupleWeekAsksSubtitle =>
+      'Planes, pedidos y charlas pendientes. Siempre se puede decir “ahora no”.';
+
+  @override
+  String get coupleWeekAsksEmpty => 'Nada pendiente entre ustedes.';
+
+  @override
+  String coupleWeekAsksEmptyHint(String action) {
+    return 'Para pedir una mano o proponer un plan, tocá “$action”.';
+  }
+
+  @override
+  String get coupleWeekAskToAnswer => 'Te toca responder';
+
+  @override
+  String coupleWeekAskWaiting(String name) {
+    return 'Esperando a $name';
+  }
+
+  @override
+  String coupleWeekAskFrom(String name, String when) {
+    return 'De $name · $when';
+  }
+
+  @override
+  String coupleWeekAskFromYou(String when) {
+    return 'Tuya · $when';
+  }
+
+  @override
+  String coupleWeekNoteTitle(String name) {
+    return 'Una nota para $name';
+  }
+
+  @override
+  String get coupleWeekNoteBody =>
+      'Le llega como un sobre al inicio de su app.';
+
+  @override
+  String coupleProposalPushTitle(String name) {
+    return '$name te propuso algo';
+  }
+
+  @override
+  String coupleProposalAnsweredPushTitle(String name) {
+    return '$name respondió tu propuesta';
+  }
+
+  @override
+  String coupleProposalAnsweredPushBody(String answer, String title) {
+    return '$answer: $title';
+  }
+
+  @override
+  String loveNotePushTitle(String name) {
+    return '💌 $name te dejó una nota';
+  }
+
+  @override
+  String get loveNotePushBody => 'Abrí HomeSync para leerla.';
+
+  @override
+  String loveNoteEnvelopeFrom(String name) {
+    return '$name te escribió';
+  }
+
+  @override
+  String get loveNoteEnvelopeSaved => 'Guardada en el hogar';
+
+  @override
+  String get partnerInviteTitle => 'Esto se disfruta de a dos';
+
+  @override
+  String get partnerInviteBody =>
+      'Cuando se sume tu pareja, acá van a ver cómo se repartió la semana, la plata entre ustedes y lo que se proponen.';
+
+  @override
+  String get partnerInviteCodeLabel => 'Código para tu pareja';
+
+  @override
+  String partnerInviteCodeSemantics(String code) {
+    return 'Código de invitación $code. Tocá para copiarlo.';
+  }
+
+  @override
+  String get partnerInviteShare => 'Invitar por WhatsApp';
+
+  @override
+  String get partnerInviteShareOther => 'Compartir por otra app';
+
+  @override
+  String get partnerInviteCopy => 'Copiar código';
+
+  @override
+  String get partnerInviteMessageCopied =>
+      'Copiamos la invitación: pegala donde quieras.';
+
+  @override
+  String get partnerInviteHint =>
+      'Tiene que bajar HomeSync, tocar “Tengo un código” y poner este.';
+
+  @override
+  String get partnerInviteHomeTitle => 'Falta que se sume tu pareja';
+
+  @override
+  String get partnerInviteHomeBody =>
+      'Mandale el código y empiecen a repartir tareas y gastos.';
+
+  @override
+  String get partnerInviteHomeAction => 'Invitar';
+
+  @override
+  String invitationShareMessage(String intro, String link, String code) {
+    return '$intro\n\n1. Bajate HomeSync: $link\n2. Tocá “Tengo un código” y poné: *$code*';
+  }
+
+  @override
+  String get setupStartTitle => 'Tareas y gastos de la casa, parejos.';
+
+  @override
+  String get setupStartBody =>
+      'Repartan las tareas, anoten quién pagó qué y vean cómo quedan, sin planillas ni discusiones.';
+
+  @override
+  String get setupStartBulletTasks =>
+      'Las tareas de la casa, a la vista de los dos';
+
+  @override
+  String get setupStartBulletMoney =>
+      'Gastos compartidos y el saldo siempre al día';
+
+  @override
+  String get setupStartBulletWeek => 'Un repaso semanal de cómo se repartieron';
+
+  @override
+  String get setupStartCreate => 'Empezar mi hogar';
+
+  @override
+  String get setupStartJoin => 'Tengo un código';
+
+  @override
+  String get setupStartJoinTitle => 'Unirte a un hogar';
+
+  @override
+  String get setupStartJoinBody =>
+      'Poné el código de 6 caracteres que te mandaron.';
+
+  @override
+  String get setupStartJoinNameLabel => '¿Cómo te llamás?';
+
+  @override
+  String get setupStartJoinCodeLabel => 'Código';
+
+  @override
+  String get setupStartJoinButton => 'Unirme';
+
+  @override
+  String get setupStartTime => 'Te lleva menos de un minuto.';
+
+  @override
+  String get setupHouseholdTitle => 'Contanos de tu casa';
+
+  @override
+  String get setupHouseholdSubtitle =>
+      'Con esto adaptamos la app a cómo viven.';
+
+  @override
+  String get setupHouseholdModeLabel => '¿Con quién compartís la casa?';
+
+  @override
+  String get setupHouseholdNameLabel => 'Tu nombre';
+
+  @override
+  String get setupHouseholdFinanceNote =>
+      'Arrancan dividiendo los gastos 50/50. Lo pueden cambiar cuando quieran en Ajustes.';
+
+  @override
+  String setupFamilyHouseholdNameFor(String name) {
+    return '$name y familia';
+  }
+
+  @override
+  String setupInviteTitle(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'couple': 'Sumá a tu pareja',
+        'family': 'Sumá a tu familia',
+        'friends': 'Sumá a quienes viven con vos',
+        'other': 'Sumá a alguien más',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String setupInviteBody(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'couple':
+            'HomeSync funciona de a dos: cuando se sume, van a ver las tareas, la plata y el repaso de la semana juntos.',
+        'family':
+            'Cuando se sumen, cada uno va a ver lo que le toca y lo que se comparte.',
+        'friends':
+            'Cuando se sumen, van a tener las tareas y las cuentas claras entre todos.',
+        'other': 'Compartí el código para que se sumen a tu hogar.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get setupInviteCodeLabel => 'Tu código de invitación';
+
+  @override
+  String setupInviteHint(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'family':
+            'Tienen que bajar HomeSync, tocar “Tengo un código” y poner este.',
+        'friends':
+            'Tienen que bajar HomeSync, tocar “Tengo un código” y poner este.',
+        'other':
+            'Tiene que bajar HomeSync, tocar “Tengo un código” y poner este.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get setupInviteLater => 'Lo hago después';
+
+  @override
+  String get setupInviteDone => 'Listo, ya lo mandé';
+
+  @override
+  String get homeNextStepExpenseTitle => 'Carguen el primer gasto compartido';
+
+  @override
+  String get homeNextStepExpenseBody =>
+      'Así la app lleva la cuenta de quién puso qué.';
+
+  @override
+  String get homeNextStepExpenseAction => 'Cargar';
+
+  @override
+  String get premiumProductsUnavailableTitle => 'No pudimos cargar los planes';
+
+  @override
+  String get premiumProductsUnavailableBody =>
+      'Revisá tu conexión y probá de nuevo. Si ya pagaste, restaurá tu compra.';
+
+  @override
+  String get premiumRestoreNothing => 'No encontramos compras para restaurar.';
+
+  @override
+  String get premiumRestoreError =>
+      'No pudimos restaurar la compra. Probá de nuevo.';
+
+  @override
+  String coupleWeekReadingEarly(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Van $count tareas esta semana: es temprano para leer el reparto.',
+      one: 'Va 1 tarea esta semana: es temprano para leer el reparto.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get balanceCardRecordPaymentButton => 'Registrar pago';
+
+  @override
+  String get homeActivityLoadError => 'No pudimos cargar la actividad.';
+
+  @override
+  String get expensesSummaryLoadError =>
+      'No pudimos cargar el resumen del mes.';
+
+  @override
+  String get expensesFeedLoadError => 'No pudimos cargar los movimientos.';
+
+  @override
+  String get premiumBenefitBudgetsRecap => 'Presupuestos y resumen del mes';
+
+  @override
+  String get premiumBenefitBudgetsRecapDesc =>
+      'Poné topes por categoría y mirá el cierre de cada mes: en qué se fue la plata y quién puso qué.';
+
+  @override
+  String get currencyNameArs => 'Peso argentino';
+
+  @override
+  String get currencyNameUsd => 'Dólar estadounidense';
+
+  @override
+  String get currencyNameEur => 'Euro';
+
+  @override
+  String get currencyNameBrl => 'Real brasileño';
+
+  @override
+  String get currencyNameClp => 'Peso chileno';
+
+  @override
+  String get currencyNameUyu => 'Peso uruguayo';
+
+  @override
+  String get categoryLabelHome => 'Hogar';
+
+  @override
+  String get categoryLabelOther => 'Otros';
+
+  @override
+  String weeklySummaryTasksDoneBody(int planned, int done) {
+    String _temp0 = intl.Intl.pluralLogic(
+      planned,
+      locale: localeName,
+      other: '$done de $planned tareas completadas.',
+      one: '$done de 1 tarea completada.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weeklySummaryCompletionTitle(int planned, int done, int pct) {
+    String _temp0 = intl.Intl.pluralLogic(
+      planned,
+      locale: localeName,
+      other: '$done de $planned tareas · $pct%',
+      one: '$done de 1 tarea · $pct%',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weeklySummaryVsLastWeek(String delta) {
+    return '$delta vs. la semana anterior';
+  }
+
+  @override
+  String weeklySummaryExpensesThisWeek(String amount) {
+    return '$amount esta semana';
+  }
+
+  @override
+  String weeklySummaryTopCategoryBody(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$amount en $count gastos.',
+      one: '$amount en 1 gasto.',
+    );
+    return '$_temp0';
+  }
 }

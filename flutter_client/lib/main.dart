@@ -17,10 +17,12 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/locale_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/riverpod_retry.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/breadcrumb_service.dart';
 import 'package:homesync_client/core/services/concept_icons.dart';
+import 'package:homesync_client/core/services/install_attribution_reporter.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/services/posthog_sink.dart';
@@ -472,6 +474,8 @@ class _MyAppState extends ConsumerState<MyApp> {
     ref.read(authBootstrapProvider);
     unawaited(_configureAnalytics());
     _wireAnalyticsContext();
+    // Arranca el reloj de "una semana de uso" antes de pedir una reseña.
+    unawaited(ref.read(reviewPromptServiceProvider).markFirstSeen());
 
     if (AppEnvironment.adminTestingAutoLogin) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -582,6 +586,25 @@ class _MyAppState extends ConsumerState<MyApp> {
           );
         }
       },
+    );
+
+    // Atribución de la instalación: se guarda recién con usuario logueado,
+    // porque la fila cuelga de users.id.
+    final attributionReporter = InstallAttributionReporter(
+      referrer: ref.read(installReferrerServiceProvider),
+      analytics: analytics,
+      appVersion: widget.appVersion,
+      saveAttribution: (params) => ref
+          .read(supabaseClientProvider)
+          .rpc<void>(InstallAttributionReporter.rpcName, params: params),
+    );
+    ref.listenManual<String?>(
+      currentUserIdProvider,
+      (_, userId) {
+        if (userId == null) return;
+        unawaited(attributionReporter.reportIfNeeded());
+      },
+      fireImmediately: true,
     );
 
     ref.listenManual<AsyncValue<bool>>(

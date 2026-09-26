@@ -34,7 +34,6 @@ import 'package:homesync_client/features/notifications/presentation/screens/noti
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
 import 'package:homesync_client/features/onboarding/presentation/widgets/coachmark_overlay.dart';
-import 'package:homesync_client/features/rewards/presentation/providers/couple_challenge_provider.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/screens/shopping_list_screen.dart';
@@ -279,8 +278,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
         householdId != null &&
         householdId.isNotEmpty) {
       ref.invalidate(coupleConnectionSummaryProvider(householdId));
-      ref.invalidate(coupleChallengeCompletedProvider);
-      ref.invalidate(householdFundProvider(householdId));
+      ref.invalidate(householdContributionProvider(householdId));
     }
   }
 
@@ -326,7 +324,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
             )
             ..add(
               ref.listenManual(
-                householdFundProvider(householdId),
+                householdContributionProvider(householdId),
                 (_, __) {},
               ),
             );

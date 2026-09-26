@@ -202,7 +202,7 @@ class ShoppingItems extends _$ShoppingItems {
             note: note,
           );
 
-      return result.fold(
+      return result.fold<bool>(
         (failure) {
           log.e('Failed to add item: ${failure.message}');
           state = AsyncValue.data(oldState); // Rollback

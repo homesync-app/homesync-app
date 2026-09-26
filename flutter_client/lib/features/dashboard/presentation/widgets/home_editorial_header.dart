@@ -44,7 +44,7 @@ class HomeEditorialHeader extends StatelessWidget {
               ).animateEntrance(),
               const SizedBox(height: 8),
               Text(
-                _greetingForHour(now.hour, t),
+                homeGreetingForHour(now.hour, t),
                 style: AppTypography.cardTitle.copyWith(
                   height: 1.1,
                   color: theme.textSecondary,
@@ -79,10 +79,13 @@ class HomeEditorialHeader extends StatelessWidget {
       ],
     );
   }
+}
 
-  String _greetingForHour(int hour, AppLocalizations t) {
-    if (hour >= 5 && hour < 13) return t.homeGreetingMorning;
-    if (hour >= 13 && hour < 20) return t.homeGreetingAfternoon;
-    return t.homeGreetingEvening;
-  }
+/// Saludo neutro según la hora ("Buenos días," / "Buenas tardes," /
+/// "Buenas noches,"). Termina en coma: el nombre va a continuación.
+/// Compartido por todos los modos del Home.
+String homeGreetingForHour(int hour, AppLocalizations t) {
+  if (hour >= 5 && hour < 13) return t.homeGreetingMorning;
+  if (hour >= 13 && hour < 20) return t.homeGreetingAfternoon;
+  return t.homeGreetingEvening;
 }

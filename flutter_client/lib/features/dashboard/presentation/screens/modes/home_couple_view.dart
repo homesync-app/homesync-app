@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -14,14 +13,17 @@ import 'package:homesync_client/features/dashboard/presentation/providers/love_n
 import 'package:homesync_client/features/dashboard/presentation/providers/mascot_motion_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/couple_settlement_flow.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/home_editorial_header.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_header_avatar.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/love_note_envelope.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/settlement_confirm_dialog.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/presentation/widgets/partner_invite_card.dart';
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
@@ -30,11 +32,11 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/widgets/task_completion_flow_mixin.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_feed_entry_motion.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
-import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
+import 'package:homesync_client/shared/widgets/design/app_button.dart';
+import 'package:homesync_client/shared/widgets/design/app_card.dart';
 import 'package:homesync_client/shared/widgets/expressive/expressive.dart';
 import 'package:intl/intl.dart';
-import 'package:uuid/uuid.dart';
 
 class HomeCoupleView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -59,7 +61,6 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
   bool _tourTriggered = false;
   bool _settlementJustCompleted = false;
   double? _optimisticExpenseBalance;
-  ScaffoldMessengerState? _scaffoldMessenger;
   // Cached pre-dispose so dispose() never calls ref after unmount
   TourTargetKeysNotifier? _tourKeysNotifier;
 
@@ -71,12 +72,6 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       _registerTourKeys();
       _maybeStartTour();
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _scaffoldMessenger = ScaffoldMessenger.maybeOf(context);
   }
 
   void _registerTourKeys() {
@@ -154,6 +149,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
             key: _balanceKey,
             child: _buildFinancialSummary(widget.householdId),
           ),
+          ..._buildFirstExpenseNudge(theme),
           const SizedBox(height: 28),
           if (caps.showTasks)
             KeyedSubtree(
@@ -311,22 +307,21 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     return fullName.split(' ').first;
   }
 
+  /// Saludo neutro por hora, igual que en los otros modos. Antes adivinaba el
+  /// género por la última letra del nombre ("Bienvenida" si terminaba en a),
+  /// y se equivocaba con nombres como Luca o Andrea.
   TextSpan _buildWelcomeGreetingSpan({
     required AppThemeColors theme,
     required String? currentMemberName,
   }) {
     final t = AppLocalizations.of(context);
     final firstName = _firstName(currentMemberName);
-    final welcome = firstName != null
-        ? (_looksFeminineName(firstName)
-            ? t.homeWelcomeFeminine
-            : t.homeWelcomeMasculine)
-        : t.homeWelcomeMasculine;
+    final greeting = homeGreetingForHour(DateTime.now().hour, t);
 
     return TextSpan(
       children: [
         TextSpan(
-          text: '$welcome, ',
+          text: '$greeting ',
           style: TextStyle(color: theme.textSecondary),
         ),
         TextSpan(
@@ -335,13 +330,6 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
         ),
       ],
     );
-  }
-
-  bool _looksFeminineName(String name) {
-    final normalized = name.trim().toLowerCase();
-    const masculineExceptions = {'blas', 'luca', 'noa', 'andrea'};
-    if (masculineExceptions.contains(normalized)) return false;
-    return normalized.endsWith('a');
   }
 
   Widget _buildProfileAvatar(MemberModel? member) {
@@ -381,6 +369,16 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
           members.where((m) => m.userId != currentUserId).firstOrNull,
     );
 
+    // Sin la otra persona no hay balance entre dos que mostrar (antes decía
+    // "Balance en calma" a alguien que estaba solo). En su lugar va la
+    // invitación: es lo que destraba el resto de la app.
+    if (membersAsync.hasValue && partner == null) {
+      return const PartnerInviteCard(
+        variant: PartnerInviteVariant.compact,
+        source: 'home',
+      ).animateEntrance(delay: 100);
+    }
+
     // Integrated economy: no debt/balance between partners, so the card shows
     // the shared household monthly spend instead of a balance + settle action.
     if (isIntegratedEconomy) {
@@ -403,7 +401,6 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       settlementJustCompleted: _settlementJustCompleted,
       onSettle: partner != null && displayedExpenseBalance.abs() > 10.0
           ? () => _showSettlementDialog(
-                householdId: householdId,
                 partnerId: partner.userId,
                 partnerName: partner.displayName,
                 amount: displayedExpenseBalance.abs(),
@@ -411,6 +408,76 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
               )
           : null,
     ).animateEntrance(delay: 100);
+  }
+
+  /// Siguiente paso una vez que están los dos: el primer gasto. Se va sola en
+  /// cuanto existe uno (o hay un saldo abierto, que implica que ya hubo).
+  List<Widget> _buildFirstExpenseNudge(AppThemeColors theme) {
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final members = ref.watch(householdMembersProvider).value;
+    final hasPartner = members?.any((m) => m.userId != currentUserId) ?? false;
+    if (!hasPartner) return const [];
+
+    final feed = ref.watch(combinedFeedControllerProvider).value;
+    if (feed == null || feed.any((item) => item.isRealExpense)) {
+      return const [];
+    }
+    final balances = ref.watch(expenseBalancesProvider).value;
+    if (balances == null || balances.any((b) => b.balance.abs() > 0.01)) {
+      return const [];
+    }
+
+    final t = AppLocalizations.of(context);
+    return [
+      const SizedBox(height: AppSpacing.md),
+      AppCard(
+        padding: AppInsets.compactCard,
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: theme.primary.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.receipt_long_rounded,
+                color: theme.primary,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t.homeNextStepExpenseTitle,
+                    style: AppTypography.cardTitle.copyWith(
+                      color: theme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    t.homeNextStepExpenseBody,
+                    style: AppTypography.caption.copyWith(
+                      color: theme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            AppButton(
+              label: t.homeNextStepExpenseAction,
+              size: AppButtonSize.small,
+              onTap: () => ExpenseFormSheet.show(context),
+            ),
+          ],
+        ),
+      ).animateEntrance(delay: 140),
+    ];
   }
 
   Widget _buildTasksSection(AppThemeColors theme) {
@@ -471,7 +538,10 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
         const SizedBox(height: AppSpacing.md),
         tasksAsync.when(
           loading: () => _buildTasksShimmer(theme),
-          error: (e, _) => Text(t.commonErrorWithDetails(e.toString())),
+          error: (_, __) => AppInlineError(
+            message: t.tasksLoadError,
+            onRetry: () => ref.invalidate(tasksProvider),
+          ),
           data: (tasks) {
             if (tasks.isEmpty) {
               return _buildEmptyState(t.homeAllDoneToday, theme);
@@ -535,9 +605,12 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
             padding: EdgeInsets.symmetric(vertical: 20),
             child: Center(child: AppLoader()),
           ),
-          error: (e, _) => Padding(
+          error: (_, __) => Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: Text(t.commonErrorWithDetails(e.toString())),
+            child: AppInlineError(
+              message: t.homeActivityLoadError,
+              onRetry: () => ref.invalidate(recentActivityRemoteProvider),
+            ),
           ),
           data: (activities) {
             final visibleActivities = activities
@@ -718,76 +791,31 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
   }
 
   void _showSettlementDialog({
-    required String householdId,
     required String partnerId,
     required String partnerName,
     required double amount,
     required bool isOwedByMe,
   }) {
-    final t = AppLocalizations.of(context);
-    final currentUserId = ref.read(currentUserIdProvider);
-    if (currentUserId == null) {
-      _showMessage(t.homeCoupleSettlementErrorNoUser);
-      return;
-    }
-
-    final payerId = isOwedByMe ? currentUserId : partnerId;
-    final receiverId = isOwedByMe ? partnerId : currentUserId;
-    final formattedAmount = ref.read(currencyProvider).format(amount);
-    // One idempotency key per dialog (i.e. per settlement intent): reused if the
-    // user retries after an error/timeout so the server resolves to the same
-    // settlement instead of duplicating it. A new dialog → new key.
-    final requestId = const Uuid().v4();
-
-    showDialog<void>(
+    showCoupleSettlementDialog(
       context: context,
-      builder: (dialogContext) => SettlementConfirmDialog(
-        titleText: t.homeCoupleSettlementDialogTitle,
-        amountText: formattedAmount,
-        directionText: isOwedByMe
-            ? t.homeCoupleSettlementDialogDirectionPay(partnerName)
-            : t.homeCoupleSettlementDialogDirectionReceive(partnerName),
-        bodyText: t.homeCoupleSettlementDialogBalanceZero,
-        confirmLabel: t.homeCoupleSettlementDialogConfirm,
-        cancelLabel: t.homeCoupleSettlementDialogCancel,
-        doneBadgeText: t.homeCoupleSettlementDoneBadge,
-        errorTextBuilder: t.homeCoupleSettlementError,
-        onConfirm: () =>
-            ref.read(expenseControllerProvider.notifier).settleDebt(
-                  fromUserId: payerId,
-                  toUserId: receiverId,
-                  amount: amount,
-                  requestId: requestId,
-                ),
-        onSettled: () {
-          if (mounted) {
-            setState(() {
-              _optimisticExpenseBalance = 0;
-              _settlementJustCompleted = true;
-            });
-          }
-          // Let the balance-card "just settled" flourish play, then clear it.
-          Future<void>.delayed(const Duration(milliseconds: 2200), () {
-            if (!mounted) return;
-            setState(() => _settlementJustCompleted = false);
+      ref: ref,
+      partnerId: partnerId,
+      partnerName: partnerName,
+      amount: amount,
+      isOwedByMe: isOwedByMe,
+      onSettled: () {
+        if (mounted) {
+          setState(() {
+            _optimisticExpenseBalance = 0;
+            _settlementJustCompleted = true;
           });
-          _showMessage(
-            isOwedByMe
-                ? t.homeCoupleSettlementSuccessPay(partnerName)
-                : t.homeCoupleSettlementSuccessReceive(partnerName),
-          );
-        },
-      ),
-    );
-  }
-
-  void _showMessage(String message) {
-    final messenger = _scaffoldMessenger;
-    if (messenger == null || !messenger.mounted) return;
-    AppSnackBar.show(
-      messenger.context,
-      message: message,
-      type: AppSnackBarType.neutral,
+        }
+        // Let the balance-card "just settled" flourish play, then clear it.
+        Future<void>.delayed(const Duration(milliseconds: 2200), () {
+          if (!mounted) return;
+          setState(() => _settlementJustCompleted = false);
+        });
+      },
     );
   }
 }

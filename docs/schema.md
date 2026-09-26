@@ -28,6 +28,22 @@
 
 Unique: (user_id, token)
 
+#### `install_attributions`
+Origen de la instalación (Play Install Referrer). Una fila por usuario, la primera gana. Sin policies RLS: solo se escribe vía `record_install_attribution_v1`; se lee con service_role.
+
+| Columna | Tipo | Restricciones | Notas |
+|---------|------|---------------|-------|
+| user_id | UUID | PK, FK → users(id) ON DELETE CASCADE | |
+| utm_source | TEXT | nullable | `instagram`, `invite`, `google-play`, `apps.facebook.com`… |
+| utm_medium | TEXT | nullable | `organic` = búsqueda en Play |
+| utm_campaign | TEXT | nullable | |
+| utm_content | TEXT | nullable | Código de invitación, o JSON cifrado de Meta Ads |
+| utm_term | TEXT | nullable | |
+| raw_referrer | TEXT | nullable | Referrer entero (≤4096) para descifrar Meta después |
+| platform | TEXT | default 'android' | |
+| app_version | TEXT | nullable | Versión que lo reportó |
+| created_at | TIMESTAMPTZ | default now() | ≈ primer login |
+
 ---
 
 ### HOUSEHOLD
@@ -535,6 +551,7 @@ expense_templates.id ← planned_expenses.template_id
 | current_app_user_id() | UUID | Resuelve JWT sub/firebase_uid → users.id |
 | ensure_user_profile(p_firebase_uid, p_email, p_full_name, p_avatar_url) | UUID | Crea o linkea perfil de usuario |
 | update_own_profile(p_full_name, p_avatar_url) | BOOLEAN | Actualiza perfil (security definer) |
+| record_install_attribution_v1(p_source, p_medium, p_campaign, p_content, p_term, p_raw_referrer, p_platform, p_app_version) | BOOLEAN | Guarda el origen de la instalación del usuario actual (primera escritura gana) |
 | current_auth_subject() | TEXT | JWT sub o auth.uid() |
 | is_current_app_user(user_id) | BOOLEAN | Verifica si user_id coincide |
 | is_current_household_member(target_household_id) | BOOLEAN | Verifica membresia |

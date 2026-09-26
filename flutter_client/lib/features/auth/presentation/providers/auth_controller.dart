@@ -216,7 +216,8 @@ class AuthController extends _$AuthController {
       );
       final result = await _repository.signInWithGoogle();
 
-      return result.fold(
+      // Awaited so errors thrown inside either branch reach the catch below.
+      return await result.fold(
         (failure) async {
           log.setCustomKey('auth_flow', 'google_sign_in');
           log.e('Google Sign-In error: ${failure.message}', error: failure);

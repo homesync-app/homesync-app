@@ -188,6 +188,46 @@ class AnalyticsService {
     );
   }
 
+  /// El código llegó precargado desde el link de invitación de Play Store.
+  /// Comparado con `invite_accepted`, mide cuánto ayuda el link frente a
+  /// tipear el código a mano.
+  Future<void> trackInviteCodePrefilled({required String source}) async {
+    await logEvent(
+      'invite_code_prefilled',
+      parameters: {
+        'source': source,
+      },
+    );
+  }
+
+  /// Primera vez que se sabe de dónde vino la instalación (campaña, invitación
+  /// u orgánico). Deja también `acquisition_*` como propiedad de usuario, así
+  /// retención y conversión se pueden cortar por canal sin joins.
+  Future<void> trackInstallAttributed({
+    String? source,
+    String? medium,
+    String? campaign,
+  }) async {
+    // Firebase corta los valores de propiedades de usuario en 36 caracteres.
+    String? clip(String? value) =>
+        value == null || value.length <= 36 ? value : value.substring(0, 36);
+
+    await setUserProperty(name: 'acquisition_source', value: clip(source));
+    await setUserProperty(name: 'acquisition_medium', value: clip(medium));
+    await setUserProperty(
+      name: 'acquisition_campaign',
+      value: clip(campaign),
+    );
+    await logEvent(
+      'install_attributed',
+      parameters: {
+        'source': source ?? 'unknown',
+        'medium': medium,
+        'campaign': campaign,
+      },
+    );
+  }
+
   /// El hogar dejó de estar solo. Se emite una única vez por dispositivo:
   /// mide el hito, no el tamaño del hogar.
   Future<void> trackHouseholdSecondMemberJoined({

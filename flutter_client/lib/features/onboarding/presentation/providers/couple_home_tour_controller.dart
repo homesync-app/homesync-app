@@ -127,28 +127,30 @@ class CoupleHomeTourController extends Notifier<CoupleHomeTourState> {
           target: TourTarget.tasksSection,
         ),
       // Balance: el widget y su explicación cambian según la configuración
-      // de finanzas del hogar (integrada vs dividida).
-      CoachmarkStep(
-        kind: CoachmarkStepKind.spotlight,
-        title: t.tourBalanceTitle,
-        body: t.tourBalanceBody(financeMode),
-        primaryCta: t.tourCtaNext,
-        target: TourTarget.balanceCard,
-        bullets: [
-          if (ctx.integratedFinances)
-            CoachmarkBullet(
-              icon: Icons.timeline_rounded,
-              tint: AppColors.accentOrange,
-              text: t.tourBalanceBulletMonth,
-            )
-          else
-            CoachmarkBullet(
-              icon: Icons.payment_rounded,
-              tint: AppColors.accentOrange,
-              text: t.tourBalanceBulletSettle,
-            ),
-        ],
-      ),
+      // de finanzas del hogar (integrada vs dividida). Sin pareja todavía, el
+      // Home muestra la invitación en ese lugar, así que el paso no aplica.
+      if (ctx.partnerName != null)
+        CoachmarkStep(
+          kind: CoachmarkStepKind.spotlight,
+          title: t.tourBalanceTitle,
+          body: t.tourBalanceBody(financeMode),
+          primaryCta: t.tourCtaNext,
+          target: TourTarget.balanceCard,
+          bullets: [
+            if (ctx.integratedFinances)
+              CoachmarkBullet(
+                icon: Icons.timeline_rounded,
+                tint: AppColors.accentOrange,
+                text: t.tourBalanceBulletMonth,
+              )
+            else
+              CoachmarkBullet(
+                icon: Icons.payment_rounded,
+                tint: AppColors.accentOrange,
+                text: t.tourBalanceBulletSettle,
+              ),
+          ],
+        ),
       CoachmarkStep(
         kind: CoachmarkStepKind.spotlight,
         title: t.tourExpensesTitle(financeMode),

@@ -47,8 +47,12 @@ class AppColors {
 
   // Neutral Colors
   static const Color textPrimary = Color(0xFF4A4443);
-  static const Color textSecondary = Color(0xFF8E8480);
-  static const Color textMuted = Color(0xFFB2AAA6);
+  // Oscurecidos en 2026-09 para contraste: textSecondary ≥4.5:1 (AA texto
+  // normal) y textMuted ≥3:1 (texto grande / no esencial) sobre todas las
+  // superficies claras. Los anteriores (#8E8480 ~3.5:1, #B2AAA6 ~2.2:1) no
+  // llegaban.
+  static const Color textSecondary = Color(0xFF756C68);
+  static const Color textMuted = Color(0xFF968D89);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
   static const Color textDark = Color(0xFF0F172A);
   static const Color textLight = Color(0xFFF8FAFC);
