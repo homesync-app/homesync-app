@@ -36,8 +36,10 @@ El launcher usa:
 - `APP_ENV=staging`
 - `AUTH_MODE=supabase_native`
 - `ENABLE_ADMIN_TESTING=true`
-- admin preview: `admin / superadmin`
-- base session: `test@homesync.com / qapass123`
+- credenciales QA (`ADMIN_TESTING_BASE_EMAIL/PASSWORD`, `ADMIN_TESTING_USERNAME/PASSWORD`,
+  `QA_TESTING_PASSWORD`): solo en `flutter_client/.env.local`, que no se versiona. Nunca
+  ponerlas en scripts, docs ni defaults del código: el repo es público y la cuenta base QA
+  es admin en producción.
 
 ## Evidencia
 

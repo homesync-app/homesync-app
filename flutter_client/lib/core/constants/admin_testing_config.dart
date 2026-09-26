@@ -37,17 +37,17 @@ class AdminTestingScenario {
 }
 
 class AdminTestingConfig {
+  /// Password de las cuentas QA. Sin default a propósito: viene de
+  /// `flutter_client/.env.local` (gitignored). Un default acá quedaba publicado
+  /// en el repo y daba acceso a las cuentas QA de producción.
   static const String qaTestingPassword =
-      String.fromEnvironment('QA_TESTING_PASSWORD', defaultValue: 'qapass123');
+      String.fromEnvironment('QA_TESTING_PASSWORD');
 
   static const String adminTestingUserId =
       '5ac9da1b-11ba-4427-a994-691577ad596f';
   static const String adminDisplayName = 'Admin QA';
   static const String adminEmail = 'admin@homesync.qa';
   static const String adminAvatar = '\u{1F6E0}\u{FE0F}';
-
-  static const String defaultUsername = 'admin';
-  static const String defaultPassword = 'superadmin';
 
   static const List<AdminTestingScenario> scenarios = [
     AdminTestingScenario(

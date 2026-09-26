@@ -24,7 +24,7 @@ if ($devicesText -notmatch $deviceId) {
 
 Write-Host ""
 Write-Host "Starting HomeSync Admin QA on phone..." -ForegroundColor Green
-Write-Host "Admin login: admin / superadmin" -ForegroundColor Yellow
+Write-Host "Credenciales QA: flutter_client/.env.local (no se versionan)" -ForegroundColor Yellow
 Write-Host ""
 
 Push-Location $flutterAppDir
@@ -35,9 +35,7 @@ try {
         --dart-define=APP_ENV=staging `
         --dart-define=AUTH_MODE=supabase_native `
         --dart-define=ENABLE_ADMIN_TESTING=true `
-        --dart-define=ADMIN_TESTING_AUTO_LOGIN=true `
-        --dart-define=ADMIN_TESTING_USERNAME=admin `
-        --dart-define=ADMIN_TESTING_PASSWORD=superadmin
+        --dart-define=ADMIN_TESTING_AUTO_LOGIN=true
 }
 finally {
     Pop-Location
