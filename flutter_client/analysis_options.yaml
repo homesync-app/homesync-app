@@ -13,6 +13,13 @@ analyzer:
     # Vendored M3 Expressive ports (MIT, ksokolovskyi via bunpod): shape
     # morphing (material_shapes) + wavy progress indicator.
     - lib/shared/widgets/vendor/**
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
   language:
     strict-casts: false
     strict-raw-types: false

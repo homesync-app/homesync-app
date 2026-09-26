@@ -432,7 +432,10 @@ class Tasks extends _$Tasks {
 
       if (result.isRight()) {
         if (!ref.mounted) {
-          return result.fold((_) => null, (data) => data);
+          return result.fold<TaskCompletionResult?>(
+            (_) => null,
+            (data) => data,
+          );
         }
         final isOnline = ref.read(isOnlineProvider);
         final queued = result.fold(
@@ -484,7 +487,7 @@ class Tasks extends _$Tasks {
         }
       }
 
-      return result.fold(
+      return result.fold<TaskCompletionResult?>(
         (failure) {
           state = AsyncValue.data(oldState!);
           return null;
@@ -582,7 +585,7 @@ class Tasks extends _$Tasks {
         completedAt: effectiveCompletedAt,
       );
       if (!ref.mounted) {
-        return result.fold((_) => null, (data) => data);
+        return result.fold<Map<String, dynamic>?>((_) => null, (data) => data);
       }
 
       if (result.isRight()) {
@@ -610,7 +613,7 @@ class Tasks extends _$Tasks {
         }
       }
 
-      return result.fold(
+      return result.fold<Map<String, dynamic>?>(
         (failure) {
           if (oldState != null) state = AsyncValue.data(oldState);
           return null;

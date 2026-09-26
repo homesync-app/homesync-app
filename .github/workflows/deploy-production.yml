@@ -55,10 +55,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Fijado: misma versión que tests.yml, que el entorno local y que el
+      # `--flutter-version` de shorebird release de abajo.
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.47.5
           cache: true
 
       - name: Setup Shorebird
@@ -176,14 +179,15 @@ jobs:
             # and embeds the updater so the AAB stays OTA-patchable. Flutter args
             # are forwarded after `--`.
             #
-            # NOTE: Shorebird only supports specific Flutter revisions. If your
-            # team pins one (AGENTS.md says 3.41+), add it explicitly once you've
-            # confirmed it's supported: `--flutter-version=<rev>`. Patches MUST be
-            # built with the same Flutter version as the release.
+            # Flutter fijado explícitamente (sin esto Shorebird usa su última
+            # versión, que puede no ser la que se probó). Patches MUST be built
+            # with the same Flutter version as the release; `shorebird patch`
+            # la toma sola de la release. Subirla = release nueva, no patch.
             # --obfuscate hardens the Dart code in the AAB; --split-debug-info
             # saves the symbol map so Crashlytics stack traces stay readable.
             # The symbols dir is uploaded as an artifact below — keep it per release.
             shorebird release android \
+              --flutter-version=3.47.5 \
               --no-confirm \
               -- \
               --dart-define-from-file=.env.production \
