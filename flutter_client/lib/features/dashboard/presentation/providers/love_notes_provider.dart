@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/dashboard/domain/models/love_note_model.dart';
@@ -69,35 +68,49 @@ class LoveNotesNotifier extends AsyncNotifier<List<LoveNoteModel>> {
     return notes;
   }
 
-  /// Envía una nota de amor al partner.
-  /// Requiere premium (doble verificación además de la UI).
+  /// Largo máximo de una nota: entra entera en el sobre sin scroll.
+  static const int maxLength = 280;
+
+  /// Envía una nota a la pareja. Es gratis: es el gesto más chico que la app
+  /// ofrece para cuidar el vínculo, y cobrarlo lo volvía invisible.
+  ///
+  /// [pushTitle] y [pushBody] llegan ya localizados desde la UI. Si falla el
+  /// insert, el error sube para que la UI lo muestre; el push es best-effort.
   Future<void> sendNote({
     required String content,
     required String fromUserId,
     required String toUserId,
     required String householdId,
+    required String pushTitle,
+    required String pushBody,
   }) async {
-    if (!(ref.read(premiumProvider).value ?? false)) return;
-    if (content.trim().isEmpty) return;
+    final trimmed = content.trim();
+    if (trimmed.isEmpty) return;
 
     await _supabase.from('love_notes').insert({
       'household_id': householdId,
       'from_user_id': fromUserId,
       'to_user_id': toUserId,
-      'content': content.trim(),
+      'content': trimmed.length > maxLength
+          ? trimmed.substring(0, maxLength)
+          : trimmed,
     });
 
-    // Push notification al partner (fallback si la app está cerrada)
+    // Push al partner (fallback si la app está cerrada). No bloquea el envío.
     try {
       final notifService = ref.read(notificationServiceProvider);
       await notifService.notifyMember(
         toUserId: toUserId,
-        title: '💌 Tenés una nota especial',
-        body: 'Tu pareja te mandó una nota de amor ❤️',
+        title: pushTitle,
+        body: pushBody,
         type: 'love_note',
       );
-    } catch (_) {
-      // No bloquear si falla la notificación
+    } catch (error, stackTrace) {
+      log.w(
+        'love note push failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
   }
 

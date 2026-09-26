@@ -1,4 +1,5 @@
 import 'package:homesync_client/core/services/template_service.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -198,6 +199,26 @@ String localizedTaskCatalogText(
 
 String localizedTaskCategoryName(AppLocalizations t, CategoryModel category) {
   return localizedTaskCatalogText(t, category.translationKey, category.name);
+}
+
+/// Nombre localizado de una categoría a partir de su clave cruda (`cocina`,
+/// `kitchen`, `baño`…), como la guardan las actividades del hogar.
+///
+/// Busca la categoría en el catálogo cargado para usar su traducción; si no
+/// aparece (catálogo todavía cargando o clave legacy), cae al nombre del mapeo
+/// local.
+String localizedTaskCategoryFromKey(
+  AppLocalizations t,
+  Iterable<CategoryModel> catalog,
+  String? rawKey,
+) {
+  final normalized = CategoryMapping.normaliseCategory(rawKey);
+  for (final category in catalog) {
+    if (CategoryMapping.normaliseCategory(category.id) == normalized) {
+      return localizedTaskCategoryName(t, category);
+    }
+  }
+  return CategoryMapping.displayName(rawKey);
 }
 
 String localizedTaskTemplateTitle(AppLocalizations t, TaskTemplate template) {

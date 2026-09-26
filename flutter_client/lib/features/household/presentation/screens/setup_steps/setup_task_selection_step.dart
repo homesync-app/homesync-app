@@ -11,7 +11,7 @@ import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
 import '../setup_widgets.dart';
 
-/// Paso 7: elegir las tareas iniciales del hogar.
+/// Paso de tareas: elegir las primeras tareas del hogar (ya vienen sugeridas).
 class SetupTaskSelectionStep extends ConsumerWidget {
   final bool isLoadingTemplates;
   final bool hasTemplatesError;
@@ -21,6 +21,9 @@ class SetupTaskSelectionStep extends ConsumerWidget {
   final VoidCallback onRetryTemplates;
   final VoidCallback onFinish;
 
+  /// "Continuar" cuando todavía falta invitar a alguien; "Terminar" en solo.
+  final String buttonLabel;
+
   const SetupTaskSelectionStep({
     required this.isLoadingTemplates,
     required this.hasTemplatesError,
@@ -29,6 +32,7 @@ class SetupTaskSelectionStep extends ConsumerWidget {
     required this.templatesByCategory,
     required this.onRetryTemplates,
     required this.onFinish,
+    required this.buttonLabel,
     super.key,
   });
 
@@ -47,7 +51,7 @@ class SetupTaskSelectionStep extends ConsumerWidget {
 
     final theme = context.theme;
     final wizard = ref.watch(setupWizardControllerProvider);
-    final modeKey = wizard.selectedMode ?? 'couple';
+    final modeKey = wizard.selectedMode;
     final accent = wizard.modeDesign.accent;
 
     return Column(
@@ -58,14 +62,28 @@ class SetupTaskSelectionStep extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 12),
-              SetupStepEyebrow(text: t.setupFirstTasksEyebrow, accent: accent),
-              const SizedBox(height: 10),
-              SetupHeading(
-                title: t.setupFirstTasksTitle(modeKey),
-                subtitle: t.setupFirstTasksSubtitle(modeKey),
+              const SizedBox(height: 4),
+              Semantics(
+                header: true,
+                child: Text(
+                  t.setupFirstTasksTitle(modeKey),
+                  style: AppTypography.heroAmount.copyWith(
+                    fontSize: 32,
+                    letterSpacing: -0.8,
+                    height: 1.08,
+                    color: theme.textPrimary,
+                  ),
+                ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 8),
+              Text(
+                t.setupFirstTasksSubtitle(modeKey),
+                style: AppTypography.body.copyWith(
+                  fontSize: 16,
+                  color: theme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
             ],
           ),
         ),
@@ -138,7 +156,7 @@ class SetupTaskSelectionStep extends ConsumerWidget {
           child: SafeArea(
             top: false,
             child: SetupPrimaryButton(
-              text: t.setupFinishButton,
+              text: buttonLabel,
               isLoading: isSaving,
               onPressed:
                   wizard.selectedTemplateIds.isNotEmpty ? onFinish : null,

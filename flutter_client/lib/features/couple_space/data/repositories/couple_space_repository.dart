@@ -1,7 +1,6 @@
 import 'package:homesync_client/features/couple_space/domain/models/couple_connection_summary.dart';
 import 'package:homesync_client/features/couple_space/domain/models/couple_proposal.dart';
 import 'package:homesync_client/features/couple_space/domain/models/household_contribution.dart';
-import 'package:homesync_client/features/couple_space/domain/models/household_fund.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CoupleSpaceRepository {
@@ -17,21 +16,6 @@ class CoupleSpaceRepository {
     return CoupleConnectionSummary.fromMap(
       Map<String, dynamic>.from(response as Map),
     );
-  }
-
-  Future<List<CoupleProposal>> getProposals(String householdId) async {
-    final response = await _client
-        .from('couple_proposals')
-        .select()
-        .eq('household_id', householdId)
-        .inFilter('status', ['pending', 'accepted', 'deferred']).order(
-      'created_at',
-      ascending: false,
-    );
-
-    return List<Map<String, dynamic>>.from(response)
-        .map(CoupleProposal.fromMap)
-        .toList(growable: false);
   }
 
   Stream<List<CoupleProposal>> watchProposals(String householdId) {
@@ -115,8 +99,8 @@ class CoupleSpaceRepository {
     );
   }
 
-  /// El reparto de la semana. Contraparte de que el fondo no tenga desglose
-  /// por persona: el desequilibrio se ve acá, en tareas y carga.
+  /// El reparto de la semana: quién hizo qué, cuántas de las pesadas y qué
+  /// categorías cayeron siempre del mismo lado.
   Future<HouseholdContribution> getContribution(String householdId) async {
     final response = await _client.rpc(
       'get_household_contribution_v1',
@@ -124,57 +108,6 @@ class CoupleSpaceRepository {
     );
     return HouseholdContribution.fromMap(
       Map<String, dynamic>.from(response as Map),
-    );
-  }
-
-  // ── Fondo compartido ──────────────────────────────────────────────────────
-
-  Future<HouseholdFund> getFund(String householdId) async {
-    final response = await _client.rpc(
-      'get_household_fund_v1',
-      params: {'p_household_id': householdId},
-    );
-    return HouseholdFund.fromMap(
-      Map<String, dynamic>.from(response as Map),
-    );
-  }
-
-  /// Reemplaza la meta abierta. Cancelar la anterior no gasta el fondo: llegar
-  /// a una meta nunca obliga a canjearla.
-  Future<FundGoal> setActiveGoal({
-    required String householdId,
-    required String title,
-    required int cost,
-    required String icon,
-    String? catalogKey,
-  }) async {
-    final response = await _client.rpc(
-      'set_active_fund_goal_v1',
-      params: {
-        'p_household_id': householdId,
-        'p_title': title,
-        'p_cost': cost,
-        'p_icon': icon,
-        'p_catalog_key': catalogKey,
-      },
-    );
-    return FundGoal.fromMap(Map<String, dynamic>.from(response as Map));
-  }
-
-  Future<FundConfirmationOutcome> confirmGoal(String goalId) async {
-    final response = await _client.rpc(
-      'confirm_fund_goal_v1',
-      params: {'p_goal_id': goalId},
-    );
-    return FundConfirmationOutcome.fromMap(
-      Map<String, dynamic>.from(response as Map),
-    );
-  }
-
-  Future<void> withdrawGoalConfirmation(String goalId) async {
-    await _client.rpc(
-      'withdraw_fund_goal_confirmation_v1',
-      params: {'p_goal_id': goalId},
     );
   }
 }

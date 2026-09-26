@@ -21,12 +21,17 @@ class CoupleProposalDraft {
 
 enum CoupleProposalDecision { accept, defer, decline, withdraw, archive }
 
+/// Editor de una propuesta nueva. [initialTitle] y [initialCategory] permiten
+/// abrirlo ya redactado desde una sugerencia (p. ej. "¿Nos turnamos con…?"),
+/// pero la persona siempre lo puede editar antes de mandarlo.
 Future<CoupleProposalDraft?> showCoupleProposalEditor(
-  BuildContext context,
-) async {
-  final titleController = TextEditingController();
+  BuildContext context, {
+  String? initialTitle,
+  CoupleProposalCategory initialCategory = CoupleProposalCategory.talk,
+}) async {
+  final titleController = TextEditingController(text: initialTitle ?? '');
   final descriptionController = TextEditingController();
-  var selectedCategory = CoupleProposalCategory.talk;
+  var selectedCategory = initialCategory;
   String? validationError;
 
   final result = await AppSheet.show<CoupleProposalDraft>(
@@ -73,7 +78,7 @@ Future<CoupleProposalDraft?> showCoupleProposalEditor(
                   const SizedBox(height: AppSpacing.lg),
                   TextField(
                     controller: titleController,
-                    autofocus: true,
+                    autofocus: initialTitle == null,
                     textCapitalization: TextCapitalization.sentences,
                     maxLength: 120,
                     decoration: InputDecoration(

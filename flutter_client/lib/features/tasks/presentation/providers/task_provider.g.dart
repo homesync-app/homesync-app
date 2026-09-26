@@ -169,7 +169,7 @@ final class TaskCategoryFilterProvider
 }
 
 String _$taskCategoryFilterHash() =>
-    r'84f331d2a6742654645977cc883f6e78066cff67';
+    r'b041fe04b1e8e1538b0a4a9fd62fe42a0f235482';
 
 abstract class _$TaskCategoryFilter extends $Notifier<Set<String>> {
   Set<String> build();

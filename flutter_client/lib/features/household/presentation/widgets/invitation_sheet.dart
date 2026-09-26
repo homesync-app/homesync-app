@@ -1,5 +1,6 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
@@ -10,11 +11,11 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
+import 'package:homesync_client/features/household/presentation/utils/invite_share.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/portal_labs/reveal_copy_interaction.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class InvitationSheet extends ConsumerStatefulWidget {
   const InvitationSheet({super.key});
@@ -85,13 +86,6 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
     }
   }
 
-  // Used by the WhatsApp-share fallback: copies to the clipboard and confirms.
-  void _copyCode() {
-    if (_invitationCode == null) return;
-    Clipboard.setData(ClipboardData(text: _invitationCode!));
-    _showCopiedFeedback();
-  }
-
   // RevealCopyInteraction writes to the clipboard itself; this only surfaces
   // the confirmation feedback.
   void _showCopiedFeedback() {
@@ -105,45 +99,23 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
   }
 
   Future<void> _shareViaWhatsApp() async {
-    if (_invitationCode == null) return;
+    final code = _invitationCode;
+    if (code == null) return;
 
     final t = AppLocalizations.of(context);
     final caps = ref.read(householdCapabilitiesProvider);
-    String intro = t.invitationIntroDefault;
-
-    if (caps.type == HouseholdType.couple) {
-      intro = t.invitationIntroCouple;
-    } else if (caps.type == HouseholdType.family) {
-      intro = t.invitationIntroFamily;
-    } else if (caps.type == HouseholdType.friends) {
-      intro = t.invitationIntroFriends;
-    }
-
-    final text = t.invitationShareBody(intro, _invitationCode!);
-    final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
-
-    try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url);
-      } else {
-        _copyCode();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content:
-                  Text(AppLocalizations.of(context).invitationWhatsAppFailed),
-            ),
-          );
-        }
-      }
-    } catch (e, stack) {
-      log.w(
-        'InvitationSheet._shareWhatsApp failed; copying code instead',
-        error: e,
-        stackTrace: stack,
-      );
-      _copyCode();
-    }
+    unawaited(
+      ref.read(analyticsServiceProvider).trackInviteSent(
+            mode: caps.type.name,
+            channel: 'whatsapp',
+          ),
+    );
+    final outcome =
+        await shareInviteViaWhatsApp(t, code: code, type: caps.type);
+    if (!mounted || outcome != InviteShareOutcome.copiedFallback) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(t.partnerInviteMessageCopied)),
+    );
   }
 
   @override

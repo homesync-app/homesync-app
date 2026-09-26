@@ -16,27 +16,34 @@ import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/setup_wizard_controller.dart';
+import 'package:homesync_client/features/household/presentation/utils/invite_share.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import 'setup_steps/setup_household_config_step.dart';
-import 'setup_steps/setup_identity_step.dart';
-import 'setup_steps/setup_invite_code_step.dart';
-import 'setup_steps/setup_mode_step.dart';
+import 'setup_steps/setup_household_step.dart';
+import 'setup_steps/setup_invite_step.dart';
+import 'setup_steps/setup_start_step.dart';
 import 'setup_steps/setup_task_selection_step.dart';
-import 'setup_steps/setup_team_options_step.dart';
-import 'setup_steps/setup_value_prop_step.dart';
-import 'setup_steps/setup_welcome_step.dart';
 
 /// Shell del wizard de setup. La navegación y el estado del formulario viven
 /// en [SetupWizardController]; acá quedan solo los side effects (crear hogar,
-/// unirse por código, guardar perfil/finanzas/tareas) porque necesitan
+/// unirse por código, guardar perfil y tareas) porque necesitan
 /// `BuildContext` para snackbars y coordinar providers de sesión.
+///
+/// El orden de los side effects importa:
+/// - el hogar se crea recién al confirmar el paso "tu casa", nunca antes de
+///   ofrecer "Tengo un código" (unirse borra un hogar de un solo miembro);
+/// - el perfil se guarda en ese mismo momento, así la pareja ve el nombre
+///   apenas se une;
+/// - las tareas se clonan una sola vez (el clon no es idempotente);
+/// - `setupInProgressProvider` mantiene montado el wizard desde que existe el
+///   hogar hasta el último paso.
 class SetupScreen extends ConsumerStatefulWidget {
   final VoidCallback onComplete;
   final bool isAdminPreview;
@@ -54,25 +61,37 @@ class SetupScreen extends ConsumerStatefulWidget {
 class _SetupScreenState extends ConsumerState<SetupScreen> {
   final _codeController = TextEditingController();
   final _nameController = TextEditingController();
-  final _familyHouseholdNameController = TextEditingController();
 
-  // Email resolved from auth on init — used as name fallback when Supabase
-  // session isn't ready yet (Firebase fires signedIn before session syncs).
+  // Email resuelto al iniciar: fallback de nombre cuando la sesión de Supabase
+  // todavía no está lista (Firebase avisa signedIn antes de sincronizar).
   String? _authEmail;
 
-  // Invite code shown to "create" users
+  /// Foto de la cuenta (Google), para poder volver a elegirla como avatar.
+  String? _accountPhotoUrl;
+
+  /// La cuenta trajo nombre: quien se une no necesita escribirlo.
+  bool _accountHasName = false;
+
+  // Invitación
   String? _myInviteCode;
-  bool _isGeneratingCode = false;
+  bool _inviteCodeFailed = false;
+  bool _isSharing = false;
+  bool _hasShared = false;
 
-  // Join flow state
+  // Estados de las acciones
+  bool _isCreating = false;
   bool _isJoining = false;
+  bool _isSaving = false;
+  bool _isFinishing = false;
 
-  // TaskModel templates
+  /// Las tareas iniciales ya se clonaron: reintentar el paso no las duplica.
+  bool _tasksCloned = false;
+
+  // Plantillas de tareas
   List<Category> _categories = [];
   Map<String, List<TaskTemplate>> _templatesByCategory = {};
   bool _isLoadingTemplates = true;
   bool _templatesLoadFailed = false;
-  bool _isSaving = false;
   TemplateService get _templateService => ref.read(templateServiceProvider);
 
   SetupWizardController get _wizard =>
@@ -100,8 +119,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   @override
   void initState() {
     super.initState();
-    // Provider mutations can't happen while the tree is building; defer the
-    // seeding of wizard state (avatar/templates) to after the first frame.
+    // Los providers no se pueden mutar durante el build: la siembra del
+    // estado del wizard (avatar por defecto, datos de la cuenta) va después
+    // del primer frame.
     Future.microtask(() {
       if (!mounted) return;
       _wizard.setAvatarEmoji(
@@ -116,60 +136,57 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   void dispose() {
     _codeController.dispose();
     _nameController.dispose();
-    _familyHouseholdNameController.dispose();
     super.dispose();
   }
 
+  // -- Identidad -------------------------------------------------------------
+
   void _prefillIdentityFromAuth() {
     final currentUser = ref.read(currentUserProvider);
-    // currentUser may be null if the Supabase session is still being established
-    // (Firebase auth fires signedIn before _syncSupabaseWithEmailPassword completes).
-    // We store the email as a fallback so _saveAndComplete can still derive a name.
     _authEmail = currentUser?.email;
 
-    // Prefer Firebase user data (available immediately, even before Supabase session).
+    // Primero Firebase (disponible al instante, incluso antes de Supabase).
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser != null) {
       final photoUrl = firebaseUser.photoURL;
       if (photoUrl != null && photoUrl.isNotEmpty) {
+        _accountPhotoUrl = photoUrl;
         _wizard.setAvatarUrl(photoUrl);
       }
+      final firstName = _firstNameFromDisplayName(firebaseUser.displayName);
+      if (firstName != null) _nameController.text = firstName;
+    }
 
-      final displayName = firebaseUser.displayName;
-      final firstName = _firstNameFromDisplayName(displayName);
-      if (firstName != null) {
-        _nameController.text = firstName;
+    // Fallback: metadata de Supabase (registro con email y contraseña).
+    if (_nameController.text.trim().isEmpty && currentUser != null) {
+      final metadata = currentUser.userMetadata ?? const <String, dynamic>{};
+      final displayName = [metadata['full_name'], metadata['name']]
+          .whereType<String>()
+          .map((value) => value.trim())
+          .firstWhere((value) => value.isNotEmpty, orElse: () => '');
+      if (displayName.isNotEmpty) {
+        _nameController.text = _firstNameFromDisplayName(displayName) ?? '';
       }
-      if (_nameController.text.trim().isNotEmpty || currentUser == null) return;
+      if (_accountPhotoUrl == null) {
+        final profileImage = [
+          metadata['avatar_url'],
+          metadata['picture'],
+          metadata['photo_url'],
+        ].whereType<String>().map((value) => value.trim()).firstWhere(
+              (value) => value.isNotEmpty,
+              orElse: () => '',
+            );
+        if (profileImage.isNotEmpty) {
+          _accountPhotoUrl = profileImage;
+          _wizard.setAvatarUrl(profileImage);
+        }
+      }
     }
 
-    // Fallback: use Supabase user metadata (email/password sign-in).
-    if (currentUser == null) return;
-
-    final metadata = currentUser.userMetadata ?? const <String, dynamic>{};
-    final profileImage = [
-      currentUser.userMetadata?['avatar_url'],
-      currentUser.userMetadata?['picture'],
-      currentUser.userMetadata?['photo_url'],
-    ].whereType<String>().map((value) => value.trim()).firstWhere(
-          (value) => value.isNotEmpty,
-          orElse: () => '',
-        );
-
-    final displayName = [
-      metadata['full_name'],
-      metadata['name'],
-    ].whereType<String>().map((value) => value.trim()).firstWhere(
-          (value) => value.isNotEmpty,
-          orElse: () => '',
-        );
-
-    if (displayName.isNotEmpty) {
-      _nameController.text = _firstNameFromDisplayName(displayName) ?? '';
-    }
-
-    if (profileImage.isNotEmpty) {
-      _wizard.setAvatarUrl(profileImage);
+    if (mounted) {
+      setState(
+        () => _accountHasName = _nameController.text.trim().isNotEmpty,
+      );
     }
   }
 
@@ -177,6 +194,17 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     final firstName = displayName?.trim().split(RegExp(r'\s+')).first.trim();
     return firstName == null || firstName.isEmpty ? null : firstName;
   }
+
+  /// Nombre a guardar: el escrito, o el usuario del email si no hay otro.
+  String? get _nameToSave {
+    final typed = _nameController.text.trim();
+    if (typed.isNotEmpty) return typed;
+    final email = _authEmail ?? ref.read(currentUserProvider)?.email;
+    final fallback = email?.split('@').first.trim();
+    return fallback == null || fallback.isEmpty ? null : fallback;
+  }
+
+  // -- Plantillas ------------------------------------------------------------
 
   List<Category> _sortInitialTaskCategories(List<Category> categories) {
     return [...categories]..sort((a, b) {
@@ -219,11 +247,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         _isLoadingTemplates = false;
       });
     } catch (e, stack) {
-      log.e(
-        'SetupScreen._loadTemplates failed',
-        error: e,
-        stackTrace: stack,
-      );
+      log.e('SetupScreen._loadTemplates failed', error: e, stackTrace: stack);
       if (mounted) {
         setState(() {
           _isLoadingTemplates = false;
@@ -235,9 +259,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Future<bool> _isTasksEnabledForCurrentHousehold() async {
     final currentHousehold = ref.read(currentHouseholdProvider).value;
-    if (currentHousehold != null) {
-      return currentHousehold.tasksEnabled;
-    }
+    if (currentHousehold != null) return currentHousehold.tasksEnabled;
 
     try {
       final household = await ref.read(currentHouseholdProvider.future);
@@ -252,143 +274,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     }
   }
 
-  Future<void> _advanceToTaskSelectionOrComplete() async {
-    final tasksEnabled = await _isTasksEnabledForCurrentHousehold();
-    if (!mounted) return;
-
-    if (tasksEnabled) {
-      _wizard.goTo(SetupStep.taskSelection);
-      return;
-    }
-
-    await _saveAndComplete();
-  }
-
-  // -- Step handlers ----------------------------------------------------------
-
-  void _onModeSelected() {
-    AppHaptics.success();
-    if (_wizardState.selectedMode == 'family' &&
-        _familyHouseholdNameController.text.trim().isEmpty) {
-      _familyHouseholdNameController.text = _suggestFamilyHouseholdName();
-    }
-    _wizard.confirmMode();
-  }
-
-  String _suggestFamilyHouseholdName() {
-    final rawName = _nameController.text.trim();
-    if (rawName.isEmpty) {
-      return AppLocalizations.of(context).setupFamilyDefaultName;
-    }
-
-    final firstName = rawName.split(' ').first.trim();
-    return '$firstName y familia';
-  }
-
-  Future<void> _handleCreateTeam() async {
-    if (_isGeneratingCode) return;
-
-    AppHaptics.success();
-    setState(() => _isGeneratingCode = true);
-
-    try {
-      // Guard: el wizard puede aparecer por un falso negativo de
-      // householdIdProvider (p. ej. snapshot de bootstrap sin hogar). Si el
-      // usuario YA pertenece a un hogar, ensure_household_for_user devolvería
-      // ese hogar y generate_household_invitation puede cortar con
-      // "limited to 2 members". En ese caso no hay nada que crear: entramos.
-      // Solo aplica con el wizard recién abierto (no mid-flow), para no
-      // expulsar a quien volvió atrás después de crear su hogar acá mismo.
-      if (!ref.read(setupInProgressProvider)) {
-        final userId = ref.read(currentUserIdProvider);
-        if (userId != null) {
-          final existing = await ref
-              .read(householdRepositoryProvider)
-              .getHouseholdId(userId);
-          final existingId = existing.fold<String?>((_) => null, (id) => id);
-          if (existingId != null && existingId.isNotEmpty) {
-            // log.e para que llegue al pipeline remoto: este evento es la
-            // evidencia del falso negativo del router que hay que cazar.
-            log.e(
-              'SetupScreen._handleCreateTeam: wizard shown for user with '
-              'existing household $existingId — entering it instead of '
-              'creating a new one',
-            );
-            _invalidateHouseholdSession();
-            ref.invalidate(userProfileProvider);
-            ref.invalidate(householdMembersProvider);
-            ref.invalidate(memberOnboardingProvider);
-            if (!widget.isAdminPreview) {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('setup_completed', true);
-            }
-            if (mounted) _notifySetupComplete();
-            return;
-          }
-        }
-      }
-
-      final firebaseAuthService = ref.read(firebaseAuthServiceProvider);
-      final mode = _wizardState.selectedMode ?? 'couple';
-      // Mark setup as in-progress BEFORE creating the household. Creating it
-      // makes householdId non-null, which would otherwise make MainScreen swap
-      // this wizard out for Home/MemberOnboarding before the remaining steps
-      // (profile save, finance, tasks) run.
-      ref.read(setupInProgressProvider.notifier).begin();
-      final householdId =
-          await firebaseAuthService.createHouseholdForUser(mode);
-      if (householdId == null || householdId.isEmpty) {
-        throw Exception('No se pudo crear el hogar');
-      }
-      _invalidateHouseholdSession();
-
-      final result =
-          await ref.read(generateInvitationCodeUseCaseProvider).call();
-      result.fold(
-        (failure) {
-          log.e(
-            'SetupScreen._handleCreateTeam: invitation generation failed: '
-            '${failure.message}',
-          );
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                AppLocalizations.of(context).setupCreateHouseholdError,
-              ),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        },
-        (code) {
-          if (!mounted) return;
-          setState(() => _myInviteCode = code);
-          _wizard.goTo(SetupStep.inviteCode);
-        },
-      );
-    } catch (e, stack) {
-      // Creation failed — clear the in-progress guard so the router can show
-      // the normal setup entry point again instead of being stuck.
-      ref.read(setupInProgressProvider.notifier).finish();
-      log.e(
-        'SetupScreen._handleCreateTeam failed',
-        error: e,
-        stackTrace: stack,
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context).setupCreateHouseholdError,
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isGeneratingCode = false);
-    }
-  }
+  // -- Sesión ----------------------------------------------------------------
 
   void _invalidateHouseholdSession() {
     ref.invalidate(householdIdProvider);
@@ -397,8 +283,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   void _notifySetupComplete() {
-    // Setup finished — release the in-progress guard so the router resumes
-    // normal household-based routing.
+    // Setup terminado: se libera la guarda para que el router vuelva a rutear
+    // según el hogar.
     ref.read(setupInProgressProvider.notifier).finish();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) widget.onComplete();
@@ -406,12 +292,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   String get _creatorMemberTypeForOnboarding =>
-      _wizardState.selectedMode == 'family'
+      _wizardState.householdType == HouseholdType.family
           ? _wizardState.creatorMemberType
           : 'parent';
 
   String get _creatorDisplayRoleForOnboarding =>
-      _wizardState.selectedMode == 'family'
+      _wizardState.householdType == HouseholdType.family
           ? _wizardState.familyRole
           : 'Adulto';
 
@@ -426,41 +312,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     return null;
   }
 
-  Future<String?> _ensureHouseholdForSetupCompletion({
-    bool refreshSessionImmediately = true,
-  }) async {
-    final selectedMode = _wizardState.selectedMode ?? 'solo';
-    final createNew = _wizardState.createNew;
-    var householdId = await ref.read(householdIdProvider.future);
-
-    if (householdId == null && createNew) {
-      householdId = await ref
-          .read(firebaseAuthServiceProvider)
-          .createHouseholdForUser(selectedMode);
-      if (householdId == null || householdId.isEmpty) {
-        throw Exception('No se pudo crear el hogar');
-      }
-      if (refreshSessionImmediately) {
-        _invalidateHouseholdSession();
-      }
-    }
-
-    // Only update household type when the user CREATED the household.
-    // Joiners don't own the household and RLS blocks the update.
-    if (householdId != null && _wizardState.selectedMode != null && createNew) {
-      final result = await ref
-          .read(updateHouseholdTypeUseCaseProvider)
-          .call(householdId, selectedMode);
-      result.fold((failure) => throw failure, (_) {});
-      if (refreshSessionImmediately) {
-        _invalidateHouseholdSession();
-      }
-    }
-
-    return householdId;
+  void _showError(String message) {
+    if (!mounted) return;
+    AppSnackBar.show(context, message: message, type: AppSnackBarType.error);
   }
 
-  Future<void> _handleJoinTeam() async {
+  // -- Paso 1: unirse con un código ------------------------------------------
+
+  Future<void> _handleJoin() async {
     if (_isJoining) return;
 
     AppHaptics.success();
@@ -478,9 +337,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       final result = await ref.read(joinHouseholdUseCaseProvider).call(code);
       final joined = result.fold(
         (failure) {
-          log.w(
-            'SetupScreen._handleJoinTeam rejected code: ${failure.message}',
-          );
+          log.w('SetupScreen._handleJoin rejected code: ${failure.message}');
           return false;
         },
         (_) => true,
@@ -491,14 +348,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       }
 
       if (!widget.isAdminPreview) {
-        final typedName = _nameController.text.trim();
-        final fallbackName =
-            (_authEmail ?? ref.read(currentUserProvider)?.email)
-                ?.split('@')
-                .first
-                .trim();
-        final nameToSave = typedName.isNotEmpty ? typedName : fallbackName;
-        if (nameToSave != null && nameToSave.isNotEmpty) {
+        final nameToSave = _nameToSave;
+        if (nameToSave != null) {
           final profileResult =
               await ref.read(authRepositoryProvider).updateProfile(
                     fullName: nameToSave,
@@ -506,28 +357,24 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   );
           profileResult.fold(
             (failure) => log.e(
-              'SetupScreen._handleJoinTeam: updateProfile failed: ${failure.message}',
+              'SetupScreen._handleJoin: updateProfile failed: '
+              '${failure.message}',
             ),
-            (_) => log.i(
-              'SetupScreen._handleJoinTeam: updateProfile ok name="$nameToSave"',
-            ),
+            (_) => log.i('SetupScreen._handleJoin: updateProfile ok'),
           );
         }
       }
 
       // Entró alguien con un código válido: cierra el loop de la invitación.
       // Se emite antes de los invalidates para no perderlo si algún refresh
-      // falla y el flujo cae al catch.
-      final joinedMode = _wizardState.selectedMode ?? 'unknown';
+      // falla.
       unawaited(
-        ref
-            .read(analyticsServiceProvider)
-            .trackInviteAccepted(mode: joinedMode),
+        ref.read(analyticsServiceProvider).trackInviteAccepted(mode: 'joined'),
       );
       unawaited(
         ref
             .read(analyticsServiceProvider)
-            .trackSetupCompleted(mode: joinedMode, joined: true),
+            .trackSetupCompleted(mode: 'joined', joined: true),
       );
 
       ref.invalidate(householdIdProvider);
@@ -542,276 +389,377 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         await prefs.setBool('setup_completed', true);
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(t.setupSnackJoinedHousehold),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-          ),
+        AppSnackBar.show(
+          context,
+          message: t.setupSnackJoinedHousehold,
+          type: AppSnackBarType.success,
         );
         _notifySetupComplete();
       }
     } catch (e, stack) {
-      log.e(
-        'SetupScreen._handleJoinTeam failed',
-        error: e,
-        stackTrace: stack,
-      );
+      log.e('SetupScreen._handleJoin failed', error: e, stackTrace: stack);
       if (mounted) _wizard.setJoinError(t.setupJoinHouseholdError);
     } finally {
       if (mounted) setState(() => _isJoining = false);
     }
   }
 
-  Future<void> _saveFamilySetup() async {
-    final defaultHouseholdName =
-        AppLocalizations.of(context).setupHouseholdDefaultName;
-    final householdId = await ref.read(householdIdProvider.future);
-    final currentUserId = ref.read(currentUserIdProvider);
-    final rawName = _familyHouseholdNameController.text.trim();
-    final householdName = rawName.isNotEmpty ? rawName : defaultHouseholdName;
-    final familyRole = _wizardState.familyRole;
+  // -- Paso 2: crear el hogar ------------------------------------------------
 
-    try {
-      if (householdId != null) {
-        await ref
-            .read(supabaseClientProvider)
-            .from('households')
-            .update({'name': householdName}).eq('id', householdId);
-        ref.invalidate(currentHouseholdProvider);
-      }
+  /// Guarda: el wizard puede aparecer por un falso negativo del router aunque
+  /// el usuario ya tenga hogar. Crear otro fallaría (o duplicaría); en ese
+  /// caso se entra al existente. Solo aplica con el wizard recién abierto, no
+  /// a mitad de camino (volver atrás tras crear el hogar acá mismo).
+  Future<bool> _enterExistingHouseholdIfAny() async {
+    if (ref.read(setupInProgressProvider)) return false;
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) return false;
 
-      if (currentUserId != null && familyRole.trim().isNotEmpty) {
-        final result = await ref
-            .read(updateMemberDisplayRoleUseCaseProvider)
-            .call(currentUserId, familyRole);
-        result.fold((failure) => throw failure, (_) {});
-        ref.invalidate(householdMembersProvider);
-      }
-    } catch (error, stackTrace) {
-      log.w(
-        'SetupScreen family onboarding best-effort update failed',
-        error: error,
-        stackTrace: stackTrace,
-      );
+    final existing =
+        await ref.read(householdRepositoryProvider).getHouseholdId(userId);
+    final existingId = existing.fold<String?>((_) => null, (id) => id);
+    if (existingId == null || existingId.isEmpty) return false;
+
+    // log.e para que llegue al pipeline remoto: es la evidencia del falso
+    // negativo del router.
+    log.e(
+      'SetupScreen: wizard shown for user with existing household '
+      '$existingId, entering it instead of creating a new one',
+    );
+    _invalidateHouseholdSession();
+    ref.invalidate(userProfileProvider);
+    ref.invalidate(householdMembersProvider);
+    ref.invalidate(memberOnboardingProvider);
+    if (!widget.isAdminPreview) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('setup_completed', true);
     }
-
-    if (mounted) {
-      await _advanceToTaskSelectionOrComplete();
-    }
+    if (mounted) _notifySetupComplete();
+    return true;
   }
 
-  Future<void> _saveFriendsSplit() async {
-    try {
-      final householdId = await ref.read(householdIdProvider.future);
-      if (householdId != null) {
-        final result = await ref
-            .read(updateDefaultSplitRatioUseCaseProvider)
-            .call(householdId, 0.5);
-        result.fold((failure) => throw failure, (_) {});
-      }
-    } catch (e, st) {
-      log.w(
-        'Failed to update default split ratio during setup',
-        error: e,
-        stackTrace: st,
-      );
-    }
-    await _advanceToTaskSelectionOrComplete();
-  }
-
-  Future<void> _saveFinanceSettings() async {
-    final financeMode = _wizardState.financeMode;
-    final splitRatio = _wizardState.splitRatio;
-    try {
-      final householdId = await ref.read(householdIdProvider.future);
-      if (householdId != null) {
-        final result =
-            await ref.read(updateFinanceSettingsUseCaseProvider).call(
-                  householdId,
-                  financeMode: financeMode,
-                  defaultSplitRatio: financeMode == 'shared' ? 0.5 : splitRatio,
-                );
-        result.fold((failure) => throw failure, (_) {});
-      }
-    } catch (e, stack) {
-      log.w(
-        'SetupScreen._saveFinanceSettings failed; continuing setup',
-        error: e,
-        stackTrace: stack,
-      );
-    }
-    await _advanceToTaskSelectionOrComplete();
-  }
-
-  Future<void> _saveAndComplete() async {
-    if (_isSaving) return;
-
+  Future<void> _handleCreateHousehold() async {
+    if (_isCreating) return;
     final t = AppLocalizations.of(context);
-    setState(() => _isSaving = true);
+    final mode = _wizardState.selectedMode;
+    setState(() => _isCreating = true);
 
     try {
-      final tasksEnabled = await _isTasksEnabledForCurrentHousehold();
-      if (!mounted) return;
-      final selectedTemplateIds = _wizardState.selectedTemplateIds;
-      if (tasksEnabled && selectedTemplateIds.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(t.setupSnackPickAtLeastOneTask),
-          ),
-        );
-        return;
-      }
+      if (await _enterExistingHouseholdIfAny()) return;
 
-      // Guard the whole completion flow: for solo / "configure later" paths the
-      // household is created here (inside _ensureHouseholdForSetupCompletion), so
-      // keep the wizard mounted until we finish persisting profile/tasks.
+      // La guarda va ANTES de crear el hogar: en cuanto existe, householdId
+      // deja de ser null y MainScreen cambiaría el wizard por el Home antes de
+      // los pasos que faltan.
       ref.read(setupInProgressProvider.notifier).begin();
 
-      final client = ref.read(supabaseClientProvider);
-
-      log.i(
-        'SetupScreen._saveAndComplete: starting '
-        'mode=${_wizardState.selectedMode ?? 'solo'} '
-        'selectedTemplates=${selectedTemplateIds.length}',
-      );
-      final householdId = await _ensureHouseholdForSetupCompletion(
-        refreshSessionImmediately: false,
-      );
+      final householdId = await ref
+          .read(firebaseAuthServiceProvider)
+          .createHouseholdForUser(mode);
       if (householdId == null || householdId.isEmpty) {
-        throw Exception('No se pudo resolver el hogar para finalizar setup');
+        throw StateError('Household creation returned no id');
       }
 
-      if (!mounted) return;
+      // ensure_household_for_user devuelve el hogar existente si el usuario
+      // volvió atrás y cambió de modo: el tipo se actualiza igual.
+      final typeResult = await ref
+          .read(updateHouseholdTypeUseCaseProvider)
+          .call(householdId, mode);
+      typeResult.fold((failure) => throw failure, (_) {});
 
-      // Update user profile with name and avatar.
-      // When the Supabase session isn't ready at init time (Firebase fires
-      // signedIn before _syncSupabaseWithEmailPassword completes), the name
-      // field may be empty — fall back to the email username so we always
-      // persist something meaningful.
       if (!widget.isAdminPreview) {
-        final typedName = _nameController.text.trim();
-        final fallbackName =
-            (_authEmail ?? ref.read(currentUserProvider)?.email)
-                ?.split('@')
-                .first
-                .trim();
-        final nameToSave = typedName.isNotEmpty ? typedName : fallbackName;
-        log.i(
-          'SetupScreen._saveAndComplete: saving profile '
-          'typed="$typedName" fallback="$fallbackName" saving="$nameToSave"',
-        );
-        if (nameToSave != null && nameToSave.isNotEmpty) {
+        final nameToSave = _nameToSave;
+        if (nameToSave != null) {
           final profileResult =
               await ref.read(authRepositoryProvider).updateProfile(
                     fullName: nameToSave,
                     avatarUrl: _wizardState.resolvedAvatarValue,
                   );
-          profileResult.fold(
-            (failure) {
-              log.e(
-                'SetupScreen._saveAndComplete: updateProfile failed: ${failure.message}',
-              );
-              throw failure;
-            },
-            (_) => log.i('SetupScreen._saveAndComplete: updateProfile ok'),
-          );
+          profileResult.fold((failure) => throw failure, (_) {});
         }
       }
 
-      if (!mounted) return;
+      await _applyModeDefaults(householdId: householdId, mode: mode);
 
-      if (tasksEnabled) {
-        log.i(
-          '_saveAndComplete: cloning ${selectedTemplateIds.length} templates',
-        );
+      _invalidateHouseholdSession();
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(householdMembersProvider);
+
+      if (_wizardState.householdType != HouseholdType.solo) {
+        unawaited(_loadInviteCode());
+      }
+
+      if (!mounted) return;
+      if (await _isTasksEnabledForCurrentHousehold()) {
+        _wizard.householdReady();
+      } else {
+        await _completeOnboarding();
+      }
+    } catch (e, stack) {
+      log.e(
+        'SetupScreen._handleCreateHousehold failed',
+        error: e,
+        stackTrace: stack,
+      );
+      _showError(t.setupCreateHouseholdError);
+    } finally {
+      if (mounted) setState(() => _isCreating = false);
+    }
+  }
+
+  /// Ajustes por modo que no merecen un paso propio. Best-effort: el hogar ya
+  /// existe y todo esto se puede cambiar después desde Ajustes.
+  Future<void> _applyModeDefaults({
+    required String householdId,
+    required String mode,
+  }) async {
+    final type = HouseholdType.fromString(mode);
+    try {
+      if (type == HouseholdType.family) {
+        final t = AppLocalizations.of(context);
+        final name = _nameToSave;
+        final householdName = name == null
+            ? t.setupFamilyDefaultName
+            : t.setupFamilyHouseholdNameFor(name);
+        await ref
+            .read(supabaseClientProvider)
+            .from('households')
+            .update({'name': householdName}).eq('id', householdId);
+
+        final currentUserId = ref.read(currentUserIdProvider);
+        if (currentUserId != null) {
+          final roleResult = await ref
+              .read(updateMemberDisplayRoleUseCaseProvider)
+              .call(currentUserId, _wizardState.familyRole);
+          roleResult.fold((failure) => throw failure, (_) {});
+        }
+      } else if (type == HouseholdType.friends) {
+        final splitResult = await ref
+            .read(updateDefaultSplitRatioUseCaseProvider)
+            .call(householdId, 0.5);
+        splitResult.fold((failure) => throw failure, (_) {});
+      }
+    } catch (error, stackTrace) {
+      log.w(
+        'SetupScreen mode defaults failed; continuing setup',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  // -- Paso 3: tareas iniciales ----------------------------------------------
+
+  Future<void> _saveTasks() async {
+    if (_isSaving) return;
+    final t = AppLocalizations.of(context);
+    final selectedTemplateIds = _wizardState.selectedTemplateIds;
+    if (selectedTemplateIds.isEmpty) {
+      _showError(t.setupSnackPickAtLeastOneTask);
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    try {
+      final householdId = await ref.read(householdIdProvider.future);
+      if (householdId == null || householdId.isEmpty) {
+        throw StateError('No household to clone tasks into');
+      }
+
+      if (!_tasksCloned) {
         final count = await _templateService.cloneTemplates(
           selectedTemplateIds.toList(),
           householdId: householdId,
         );
         if (count <= 0) {
-          throw Exception('No se pudieron crear las tareas iniciales');
+          throw StateError('No initial tasks were created');
         }
-        log.i('_saveAndComplete: cloned $count tasks household=$householdId');
+        _tasksCloned = true;
+        log.i('SetupScreen: cloned $count tasks household=$householdId');
       }
 
-      if (!mounted) return;
+      await _completeOnboarding();
+    } catch (e, stack) {
+      log.e('SetupScreen._saveTasks failed', error: e, stackTrace: stack);
+      _showError(t.setupCompleteError);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
 
-      if (!widget.isAdminPreview) {
-        try {
-          final rpcResult = await client.rpc(
-            'complete_member_onboarding',
-            params: {
-              'p_member_type': _creatorMemberTypeForOnboarding,
-              'p_display_role': _creatorDisplayRoleForOnboarding,
-            },
-          );
-          final onboardingError = _memberOnboardingErrorMessage(
-            rpcResult,
-            t.setupSnackUnknownError,
-          );
-          if (onboardingError != null) {
-            log.w(
-              'complete_member_onboarding (creator) returned: $onboardingError',
-            );
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(t.setupSnackOnboardingFailed)),
-              );
-            }
-            return;
-          }
-        } catch (e, stack) {
-          log.w(
-            'complete_member_onboarding (creator) failed: $e',
-            error: e,
-            stackTrace: stack,
-          );
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(t.setupSnackOnboardingFailed)),
-            );
-          }
+  /// Marca el onboarding del miembro como completo y decide si falta el paso
+  /// de invitación (hogares compartidos) o si ya se puede entrar (solo).
+  Future<void> _completeOnboarding() async {
+    final t = AppLocalizations.of(context);
+
+    if (!widget.isAdminPreview) {
+      try {
+        final rpcResult = await ref.read(supabaseClientProvider).rpc(
+          'complete_member_onboarding',
+          params: {
+            'p_member_type': _creatorMemberTypeForOnboarding,
+            'p_display_role': _creatorDisplayRoleForOnboarding,
+          },
+        );
+        final onboardingError = _memberOnboardingErrorMessage(
+          rpcResult,
+          t.setupSnackUnknownError,
+        );
+        if (onboardingError != null) {
+          log.w('complete_member_onboarding returned: $onboardingError');
+          _showError(t.setupSnackOnboardingFailed);
           return;
         }
+      } catch (e, stack) {
+        log.w(
+          'complete_member_onboarding failed',
+          error: e,
+          stackTrace: stack,
+        );
+        _showError(t.setupSnackOnboardingFailed);
+        return;
       }
+    }
 
+    ref.invalidate(userProfileProvider);
+    ref.invalidate(userBalanceProvider);
+    ref.invalidate(householdMembersProvider);
+    ref.invalidate(memberOnboardingProvider);
+
+    unawaited(
+      ref.read(analyticsServiceProvider).trackSetupCompleted(
+            mode: _wizardState.selectedMode,
+            joined: false,
+          ),
+    );
+
+    if (!widget.isAdminPreview) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('setup_completed', true);
+    }
+
+    if (!mounted) return;
+    final needsInvite = _wizard.tasksSaved();
+    if (!needsInvite) await _finishSetup();
+  }
+
+  // -- Paso 4: invitar -------------------------------------------------------
+
+  Future<void> _loadInviteCode() async {
+    if (mounted) setState(() => _inviteCodeFailed = false);
+    try {
+      final result =
+          await ref.read(generateInvitationCodeUseCaseProvider).call();
       if (!mounted) return;
-
-      ref.invalidate(householdIdProvider);
-      ref.invalidate(userProfileProvider);
-      ref.invalidate(userBalanceProvider);
-      ref.invalidate(householdMembersProvider);
-      ref.invalidate(memberOnboardingProvider);
-
-      unawaited(
-        ref.read(analyticsServiceProvider).trackSetupCompleted(
-              mode: _wizardState.selectedMode ?? 'unknown',
-              joined: false,
-            ),
+      result.fold(
+        (failure) {
+          log.w('SetupScreen invite code failed: ${failure.message}');
+          setState(() => _inviteCodeFailed = true);
+        },
+        (code) => setState(() => _myInviteCode = code),
       );
+    } catch (error, stackTrace) {
+      log.w(
+        'SetupScreen invite code threw',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) setState(() => _inviteCodeFailed = true);
+    }
+  }
 
-      if (!widget.isAdminPreview) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('setup_completed', true);
-      }
+  /// `invite_sent` es el primer paso del loop viral: sin él no se puede saber
+  /// si el problema es que no invitan o que la invitación no convierte.
+  void _trackInviteSent(String channel) {
+    unawaited(
+      ref.read(analyticsServiceProvider).trackInviteSent(
+            mode: _wizardState.selectedMode,
+            channel: channel,
+          ),
+    );
+  }
+
+  Future<void> _shareViaWhatsApp() async {
+    final code = _myInviteCode;
+    if (code == null || _isSharing) return;
+    final t = AppLocalizations.of(context);
+    setState(() => _isSharing = true);
+    AppHaptics.tap();
+    _trackInviteSent('whatsapp');
+    final outcome = await shareInviteViaWhatsApp(
+      t,
+      code: code,
+      type: _wizardState.householdType,
+    );
+    if (!mounted) return;
+    setState(() {
+      _isSharing = false;
+      _hasShared = true;
+    });
+    if (outcome == InviteShareOutcome.copiedFallback) {
+      AppSnackBar.show(
+        context,
+        message: t.partnerInviteMessageCopied,
+        type: AppSnackBarType.neutral,
+      );
+    }
+  }
+
+  Future<void> _shareOther() async {
+    final code = _myInviteCode;
+    if (code == null || _isSharing) return;
+    final t = AppLocalizations.of(context);
+    setState(() => _isSharing = true);
+    _trackInviteSent('share');
+    final outcome = await shareInviteWithSystemSheet(
+      t,
+      code: code,
+      type: _wizardState.householdType,
+    );
+    if (!mounted) return;
+    setState(() {
+      _isSharing = false;
+      _hasShared = true;
+    });
+    if (outcome == InviteShareOutcome.copiedFallback) {
+      AppSnackBar.show(
+        context,
+        message: t.partnerInviteMessageCopied,
+        type: AppSnackBarType.neutral,
+      );
+    }
+  }
+
+  Future<void> _copyCode() async {
+    final code = _myInviteCode;
+    if (code == null) return;
+    await Clipboard.setData(ClipboardData(text: code));
+    _trackInviteSent('copy');
+    AppHaptics.selection();
+    if (!mounted) return;
+    setState(() => _hasShared = true);
+    AppSnackBar.show(
+      context,
+      message: AppLocalizations.of(context).setupSnackCodeCopied,
+      type: AppSnackBarType.success,
+    );
+  }
+
+  Future<void> _finishSetup() async {
+    if (_isFinishing) return;
+    setState(() => _isFinishing = true);
+    try {
+      unawaited(
+        ref.read(analyticsServiceProvider).logEvent(
+          'setup_invite_step_finished',
+          parameters: {'shared': _hasShared, 'mode': _wizardState.selectedMode},
+        ),
+      );
       if (mounted && !widget.isAdminPreview) {
         await _showCompletionCelebration();
       }
       if (mounted) _notifySetupComplete();
-    } catch (e, stack) {
-      log.e(
-        'SetupScreen._saveAndComplete failed',
-        error: e,
-        stackTrace: stack,
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.setupCompleteError)),
-        );
-      }
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      if (mounted) setState(() => _isFinishing = false);
     }
   }
 
@@ -820,7 +768,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   Future<void> _showCompletionCelebration() async {
     final t = AppLocalizations.of(context);
     final design = _wizardState.modeDesign;
-    final modeKey = _wizardState.selectedMode ?? 'solo';
+    final modeKey = _wizardState.selectedMode;
     unawaited(AppHaptics.celebrate());
 
     var dismissed = false;
@@ -881,7 +829,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   textAlign: TextAlign.center,
                   style: AppTypography.body.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: context.theme.textSecondary.withValues(alpha: 0.88),
+                    color: context.theme.textSecondary,
                   ),
                 ),
               ],
@@ -898,85 +846,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     await dialogFuture;
   }
 
-  void _copyCode() {
-    if (_myInviteCode == null) return;
-    Clipboard.setData(ClipboardData(text: _myInviteCode!));
-    _trackInviteSent('copy');
-    AppHaptics.selection();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context).setupSnackCodeCopied),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
-  /// `invite_sent` es el primer paso del loop viral: sin él no se puede saber
-  /// si el problema es que no invitan o que la invitación no convierte.
-  void _trackInviteSent(String channel) {
-    unawaited(
-      ref.read(analyticsServiceProvider).trackInviteSent(
-            mode: _wizardState.selectedMode ?? 'unknown',
-            channel: channel,
-          ),
-    );
-  }
-
-  Future<void> _shareViaWhatsApp() async {
-    if (_myInviteCode == null) return;
-    _trackInviteSent('whatsapp');
-    final t = AppLocalizations.of(context);
-
-    final intro = switch (_wizardState.selectedMode) {
-      'couple' => t.invitationIntroCouple,
-      'family' => t.invitationIntroFamily,
-      'friends' => t.invitationIntroFriends,
-      _ => t.invitationIntroDefault,
-    };
-    final text = t.invitationShareBody(intro, _myInviteCode!);
-    final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
-
-    try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url);
-      } else {
-        final webUrl =
-            Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
-        if (await canLaunchUrl(webUrl)) {
-          await launchUrl(webUrl, mode: LaunchMode.externalApplication);
-        } else {
-          _copyCode();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  AppLocalizations.of(context).setupSnackWhatsappFailed,
-                ),
-              ),
-            );
-          }
-        }
-      }
-    } catch (e, stack) {
-      log.w(
-        'SetupScreen._shareViaWhatsApp failed; copying code instead',
-        error: e,
-        stackTrace: stack,
-      );
-      _copyCode();
-    }
-  }
-
-  // -- Build ------------------------------------------------------------------
+  // -- Build -----------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
     final wizard = ref.watch(setupWizardControllerProvider);
+    final t = AppLocalizations.of(context);
 
     return PopScope(
-      canPop: wizard.step == SetupStep.valueProp,
+      canPop: wizard.step == SetupStep.start,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         _wizard.goBack();
@@ -985,188 +863,140 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         backgroundColor: context.theme.scaffoldBackground,
         body: Container(
           decoration: AppTheme.backgroundGradientBox,
-          child: Stack(
-            children: [
-              // Background decor
-              Positioned(
-                top: -100,
-                right: -100,
-                child: Container(
-                  width: 280,
-                  height: 280,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary.withValues(alpha: 0.04),
+          child: SafeArea(
+            child: Column(
+              children: [
+                _buildProgressIndicator(wizard),
+                if (widget.isAdminPreview) _buildAdminPreviewBanner(),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: AppMotion.slow,
+                    switchInCurve: AppMotion.standard,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.04),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: switch (wizard.step) {
+                      SetupStep.start => SetupStartStep(
+                          nameController: _nameController,
+                          codeController: _codeController,
+                          askName: !_accountHasName,
+                          isJoining: _isJoining,
+                          onCreate: _wizard.startCreate,
+                          onJoin: _handleJoin,
+                          onSignOut: () => ref
+                              .read(authControllerProvider.notifier)
+                              .signOut(),
+                        ),
+                      SetupStep.household => SetupHouseholdStep(
+                          nameController: _nameController,
+                          accountPhotoUrl: _accountPhotoUrl,
+                          isCreating: _isCreating,
+                          onContinue: _handleCreateHousehold,
+                        ),
+                      SetupStep.tasks => SetupTaskSelectionStep(
+                          isLoadingTemplates: _isLoadingTemplates,
+                          hasTemplatesError: _templatesLoadFailed,
+                          isSaving: _isSaving,
+                          categories: _categories,
+                          templatesByCategory: _templatesByCategory,
+                          onRetryTemplates: _loadTemplates,
+                          onFinish: _saveTasks,
+                          buttonLabel: wizard.isSolo
+                              ? t.setupFinishButton
+                              : t.commonContinue,
+                        ),
+                      SetupStep.invite => SetupInviteStep(
+                          inviteCode: _myInviteCode,
+                          codeFailed: _inviteCodeFailed,
+                          isSharing: _isSharing,
+                          hasShared: _hasShared,
+                          isFinishing: _isFinishing,
+                          onShareWhatsApp: _shareViaWhatsApp,
+                          onShareOther: _shareOther,
+                          onCopy: _copyCode,
+                          onRetryCode: _loadInviteCode,
+                          onFinish: _finishSetup,
+                        ),
+                    },
                   ),
                 ),
-              ),
-              Positioned(
-                bottom: -50,
-                left: -50,
-                child: Container(
-                  width: 180,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.accentTeal.withValues(alpha: 0.035),
-                  ),
-                ),
-              ),
-
-              SafeArea(
-                child: Column(
-                  children: [
-                    _buildProgressIndicator(wizard),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          if (widget.isAdminPreview)
-                            Container(
-                              margin: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    AppColors.primary.withValues(alpha: 0.10),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color:
-                                      AppColors.primary.withValues(alpha: 0.18),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.auto_fix_high_rounded,
-                                    color: AppColors.primary,
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      'Preview QA del onboarding. No modifica tu perfil real; sirve para configurar y testear el escenario activo.',
-                                      style: AppTypography.caption.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        height: 1.35,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          Expanded(
-                            child: AnimatedSwitcher(
-                              duration: AppMotion.slow,
-                              switchInCurve: AppMotion.standard,
-                              switchOutCurve: Curves.easeInCubic,
-                              transitionBuilder: (child, animation) {
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: SlideTransition(
-                                    position: Tween<Offset>(
-                                      begin: const Offset(0, 0.05),
-                                      end: Offset.zero,
-                                    ).animate(animation),
-                                    child: child,
-                                  ),
-                                );
-                              },
-                              child: switch (wizard.step) {
-                                SetupStep.valueProp =>
-                                  const SetupValuePropStep(),
-                                SetupStep.welcome => const SetupWelcomeStep(),
-                                SetupStep.identity => SetupIdentityStep(
-                                    nameController: _nameController,
-                                  ),
-                                SetupStep.mode =>
-                                  SetupModeStep(onContinue: _onModeSelected),
-                                SetupStep.teamOptions => SetupTeamOptionsStep(
-                                    codeController: _codeController,
-                                    isJoining: _isJoining,
-                                    onCreateTeam: _handleCreateTeam,
-                                    onJoinTeam: _handleJoinTeam,
-                                  ),
-                                SetupStep.inviteCode => SetupInviteCodeStep(
-                                    inviteCode: _myInviteCode,
-                                    isGeneratingCode: _isGeneratingCode,
-                                    onCopyCode: _copyCode,
-                                    onShareCode: _shareViaWhatsApp,
-                                  ),
-                                SetupStep.householdConfig =>
-                                  SetupHouseholdConfigStep(
-                                    familyHouseholdNameController:
-                                        _familyHouseholdNameController,
-                                    onSaveFamily: _saveFamilySetup,
-                                    onSaveFinanceSettings: _saveFinanceSettings,
-                                    onSaveFriendsSplit: _saveFriendsSplit,
-                                    onSkip: _advanceToTaskSelectionOrComplete,
-                                  ),
-                                SetupStep.taskSelection =>
-                                  SetupTaskSelectionStep(
-                                    isLoadingTemplates: _isLoadingTemplates,
-                                    hasTemplatesError: _templatesLoadFailed,
-                                    isSaving: _isSaving,
-                                    categories: _categories,
-                                    templatesByCategory: _templatesByCategory,
-                                    onRetryTemplates: _loadTemplates,
-                                    onFinish: _saveAndComplete,
-                                  ),
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildProgressIndicator(SetupWizardState wizard) {
-    // La intro (value prop) no cuenta como progreso. La cantidad de
-    // segmentos es la ruta efectiva del modo elegido: solo no ve los pasos
-    // de equipo/invitación/configuración, así que su barra no los muestra.
-    if (wizard.progressIndex < 0) return const SizedBox(height: 8);
-    final theme = context.theme;
-    // Con modo elegido la barra adopta el acento de ese modo.
-    final accent =
-        wizard.selectedMode != null ? wizard.modeDesign.accent : theme.primary;
+  Widget _buildAdminPreviewBanner() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      margin: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
+      ),
       child: Row(
-        children: List.generate(wizard.progressTotal, (index) {
-          final isActive = index <= wizard.progressIndex;
-
-          return Expanded(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              height: 6,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              decoration: BoxDecoration(
-                color: isActive ? accent : theme.border.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(999),
-                boxShadow: index == wizard.progressIndex
-                    ? [
-                        BoxShadow(
-                          color: accent.withValues(alpha: 0.18),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : null,
+        children: [
+          const Icon(
+            Icons.auto_fix_high_rounded,
+            color: AppColors.primary,
+            size: 18,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Preview QA del onboarding. No modifica tu perfil real; sirve para configurar y testear el escenario activo.',
+              style: AppTypography.caption.copyWith(
+                fontWeight: FontWeight.w700,
+                height: 1.35,
+                color: AppColors.textPrimary,
               ),
             ),
-          );
-        }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressIndicator(SetupWizardState wizard) {
+    // La bienvenida no cuenta como progreso. La cantidad de segmentos es la
+    // ruta efectiva del modo: solo no tiene el paso de invitación.
+    if (wizard.progressIndex < 0) return const SizedBox(height: 8);
+    final theme = context.theme;
+    final accent = wizard.modeDesign.accent;
+    return Semantics(
+      label: '${wizard.progressIndex + 1}/${wizard.progressTotal}',
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
+        child: Row(
+          children: List.generate(wizard.progressTotal, (index) {
+            final isActive = index <= wizard.progressIndex;
+            return Expanded(
+              child: AnimatedContainer(
+                duration: AppMotion.normal,
+                curve: AppMotion.standard,
+                height: 6,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  color: isActive ? accent : theme.border,
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                ),
+              ),
+            );
+          }),
+        ),
       ),
     );
   }

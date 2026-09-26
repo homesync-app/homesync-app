@@ -1,21 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/utils/app_haptics.dart';
-import 'package:homesync_client/features/couple_space/presentation/providers/couple_space_providers.dart';
-import 'package:homesync_client/features/couple_space/presentation/widgets/contribution_split_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_loader.dart';
-import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
-import 'love_note_dialog.dart';
 import 'stats_shared_widgets.dart';
 
 class WeeklyProgressTab extends ConsumerWidget {
@@ -46,7 +38,6 @@ class WeeklyProgressTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
-    final isPremium = ref.watch(premiumProvider).value ?? false;
     final caps = ref.watch(householdCapabilitiesProvider);
 
     return RefreshIndicator(
@@ -64,16 +55,13 @@ class WeeklyProgressTab extends ConsumerWidget {
             _WeeklyHeaderCard(weekRange: weekRange),
             const SizedBox(height: AppSpacing.lg),
           ],
+          // En pareja el reparto de la semana vive en la pestaña Pareja: acá no
+          // hay duelo ni un segundo lugar donde mirar lo mismo.
           if (caps.showsWeeklyDuelCard && weeklyRanking.isNotEmpty) ...[
             AIFaceoffWidget(
               weeklyRanking: weeklyRanking,
               duelHistory: duelHistory,
             ),
-            const SizedBox(height: AppSpacing.xl),
-          ] else if (!caps.showsWeeklyDuelCard) ...[
-            // El duelo se fue; en su lugar va el ritmo del hogar contra su
-            // propio pasado y el reparto honesto de la semana.
-            const _ContributionSection(),
             const SizedBox(height: AppSpacing.xl),
           ],
           SectionLabel(label: t.statsHouseholdSummary, icon: '•'),
@@ -119,110 +107,6 @@ class WeeklyProgressTab extends ConsumerWidget {
                   ),
                 ],
               ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          GestureDetector(
-            onTap: () {
-              if (!isPremium) {
-                PremiumPaywall.show(context, source: 'weekly_progress');
-              } else {
-                AppHaptics.tap();
-                showLoveNoteDialog(context: context, ref: ref);
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isPremium
-                      ? theme.isDarkMode
-                          ? [
-                              const Color(0xFF3A2424),
-                              const Color(0xFF2C1D1D),
-                            ]
-                          : [
-                              const Color(0xFFFFF1F1),
-                              const Color(0xFFFFFBFB),
-                            ]
-                      : [theme.surface, theme.surface],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(AppRadii.modal),
-                border: Border.all(
-                  color: isPremium
-                      ? (theme.isDarkMode
-                              ? const Color(0xFFFCA5A5)
-                              : const Color(0xFFFCA5A5))
-                          .withValues(alpha: theme.isDarkMode ? 0.18 : 0.4)
-                      : theme.border.withValues(alpha: 0.45),
-                ),
-                boxShadow: theme.cardShadow,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: isPremium
-                          ? (theme.isDarkMode
-                              ? const Color(0xFF5B2B2B)
-                              : const Color(0xFFFECACA))
-                          : theme.textMuted.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isPremium ? Icons.favorite_rounded : Icons.lock_rounded,
-                      color: isPremium
-                          ? const Color(0xFFEF4444)
-                          : AppColors.textMuted,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.loveNoteSendTitle,
-                          style: AppTypography.cardTitle.copyWith(
-                            color: isPremium
-                                ? (theme.isDarkMode
-                                    ? const Color(0xFFFFD6D6)
-                                    : const Color(0xFF991B1B))
-                                : theme.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isPremium
-                              ? t.loveNoteSendSubtitle
-                              : t.loveNotePremiumFeature,
-                          style: AppTypography.caption.copyWith(
-                            fontSize: 13,
-                            color: isPremium
-                                ? (theme.isDarkMode
-                                        ? const Color(0xFFFECACA)
-                                        : const Color(0xFFB91C1C))
-                                    .withValues(
-                                    alpha: theme.isDarkMode ? 0.82 : 0.7,
-                                  )
-                                : theme.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (!isPremium)
-                    const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 16,
-                      color: AppColors.textMuted,
-                    ),
-                ],
-              ),
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -345,10 +229,13 @@ class _SummaryMetric extends StatelessWidget {
     final theme = context.theme;
     return Column(
       children: [
-        Text(icon, style: AppTypography.body.copyWith(
-          fontSize: 18,
-          fontWeight: FontWeight.w400,
-        ),),
+        Text(
+          icon,
+          style: AppTypography.body.copyWith(
+            fontSize: 18,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           value,
@@ -371,30 +258,5 @@ class _SummaryMetric extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-/// El reparto de la semana en la pestaña Progreso. Resuelve su propio estado
-/// para que un fallo acá no se lleve puesta toda la pestaña.
-class _ContributionSection extends ConsumerWidget {
-  const _ContributionSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final householdId = ref.watch(householdIdProvider).value;
-    if (householdId == null || householdId.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return ref.watch(householdContributionProvider(householdId)).when(
-          skipLoadingOnReload: true,
-          data: (contribution) =>
-              ContributionSplitCard(contribution: contribution),
-          loading: () => const Padding(
-            padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
-            child: Center(child: AppLoader()),
-          ),
-          error: (_, __) => const SizedBox.shrink(),
-        );
   }
 }

@@ -256,7 +256,9 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                 ),
                 if (integrated)
                   _IntegratedEconomyBadge(compact: widget.compact)
-                else if (isNegative && widget.onSettle != null)
+                // Las dos direcciones: quien debe salda, y quien tiene plata a
+                // favor puede registrar que ya se la devolvieron.
+                else if (!isBalanced && widget.onSettle != null)
                   AnimatedPress(
                     onTap: widget.onSettle!,
                     child: Container(
@@ -283,13 +285,17 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.payment_rounded,
+                            isNegative
+                                ? Icons.payment_rounded
+                                : Icons.check_circle_outline_rounded,
                             color: statusColor,
                             size: 15,
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           Text(
-                            t.balanceCardSettleButton,
+                            isNegative
+                                ? t.balanceCardSettleButton
+                                : t.balanceCardRecordPaymentButton,
                             style: AppTypography.caption.copyWith(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -299,7 +305,9 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                         ],
                       ),
                     ),
-                  ).animatePulse()
+                    // Solo late cuando me toca pagar a mí: a quien tiene plata
+                    // a favor no hay que apurarlo.
+                  ).animatePulse(active: isNegative)
                 else if (isBalanced)
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 320),

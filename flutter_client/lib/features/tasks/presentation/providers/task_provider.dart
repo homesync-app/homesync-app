@@ -80,6 +80,10 @@ class TaskCategoryFilter extends _$TaskCategoryFilter {
 
   void clear() => state = {};
 
+  /// Deja el filtro en una sola categoría (p. ej. al llegar desde el reparto
+  /// de la semana con "Ver tareas").
+  void showOnly(String category) => state = {category};
+
   /// Descarta del filtro las categorías que ya no tienen tareas activas.
   /// Sin esto, al completarse la última tarea de una categoría filtrada su
   /// chip desaparecía pero el filtro seguía vivo: lista vacía "filtrada" sin

@@ -9,6 +9,7 @@ import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/domain/models/love_note_model.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class LoveNoteEnvelope extends ConsumerStatefulWidget {
   final LoveNoteModel note;
@@ -279,7 +280,8 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
                   const SizedBox(width: 7),
                   Expanded(
                     child: Text(
-                      '${widget.senderName} te escribió',
+                      AppLocalizations.of(context)
+                          .loveNoteEnvelopeFrom(widget.senderName),
                       style: AppTypography.caption.copyWith(
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF5C504C),
@@ -289,11 +291,12 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
                   ),
                   IconButton(
                     onPressed: _onClose,
+                    tooltip: AppLocalizations.of(context).commonClose,
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                      minWidth: 28,
-                      minHeight: 28,
+                      minWidth: AppControlSizes.minTapTarget,
+                      minHeight: AppControlSizes.minTapTarget,
                     ),
                     icon: const Icon(
                       Icons.close_rounded,
@@ -330,7 +333,7 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    'Guardado en el hogar',
+                    AppLocalizations.of(context).loveNoteEnvelopeSaved,
                     style: AppTypography.caption.copyWith(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,

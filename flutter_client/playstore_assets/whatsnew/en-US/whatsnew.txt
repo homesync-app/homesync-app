@@ -1,11 +1,11 @@
-Couple mode, rebuilt.
+New Couple tab: your week together. See how chores were split and, if something landed on one side, a suggestion to even it out. No winners.
 
-Housework now feeds a shared household fund. You pick a goal together, and unlocking it takes both confirmations: nobody spends it alone.
+Money between you two in one place: who owes what, how much each of you put in this month, and settling up in one tap.
 
-Coins, the rewards store and the weekly duel are gone: in couple mode they created debts between you. Your personal XP is unchanged.
+Notes for your partner are now free.
 
-New: Proposals, for asking each other for things with no price and "not now" always available.
+A new, shorter onboarding, and invites now include the link to get the app.
 
-Progress now shows how the week was split, no winners.
+The shared fund and weekly challenges have been retired.
 
-Also: push notifications fixed.
+Also: better contrast and fixes.

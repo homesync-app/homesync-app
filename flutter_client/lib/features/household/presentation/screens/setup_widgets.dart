@@ -3,21 +3,8 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
-import 'package:homesync_client/shared/widgets/design/app_pill.dart';
 
-class SetupStepEyebrow extends StatelessWidget {
-  final String text;
-
-  /// Acento del modo elegido; null usa el primary global.
-  final Color? accent;
-
-  const SetupStepEyebrow({required this.text, this.accent, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppPill(label: text, color: accent);
-  }
-}
+/// Piezas compartidas por los pasos del onboarding.
 
 class SetupSupportBullet extends StatelessWidget {
   final IconData icon;
@@ -56,87 +43,8 @@ class SetupSupportBullet extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 height: 1.35,
-                color: theme.textSecondary.withValues(alpha: 0.9),
+                color: theme.textSecondary,
               ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Encabezado editorial de step: título hero + subtítulo de apoyo, con la
-/// firma de la app (regla horizontal + kicker) opcional vía [kicker].
-class SetupHeading extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String? kicker;
-
-  const SetupHeading({
-    required this.title,
-    required this.subtitle,
-    this.kicker,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          // Tracking a -1.2 (~-0.03em): más apretado se tocan las letras.
-          style: AppTypography.heroAmount.copyWith(
-            fontSize: 40,
-            letterSpacing: -1.2,
-            height: 1.05,
-            color: theme.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          subtitle,
-          style: AppTypography.body.copyWith(
-            fontSize: 19,
-            height: 1.45,
-            color: theme.textSecondary.withValues(alpha: 0.84),
-          ),
-        ),
-        if (kicker != null) ...[
-          const SizedBox(height: 10),
-          SetupKicker(text: kicker!),
-        ],
-      ],
-    );
-  }
-}
-
-/// Regla horizontal + texto corto, la firma editorial del home solo.
-class SetupKicker extends StatelessWidget {
-  final String text;
-
-  const SetupKicker({required this.text, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Row(
-      children: [
-        Container(
-          width: 24,
-          height: 1.5,
-          color: theme.primary.withValues(alpha: 0.5),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: AppTypography.caption.copyWith(
-              fontSize: 13,
-              color: theme.textSecondary,
             ),
           ),
         ),
@@ -224,184 +132,6 @@ class SetupPrimaryButton extends StatelessWidget {
   }
 }
 
-class SetupSecondaryButton extends StatelessWidget {
-  final String text;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  /// Acento del modo elegido; null usa el primary global.
-  final Color? accent;
-
-  const SetupSecondaryButton({
-    required this.text,
-    required this.icon,
-    required this.onTap,
-    this.accent,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final tone = accent ?? theme.primary;
-    return ElevatedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: AppControlSizes.iconMd),
-      label: Text(text),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: theme.surface.withValues(alpha: 0.9),
-        foregroundColor: tone,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: BorderSide(
-            color: tone.withValues(alpha: 0.28),
-            width: 1.4,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class SetupFeatureCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String desc;
-  final Color color;
-
-  const SetupFeatureCard({
-    required this.icon,
-    required this.title,
-    required this.desc,
-    required this.color,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppInsets.itemGap),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-      decoration: BoxDecoration(
-        color: theme.surface.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        border: Border.all(color: theme.border.withValues(alpha: 0.85)),
-        boxShadow: theme.cardShadow,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Icon(icon, color: color, size: AppControlSizes.iconLg),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.cardTitle.copyWith(
-                    fontSize: 17,
-                    color: theme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  desc,
-                  style: AppTypography.caption.copyWith(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    height: 1.4,
-                    color: theme.textSecondary.withValues(alpha: 0.82),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class SetupStrategyTip extends StatelessWidget {
-  final String title;
-  final String desc;
-  final bool active;
-
-  /// Acento del modo elegido; null usa el primary global.
-  final Color? accent;
-
-  const SetupStrategyTip({
-    required this.title,
-    required this.desc,
-    required this.active,
-    this.accent,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final tone = accent ?? theme.primary;
-    return AnimatedContainer(
-      duration: AppMotion.slow,
-      margin: const EdgeInsets.only(bottom: AppInsets.itemGap),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: active
-            ? tone.withValues(alpha: 0.08)
-            : theme.surface.withValues(alpha: 0.84),
-        borderRadius: BorderRadius.circular(AppRadii.md),
-        border: Border.all(
-          color: active
-              ? tone.withValues(alpha: 0.28)
-              : theme.cardBorder.withValues(alpha: 0.85),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            active ? Icons.check_circle_rounded : Icons.circle_outlined,
-            color: active ? tone : theme.textMuted,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.bodyStrong.copyWith(
-                    color: active ? tone : theme.textPrimary,
-                  ),
-                ),
-                Text(
-                  desc,
-                  style: AppTypography.caption.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: theme.textSecondary.withValues(alpha: 0.82),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class SetupFamilyPanel extends StatelessWidget {
   final Widget child;
 
@@ -444,181 +174,33 @@ class SetupFamilyChoiceChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final tone = accent ?? theme.primary;
-    return GestureDetector(
-      onTap: () {
-        AppHaptics.selection();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: AppMotion.fast,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? tone.withValues(alpha: 0.14)
-              : theme.surface,
-          borderRadius: BorderRadius.circular(AppRadii.pill),
-          border: Border.all(
-            color: selected
-                ? tone.withValues(alpha: 0.3)
-                : theme.cardBorder,
-          ),
-        ),
-        child: Text(
-          label,
-          style: AppTypography.caption.copyWith(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: selected ? tone : theme.textPrimary,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class SetupOptionTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String desc;
-  final bool isSelected;
-  final Color tone;
-  final VoidCallback onTap;
-
-  const SetupOptionTile({
-    required this.icon,
-    required this.title,
-    required this.desc,
-    required this.isSelected,
-    required this.tone,
-    required this.onTap,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: AppMotion.normal,
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-        decoration: BoxDecoration(
-          color: theme.surface.withValues(alpha: 0.94),
-          borderRadius: BorderRadius.circular(26),
-          border: Border.all(
-            color: isSelected
-                ? tone.withValues(alpha: 0.5)
-                : theme.border.withValues(alpha: 0.8),
-            width: isSelected ? 1.8 : 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: isSelected
-                  ? tone.withValues(alpha: 0.08)
-                  : theme.shadowBase.withValues(alpha: 0.045),
-              blurRadius: 16,
-              offset: const Offset(0, 7),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: tone.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppRadii.md),
-              ),
-              child: Icon(icon, color: tone, size: AppControlSizes.iconLg),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title,
-                    style: AppTypography.cardTitle.copyWith(
-                      fontSize: 17,
-                      color: theme.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    desc,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.caption.copyWith(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      height: 1.25,
-                      color: theme.textSecondary.withValues(alpha: 0.84),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            AnimatedContainer(
-              duration: AppMotion.normal,
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: isSelected ? tone : Colors.transparent,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected
-                      ? tone
-                      : theme.border.withValues(alpha: 0.9),
-                  width: 1.3,
-                ),
-              ),
-              child: isSelected
-                  ? const Icon(
-                      Icons.check_rounded,
-                      color: Colors.white,
-                      size: 14,
-                    )
-                  : null,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class SetupOnboardingIllustration extends StatelessWidget {
-  final String imagePath;
-
-  const SetupOnboardingIllustration({required this.imagePath, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.center,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final illustrationWidth =
-              (constraints.maxWidth * 0.92).clamp(260.0, 420.0);
-
-          return SizedBox(
-            width: illustrationWidth,
-            child: AspectRatio(
-              aspectRatio: 4 / 5,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadii.xl),
-                child: Image.asset(
-                  imagePath,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.center,
-                ),
-              ),
-            ),
-          );
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: GestureDetector(
+        onTap: () {
+          AppHaptics.selection();
+          onTap();
         },
+        child: AnimatedContainer(
+          duration: AppMotion.fast,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? tone.withValues(alpha: 0.14) : theme.surface,
+            borderRadius: BorderRadius.circular(AppRadii.pill),
+            border: Border.all(
+              color: selected ? tone.withValues(alpha: 0.3) : theme.cardBorder,
+            ),
+          ),
+          child: Text(
+            label,
+            style: AppTypography.caption.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: selected ? tone : theme.textPrimary,
+            ),
+          ),
+        ),
       ),
     );
   }

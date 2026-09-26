@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +21,7 @@ import 'package:homesync_client/features/household/domain/models/household_capab
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
+import 'package:homesync_client/features/household/presentation/utils/invite_share.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_household_components.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
@@ -26,7 +29,6 @@ import 'package:homesync_client/features/tasks/presentation/providers/family_mem
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Pantalla de detalle del hogar (Casa compartida): miembros, roles, modo de
 /// tareas, invitación. Extraída del settings monolítico (fase 2) — patrón
@@ -268,24 +270,18 @@ class _HouseholdSettingsScreenState
       return;
     }
 
-    final text =
-        t.settingsInviteWhatsAppMessage(_normalizedHouseholdType, code);
-    final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
-
-    try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        _copyCode();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(t.settingsHouseholdWhatsAppFallback)),
-          );
-        }
-      }
-    } catch (e) {
-      _copyCode();
-    }
+    final type = HouseholdType.fromString(_normalizedHouseholdType);
+    unawaited(
+      ref.read(analyticsServiceProvider).trackInviteSent(
+            mode: type.name,
+            channel: 'whatsapp',
+          ),
+    );
+    final outcome = await shareInviteViaWhatsApp(t, code: code, type: type);
+    if (!mounted || outcome != InviteShareOutcome.copiedFallback) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(t.partnerInviteMessageCopied)),
+    );
   }
 
   void _showJoinDialog() {

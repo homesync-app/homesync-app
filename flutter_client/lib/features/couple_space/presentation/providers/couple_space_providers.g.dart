@@ -213,80 +213,6 @@ final class CoupleProposalsFamily extends $Family
   String toString() => r'coupleProposalsProvider';
 }
 
-@ProviderFor(householdFund)
-final householdFundProvider = HouseholdFundFamily._();
-
-final class HouseholdFundProvider extends $FunctionalProvider<
-        AsyncValue<HouseholdFund>, HouseholdFund, FutureOr<HouseholdFund>>
-    with $FutureModifier<HouseholdFund>, $FutureProvider<HouseholdFund> {
-  HouseholdFundProvider._(
-      {required HouseholdFundFamily super.from, required String super.argument})
-      : super(
-          retry: null,
-          name: r'householdFundProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
-
-  @override
-  String debugGetCreateSourceHash() => _$householdFundHash();
-
-  @override
-  String toString() {
-    return r'householdFundProvider'
-        ''
-        '($argument)';
-  }
-
-  @$internal
-  @override
-  $FutureProviderElement<HouseholdFund> $createElement(
-          $ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<HouseholdFund> create(Ref ref) {
-    final argument = this.argument as String;
-    return householdFund(
-      ref,
-      argument,
-    );
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is HouseholdFundProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$householdFundHash() => r'882060e7f3c8d4a30c22f7895c6363778a0a954e';
-
-final class HouseholdFundFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<HouseholdFund>, String> {
-  HouseholdFundFamily._()
-      : super(
-          retry: null,
-          name: r'householdFundProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
-
-  HouseholdFundProvider call(
-    String householdId,
-  ) =>
-      HouseholdFundProvider._(argument: householdId, from: this);
-
-  @override
-  String toString() => r'householdFundProvider';
-}
-
 @ProviderFor(householdContribution)
 final householdContributionProvider = HouseholdContributionFamily._();
 
@@ -366,3 +292,47 @@ final class HouseholdContributionFamily extends $Family
   @override
   String toString() => r'householdContributionProvider';
 }
+
+/// Lo que puso cada uno este mes, leído del mismo feed que usa Finanzas: sin
+/// queries nuevas y con los mismos filtros de privacidad.
+
+@ProviderFor(coupleMonthMoney)
+final coupleMonthMoneyProvider = CoupleMonthMoneyProvider._();
+
+/// Lo que puso cada uno este mes, leído del mismo feed que usa Finanzas: sin
+/// queries nuevas y con los mismos filtros de privacidad.
+
+final class CoupleMonthMoneyProvider extends $FunctionalProvider<
+        AsyncValue<CoupleMonthMoney>,
+        CoupleMonthMoney,
+        FutureOr<CoupleMonthMoney>>
+    with $FutureModifier<CoupleMonthMoney>, $FutureProvider<CoupleMonthMoney> {
+  /// Lo que puso cada uno este mes, leído del mismo feed que usa Finanzas: sin
+  /// queries nuevas y con los mismos filtros de privacidad.
+  CoupleMonthMoneyProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'coupleMonthMoneyProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$coupleMonthMoneyHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<CoupleMonthMoney> $createElement(
+          $ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<CoupleMonthMoney> create(Ref ref) {
+    return coupleMonthMoney(ref);
+  }
+}
+
+String _$coupleMonthMoneyHash() => r'c0ac7c555026f942718a63f1462a0bf5a991dba7';

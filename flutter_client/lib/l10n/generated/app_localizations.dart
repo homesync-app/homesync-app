@@ -317,7 +317,7 @@ abstract class AppLocalizations {
   /// Subtitle on the social hub screen. Tone: couple romantic; family parental/coordinative; friends casual peer; solo individual.
   ///
   /// In es, this message translates to:
-  /// **'{type, select, couple{Desafíos, premios y pequeñas recompensas para compartir.} family{Coordinación, miembros y acuerdos del hogar para toda la familia.} friends{Organización, convivencia y reparto claro para el piso.} solo{Todo tu progreso personal en un solo lugar.} other{Todo tu progreso personal en un solo lugar.}}'**
+  /// **'{type, select, couple{El repaso de la semana, la plata entre los dos y lo que se proponen.} family{Coordinación, miembros y acuerdos del hogar para toda la familia.} friends{Organización, convivencia y reparto claro para el piso.} solo{Todo tu progreso personal en un solo lugar.} other{Todo tu progreso personal en un solo lugar.}}'**
   String householdSocialHubSubtitle(String type);
 
   /// Greeting/title on the dashboard header. Varies by mode.
@@ -535,12 +535,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Pagos Recurrentes (Suscripciones)'**
   String get settingsPremiumFeatureRecurringPayments;
-
-  /// Premium feature label: small love notes between partners on the dashboard. Couple-mode only feature.
-  ///
-  /// In es, this message translates to:
-  /// **'Notas de Amor en Dashboard'**
-  String get settingsPremiumFeatureLoveNotes;
 
   /// Premium feature label: exclusive avatar set.
   ///
@@ -2721,179 +2715,17 @@ abstract class AppLocalizations {
   /// **'{mode, select, couple{Gastos y tareas compartidas} family{Tareas, compras y seguimiento familiar} friends{Cuentas claras entre roommates} solo{Rutinas y pendientes personales} other{Rutinas y pendientes personales}}'**
   String setupModeDescription(String mode);
 
-  /// Tiny eyebrow label above the brand name on the first wizard screen.
-  ///
-  /// In es, this message translates to:
-  /// **'Tu hogar, sincronizado'**
-  String get setupValuePropEyebrow;
-
-  /// No description provided for @setupValuePropTagline.
-  ///
-  /// In es, this message translates to:
-  /// **'El hogar mejor organizado empieza aquí.'**
-  String get setupValuePropTagline;
-
-  /// No description provided for @setupValuePropStartButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Comenzar'**
-  String get setupValuePropStartButton;
-
-  /// No description provided for @setupValuePropTimeHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Te llevará menos de 2 minutos'**
-  String get setupValuePropTimeHint;
-
-  /// No description provided for @setupFeatureTasksTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Tareas compartidas'**
-  String get setupFeatureTasksTitle;
-
-  /// No description provided for @setupFeatureTasksDesc.
-  ///
-  /// In es, this message translates to:
-  /// **'Organizá tareas del hogar y repartí responsabilidades sin fricción.'**
-  String get setupFeatureTasksDesc;
-
-  /// No description provided for @setupFeatureExpensesTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Gastos en equipo'**
-  String get setupFeatureExpensesTitle;
-
-  /// No description provided for @setupFeatureExpensesDesc.
-  ///
-  /// In es, this message translates to:
-  /// **'Registrá gastos, dividí cuentas y mantené el balance siempre claro.'**
-  String get setupFeatureExpensesDesc;
-
-  /// No description provided for @setupFeatureGamificationTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Gamificación real'**
-  String get setupFeatureGamificationTitle;
-
-  /// No description provided for @setupFeatureGamificationDesc.
-  ///
-  /// In es, this message translates to:
-  /// **'Convertí la organización diaria en progreso, premios y motivación.'**
-  String get setupFeatureGamificationDesc;
-
-  /// No description provided for @setupFeatureShoppingTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Compras sincronizadas'**
-  String get setupFeatureShoppingTitle;
-
-  /// No description provided for @setupFeatureShoppingDesc.
-  ///
-  /// In es, this message translates to:
-  /// **'Listas compartidas en tiempo real para que nadie compre dos veces.'**
-  String get setupFeatureShoppingDesc;
-
-  /// No description provided for @setupWelcomeTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Bienvenido!'**
-  String get setupWelcomeTitle;
-
-  /// No description provided for @setupWelcomeBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Vamos a dejar tu hogar listo para empezar con tareas, gastos y compras compartidas desde el primer día.'**
-  String get setupWelcomeBody;
-
-  /// No description provided for @setupWelcomeBulletQuick.
-  ///
-  /// In es, this message translates to:
-  /// **'Configuración rápida de menos de 1 minuto.'**
-  String get setupWelcomeBulletQuick;
-
-  /// No description provided for @setupWelcomeBulletJoin.
-  ///
-  /// In es, this message translates to:
-  /// **'Podés crear un hogar nuevo o sumarte con un código.'**
-  String get setupWelcomeBulletJoin;
-
-  /// No description provided for @setupWelcomeStartButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Configurar mi hogar'**
-  String get setupWelcomeStartButton;
-
-  /// No description provided for @setupProfileEyebrow.
-  ///
-  /// In es, this message translates to:
-  /// **'Tu perfil'**
-  String get setupProfileEyebrow;
-
-  /// No description provided for @setupProfileTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'¿Cómo te llamas?'**
-  String get setupProfileTitle;
-
-  /// No description provided for @setupProfileSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Personalizá tu perfil para que tu equipo te identifique mejor.'**
-  String get setupProfileSubtitle;
-
-  /// No description provided for @setupProfileGoogleAvatarHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Usamos tu foto de Google como punto de partida. Si querés, podés cambiarla por uno de nuestros avatares.'**
-  String get setupProfileGoogleAvatarHint;
-
-  /// No description provided for @setupProfileEmptyAvatarHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Elegí un avatar y un nombre para empezar con una identidad clara dentro del hogar.'**
-  String get setupProfileEmptyAvatarHint;
-
   /// No description provided for @setupProfileAvatarLabel.
   ///
   /// In es, this message translates to:
   /// **'Avatar'**
   String get setupProfileAvatarLabel;
 
-  /// No description provided for @setupModePickerEyebrow.
-  ///
-  /// In es, this message translates to:
-  /// **'Tipo de hogar'**
-  String get setupModePickerEyebrow;
-
-  /// No description provided for @setupModePickerTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Comencemos!'**
-  String get setupModePickerTitle;
-
-  /// No description provided for @setupModePickerSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'¿Cómo vas a organizar tu hogar?'**
-  String get setupModePickerSubtitle;
-
   /// Tiny sign-out link below the mode picker in the setup wizard. Source uses lowercase 'sesión' (with accent) — distinct from the bigger Settings logout button.
   ///
   /// In es, this message translates to:
   /// **'Cerrar sesión'**
   String get setupSignOutLink;
-
-  /// Tiny link to go back to the value-prop screen from the mode picker.
-  ///
-  /// In es, this message translates to:
-  /// **'Ver características'**
-  String get setupSeeFeaturesLink;
-
-  /// Fallback household name when the user didn't enter one.
-  ///
-  /// In es, this message translates to:
-  /// **'Mi Hogar'**
-  String get setupHouseholdDefaultName;
 
   /// Fallback name when creating a family-mode household without an explicit name.
   ///
@@ -2931,156 +2763,6 @@ abstract class AppLocalizations {
   /// **'¡Código copiado al portapapeles! 📋'**
   String get setupSnackCodeCopied;
 
-  /// No description provided for @setupSnackWhatsappFailed.
-  ///
-  /// In es, this message translates to:
-  /// **'No se pudo abrir WhatsApp. Código copiado.'**
-  String get setupSnackWhatsappFailed;
-
-  /// Heading above the 6-letter invite code input on the join flow.
-  ///
-  /// In es, this message translates to:
-  /// **'Ingresa el código'**
-  String get setupJoinCodeTitle;
-
-  /// No description provided for @setupConnectEyebrow.
-  ///
-  /// In es, this message translates to:
-  /// **'Conectar el hogar'**
-  String get setupConnectEyebrow;
-
-  /// No description provided for @setupConnectTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Conecta tu hogar'**
-  String get setupConnectTitle;
-
-  /// No description provided for @setupConnectSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Podés crear un nuevo equipo o sumarte con un código de invitación.'**
-  String get setupConnectSubtitle;
-
-  /// No description provided for @setupConnectCreateTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Crear nuevo hogar'**
-  String get setupConnectCreateTitle;
-
-  /// No description provided for @setupConnectCreateDesc.
-  ///
-  /// In es, this message translates to:
-  /// **'Generá un código para invitar a quienes comparten este espacio.'**
-  String get setupConnectCreateDesc;
-
-  /// No description provided for @setupConnectJoinTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Tengo un código'**
-  String get setupConnectJoinTitle;
-
-  /// No description provided for @setupConnectJoinDesc.
-  ///
-  /// In es, this message translates to:
-  /// **'Ingresá el código para sumarte al hogar.'**
-  String get setupConnectJoinDesc;
-
-  /// No description provided for @setupConnectCodeInputLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Ingresá el código'**
-  String get setupConnectCodeInputLabel;
-
-  /// No description provided for @setupConnectCreateButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Crear mi hogar'**
-  String get setupConnectCreateButton;
-
-  /// No description provided for @setupConnectJoinButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Unirme ahora'**
-  String get setupConnectJoinButton;
-
-  /// No description provided for @setupConnectBackButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Volver atrás'**
-  String get setupConnectBackButton;
-
-  /// No description provided for @setupInvitationEyebrow.
-  ///
-  /// In es, this message translates to:
-  /// **'Invitación'**
-  String get setupInvitationEyebrow;
-
-  /// Heading on the invite-code result step. family = whole family; friends = shared place/roommates; couple/solo show 'Hogar creado'.
-  ///
-  /// In es, this message translates to:
-  /// **'{mode, select, family{Familia creada} friends{Convivencia creada} couple{Hogar creado} solo{Hogar creado} other{Hogar creado}}'**
-  String setupInvitationTitle(String mode);
-
-  /// No description provided for @setupInvitationSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'{mode, select, family{Compartí este código con quienes forman parte del hogar.} friends{Compartí este código con tus compañeros de convivencia.} couple{Compartí este código para invitar a la otra persona.} solo{Compartí este código para invitar a la otra persona.} other{Compartí este código para invitar a la otra persona.}}'**
-  String setupInvitationSubtitle(String mode);
-
-  /// No description provided for @setupInvitationCodeEyebrow.
-  ///
-  /// In es, this message translates to:
-  /// **'CODIGO DE INVITACION'**
-  String get setupInvitationCodeEyebrow;
-
-  /// No description provided for @setupInvitationFooter.
-  ///
-  /// In es, this message translates to:
-  /// **'Podés copiarlo o compartirlo ahora. Más adelante también lo vas a encontrar en ajustes.'**
-  String get setupInvitationFooter;
-
-  /// No description provided for @setupInvitationCopyButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Copiar'**
-  String get setupInvitationCopyButton;
-
-  /// No description provided for @setupInvitationShareButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Compartir'**
-  String get setupInvitationShareButton;
-
-  /// No description provided for @setupFamilyBaseEyebrow.
-  ///
-  /// In es, this message translates to:
-  /// **'Base familiar'**
-  String get setupFamilyBaseEyebrow;
-
-  /// No description provided for @setupFamilyBaseTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Base del hogar familiar'**
-  String get setupFamilyBaseTitle;
-
-  /// No description provided for @setupFamilyBaseSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Antes de empezar, definamos cómo se organiza esta familia.'**
-  String get setupFamilyBaseSubtitle;
-
-  /// No description provided for @setupFamilyHouseholdNameLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Nombre del hogar'**
-  String get setupFamilyHouseholdNameLabel;
-
-  /// No description provided for @setupFamilyHouseholdNameHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Ej: Casa de los Gómez'**
-  String get setupFamilyHouseholdNameHint;
-
   /// No description provided for @setupFamilyRoleLabel.
   ///
   /// In es, this message translates to:
@@ -3111,118 +2793,10 @@ abstract class AppLocalizations {
   /// **'Adolescente'**
   String get setupFamilyRoleTeen;
 
-  /// No description provided for @setupSaveAndContinue.
-  ///
-  /// In es, this message translates to:
-  /// **'Guardar y continuar'**
-  String get setupSaveAndContinue;
-
-  /// No description provided for @setupConfigureLater.
-  ///
-  /// In es, this message translates to:
-  /// **'Configurar luego'**
-  String get setupConfigureLater;
-
-  /// No description provided for @setupExpensesEyebrow.
-  ///
-  /// In es, this message translates to:
-  /// **'Gastos del hogar'**
-  String get setupExpensesEyebrow;
-
-  /// No description provided for @setupExpensesTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'División de gastos'**
-  String get setupExpensesTitle;
-
-  /// No description provided for @setupFriendsExpensesSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'En un piso compartido, lo más simple es dividir todo en partes iguales.'**
-  String get setupFriendsExpensesSubtitle;
-
-  /// No description provided for @setupFriendsExpensesCardTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Reparto equitativo'**
-  String get setupFriendsExpensesCardTitle;
-
-  /// No description provided for @setupFriendsExpensesCardBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Cada compañero paga la misma proporción. Pueden ajustar gastos individuales más adelante.'**
-  String get setupFriendsExpensesCardBody;
-
-  /// No description provided for @setupFriendsExpensesTipTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Equitativo por defecto'**
-  String get setupFriendsExpensesTipTitle;
-
-  /// No description provided for @setupFriendsExpensesTipDesc.
-  ///
-  /// In es, this message translates to:
-  /// **'Ideal para compañeros que comparten gastos del piso.'**
-  String get setupFriendsExpensesTipDesc;
-
-  /// No description provided for @setupCoupleFamilyExpensesSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'{mode, select, couple{Configuremos una base simple para dividir gastos en pareja.} other{Configuremos una base simple para dividir gastos en convivencia.}}'**
-  String setupCoupleFamilyExpensesSubtitle(String mode);
-
-  /// No description provided for @setupCoupleFamilyExpensesNote.
-  ///
-  /// In es, this message translates to:
-  /// **'{mode, select, couple{Pueden cambiar esto después en ajustes. Como base arrancamos con una división 50/50.} other{Pueden cambiar esto después en ajustes. Como base arrancamos con una división equitativa.}}'**
-  String setupCoupleFamilyExpensesNote(String mode);
-
-  /// Tiny uppercase label above the split-percentage slider. couple = 'VOS / PAREJA' (you / partner); family = 'VOS / OTROS' (you / others).
-  ///
-  /// In es, this message translates to:
-  /// **'{mode, select, couple{VOS / PAREJA} other{VOS / OTROS}}'**
-  String setupCoupleFamilyExpensesSplitLabel(String mode);
-
-  /// No description provided for @setupCoupleFamilyTipEqualTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Igualitario (50/50)'**
-  String get setupCoupleFamilyTipEqualTitle;
-
-  /// No description provided for @setupCoupleFamilyTipEqualDescCouple.
-  ///
-  /// In es, this message translates to:
-  /// **'Ideal para ingresos y responsabilidades similares.'**
-  String get setupCoupleFamilyTipEqualDescCouple;
-
-  /// No description provided for @setupCoupleFamilyTipEqualDescOther.
-  ///
-  /// In es, this message translates to:
-  /// **'Ideal para hogares donde los gastos se reparten parejo.'**
-  String get setupCoupleFamilyTipEqualDescOther;
-
-  /// No description provided for @setupCoupleFamilyTipProportionalTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Proporcional'**
-  String get setupCoupleFamilyTipProportionalTitle;
-
-  /// No description provided for @setupCoupleFamilyTipProportionalDesc.
-  ///
-  /// In es, this message translates to:
-  /// **'Ajustado a lo que cada persona puede aportar.'**
-  String get setupCoupleFamilyTipProportionalDesc;
-
-  /// No description provided for @setupFirstTasksEyebrow.
-  ///
-  /// In es, this message translates to:
-  /// **'Primeras tareas'**
-  String get setupFirstTasksEyebrow;
-
   /// No description provided for @setupFirstTasksTitle.
   ///
   /// In es, this message translates to:
-  /// **'{mode, select, family{Primeras tareas para la familia} other{Personaliza tu hogar}}'**
+  /// **'{mode, select, family{Primeras tareas para la familia} solo{¿Qué querés tener en orden?} other{¿Qué tareas se reparten?}}'**
   String setupFirstTasksTitle(String mode);
 
   /// No description provided for @setupFirstTasksSubtitle.
@@ -3524,12 +3098,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'El código debe tener 6 caracteres'**
   String get settingsHouseholdJoinCodeLength;
-
-  /// Full WhatsApp invite message. mode = couple|family|friends|solo (solo falls into other).
-  ///
-  /// In es, this message translates to:
-  /// **'{mode, select, couple{¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.} family{¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.} friends{¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.} other{¡Hola! Te invito a unirte a nuestro hogar en HomeSync.}}\n\nDescarga la app e ingresa este código: *{code}*\n\n¡Organicemos nuestro hogar juntos!'**
-  String settingsInviteWhatsAppMessage(String mode, String code);
 
   /// No description provided for @settingsHouseholdRoleUpdated.
   ///
@@ -5535,12 +5103,6 @@ abstract class AppLocalizations {
   /// **'Movimiento'**
   String get expensesFabMovement;
 
-  /// CTA button inside the empty movements feed.
-  ///
-  /// In es, this message translates to:
-  /// **'Registrar un movimiento'**
-  String get expensesEmptyCta;
-
   /// No description provided for @expensesFabNewSubscription.
   ///
   /// In es, this message translates to:
@@ -7200,7 +6762,7 @@ abstract class AppLocalizations {
   /// No description provided for @premiumPaywallSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Pagos, compras y estadísticas trabajando juntos para que el balance esté siempre claro.'**
+  /// **'Pagos, compras y presupuestos trabajando juntos para que el balance esté siempre claro.'**
   String get premiumPaywallSubtitle;
 
   /// Premium benefit title for scheduled or recurring payments.
@@ -7227,18 +6789,6 @@ abstract class AppLocalizations {
   /// **'Vinculá productos de la lista con gastos reales y evitá cargar la misma compra dos veces.'**
   String get premiumBenefitShoppingFinanceSyncDesc;
 
-  /// No description provided for @premiumBenefitAdvancedStats.
-  ///
-  /// In es, this message translates to:
-  /// **'Estadísticas avanzadas'**
-  String get premiumBenefitAdvancedStats;
-
-  /// No description provided for @premiumBenefitAdvancedStatsDesc.
-  ///
-  /// In es, this message translates to:
-  /// **'Analizá gastos, tareas y progreso con vistas más profundas por categoría y período.'**
-  String get premiumBenefitAdvancedStatsDesc;
-
   /// No description provided for @premiumBenefitFullCustomization.
   ///
   /// In es, this message translates to:
@@ -7263,29 +6813,11 @@ abstract class AppLocalizations {
   /// **'Cancelá cuando quieras'**
   String get premiumCancelAnytime;
 
-  /// No description provided for @premiumFreeTrialAvailable.
+  /// Badge del plan anual. percent se calcula con los precios reales de la tienda; se oculta si no hay plan mensual para comparar.
   ///
   /// In es, this message translates to:
-  /// **'Prueba Gratis Disponible'**
-  String get premiumFreeTrialAvailable;
-
-  /// No description provided for @premiumActivateButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Activar Premium'**
-  String get premiumActivateButton;
-
-  /// No description provided for @premiumTestingModeLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Modo testing · sin cargo'**
-  String get premiumTestingModeLabel;
-
-  /// No description provided for @premiumSavePercent.
-  ///
-  /// In es, this message translates to:
-  /// **'Ahorrá 20%'**
-  String get premiumSavePercent;
+  /// **'Ahorrá {percent}%'**
+  String premiumSavePercent(int percent);
 
   /// No description provided for @premiumChoosePlanTitle.
   ///
@@ -7374,7 +6906,7 @@ abstract class AppLocalizations {
   /// No description provided for @premiumStoreErrorTitle.
   ///
   /// In es, this message translates to:
-  /// **'Error al conectar con la tienda'**
+  /// **'No pudimos conectar con la tienda'**
   String get premiumStoreErrorTitle;
 
   /// No description provided for @premiumDeveloperModeButton.
@@ -7566,13 +7098,13 @@ abstract class AppLocalizations {
   /// No description provided for @faqWhatSpecialEvents.
   ///
   /// In es, this message translates to:
-  /// **'¿Qué es el evento semanal de pareja?'**
+  /// **'¿Qué hay en la pestaña Pareja?'**
   String get faqWhatSpecialEvents;
 
   /// No description provided for @faqWhatSpecialEventsAnswer.
   ///
   /// In es, this message translates to:
-  /// **'Cada semana aparece una propuesta pensada para los dos: recrear la primera cita, cocinar juntos o pasar una noche sin pantallas. Al completarla guardan un momento compartido y avanzan en sus logros de pareja, sin coins ni obligaciones.'**
+  /// **'Es el repaso de la semana de los dos: cómo se repartieron las tareas (sin ganadores), cómo está la plata entre ustedes y las propuestas pendientes. Si algo cayó siempre del mismo lado, te sugiere proponer turnarse. También podés mandarle una nota a tu pareja.'**
   String get faqWhatSpecialEventsAnswer;
 
   /// No description provided for @faqContributionBalance.
@@ -7998,7 +7530,7 @@ abstract class AppLocalizations {
   /// No description provided for @shoppingEmptyFirstLineDone.
   ///
   /// In es, this message translates to:
-  /// **'La heladera está llena.\n¿Necesitás algo hoy?'**
+  /// **'La lista está vacía.\n¿Qué falta en casa?'**
   String get shoppingEmptyFirstLineDone;
 
   /// No description provided for @shoppingEmptyFirstLineBought.
@@ -8301,18 +7833,6 @@ abstract class AppLocalizations {
   /// **'Todavía no hay premios en tu tienda.'**
   String get rewardsEmptyNoChildStore;
 
-  /// No description provided for @rewardsChallengeCompletePrompt.
-  ///
-  /// In es, this message translates to:
-  /// **'¿Completaron el desafío?'**
-  String get rewardsChallengeCompletePrompt;
-
-  /// No description provided for @rewardsChallengeCompleteBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Qué alegría. Al confirmar, ambos recibirán {count} coins.'**
-  String rewardsChallengeCompleteBody(int count);
-
   /// No description provided for @rewardsNotYet.
   ///
   /// In es, this message translates to:
@@ -8324,30 +7844,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Sí, lo hicimos'**
   String get rewardsYesWeDid;
-
-  /// No description provided for @rewardsChallengeTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Desafío: {title}'**
-  String rewardsChallengeTitle(String title);
-
-  /// No description provided for @rewardsChallengeCompleted.
-  ///
-  /// In es, this message translates to:
-  /// **'Desafío completado'**
-  String get rewardsChallengeCompleted;
-
-  /// No description provided for @rewardsChallengeCompletedBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Ambos ganaron {count} coins. Sigan cultivando su conexión.'**
-  String rewardsChallengeCompletedBody(int count);
-
-  /// No description provided for @rewardsChallengeError.
-  ///
-  /// In es, this message translates to:
-  /// **'Error al completar el desafío: {error}'**
-  String rewardsChallengeError(String error);
 
   /// No description provided for @rewardsDeletePrompt.
   ///
@@ -8769,96 +8265,6 @@ abstract class AppLocalizations {
   /// **'{count} coins · tocá para aprobar o quitar'**
   String rewardsProposalStatusAction(int count);
 
-  /// Pill label on the couple challenge card indicating which weekly special this is.
-  ///
-  /// In es, this message translates to:
-  /// **'Especial semanal {number} de {total}'**
-  String coupleChallengeWeeklyPill(int number, int total);
-
-  /// No description provided for @coupleChallengeExpandTooltip.
-  ///
-  /// In es, this message translates to:
-  /// **'Expandir'**
-  String get coupleChallengeExpandTooltip;
-
-  /// No description provided for @coupleChallengeShowLess.
-  ///
-  /// In es, this message translates to:
-  /// **'Ver menos'**
-  String get coupleChallengeShowLess;
-
-  /// No description provided for @coupleChallengeShowMore.
-  ///
-  /// In es, this message translates to:
-  /// **'Ver detalles completos'**
-  String get coupleChallengeShowMore;
-
-  /// No description provided for @coupleChallengeSharedReward.
-  ///
-  /// In es, this message translates to:
-  /// **'Un momento de los dos'**
-  String get coupleChallengeSharedReward;
-
-  /// Cantidad de eventos semanales que la pareja completó y guardó como momentos compartidos.
-  ///
-  /// In es, this message translates to:
-  /// **'{count, plural, =0{Todavía no guardaron momentos especiales} =1{1 momento compartido} other{{count} momentos compartidos}}'**
-  String coupleChallengeSharedRewardBody(int count);
-
-  /// No description provided for @coupleChallengeWeDidIt.
-  ///
-  /// In es, this message translates to:
-  /// **'Lo hicimos'**
-  String get coupleChallengeWeDidIt;
-
-  /// No description provided for @coupleChallengeDoneThisWeek.
-  ///
-  /// In es, this message translates to:
-  /// **'Guardado como momento compartido'**
-  String get coupleChallengeDoneThisWeek;
-
-  /// No description provided for @coupleChallengeAlreadyDone.
-  ///
-  /// In es, this message translates to:
-  /// **'Ya guardaron el especial de esta semana.'**
-  String get coupleChallengeAlreadyDone;
-
-  /// No description provided for @coupleSpaceWeekEyebrow.
-  ///
-  /// In es, this message translates to:
-  /// **'NUESTRA SEMANA'**
-  String get coupleSpaceWeekEyebrow;
-
-  /// Progreso conjunto de tareas del hogar durante la semana.
-  ///
-  /// In es, this message translates to:
-  /// **'{done} de {total} tareas listas'**
-  String coupleSpaceTasksReady(int done, int total);
-
-  /// No description provided for @coupleSpaceNoTasksPlanned.
-  ///
-  /// In es, this message translates to:
-  /// **'Una semana tranquila por ahora'**
-  String get coupleSpaceNoTasksPlanned;
-
-  /// No description provided for @coupleSpaceRemainingTasks.
-  ///
-  /// In es, this message translates to:
-  /// **'{count, plural, =0{No quedan tareas pendientes} =1{Queda 1 pendiente} other{Quedan {count} pendientes}}'**
-  String coupleSpaceRemainingTasks(int count);
-
-  /// No description provided for @coupleSpaceNeedsAttention.
-  ///
-  /// In es, this message translates to:
-  /// **'{count, plural, =1{1 necesita atención} other{{count} necesitan atención}}'**
-  String coupleSpaceNeedsAttention(int count);
-
-  /// No description provided for @coupleSpaceWeekSupport.
-  ///
-  /// In es, this message translates to:
-  /// **'El hogar avanza cuando se reparten lo que pesa.'**
-  String get coupleSpaceWeekSupport;
-
   /// No description provided for @coupleSpaceTaskEffortEyebrow.
   ///
   /// In es, this message translates to:
@@ -8883,90 +8289,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Tarea completada. La semana avanzó un poco más.} other{{count} tareas completadas. La semana avanzó un poco más.}}'**
   String coupleSpaceTaskCompletionMessage(int count);
 
-  /// No description provided for @coupleSpaceDistributionAction.
-  ///
-  /// In es, this message translates to:
-  /// **'Ver cómo se repartió'**
-  String get coupleSpaceDistributionAction;
-
-  /// No description provided for @coupleSpaceDistributionTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Cómo se repartió la semana'**
-  String get coupleSpaceDistributionTitle;
-
-  /// No description provided for @coupleSpaceDistributionSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Una foto para conversar, sin ganadores ni puntajes.'**
-  String get coupleSpaceDistributionSubtitle;
-
-  /// No description provided for @coupleSpaceTasksDone.
-  ///
-  /// In es, this message translates to:
-  /// **'{count, plural, =0{Sin tareas completadas} =1{1 tarea completada} other{{count} tareas completadas}}'**
-  String coupleSpaceTasksDone(int count);
-
-  /// No description provided for @coupleSpaceForConnection.
-  ///
-  /// In es, this message translates to:
-  /// **'Para conectar'**
-  String get coupleSpaceForConnection;
-
-  /// No description provided for @coupleSpaceSpecialMemoryBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Al completarlo, guardan el recuerdo y avanzan juntos en sus logros de pareja.'**
-  String get coupleSpaceSpecialMemoryBody;
-
-  /// No description provided for @coupleSpaceSkipWeek.
-  ///
-  /// In es, this message translates to:
-  /// **'Pasar esta semana'**
-  String get coupleSpaceSkipWeek;
-
-  /// No description provided for @coupleSpaceSkipToast.
-  ///
-  /// In es, this message translates to:
-  /// **'Lo dejamos para otro momento. No afecta ningún logro.'**
-  String get coupleSpaceSkipToast;
-
-  /// No description provided for @coupleSpaceUndo.
-  ///
-  /// In es, this message translates to:
-  /// **'Ver de nuevo'**
-  String get coupleSpaceUndo;
-
-  /// No description provided for @coupleSpaceSpecialConfirmTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'¿Guardamos este momento?'**
-  String get coupleSpaceSpecialConfirmTitle;
-
-  /// No description provided for @coupleSpaceSpecialConfirmBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Confirmá solo si los dos participaron y se sintieron cómodos. No suma coins ni genera ninguna deuda.'**
-  String get coupleSpaceSpecialConfirmBody;
-
-  /// No description provided for @coupleSpaceSpecialCompletedTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Un momento más de ustedes'**
-  String get coupleSpaceSpecialCompletedTitle;
-
-  /// No description provided for @coupleSpaceSpecialCompletedBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Quedó guardado en su historia compartida.'**
-  String get coupleSpaceSpecialCompletedBody;
-
-  /// No description provided for @coupleSpacePlansTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Planes y deseos'**
-  String get coupleSpacePlansTitle;
-
   /// No description provided for @coupleSpacePlansSubtitle.
   ///
   /// In es, this message translates to:
@@ -8979,30 +8301,6 @@ abstract class AppLocalizations {
   /// **'Proponer algo'**
   String get coupleSpaceProposeAction;
 
-  /// No description provided for @coupleSpaceProposalsEmptyTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Todavía no hay propuestas'**
-  String get coupleSpaceProposalsEmptyTitle;
-
-  /// No description provided for @coupleSpaceProposalsEmptyBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Podés abrir una conversación, sugerir un plan o pedir apoyo sin ponerle precio.'**
-  String get coupleSpaceProposalsEmptyBody;
-
-  /// No description provided for @coupleSpaceProposalAwaiting.
-  ///
-  /// In es, this message translates to:
-  /// **'Esperando respuesta'**
-  String get coupleSpaceProposalAwaiting;
-
-  /// No description provided for @coupleSpaceProposalRespond.
-  ///
-  /// In es, this message translates to:
-  /// **'Responder'**
-  String get coupleSpaceProposalRespond;
-
   /// No description provided for @coupleSpaceProposalAccepted.
   ///
   /// In es, this message translates to:
@@ -9014,12 +8312,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Para después'**
   String get coupleSpaceProposalDeferred;
-
-  /// No description provided for @coupleSpaceProposalMine.
-  ///
-  /// In es, this message translates to:
-  /// **'Tu propuesta'**
-  String get coupleSpaceProposalMine;
 
   /// No description provided for @coupleSpaceProposalCategoryTalk.
   ///
@@ -9182,12 +8474,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No pudimos cargar este espacio.'**
   String get coupleSpaceLoadError;
-
-  /// No description provided for @coupleSpaceRetry.
-  ///
-  /// In es, this message translates to:
-  /// **'Reintentar'**
-  String get coupleSpaceRetry;
 
   /// No description provided for @tourStepLabel.
   ///
@@ -9645,12 +8931,6 @@ abstract class AppLocalizations {
   /// **'Continuar'**
   String get weeklyWinnerContinue;
 
-  /// No description provided for @loveNoteDialogTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Nueva nota de amor'**
-  String get loveNoteDialogTitle;
-
   /// No description provided for @loveNoteHint.
   ///
   /// In es, this message translates to:
@@ -9662,24 +8942,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Nota enviada con amor'**
   String get loveNoteSent;
-
-  /// No description provided for @loveNoteSendMessageTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Enviar mensaje a tu pareja'**
-  String get loveNoteSendMessageTitle;
-
-  /// No description provided for @loveNotePremiumHintActive.
-  ///
-  /// In es, this message translates to:
-  /// **'Sorprendé con una nota especial hoy ✨'**
-  String get loveNotePremiumHintActive;
-
-  /// No description provided for @loveNotePremiumHintInactive.
-  ///
-  /// In es, this message translates to:
-  /// **'Función Premium. Desbloqueala para enviar notas.'**
-  String get loveNotePremiumHintInactive;
 
   /// No description provided for @weeklyProgressTitle.
   ///
@@ -9879,24 +9141,6 @@ abstract class AppLocalizations {
   /// **'Contá un poco más para que sea fácil evaluarlo.'**
   String get rewardsValidationMinLength;
 
-  /// No description provided for @loveNoteSendTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Enviar mensaje a tu pareja'**
-  String get loveNoteSendTitle;
-
-  /// No description provided for @loveNoteSendSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Sorprendé con una nota especial hoy.'**
-  String get loveNoteSendSubtitle;
-
-  /// No description provided for @loveNotePremiumFeature.
-  ///
-  /// In es, this message translates to:
-  /// **'Función premium. Desbloqueala para enviar notas.'**
-  String get loveNotePremiumFeature;
-
   /// No description provided for @statsWeeklyProgressTitle.
   ///
   /// In es, this message translates to:
@@ -10076,12 +9320,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Actualizar datos'**
   String get commonRefresh;
-
-  /// No description provided for @rewardsChallengeCompleteConfirm.
-  ///
-  /// In es, this message translates to:
-  /// **'Sí, lo hicimos'**
-  String get rewardsChallengeCompleteConfirm;
 
   /// No description provided for @rewardsWaitingResponse.
   ///
@@ -12192,25 +11430,25 @@ abstract class AppLocalizations {
   /// Invitation sheet subtitle for family households.
   ///
   /// In es, this message translates to:
-  /// **'Comparte este código con los miembros de tu familia.'**
+  /// **'Compartí este código con tu familia.'**
   String get invitationSubtitleFamily;
 
   /// Invitation sheet subtitle for friends/roommates households.
   ///
   /// In es, this message translates to:
-  /// **'Comparte este código con tus compañeros para sumarlos a la convivencia.'**
+  /// **'Compartí este código con quienes viven con vos.'**
   String get invitationSubtitleFriends;
 
   /// Invitation sheet subtitle for couple/default households.
   ///
   /// In es, this message translates to:
-  /// **'Comparte este código para que alguien se una a tu hogar.'**
+  /// **'Compartí este código para que alguien se sume a tu hogar.'**
   String get invitationSubtitleDefault;
 
   /// Hint below the invitation code telling the user they can tap to copy it.
   ///
   /// In es, this message translates to:
-  /// **'Toca para copiar'**
+  /// **'Tocá para copiar'**
   String get invitationTapToCopy;
 
   /// Snackbar shown when the invitation code is copied to the clipboard.
@@ -12231,41 +11469,29 @@ abstract class AppLocalizations {
   /// **'Reintentar generar código'**
   String get invitationRetry;
 
-  /// Snackbar shown when WhatsApp can't be opened and the code is copied instead.
-  ///
-  /// In es, this message translates to:
-  /// **'No se pudo abrir WhatsApp. Código copiado.'**
-  String get invitationWhatsAppFailed;
-
   /// WhatsApp invitation intro line for couple households.
   ///
   /// In es, this message translates to:
-  /// **'¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.'**
+  /// **'¡Hola! Sumate conmigo a HomeSync así organizamos las tareas y los gastos de la casa.'**
   String get invitationIntroCouple;
 
   /// WhatsApp invitation intro line for family households.
   ///
   /// In es, this message translates to:
-  /// **'¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.'**
+  /// **'¡Hola! Te invito a sumarte a nuestro hogar familiar en HomeSync.'**
   String get invitationIntroFamily;
 
   /// WhatsApp invitation intro line for friends/roommates households.
   ///
   /// In es, this message translates to:
-  /// **'¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.'**
+  /// **'¡Hola! Sumate a nuestra convivencia en HomeSync así organizamos mejor la casa.'**
   String get invitationIntroFriends;
 
   /// Default WhatsApp invitation intro line.
   ///
   /// In es, this message translates to:
-  /// **'¡Hola! Te invito a unirte a nuestro hogar en HomeSync.'**
+  /// **'¡Hola! Te invito a sumarte a nuestro hogar en HomeSync.'**
   String get invitationIntroDefault;
-
-  /// Full WhatsApp invitation message combining the intro line and the code.
-  ///
-  /// In es, this message translates to:
-  /// **'{intro}\n\nDescarga la app e ingresa este código: *{code}*\n\n¡Organicemos nuestro hogar juntos!'**
-  String invitationShareBody(String intro, String code);
 
   /// Title of the avatar picker bottom sheet.
   ///
@@ -12434,1416 +11660,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'✅ {name} ha sido quitado del hogar'**
   String settingsMemberRemoved(String name);
-
-  /// Snackbar shown when generating the household invitation code fails.
-  ///
-  /// In es, this message translates to:
-  /// **'Error al generar código: {error}'**
-  String setupGenerateCodeError(String error);
-
-  /// No description provided for @coupleChallenge1Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Recreando la primera cita'**
-  String get coupleChallenge1Title;
-
-  /// No description provided for @coupleChallenge1Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Vuelvan al lugar donde todo empezó.\n\nIntenten recrear esos detalles chiquitos: la comida, la ropa, las frases, los nervios.\n\nCharlen sobre cómo eran en ese momento y cuánto crecieron juntos.\n\nVa a ser imposible no reírse de los recuerdos y agradecer todo lo que vivieron.'**
-  String get coupleChallenge1Description;
-
-  /// No description provided for @coupleChallenge1Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'A veces volver atrás es la mejor forma de ver cuánto han avanzado juntos.'**
-  String get coupleChallenge1Motivation;
-
-  /// No description provided for @coupleChallenge1Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Experiencial'**
-  String get coupleChallenge1Category;
-
-  /// No description provided for @coupleChallenge1Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Exterior'**
-  String get coupleChallenge1Location;
-
-  /// No description provided for @coupleChallenge1Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Cualquier momento'**
-  String get coupleChallenge1Timing;
-
-  /// No description provided for @coupleChallenge2Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Cena a la luz de las velas'**
-  String get coupleChallenge2Title;
-
-  /// No description provided for @coupleChallenge2Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Solo necesitan unas velas o luces cálidas, una comida y algo rico para tomar.\n\nApaguen las luces, bajen el ritmo y dejen que el silencio se llene de música suave y miradas largas.\n\nNo importa tanto el menú como la presencia del otro.'**
-  String get coupleChallenge2Description;
-
-  /// No description provided for @coupleChallenge2Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Una cita perfecta para reconectar sin distracciones y recordar por qué se eligen cada día.'**
-  String get coupleChallenge2Motivation;
-
-  /// No description provided for @coupleChallenge2Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Romántico'**
-  String get coupleChallenge2Category;
-
-  /// No description provided for @coupleChallenge2Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge2Location;
-
-  /// No description provided for @coupleChallenge2Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge2Timing;
-
-  /// No description provided for @coupleChallenge3Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Lista de sueños compartidos'**
-  String get coupleChallenge3Title;
-
-  /// No description provided for @coupleChallenge3Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Agarren papel y lápiz. Anoten al menos 10 cosas que les gustaría lograr como pareja: viajes, metas o sueños.\n\nLéanlas en voz alta y guarden esa lista como recordatorio.'**
-  String get coupleChallenge3Description;
-
-  /// No description provided for @coupleChallenge3Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Tener sueños en común no solo une, sino que da dirección a su historia.'**
-  String get coupleChallenge3Motivation;
-
-  /// No description provided for @coupleChallenge3Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Emocional'**
-  String get coupleChallenge3Category;
-
-  /// No description provided for @coupleChallenge3Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge3Location;
-
-  /// No description provided for @coupleChallenge3Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Tarde'**
-  String get coupleChallenge3Timing;
-
-  /// No description provided for @coupleChallenge4Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Karaoke casero'**
-  String get coupleChallenge4Title;
-
-  /// No description provided for @coupleChallenge4Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Suban el volumen, elijan canciones y que empiece la diversión. No hace falta micrófono ni voz perfecta, solo actitud.\n\nEntre risas, van a descubrir lo liberador que es reírse juntos.'**
-  String get coupleChallenge4Description;
-
-  /// No description provided for @coupleChallenge4Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'El amor también se canta desafinando, pero al mismo ritmo.'**
-  String get coupleChallenge4Motivation;
-
-  /// No description provided for @coupleChallenge4Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Lúdico'**
-  String get coupleChallenge4Category;
-
-  /// No description provided for @coupleChallenge4Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge4Location;
-
-  /// No description provided for @coupleChallenge4Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge4Timing;
-
-  /// No description provided for @coupleChallenge5Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Pintando juntos'**
-  String get coupleChallenge5Title;
-
-  /// No description provided for @coupleChallenge5Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Consigan hojas y pinceles. No importa si no saben dibujar: la idea es soltar la mente, reírse de los trazos y disfrutar del color.\n\nPinten algo que los represente como pareja.'**
-  String get coupleChallenge5Description;
-
-  /// No description provided for @coupleChallenge5Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Porque el arte no busca perfección, busca conexión.'**
-  String get coupleChallenge5Motivation;
-
-  /// No description provided for @coupleChallenge5Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Creativo'**
-  String get coupleChallenge5Category;
-
-  /// No description provided for @coupleChallenge5Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge5Location;
-
-  /// No description provided for @coupleChallenge5Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'A definir'**
-  String get coupleChallenge5Timing;
-
-  /// No description provided for @coupleChallenge6Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Maratón de películas'**
-  String get coupleChallenge6Title;
-
-  /// No description provided for @coupleChallenge6Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Armen su propio cine en casa: luz tenue, mantas, snacks y una lista de pelis elegidas por los dos.\n\nVer películas juntos también es cruzar miradas y reírse en sincronía.'**
-  String get coupleChallenge6Description;
-
-  /// No description provided for @coupleChallenge6Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Pequeñas cosas que hacen grande el amor.'**
-  String get coupleChallenge6Motivation;
-
-  /// No description provided for @coupleChallenge6Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Relajado'**
-  String get coupleChallenge6Category;
-
-  /// No description provided for @coupleChallenge6Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge6Location;
-
-  /// No description provided for @coupleChallenge6Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge6Timing;
-
-  /// No description provided for @coupleChallenge7Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Caminata fotográfica'**
-  String get coupleChallenge7Title;
-
-  /// No description provided for @coupleChallenge7Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Salgan a caminar sin plan y traten de capturar lo que normalmente pasa desapercibido: una sombra, una sonrisa, un reflejo.\n\nSaquen fotos de todo lo que los haga frenar un segundo.'**
-  String get coupleChallenge7Description;
-
-  /// No description provided for @coupleChallenge7Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'A veces mirar el mundo a través del lente es la mejor forma de volver a mirarse entre sí.'**
-  String get coupleChallenge7Motivation;
-
-  /// No description provided for @coupleChallenge7Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Aventura'**
-  String get coupleChallenge7Category;
-
-  /// No description provided for @coupleChallenge7Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Ciudad'**
-  String get coupleChallenge7Location;
-
-  /// No description provided for @coupleChallenge7Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Tarde'**
-  String get coupleChallenge7Timing;
-
-  /// No description provided for @coupleChallenge8Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Picnic improvisado'**
-  String get coupleChallenge8Title;
-
-  /// No description provided for @coupleChallenge8Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Una manta, algo para picar, bebidas frías y ganas de compartir el momento.\n\nBusquen un parque, una plaza o incluso el patio de casa, acomódense y dejen que la charla fluya.\n\nSumen un juego de cartas, un libro o simplemente miren el cielo juntos.'**
-  String get coupleChallenge8Description;
-
-  /// No description provided for @coupleChallenge8Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'No hace falta ir lejos para sentir que se escapan del mundo.'**
-  String get coupleChallenge8Motivation;
-
-  /// No description provided for @coupleChallenge8Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Experiencial'**
-  String get coupleChallenge8Category;
-
-  /// No description provided for @coupleChallenge8Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Al aire libre'**
-  String get coupleChallenge8Location;
-
-  /// No description provided for @coupleChallenge8Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Tarde'**
-  String get coupleChallenge8Timing;
-
-  /// No description provided for @coupleChallenge9Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Cartas que no se borran'**
-  String get coupleChallenge9Title;
-
-  /// No description provided for @coupleChallenge9Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Escríbanse una carta. No en el celular: en papel y tinta.\n\nPongan música suave, preparen algo rico y déjense llevar.\n\nEscriban qué admiran, qué agradecen y qué sueñan.\n\nAl final, intercámbienlas y léanlas en voz alta.'**
-  String get coupleChallenge9Description;
-
-  /// No description provided for @coupleChallenge9Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Las cartas quedan, las palabras se leen, pero lo que más perdura es cómo te hacen sentir.'**
-  String get coupleChallenge9Motivation;
-
-  /// No description provided for @coupleChallenge9Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Emocional'**
-  String get coupleChallenge9Category;
-
-  /// No description provided for @coupleChallenge9Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge9Location;
-
-  /// No description provided for @coupleChallenge9Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge9Timing;
-
-  /// No description provided for @coupleChallenge10Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Desconexión total'**
-  String get coupleChallenge10Title;
-
-  /// No description provided for @coupleChallenge10Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Apaguen celulares, TV y cualquier notificación por una noche.\n\nLean, cocinen, charlen, jueguen o simplemente abrácense sin interrupciones.\n\nCuando baja el ruido digital, aparece otro silencio: el que deja espacio para estar presentes.'**
-  String get coupleChallenge10Description;
-
-  /// No description provided for @coupleChallenge10Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Esta cita no se mide en minutos, sino en conexión real.'**
-  String get coupleChallenge10Motivation;
-
-  /// No description provided for @coupleChallenge10Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Emocional'**
-  String get coupleChallenge10Category;
-
-  /// No description provided for @coupleChallenge10Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge10Location;
-
-  /// No description provided for @coupleChallenge10Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge10Timing;
-
-  /// No description provided for @coupleChallenge11Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Frasco de preguntas'**
-  String get coupleChallenge11Title;
-
-  /// No description provided for @coupleChallenge11Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Llenen un frasco con papelitos que tengan preguntas divertidas o profundas.\n\n\"¿Qué fue lo primero que pensaste cuando me conociste?\" o \"¿Qué sueño todavía no te animaste a contarme?\"\n\nSaquen una al azar y respondan sin filtros. Van a terminar entre risas y miradas largas.'**
-  String get coupleChallenge11Description;
-
-  /// No description provided for @coupleChallenge11Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Algunas charlas no surgen hasta que se invitan.'**
-  String get coupleChallenge11Motivation;
-
-  /// No description provided for @coupleChallenge11Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Lúdico'**
-  String get coupleChallenge11Category;
-
-  /// No description provided for @coupleChallenge11Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge11Location;
-
-  /// No description provided for @coupleChallenge11Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Cualquier momento'**
-  String get coupleChallenge11Timing;
-
-  /// No description provided for @coupleChallenge23Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Desayuno con vista'**
-  String get coupleChallenge23Title;
-
-  /// No description provided for @coupleChallenge23Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Cambien la escena del desayuno: preparen algo rico y salgan a buscar una buena vista. Puede ser un parque, una terraza o un banco en la plaza.\n\nTómense el tiempo para disfrutar el aire fresco y el café sin mirar el reloj.'**
-  String get coupleChallenge23Description;
-
-  /// No description provided for @coupleChallenge23Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'El café sabe mejor cuando el horizonte es el límite.'**
-  String get coupleChallenge23Motivation;
-
-  /// No description provided for @coupleChallenge23Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Exploración'**
-  String get coupleChallenge23Category;
-
-  /// No description provided for @coupleChallenge23Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Exterior'**
-  String get coupleChallenge23Location;
-
-  /// No description provided for @coupleChallenge23Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Mañana'**
-  String get coupleChallenge23Timing;
-
-  /// No description provided for @coupleChallenge24Title.
-  ///
-  /// In es, this message translates to:
-  /// **'A la orilla del mundo'**
-  String get coupleChallenge24Title;
-
-  /// No description provided for @coupleChallenge24Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Elijan un lugar donde el horizonte se sienta infinito: costa, río o laguna. Lleven algo para sentarse y miren cómo cae el sol.\n\nEscriban juntos una nota con lo que sueñan y guárdenla para el futuro.'**
-  String get coupleChallenge24Description;
-
-  /// No description provided for @coupleChallenge24Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'El silencio compartido frente al agua dice más que mil palabras.'**
-  String get coupleChallenge24Motivation;
-
-  /// No description provided for @coupleChallenge24Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Emocional'**
-  String get coupleChallenge24Category;
-
-  /// No description provided for @coupleChallenge24Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Naturaleza'**
-  String get coupleChallenge24Location;
-
-  /// No description provided for @coupleChallenge24Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Atardecer'**
-  String get coupleChallenge24Timing;
-
-  /// No description provided for @coupleChallenge25Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Destino incierto'**
-  String get coupleChallenge25Title;
-
-  /// No description provided for @coupleChallenge25Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Salgan a caminar sin mapa ni GPS. Elijan una dirección al azar y cada cinco cuadras uno decide hacia dónde doblar.\n\nDescubran rincones nuevos de su ciudad como si fueran turistas perdidos.'**
-  String get coupleChallenge25Description;
-
-  /// No description provided for @coupleChallenge25Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Perderse juntos es la mejor forma de encontrarse.'**
-  String get coupleChallenge25Motivation;
-
-  /// No description provided for @coupleChallenge25Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Exploración'**
-  String get coupleChallenge25Category;
-
-  /// No description provided for @coupleChallenge25Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Ciudad'**
-  String get coupleChallenge25Location;
-
-  /// No description provided for @coupleChallenge25Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Tarde'**
-  String get coupleChallenge25Timing;
-
-  /// No description provided for @coupleChallenge26Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Ritual del presente'**
-  String get coupleChallenge26Title;
-
-  /// No description provided for @coupleChallenge26Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Armen un espacio con luz cálida y música suave. Cada uno anota tres cosas que quiere dejar atrás, como miedos o enojo, y tres cosas que agradece del otro.\n\nQuemen lo que quieren soltar y guarden las notas de gratitud en un frasco.'**
-  String get coupleChallenge26Description;
-
-  /// No description provided for @coupleChallenge26Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Limpiar el pasado deja lugar para un futuro más brillante.'**
-  String get coupleChallenge26Motivation;
-
-  /// No description provided for @coupleChallenge26Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Emocional'**
-  String get coupleChallenge26Category;
-
-  /// No description provided for @coupleChallenge26Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge26Location;
-
-  /// No description provided for @coupleChallenge26Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge26Timing;
-
-  /// No description provided for @coupleChallenge27Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Arquitecto de sorpresas'**
-  String get coupleChallenge27Title;
-
-  /// No description provided for @coupleChallenge27Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Uno de los dos prepara una sorpresa pequeña: una nota en la almohada, una comida favorita cocinada en secreto o una pista para una mini aventura.\n\nLa clave está en el misterio y en el detalle pensado solo para el otro.'**
-  String get coupleChallenge27Description;
-
-  /// No description provided for @coupleChallenge27Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'El amor vive en los detalles que dicen \"pensé en vos\".'**
-  String get coupleChallenge27Motivation;
-
-  /// No description provided for @coupleChallenge27Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Detallista'**
-  String get coupleChallenge27Category;
-
-  /// No description provided for @coupleChallenge27Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Cualquier lugar'**
-  String get coupleChallenge27Location;
-
-  /// No description provided for @coupleChallenge27Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Sorpresa'**
-  String get coupleChallenge27Timing;
-
-  /// No description provided for @coupleChallenge28Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Un gesto de cuidado'**
-  String get coupleChallenge28Title;
-
-  /// No description provided for @coupleChallenge28Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Pregúntense qué gesto simple les haría bien hoy: preparar un mate, cocinar algo rico o dar un masaje, solo si nace y ambos se sienten cómodos.\n\nNo es una deuda ni un turno obligatorio. Es una invitación a cuidar con ternura y libertad.'**
-  String get coupleChallenge28Description;
-
-  /// No description provided for @coupleChallenge28Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'El cuidado se siente mejor cuando se ofrece y se recibe con libertad.'**
-  String get coupleChallenge28Motivation;
-
-  /// No description provided for @coupleChallenge28Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Cotidiano'**
-  String get coupleChallenge28Category;
-
-  /// No description provided for @coupleChallenge28Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge28Location;
-
-  /// No description provided for @coupleChallenge28Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge28Timing;
-
-  /// No description provided for @coupleChallenge29Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Historias en escena'**
-  String get coupleChallenge29Title;
-
-  /// No description provided for @coupleChallenge29Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Elijan una escena famosa de una peli e intenten recrearla con lo que tengan en casa. No busquen perfección: busquen risas y complicidad.\n\nAl final, inventen juntos su propio final.'**
-  String get coupleChallenge29Description;
-
-  /// No description provided for @coupleChallenge29Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Jugar a ser otros ayuda a redescubrir quiénes son ustedes.'**
-  String get coupleChallenge29Motivation;
-
-  /// No description provided for @coupleChallenge29Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Lúdico'**
-  String get coupleChallenge29Category;
-
-  /// No description provided for @coupleChallenge29Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge29Location;
-
-  /// No description provided for @coupleChallenge29Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Cualquier momento'**
-  String get coupleChallenge29Timing;
-
-  /// No description provided for @coupleChallenge30Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Sabores con historia'**
-  String get coupleChallenge30Title;
-
-  /// No description provided for @coupleChallenge30Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Elijan tres sabores, como una infusión, chocolate, fruta o queso, y con cada uno compartan un recuerdo personal: un viaje, una etapa, una persona.\n\nDejen que el sabor despierte historias que todavía no se contaron.'**
-  String get coupleChallenge30Description;
-
-  /// No description provided for @coupleChallenge30Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Cada bocado es una puerta abierta a un recuerdo.'**
-  String get coupleChallenge30Motivation;
-
-  /// No description provided for @coupleChallenge30Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Experiencial'**
-  String get coupleChallenge30Category;
-
-  /// No description provided for @coupleChallenge30Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Cualquier lugar'**
-  String get coupleChallenge30Location;
-
-  /// No description provided for @coupleChallenge30Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge30Timing;
-
-  /// No description provided for @coupleChallenge31Title.
-  ///
-  /// In es, this message translates to:
-  /// **'El arte de no hacer nada'**
-  String get coupleChallenge31Title;
-
-  /// No description provided for @coupleChallenge31Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Apaguen alarmas y suelten la lista de pendientes. Pasen un día sin horarios: leer en la cama, mirar series viejas o charlar sin destino.\n\nDense el lujo de habitar el tiempo sin presión por producir.'**
-  String get coupleChallenge31Description;
-
-  /// No description provided for @coupleChallenge31Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'El tiempo \"perdido\" juntos es tiempo ganado en conexión.'**
-  String get coupleChallenge31Motivation;
-
-  /// No description provided for @coupleChallenge31Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Relajado'**
-  String get coupleChallenge31Category;
-
-  /// No description provided for @coupleChallenge31Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge31Location;
-
-  /// No description provided for @coupleChallenge31Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Todo el día'**
-  String get coupleChallenge31Timing;
-
-  /// No description provided for @coupleChallenge32Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Domingo de mercado'**
-  String get coupleChallenge32Title;
-
-  /// No description provided for @coupleChallenge32Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Vayan a una feria de barrio con bolsas de tela y mate. No se enfoquen en comprar mucho: miren colores, olores y gente.\n\nElijan un ingrediente raro y cocinen algo nuevo al volver a casa.'**
-  String get coupleChallenge32Description;
-
-  /// No description provided for @coupleChallenge32Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'La rutina también tiene su propia magia artesanal.'**
-  String get coupleChallenge32Motivation;
-
-  /// No description provided for @coupleChallenge32Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Exploración'**
-  String get coupleChallenge32Category;
-
-  /// No description provided for @coupleChallenge32Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Ciudad'**
-  String get coupleChallenge32Location;
-
-  /// No description provided for @coupleChallenge32Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Mañana'**
-  String get coupleChallenge32Timing;
-
-  /// No description provided for @coupleChallenge33Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Bajo las estrellas'**
-  String get coupleChallenge33Title;
-
-  /// No description provided for @coupleChallenge33Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Busquen un lugar lejos de las luces de la ciudad. Lleven manta, cielo abierto y silencio.\n\nCuenten estrellas, inventen constelaciones o simplemente sientan la inmensidad juntos.'**
-  String get coupleChallenge33Description;
-
-  /// No description provided for @coupleChallenge33Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'El universo entero cabe en el espacio entre los dos.'**
-  String get coupleChallenge33Motivation;
-
-  /// No description provided for @coupleChallenge33Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Romántico'**
-  String get coupleChallenge33Category;
-
-  /// No description provided for @coupleChallenge33Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Naturaleza'**
-  String get coupleChallenge33Location;
-
-  /// No description provided for @coupleChallenge33Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge33Timing;
-
-  /// No description provided for @coupleChallenge34Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche de los sentidos'**
-  String get coupleChallenge34Title;
-
-  /// No description provided for @coupleChallenge34Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Elijan juntos texturas, aromas y sabores que sean seguros para ambos. Quien adivina puede cerrar los ojos si quiere, y cualquiera puede pausar o cambiar algo en cualquier momento.\n\nUna dinámica suave para prestar atención a las sensaciones, sin presión.'**
-  String get coupleChallenge34Description;
-
-  /// No description provided for @coupleChallenge34Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'La curiosidad compartida también puede ser una forma de conexión.'**
-  String get coupleChallenge34Motivation;
-
-  /// No description provided for @coupleChallenge34Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Sensoral'**
-  String get coupleChallenge34Category;
-
-  /// No description provided for @coupleChallenge34Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge34Location;
-
-  /// No description provided for @coupleChallenge34Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge34Timing;
-
-  /// No description provided for @coupleChallenge35Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Lectura compartida'**
-  String get coupleChallenge35Title;
-
-  /// No description provided for @coupleChallenge35Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Elijan un libro, poema o artículo y léanlo en voz alta, alternando partes. Escuchen el tono y las pausas del otro.\n\nAl terminar, compartan qué les hizo pensar o sentir esa historia.'**
-  String get coupleChallenge35Description;
-
-  /// No description provided for @coupleChallenge35Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Las palabras son el puente que une dos mentes.'**
-  String get coupleChallenge35Motivation;
-
-  /// No description provided for @coupleChallenge35Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Intelectual'**
-  String get coupleChallenge35Category;
-
-  /// No description provided for @coupleChallenge35Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Tranquilo'**
-  String get coupleChallenge35Location;
-
-  /// No description provided for @coupleChallenge35Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge35Timing;
-
-  /// No description provided for @coupleChallenge36Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Microteatro en pareja'**
-  String get coupleChallenge36Title;
-
-  /// No description provided for @coupleChallenge36Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Busquen una obra de microteatro o una función breve. Vivan la intensidad de una historia cercana y viva.\n\nDespués, salgan a caminar y charlen sobre lo que los hizo reír, llorar o pensar.'**
-  String get coupleChallenge36Description;
-
-  /// No description provided for @coupleChallenge36Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Vivir mil vidas en una noche, siempre de la mano.'**
-  String get coupleChallenge36Motivation;
-
-  /// No description provided for @coupleChallenge36Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Cultural'**
-  String get coupleChallenge36Category;
-
-  /// No description provided for @coupleChallenge36Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Ciudad'**
-  String get coupleChallenge36Location;
-
-  /// No description provided for @coupleChallenge36Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge36Timing;
-
-  /// No description provided for @coupleChallenge37Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Viaje sin maletas'**
-  String get coupleChallenge37Title;
-
-  /// No description provided for @coupleChallenge37Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Elijan un país y transformen su casa en ese destino por una noche: comida típica, música y clima de ese lugar.\n\nViajen sin pasaporte e imaginen qué harían si estuvieran ahí de verdad.'**
-  String get coupleChallenge37Description;
-
-  /// No description provided for @coupleChallenge37Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'El mejor destino es aquel que crean entre los dos.'**
-  String get coupleChallenge37Motivation;
-
-  /// No description provided for @coupleChallenge37Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Creativo'**
-  String get coupleChallenge37Category;
-
-  /// No description provided for @coupleChallenge37Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge37Location;
-
-  /// No description provided for @coupleChallenge37Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge37Timing;
-
-  /// No description provided for @coupleChallenge38Title.
-  ///
-  /// In es, this message translates to:
-  /// **'El sobre secreto'**
-  String get coupleChallenge38Title;
-
-  /// No description provided for @coupleChallenge38Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Uno prepara tres sobres con instrucciones para abrir por etapas: un look, un punto de encuentro y un cierre especial.\n\nLa magia está en la expectativa de no saber qué viene después.'**
-  String get coupleChallenge38Description;
-
-  /// No description provided for @coupleChallenge38Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Cada sobre es un \"te pensé\" esperando ser abierto.'**
-  String get coupleChallenge38Motivation;
-
-  /// No description provided for @coupleChallenge38Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Aventura'**
-  String get coupleChallenge38Category;
-
-  /// No description provided for @coupleChallenge38Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Sorpresa'**
-  String get coupleChallenge38Location;
-
-  /// No description provided for @coupleChallenge38Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Toda la tarde'**
-  String get coupleChallenge38Timing;
-
-  /// No description provided for @coupleChallenge39Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Propósitos al alba'**
-  String get coupleChallenge39Title;
-
-  /// No description provided for @coupleChallenge39Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Vayan a un lugar alto para ver salir el sol. Cuando aparezca el primer rayo, prometan una cosa chiquita para la relación.\n\nUn hábito, un deseo o un cambio para empezar con el nuevo día.'**
-  String get coupleChallenge39Description;
-
-  /// No description provided for @coupleChallenge39Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Cada amanecer es la oportunidad de empezar de nuevo.'**
-  String get coupleChallenge39Motivation;
-
-  /// No description provided for @coupleChallenge39Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Emocional'**
-  String get coupleChallenge39Category;
-
-  /// No description provided for @coupleChallenge39Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Exterior'**
-  String get coupleChallenge39Location;
-
-  /// No description provided for @coupleChallenge39Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Alba'**
-  String get coupleChallenge39Timing;
-
-  /// No description provided for @coupleChallenge40Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Construyendo paciencia'**
-  String get coupleChallenge40Title;
-
-  /// No description provided for @coupleChallenge40Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Pasen la tarde armando un rompecabezas lado a lado, con mate o vino cerca.\n\nEntre pieza y pieza, dejen que aparezcan charlas tranquilas y silencios cómodos.'**
-  String get coupleChallenge40Description;
-
-  /// No description provided for @coupleChallenge40Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Armar lo pequeño es practicar la paciencia para lo grande.'**
-  String get coupleChallenge40Motivation;
-
-  /// No description provided for @coupleChallenge40Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Relajado'**
-  String get coupleChallenge40Category;
-
-  /// No description provided for @coupleChallenge40Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge40Location;
-
-  /// No description provided for @coupleChallenge40Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Tarde'**
-  String get coupleChallenge40Timing;
-
-  /// No description provided for @coupleChallenge41Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Día de gratitud absoluta'**
-  String get coupleChallenge41Title;
-
-  /// No description provided for @coupleChallenge41Description.
-  ///
-  /// In es, this message translates to:
-  /// **'El desafío de hoy: pasar 24 horas sin quejarse. Cada vez que alguien se queje, lo compensa con algo que agradece.\n\nAl final del día, repasen todo lo bueno que registraron.'**
-  String get coupleChallenge41Description;
-
-  /// No description provided for @coupleChallenge41Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Cambiar el foco cambia la relación entera.'**
-  String get coupleChallenge41Motivation;
-
-  /// No description provided for @coupleChallenge41Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Emocional'**
-  String get coupleChallenge41Category;
-
-  /// No description provided for @coupleChallenge41Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Cualquier lugar'**
-  String get coupleChallenge41Location;
-
-  /// No description provided for @coupleChallenge41Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Todo el día'**
-  String get coupleChallenge41Timing;
-
-  /// No description provided for @coupleChallenge42Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Cápsula del tiempo'**
-  String get coupleChallenge42Title;
-
-  /// No description provided for @coupleChallenge42Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Elijan cinco objetos que representen su presente: una foto, un ticket, una nota. Guárdenlos en una caja y ciérrenla con fecha de apertura futura.\n\nEscriban una carta para ustedes del futuro contando cómo se sienten hoy.'**
-  String get coupleChallenge42Description;
-
-  /// No description provided for @coupleChallenge42Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Guardar el presente es dejarle un regalo al futuro.'**
-  String get coupleChallenge42Motivation;
-
-  /// No description provided for @coupleChallenge42Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Emocional'**
-  String get coupleChallenge42Category;
-
-  /// No description provided for @coupleChallenge42Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge42Location;
-
-  /// No description provided for @coupleChallenge42Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge42Timing;
-
-  /// No description provided for @coupleChallenge43Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Pintura a ciegas'**
-  String get coupleChallenge43Title;
-
-  /// No description provided for @coupleChallenge43Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Una persona se tapa los ojos y la otra la guía con la voz para dibujar líneas y colores en una hoja. Después inviertan roles.\n\nConfíen en la voz del otro y ríanse del resultado abstracto que crearon juntos.'**
-  String get coupleChallenge43Description;
-
-  /// No description provided for @coupleChallenge43Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'El amor también se pinta con los ojos cerrados.'**
-  String get coupleChallenge43Motivation;
-
-  /// No description provided for @coupleChallenge43Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Lúdico'**
-  String get coupleChallenge43Category;
-
-  /// No description provided for @coupleChallenge43Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge43Location;
-
-  /// No description provided for @coupleChallenge43Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Cualquier momento'**
-  String get coupleChallenge43Timing;
-
-  /// No description provided for @coupleChallenge44Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Nuestro propio Podcast'**
-  String get coupleChallenge44Title;
-
-  /// No description provided for @coupleChallenge44Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Grábense como si estuvieran haciendo un podcast. Elijan tema: su historia, un viaje o lo que les enseñó el amor.\n\nNo intenten sonar perfectos; intenten sonar reales. Guárdenlo como cápsula de voz.'**
-  String get coupleChallenge44Description;
-
-  /// No description provided for @coupleChallenge44Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Grabar la voz del amor es guardar una memoria viva.'**
-  String get coupleChallenge44Motivation;
-
-  /// No description provided for @coupleChallenge44Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Creativo'**
-  String get coupleChallenge44Category;
-
-  /// No description provided for @coupleChallenge44Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Tranquilo'**
-  String get coupleChallenge44Location;
-
-  /// No description provided for @coupleChallenge44Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Cualquier momento'**
-  String get coupleChallenge44Timing;
-
-  /// No description provided for @coupleChallenge45Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Mensajes diferidos'**
-  String get coupleChallenge45Title;
-
-  /// No description provided for @coupleChallenge45Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Cada uno escribe una carta para el otro, pero no la lean ahora. Intercámbienlas y fijen una fecha dentro de una semana para abrirlas.\n\nDisfruten la espera y la calma de saber que hay un mensaje de amor esperándolos.'**
-  String get coupleChallenge45Description;
-
-  /// No description provided for @coupleChallenge45Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'El amor también se escribe en tiempo diferido.'**
-  String get coupleChallenge45Motivation;
-
-  /// No description provided for @coupleChallenge45Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Emocional'**
-  String get coupleChallenge45Category;
-
-  /// No description provided for @coupleChallenge45Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge45Location;
-
-  /// No description provided for @coupleChallenge45Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge45Timing;
-
-  /// No description provided for @coupleChallenge46Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Proyección de recuerdos'**
-  String get coupleChallenge46Title;
-
-  /// No description provided for @coupleChallenge46Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Busquen fotos, videos y mensajes de cuando se conocieron. Miren juntos cuánto crecieron y qué obstáculos superaron.\n\nRedescubran el camino que los trajo hasta hoy.'**
-  String get coupleChallenge46Description;
-
-  /// No description provided for @coupleChallenge46Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Mirar atrás es la mejor forma de valorar el presente.'**
-  String get coupleChallenge46Motivation;
-
-  /// No description provided for @coupleChallenge46Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Emocional'**
-  String get coupleChallenge46Category;
-
-  /// No description provided for @coupleChallenge46Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge46Location;
-
-  /// No description provided for @coupleChallenge46Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge46Timing;
-
-  /// No description provided for @coupleChallenge47Title.
-  ///
-  /// In es, this message translates to:
-  /// **'El día del \"Sí\"'**
-  String get coupleChallenge47Title;
-
-  /// No description provided for @coupleChallenge47Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Por un día entero, la regla es decir sí a toda propuesta razonable del otro: helado, paseo, siesta.\n\nDéjense llevar por el flujo de un día sin tantos no.'**
-  String get coupleChallenge47Description;
-
-  /// No description provided for @coupleChallenge47Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'La estructura cansa, la fluidez conecta.'**
-  String get coupleChallenge47Motivation;
-
-  /// No description provided for @coupleChallenge47Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Lúdico'**
-  String get coupleChallenge47Category;
-
-  /// No description provided for @coupleChallenge47Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Cualquier lugar'**
-  String get coupleChallenge47Location;
-
-  /// No description provided for @coupleChallenge47Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Todo el día'**
-  String get coupleChallenge47Timing;
-
-  /// No description provided for @coupleChallenge48Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Brindis por el futuro'**
-  String get coupleChallenge48Title;
-
-  /// No description provided for @coupleChallenge48Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Preparen su bebida favorita y brinden mirándose a los ojos. Anoten una intención para la etapa que viene: un viaje o una meta compartida.\n\nSellen el brindis con una sonrisa que diga \"gracias por estar\".'**
-  String get coupleChallenge48Description;
-
-  /// No description provided for @coupleChallenge48Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Brindar por lo que viene es honrar lo que ya son.'**
-  String get coupleChallenge48Motivation;
-
-  /// No description provided for @coupleChallenge48Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Emocional'**
-  String get coupleChallenge48Category;
-
-  /// No description provided for @coupleChallenge48Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Cualquier lugar'**
-  String get coupleChallenge48Location;
-
-  /// No description provided for @coupleChallenge48Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche'**
-  String get coupleChallenge48Timing;
-
-  /// No description provided for @coupleChallenge49Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Cocina experimental'**
-  String get coupleChallenge49Title;
-
-  /// No description provided for @coupleChallenge49Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Elijan tres ingredientes al azar que ya tengan en casa e intenten crear un plato nuevo juntos.\n\nSin buscar recetas: usen intuición, prueben sobre la marcha y ríanse si sale raro.'**
-  String get coupleChallenge49Description;
-
-  /// No description provided for @coupleChallenge49Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'El sabor de lo improvisado siempre tiene un toque especial.'**
-  String get coupleChallenge49Motivation;
-
-  /// No description provided for @coupleChallenge49Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Creativo'**
-  String get coupleChallenge49Category;
-
-  /// No description provided for @coupleChallenge49Location.
-  ///
-  /// In es, this message translates to:
-  /// **'Cocina'**
-  String get coupleChallenge49Location;
-
-  /// No description provided for @coupleChallenge49Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Almuerzo/Cena'**
-  String get coupleChallenge49Timing;
-
-  /// No description provided for @coupleChallenge50Title.
-  ///
-  /// In es, this message translates to:
-  /// **'Muro de los deseos'**
-  String get coupleChallenge50Title;
-
-  /// No description provided for @coupleChallenge50Description.
-  ///
-  /// In es, this message translates to:
-  /// **'Peguen notas con deseos, agradecimientos o metas en una pared o espejo. Dejen que ese muro crezca durante la semana.\n\nAl final, lean cada nota y guárdenlas como testigos de sus intenciones.'**
-  String get coupleChallenge50Description;
-
-  /// No description provided for @coupleChallenge50Motivation.
-  ///
-  /// In es, this message translates to:
-  /// **'Hacer visible el deseo es empezar a cumplirlo.'**
-  String get coupleChallenge50Motivation;
-
-  /// No description provided for @coupleChallenge50Category.
-  ///
-  /// In es, this message translates to:
-  /// **'Detallista'**
-  String get coupleChallenge50Category;
-
-  /// No description provided for @coupleChallenge50Location.
-  ///
-  /// In es, this message translates to:
-  /// **'En casa'**
-  String get coupleChallenge50Location;
-
-  /// No description provided for @coupleChallenge50Timing.
-  ///
-  /// In es, this message translates to:
-  /// **'Toda la semana'**
-  String get coupleChallenge50Timing;
 
   /// No description provided for @rewardCategoryTreats.
   ///
@@ -14572,209 +12388,11 @@ abstract class AppLocalizations {
   /// **'Tu pareja te mandó una nota de amor ❤️'**
   String get notifLoveNoteBody;
 
-  /// Titulo del bloque del fondo compartido en el espacio de pareja.
-  ///
-  /// In es, this message translates to:
-  /// **'Nuestro fondo'**
-  String get coupleFundTitle;
-
-  /// No description provided for @coupleFundEyebrow.
-  ///
-  /// In es, this message translates to:
-  /// **'LO QUE JUNTAN'**
-  String get coupleFundEyebrow;
-
-  /// Saldo del fondo. Monedas simbolicas, nunca dinero real.
-  ///
-  /// In es, this message translates to:
-  /// **'{amount} sumadas'**
-  String coupleFundBalance(int amount);
-
-  /// No description provided for @coupleFundWeekAdded.
-  ///
-  /// In es, this message translates to:
-  /// **'{count, plural, =0{Esta semana todavía no sumaron} =1{Esta semana sumaron 1} other{Esta semana sumaron {count}}}'**
-  String coupleFundWeekAdded(int count);
-
-  /// Ritmo del hogar: semanas activas sobre la ventana. Nunca 'racha'.
-  ///
-  /// In es, this message translates to:
-  /// **'activos {weeks} de las últimas {window} semanas'**
-  String coupleFundRhythm(int weeks, int window);
-
-  /// No description provided for @coupleFundNoGoalTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Todavía no eligieron meta'**
-  String get coupleFundNoGoalTitle;
-
-  /// No description provided for @coupleFundNoGoalBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Elijan juntos algo para celebrar. Cada tarea que completan lo acerca.'**
-  String get coupleFundNoGoalBody;
-
-  /// No description provided for @coupleFundChooseGoal.
-  ///
-  /// In es, this message translates to:
-  /// **'Elegir meta'**
-  String get coupleFundChooseGoal;
-
-  /// No description provided for @coupleFundChangeGoal.
-  ///
-  /// In es, this message translates to:
-  /// **'Cambiar meta'**
-  String get coupleFundChangeGoal;
-
-  /// No description provided for @coupleFundToGoal.
-  ///
-  /// In es, this message translates to:
-  /// **'{current} / {cost} → {title}'**
-  String coupleFundToGoal(int current, int cost, String title);
-
-  /// No description provided for @coupleFundRemaining.
-  ///
-  /// In es, this message translates to:
-  /// **'{count, plural, =1{Falta 1 para llegar} other{Faltan {count} para llegar}}'**
-  String coupleFundRemaining(int count);
-
-  /// No description provided for @coupleFundReadyTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Llegaron a la meta!'**
-  String get coupleFundReadyTitle;
-
-  /// No description provided for @coupleFundReadyBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Elijan juntos cómo quieren celebrarlo.'**
-  String get coupleFundReadyBody;
-
-  /// No description provided for @coupleFundConfirm.
-  ///
-  /// In es, this message translates to:
-  /// **'Confirmar'**
-  String get coupleFundConfirm;
-
-  /// No description provided for @coupleFundConfirmed.
-  ///
-  /// In es, this message translates to:
-  /// **'Confirmaste'**
-  String get coupleFundConfirmed;
-
-  /// No description provided for @coupleFundWithdrawConfirm.
-  ///
-  /// In es, this message translates to:
-  /// **'Retirar mi confirmación'**
-  String get coupleFundWithdrawConfirm;
-
-  /// No description provided for @coupleFundWaitingOthers.
-  ///
-  /// In es, this message translates to:
-  /// **'{count, plural, =1{Falta 1 confirmación} other{Faltan {count} confirmaciones}}'**
-  String coupleFundWaitingOthers(int count);
-
-  /// No description provided for @coupleFundUnlockedMessage.
-  ///
-  /// In es, this message translates to:
-  /// **'Desbloquearon la meta. Quedó una propuesta para acordar cuándo.'**
-  String get coupleFundUnlockedMessage;
-
-  /// No description provided for @coupleFundPickerTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'¿Qué quieren desbloquear?'**
-  String get coupleFundPickerTitle;
-
-  /// No description provided for @coupleFundPickerSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Una meta por vez. Pueden cambiarla cuando quieran, sin perder lo que juntaron.'**
-  String get coupleFundPickerSubtitle;
-
-  /// No description provided for @coupleFundCustomOption.
-  ///
-  /// In es, this message translates to:
-  /// **'Crear una a medida'**
-  String get coupleFundCustomOption;
-
-  /// No description provided for @coupleFundCustomTitleLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'¿Qué quieren celebrar?'**
-  String get coupleFundCustomTitleLabel;
-
-  /// No description provided for @coupleFundCustomCostLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Meta'**
-  String get coupleFundCustomCostLabel;
-
-  /// No description provided for @coupleFundCustomCostHelper.
-  ///
-  /// In es, this message translates to:
-  /// **'Entre 50 y 2000'**
-  String get coupleFundCustomCostHelper;
-
-  /// No description provided for @coupleFundSave.
-  ///
-  /// In es, this message translates to:
-  /// **'Definir meta'**
-  String get coupleFundSave;
-
-  /// No description provided for @coupleFundError.
-  ///
-  /// In es, this message translates to:
-  /// **'No pudimos actualizar el fondo'**
-  String get coupleFundError;
-
-  /// No description provided for @coupleFundFromGoalBadge.
-  ///
-  /// In es, this message translates to:
-  /// **'Del fondo'**
-  String get coupleFundFromGoalBadge;
-
-  /// No description provided for @coupleFundCatalogMovieNight.
-  ///
-  /// In es, this message translates to:
-  /// **'Noche de cine en casa'**
-  String get coupleFundCatalogMovieNight;
-
-  /// No description provided for @coupleFundCatalogPicnic.
-  ///
-  /// In es, this message translates to:
-  /// **'Picnic'**
-  String get coupleFundCatalogPicnic;
-
-  /// No description provided for @coupleFundCatalogDinnerOut.
-  ///
-  /// In es, this message translates to:
-  /// **'Cena afuera'**
-  String get coupleFundCatalogDinnerOut;
-
-  /// No description provided for @coupleFundCatalogDayTrip.
-  ///
-  /// In es, this message translates to:
-  /// **'Escapada de un día'**
-  String get coupleFundCatalogDayTrip;
-
-  /// No description provided for @coupleFundCatalogWeekendAway.
-  ///
-  /// In es, this message translates to:
-  /// **'Escapada de fin de semana'**
-  String get coupleFundCatalogWeekendAway;
-
   /// No description provided for @contributionTitle.
   ///
   /// In es, this message translates to:
   /// **'Cómo se repartió'**
   String get contributionTitle;
-
-  /// No description provided for @contributionEyebrow.
-  ///
-  /// In es, this message translates to:
-  /// **'LA SEMANA'**
-  String get contributionEyebrow;
 
   /// No description provided for @contributionEmpty.
   ///
@@ -14794,12 +12412,6 @@ abstract class AppLocalizations {
   /// **'{weeks} de las últimas {window} semanas'**
   String contributionRhythmValue(int weeks, int window);
 
-  /// No description provided for @contributionRhythmHint.
-  ///
-  /// In es, this message translates to:
-  /// **'No es una racha: una semana tranquila lo baja sin romper nada.'**
-  String get contributionRhythmHint;
-
   /// No description provided for @contributionTasksLabel.
   ///
   /// In es, this message translates to:
@@ -14812,23 +12424,593 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{ninguna de las pesadas} =1{1 de las pesadas} other{{count} de las pesadas}}'**
   String contributionDemandingLabel(int count);
 
-  /// Lectura accionable, nunca un puntaje ni un reproche.
+  /// Encabezado de la pestaña Pareja con el lunes de la semana en curso.
   ///
   /// In es, this message translates to:
-  /// **'Las de {category} cayeron siempre del mismo lado.'**
-  String contributionSkewed(String category);
+  /// **'Semana del {date}'**
+  String coupleWeekOf(String date);
 
-  /// No description provided for @contributionBalanced.
+  /// No description provided for @coupleWeekYou.
   ///
   /// In es, this message translates to:
-  /// **'Esta semana se repartió parejo.'**
-  String get contributionBalanced;
+  /// **'Vos'**
+  String get coupleWeekYou;
 
-  /// No description provided for @contributionNoDurationNote.
+  /// No description provided for @coupleWeekSplitSemantics.
   ///
   /// In es, this message translates to:
-  /// **'El reparto se mide en tareas y en cuántas de las pesadas tomó cada uno.'**
-  String get contributionNoDurationNote;
+  /// **'Reparto de la semana: vos {mine}, {name} {theirs}.'**
+  String coupleWeekSplitSemantics(int mine, String name, int theirs);
+
+  /// No description provided for @coupleWeekReadingBalanced.
+  ///
+  /// In es, this message translates to:
+  /// **'Viene parejo: se repartieron bien la semana.'**
+  String get coupleWeekReadingBalanced;
+
+  /// Lectura accionable, nunca un reproche.
+  ///
+  /// In es, this message translates to:
+  /// **'{category}: esta semana lo hizo casi todo {name}.'**
+  String coupleWeekReadingCategoryPartner(String category, String name);
+
+  /// No description provided for @coupleWeekReadingCategoryMe.
+  ///
+  /// In es, this message translates to:
+  /// **'{category}: esta semana lo hiciste casi todo vos.'**
+  String coupleWeekReadingCategoryMe(String category);
+
+  /// No description provided for @coupleWeekReadingOverallPartner.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta semana la mayoría de las tareas las hizo {name}.'**
+  String coupleWeekReadingOverallPartner(String name);
+
+  /// No description provided for @coupleWeekReadingOverallMe.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta semana la mayoría de las tareas las hiciste vos.'**
+  String get coupleWeekReadingOverallMe;
+
+  /// No description provided for @coupleWeekProposeTurns.
+  ///
+  /// In es, this message translates to:
+  /// **'Proponer turnarse'**
+  String get coupleWeekProposeTurns;
+
+  /// No description provided for @coupleWeekOfferHand.
+  ///
+  /// In es, this message translates to:
+  /// **'Ofrecer una mano'**
+  String get coupleWeekOfferHand;
+
+  /// Propuesta pre-redactada; la persona la puede editar antes de mandarla.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Nos turnamos con {category}?'**
+  String coupleWeekTurnsProposalTitle(String category);
+
+  /// No description provided for @coupleWeekOfferProposalTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta semana me encargo yo de {category}'**
+  String coupleWeekOfferProposalTitle(String category);
+
+  /// No description provided for @coupleWeekTurnsProposalTitleGeneral.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Nos repartimos mejor las tareas de la semana?'**
+  String get coupleWeekTurnsProposalTitleGeneral;
+
+  /// No description provided for @coupleWeekOfferProposalTitleGeneral.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta semana me pongo con más tareas'**
+  String get coupleWeekOfferProposalTitleGeneral;
+
+  /// No description provided for @coupleWeekSeeTasks.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver tareas'**
+  String get coupleWeekSeeTasks;
+
+  /// No description provided for @coupleWeekRemaining.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{No queda nada pendiente esta semana} =1{Queda 1 tarea para esta semana} other{Quedan {count} tareas para esta semana}}'**
+  String coupleWeekRemaining(int count);
+
+  /// No description provided for @coupleWeekOverdue.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 vencida} other{{count} vencidas}}'**
+  String coupleWeekOverdue(int count);
+
+  /// No description provided for @coupleWeekMoneyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'La plata'**
+  String get coupleWeekMoneyTitle;
+
+  /// No description provided for @coupleWeekMoneySeeAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver movimientos'**
+  String get coupleWeekMoneySeeAll;
+
+  /// No description provided for @coupleWeekMoneyEven.
+  ///
+  /// In es, this message translates to:
+  /// **'Están a mano.'**
+  String get coupleWeekMoneyEven;
+
+  /// No description provided for @coupleWeekMoneyYouOwe.
+  ///
+  /// In es, this message translates to:
+  /// **'Le debés {amount} a {name}.'**
+  String coupleWeekMoneyYouOwe(String amount, String name);
+
+  /// No description provided for @coupleWeekMoneyTheyOwe.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} te debe {amount}.'**
+  String coupleWeekMoneyTheyOwe(String name, String amount);
+
+  /// No description provided for @coupleWeekMoneyPaid.
+  ///
+  /// In es, this message translates to:
+  /// **'Este mes pusiste {mine} y {name} puso {theirs} en gastos compartidos.'**
+  String coupleWeekMoneyPaid(String mine, String name, String theirs);
+
+  /// No description provided for @coupleWeekMoneyNoExpenses.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no cargaron gastos compartidos este mes.'**
+  String get coupleWeekMoneyNoExpenses;
+
+  /// No description provided for @coupleWeekMoneySharedTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'Este mes gastaron {amount} entre los dos.'**
+  String coupleWeekMoneySharedTotal(String amount);
+
+  /// No description provided for @coupleWeekMoneySharedPaid.
+  ///
+  /// In es, this message translates to:
+  /// **'Pagaste {mine} · {name} pagó {theirs}'**
+  String coupleWeekMoneySharedPaid(String mine, String name, String theirs);
+
+  /// No description provided for @coupleWeekMoneySettle.
+  ///
+  /// In es, this message translates to:
+  /// **'Saldar'**
+  String get coupleWeekMoneySettle;
+
+  /// No description provided for @coupleWeekMoneyRecordPayment.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrar pago'**
+  String get coupleWeekMoneyRecordPayment;
+
+  /// No description provided for @coupleWeekMoneyError.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar la plata de este mes.'**
+  String get coupleWeekMoneyError;
+
+  /// No description provided for @coupleWeekAsksTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Entre ustedes'**
+  String get coupleWeekAsksTitle;
+
+  /// No description provided for @coupleWeekAsksSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Planes, pedidos y charlas pendientes. Siempre se puede decir “ahora no”.'**
+  String get coupleWeekAsksSubtitle;
+
+  /// No description provided for @coupleWeekAsksEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Nada pendiente entre ustedes.'**
+  String get coupleWeekAsksEmpty;
+
+  /// No description provided for @coupleWeekAsksEmptyHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Para pedir una mano o proponer un plan, tocá “{action}”.'**
+  String coupleWeekAsksEmptyHint(String action);
+
+  /// No description provided for @coupleWeekAskToAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Te toca responder'**
+  String get coupleWeekAskToAnswer;
+
+  /// No description provided for @coupleWeekAskWaiting.
+  ///
+  /// In es, this message translates to:
+  /// **'Esperando a {name}'**
+  String coupleWeekAskWaiting(String name);
+
+  /// No description provided for @coupleWeekAskFrom.
+  ///
+  /// In es, this message translates to:
+  /// **'De {name} · {when}'**
+  String coupleWeekAskFrom(String name, String when);
+
+  /// No description provided for @coupleWeekAskFromYou.
+  ///
+  /// In es, this message translates to:
+  /// **'Tuya · {when}'**
+  String coupleWeekAskFromYou(String when);
+
+  /// No description provided for @coupleWeekNoteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Una nota para {name}'**
+  String coupleWeekNoteTitle(String name);
+
+  /// No description provided for @coupleWeekNoteBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Le llega como un sobre al inicio de su app.'**
+  String get coupleWeekNoteBody;
+
+  /// No description provided for @coupleProposalPushTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} te propuso algo'**
+  String coupleProposalPushTitle(String name);
+
+  /// No description provided for @coupleProposalAnsweredPushTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} respondió tu propuesta'**
+  String coupleProposalAnsweredPushTitle(String name);
+
+  /// No description provided for @coupleProposalAnsweredPushBody.
+  ///
+  /// In es, this message translates to:
+  /// **'{answer}: {title}'**
+  String coupleProposalAnsweredPushBody(String answer, String title);
+
+  /// No description provided for @loveNotePushTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'💌 {name} te dejó una nota'**
+  String loveNotePushTitle(String name);
+
+  /// No description provided for @loveNotePushBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrí HomeSync para leerla.'**
+  String get loveNotePushBody;
+
+  /// No description provided for @loveNoteEnvelopeFrom.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} te escribió'**
+  String loveNoteEnvelopeFrom(String name);
+
+  /// No description provided for @loveNoteEnvelopeSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardada en el hogar'**
+  String get loveNoteEnvelopeSaved;
+
+  /// No description provided for @partnerInviteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Esto se disfruta de a dos'**
+  String get partnerInviteTitle;
+
+  /// No description provided for @partnerInviteBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuando se sume tu pareja, acá van a ver cómo se repartió la semana, la plata entre ustedes y lo que se proponen.'**
+  String get partnerInviteBody;
+
+  /// No description provided for @partnerInviteCodeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Código para tu pareja'**
+  String get partnerInviteCodeLabel;
+
+  /// No description provided for @partnerInviteCodeSemantics.
+  ///
+  /// In es, this message translates to:
+  /// **'Código de invitación {code}. Tocá para copiarlo.'**
+  String partnerInviteCodeSemantics(String code);
+
+  /// No description provided for @partnerInviteShare.
+  ///
+  /// In es, this message translates to:
+  /// **'Invitar por WhatsApp'**
+  String get partnerInviteShare;
+
+  /// No description provided for @partnerInviteShareOther.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir por otra app'**
+  String get partnerInviteShareOther;
+
+  /// No description provided for @partnerInviteCopy.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar código'**
+  String get partnerInviteCopy;
+
+  /// No description provided for @partnerInviteMessageCopied.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiamos la invitación: pegala donde quieras.'**
+  String get partnerInviteMessageCopied;
+
+  /// No description provided for @partnerInviteHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Tiene que bajar HomeSync, tocar “Tengo un código” y poner este.'**
+  String get partnerInviteHint;
+
+  /// No description provided for @partnerInviteHomeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Falta que se sume tu pareja'**
+  String get partnerInviteHomeTitle;
+
+  /// No description provided for @partnerInviteHomeBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Mandale el código y empiecen a repartir tareas y gastos.'**
+  String get partnerInviteHomeBody;
+
+  /// No description provided for @partnerInviteHomeAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Invitar'**
+  String get partnerInviteHomeAction;
+
+  /// Mensaje completo de invitación para WhatsApp u otras apps. Incluye el link a la tienda.
+  ///
+  /// In es, this message translates to:
+  /// **'{intro}\n\n1. Bajate HomeSync: {link}\n2. Tocá “Tengo un código” y poné: *{code}*'**
+  String invitationShareMessage(String intro, String link, String code);
+
+  /// No description provided for @setupStartTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tareas y gastos de la casa, parejos.'**
+  String get setupStartTitle;
+
+  /// No description provided for @setupStartBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Repartan las tareas, anoten quién pagó qué y vean cómo quedan, sin planillas ni discusiones.'**
+  String get setupStartBody;
+
+  /// No description provided for @setupStartBulletTasks.
+  ///
+  /// In es, this message translates to:
+  /// **'Las tareas de la casa, a la vista de los dos'**
+  String get setupStartBulletTasks;
+
+  /// No description provided for @setupStartBulletMoney.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastos compartidos y el saldo siempre al día'**
+  String get setupStartBulletMoney;
+
+  /// No description provided for @setupStartBulletWeek.
+  ///
+  /// In es, this message translates to:
+  /// **'Un repaso semanal de cómo se repartieron'**
+  String get setupStartBulletWeek;
+
+  /// No description provided for @setupStartCreate.
+  ///
+  /// In es, this message translates to:
+  /// **'Empezar mi hogar'**
+  String get setupStartCreate;
+
+  /// No description provided for @setupStartJoin.
+  ///
+  /// In es, this message translates to:
+  /// **'Tengo un código'**
+  String get setupStartJoin;
+
+  /// No description provided for @setupStartJoinTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Unirte a un hogar'**
+  String get setupStartJoinTitle;
+
+  /// No description provided for @setupStartJoinBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Poné el código de 6 caracteres que te mandaron.'**
+  String get setupStartJoinBody;
+
+  /// No description provided for @setupStartJoinNameLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo te llamás?'**
+  String get setupStartJoinNameLabel;
+
+  /// No description provided for @setupStartJoinCodeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Código'**
+  String get setupStartJoinCodeLabel;
+
+  /// No description provided for @setupStartJoinButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Unirme'**
+  String get setupStartJoinButton;
+
+  /// No description provided for @setupStartTime.
+  ///
+  /// In es, this message translates to:
+  /// **'Te lleva menos de un minuto.'**
+  String get setupStartTime;
+
+  /// No description provided for @setupHouseholdTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Contanos de tu casa'**
+  String get setupHouseholdTitle;
+
+  /// No description provided for @setupHouseholdSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Con esto adaptamos la app a cómo viven.'**
+  String get setupHouseholdSubtitle;
+
+  /// No description provided for @setupHouseholdModeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Con quién compartís la casa?'**
+  String get setupHouseholdModeLabel;
+
+  /// No description provided for @setupHouseholdNameLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu nombre'**
+  String get setupHouseholdNameLabel;
+
+  /// No description provided for @setupHouseholdFinanceNote.
+  ///
+  /// In es, this message translates to:
+  /// **'Arrancan dividiendo los gastos 50/50. Lo pueden cambiar cuando quieran en Ajustes.'**
+  String get setupHouseholdFinanceNote;
+
+  /// No description provided for @setupFamilyHouseholdNameFor.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} y familia'**
+  String setupFamilyHouseholdNameFor(String name);
+
+  /// No description provided for @setupInviteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, couple{Sumá a tu pareja} family{Sumá a tu familia} friends{Sumá a quienes viven con vos} other{Sumá a alguien más}}'**
+  String setupInviteTitle(String mode);
+
+  /// No description provided for @setupInviteBody.
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, couple{HomeSync funciona de a dos: cuando se sume, van a ver las tareas, la plata y el repaso de la semana juntos.} family{Cuando se sumen, cada uno va a ver lo que le toca y lo que se comparte.} friends{Cuando se sumen, van a tener las tareas y las cuentas claras entre todos.} other{Compartí el código para que se sumen a tu hogar.}}'**
+  String setupInviteBody(String mode);
+
+  /// No description provided for @setupInviteCodeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu código de invitación'**
+  String get setupInviteCodeLabel;
+
+  /// No description provided for @setupInviteHint.
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, family{Tienen que bajar HomeSync, tocar “Tengo un código” y poner este.} friends{Tienen que bajar HomeSync, tocar “Tengo un código” y poner este.} other{Tiene que bajar HomeSync, tocar “Tengo un código” y poner este.}}'**
+  String setupInviteHint(String mode);
+
+  /// No description provided for @setupInviteLater.
+  ///
+  /// In es, this message translates to:
+  /// **'Lo hago después'**
+  String get setupInviteLater;
+
+  /// No description provided for @setupInviteDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Listo, ya lo mandé'**
+  String get setupInviteDone;
+
+  /// No description provided for @homeNextStepExpenseTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Carguen el primer gasto compartido'**
+  String get homeNextStepExpenseTitle;
+
+  /// No description provided for @homeNextStepExpenseBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Así la app lleva la cuenta de quién puso qué.'**
+  String get homeNextStepExpenseBody;
+
+  /// No description provided for @homeNextStepExpenseAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargar'**
+  String get homeNextStepExpenseAction;
+
+  /// No description provided for @premiumProductsUnavailableTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar los planes'**
+  String get premiumProductsUnavailableTitle;
+
+  /// No description provided for @premiumProductsUnavailableBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisá tu conexión y probá de nuevo. Si ya pagaste, restaurá tu compra.'**
+  String get premiumProductsUnavailableBody;
+
+  /// No description provided for @premiumRestoreNothing.
+  ///
+  /// In es, this message translates to:
+  /// **'No encontramos compras para restaurar.'**
+  String get premiumRestoreNothing;
+
+  /// No description provided for @premiumRestoreError.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos restaurar la compra. Probá de nuevo.'**
+  String get premiumRestoreError;
+
+  /// Reading on the couple week card when only a few tasks (1-3) were done this week, too few to judge the split. Never a reproach.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{Va 1 tarea esta semana: es temprano para leer el reparto.} other{Van {count} tareas esta semana: es temprano para leer el reparto.}}'**
+  String coupleWeekReadingEarly(int count);
+
+  /// Action on the couple Home balance card when the partner owes the current user: records that the partner already paid them back.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrar pago'**
+  String get balanceCardRecordPaymentButton;
+
+  /// Inline error on the couple Home when the recent activity feed fails to load. Shown next to a Retry button.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar la actividad.'**
+  String get homeActivityLoadError;
+
+  /// Inline error on the Finances tab when the monthly summary card fails to load. Shown next to a Retry button.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar el resumen del mes.'**
+  String get expensesSummaryLoadError;
+
+  /// Inline error on the Finances tab when the transactions list fails to load. Shown next to a Retry button.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar los movimientos.'**
+  String get expensesFeedLoadError;
+
+  /// Premium benefit title on the paywall: per-category budgets plus the end-of-month recap. Replaced the old 'Advanced stats' benefit, which had no Premium feature behind it.
+  ///
+  /// In es, this message translates to:
+  /// **'Presupuestos y resumen del mes'**
+  String get premiumBenefitBudgetsRecap;
+
+  /// Premium benefit description on the paywall for budgets and the monthly recap.
+  ///
+  /// In es, this message translates to:
+  /// **'Poné topes por categoría y mirá el cierre de cada mes: en qué se fue la plata y quién puso qué.'**
+  String get premiumBenefitBudgetsRecapDesc;
 }
 
 class _AppLocalizationsDelegate

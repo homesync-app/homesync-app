@@ -112,7 +112,7 @@
       }
     }
   },
-  "householdSocialHubSubtitle": "{type, select, couple{Challenges, prizes, and little rewards to share.} family{Coordination, members, and household agreements for the whole family.} friends{Organization, shared living, and clear splits for your place.} solo{All your personal progress in one place.} other{All your personal progress in one place.}}",
+  "householdSocialHubSubtitle": "{type, select, couple{Your week, the money between you and what you plan together.} family{Coordination, members, and household agreements for the whole family.} friends{Organization, shared living, and clear splits for your place.} solo{All your personal progress in one place.} other{All your personal progress in one place.}}",
   "@householdSocialHubSubtitle": {
     "description": "Subtitle on the social hub screen. Tone: couple romantic; family parental/coordinative; friends casual peer; solo individual.",
     "placeholders": {
@@ -229,10 +229,6 @@
   "settingsPremiumFeatureRecurringPayments": "Recurring payments (subscriptions)",
   "@settingsPremiumFeatureRecurringPayments": {
     "description": "Premium feature label: scheduled/recurring expenses like Netflix, gym, etc."
-  },
-  "settingsPremiumFeatureLoveNotes": "Love notes on dashboard",
-  "@settingsPremiumFeatureLoveNotes": {
-    "description": "Premium feature label: small love notes between partners on the dashboard. Couple-mode only feature."
   },
   "settingsPremiumFeatureExclusiveAvatars": "Exclusive avatars",
   "@settingsPremiumFeatureExclusiveAvatars": {
@@ -407,7 +403,8 @@
   "invitationLoadError": "We couldn't generate the invitation code.",
   "@invitationLoadError": {
     "description": "Recoverable inline error shown when the household invitation code cannot be generated."
-  },  "commonErrorWithDetails": "Error: {message}",
+  },
+  "commonErrorWithDetails": "Error: {message}",
   "@commonErrorWithDetails": {
     "description": "Generic technical error shown to the user. {message} is the raw exception text — usually English/technical, not localizable.",
     "placeholders": {
@@ -1418,46 +1415,10 @@
       }
     }
   },
-  "setupValuePropEyebrow": "Your home, in sync",
-  "@setupValuePropEyebrow": {
-    "description": "Tiny eyebrow label above the brand name on the first wizard screen."
-  },
-  "setupValuePropTagline": "The best-organized home starts here.",
-  "setupValuePropStartButton": "Get started",
-  "setupValuePropTimeHint": "Takes less than 2 minutes",
-  "setupFeatureTasksTitle": "Shared tasks",
-  "setupFeatureTasksDesc": "Organize household tasks and split responsibilities without friction.",
-  "setupFeatureExpensesTitle": "Expenses as a team",
-  "setupFeatureExpensesDesc": "Log expenses, split bills, and keep the balance crystal clear.",
-  "setupFeatureGamificationTitle": "Real gamification",
-  "setupFeatureGamificationDesc": "Turn daily organization into progress, rewards, and motivation.",
-  "setupFeatureShoppingTitle": "Synced shopping",
-  "setupFeatureShoppingDesc": "Real-time shared lists so nobody buys the same thing twice.",
-  "setupWelcomeTitle": "Welcome!",
-  "setupWelcomeBody": "Let's get your home ready to start with shared tasks, expenses, and shopping from day one.",
-  "setupWelcomeBulletQuick": "Quick setup, under 1 minute.",
-  "setupWelcomeBulletJoin": "Create a new home or join with an invite code.",
-  "setupWelcomeStartButton": "Set up my home",
-  "setupProfileEyebrow": "Your profile",
-  "setupProfileTitle": "What's your name?",
-  "setupProfileSubtitle": "Customize your profile so your team can recognize you.",
-  "setupProfileGoogleAvatarHint": "We're using your Google photo as a starting point. You can swap it for one of our avatars if you want.",
-  "setupProfileEmptyAvatarHint": "Pick an avatar and a name to start with a clear identity in your home.",
   "setupProfileAvatarLabel": "Avatar",
-  "setupModePickerEyebrow": "Household type",
-  "setupModePickerTitle": "Let's begin!",
-  "setupModePickerSubtitle": "How are you going to organize your home?",
   "setupSignOutLink": "Sign out",
   "@setupSignOutLink": {
     "description": "Tiny sign-out link below the mode picker in the setup wizard. Source uses lowercase 'sesión' (with accent) — distinct from the bigger Settings logout button."
-  },
-  "setupSeeFeaturesLink": "See features",
-  "@setupSeeFeaturesLink": {
-    "description": "Tiny link to go back to the value-prop screen from the mode picker."
-  },
-  "setupHouseholdDefaultName": "My Home",
-  "@setupHouseholdDefaultName": {
-    "description": "Fallback household name when the user didn't enter one."
   },
   "setupFamilyDefaultName": "My family",
   "@setupFamilyDefaultName": {
@@ -1471,49 +1432,6 @@
   "@setupSnackCodeCopied": {
     "description": "Toast after copying the household invite code."
   },
-  "setupSnackWhatsappFailed": "Couldn't open WhatsApp. Code copied.",
-  "setupJoinCodeTitle": "Enter the code",
-  "@setupJoinCodeTitle": {
-    "description": "Heading above the 6-letter invite code input on the join flow."
-  },
-  "setupConnectEyebrow": "Connect your home",
-  "setupConnectTitle": "Connect your home",
-  "setupConnectSubtitle": "Create a new team or join with an invite code.",
-  "setupConnectCreateTitle": "Create a new home",
-  "setupConnectCreateDesc": "Generate a code to invite the people you share this place with.",
-  "setupConnectJoinTitle": "I have a code",
-  "setupConnectJoinDesc": "Enter the code to join the household.",
-  "setupConnectCodeInputLabel": "Enter the code",
-  "setupConnectCreateButton": "Create my home",
-  "setupConnectJoinButton": "Join now",
-  "setupConnectBackButton": "Go back",
-  "setupInvitationEyebrow": "Invitation",
-  "setupInvitationTitle": "{mode, select, family{Family created} friends{Place created} couple{Home created} solo{Home created} other{Home created}}",
-  "@setupInvitationTitle": {
-    "description": "Heading on the invite-code result step. family = whole family; friends = shared place/roommates; couple/solo show 'Home created'.",
-    "placeholders": {
-      "mode": {
-        "type": "String"
-      }
-    }
-  },
-  "setupInvitationSubtitle": "{mode, select, family{Share this code with everyone who's part of the household.} friends{Share this code with your housemates.} couple{Share this code to invite the other person.} solo{Share this code to invite the other person.} other{Share this code to invite the other person.}}",
-  "@setupInvitationSubtitle": {
-    "placeholders": {
-      "mode": {
-        "type": "String"
-      }
-    }
-  },
-  "setupInvitationCodeEyebrow": "INVITATION CODE",
-  "setupInvitationFooter": "You can copy or share it now. You'll also find it later in settings.",
-  "setupInvitationCopyButton": "Copy",
-  "setupInvitationShareButton": "Share",
-  "setupFamilyBaseEyebrow": "Family base",
-  "setupFamilyBaseTitle": "Family household basics",
-  "setupFamilyBaseSubtitle": "Before we start, let's define how this family is organized.",
-  "setupFamilyHouseholdNameLabel": "Household name",
-  "setupFamilyHouseholdNameHint": "E.g.: The Smith House",
   "setupFamilyRoleLabel": "Your visible role",
   "setupFamilyRoleFather": "Father",
   "setupFamilyRoleMother": "Mother",
@@ -1522,47 +1440,7 @@
   "@setupFamilyRoleTeen": {
     "description": "Family role label. Note: backend stores the Spanish string as-is for back-compat; UI overrides only the displayed label."
   },
-  "setupSaveAndContinue": "Save and continue",
-  "setupConfigureLater": "Set up later",
-  "setupExpensesEyebrow": "Household expenses",
-  "setupExpensesTitle": "Splitting expenses",
-  "setupFriendsExpensesSubtitle": "In a shared place, the simplest approach is splitting everything evenly.",
-  "setupFriendsExpensesCardTitle": "Equal split",
-  "setupFriendsExpensesCardBody": "Each housemate pays the same share. You can adjust individual expenses later.",
-  "setupFriendsExpensesTipTitle": "Equal by default",
-  "setupFriendsExpensesTipDesc": "Best for housemates sharing place-related expenses.",
-  "setupCoupleFamilyExpensesSubtitle": "{mode, select, couple{Let's set up a simple base for splitting expenses as a couple.} other{Let's set up a simple base for splitting shared expenses.}}",
-  "@setupCoupleFamilyExpensesSubtitle": {
-    "placeholders": {
-      "mode": {
-        "type": "String"
-      }
-    }
-  },
-  "setupCoupleFamilyExpensesNote": "{mode, select, couple{You can change this later in settings. We're starting with a 50/50 split as a baseline.} other{You can change this later in settings. We're starting with an equal split as a baseline.}}",
-  "@setupCoupleFamilyExpensesNote": {
-    "placeholders": {
-      "mode": {
-        "type": "String"
-      }
-    }
-  },
-  "setupCoupleFamilyExpensesSplitLabel": "{mode, select, couple{YOU / PARTNER} other{YOU / OTHERS}}",
-  "@setupCoupleFamilyExpensesSplitLabel": {
-    "description": "Tiny uppercase label above the split-percentage slider. couple = 'VOS / PAREJA' (you / partner); family = 'VOS / OTROS' (you / others).",
-    "placeholders": {
-      "mode": {
-        "type": "String"
-      }
-    }
-  },
-  "setupCoupleFamilyTipEqualTitle": "Equal (50/50)",
-  "setupCoupleFamilyTipEqualDescCouple": "Best for similar incomes and responsibilities.",
-  "setupCoupleFamilyTipEqualDescOther": "Best for households where expenses split evenly.",
-  "setupCoupleFamilyTipProportionalTitle": "Proportional",
-  "setupCoupleFamilyTipProportionalDesc": "Adjusted to what each person can contribute.",
-  "setupFirstTasksEyebrow": "First tasks",
-  "setupFirstTasksTitle": "{mode, select, family{First tasks for the family} other{Customize your home}}",
+  "setupFirstTasksTitle": "{mode, select, family{First tasks for the family} solo{What do you want to keep on track?} other{Which chores do you share?}}",
   "@setupFirstTasksTitle": {
     "placeholders": {
       "mode": {
@@ -1686,18 +1564,6 @@
   "settingsHouseholdWhatsAppFallback": "Couldn't open WhatsApp. Code copied.",
   "settingsHouseholdJoinSuccess": "You've joined the household!",
   "settingsHouseholdJoinCodeLength": "The code must be 6 characters long",
-  "settingsInviteWhatsAppMessage": "{mode, select, couple{Hi! Join me on HomeSync so we can organize our expenses and chores as a couple.} family{Hi! I'm inviting you to join our family home on HomeSync.} friends{Hi! Join our shared home on HomeSync so we can keep the place organized.} other{Hi! I'm inviting you to join our home on HomeSync.}}\n\nDownload the app and enter this code: *{code}*\n\nLet's organize our home together!",
-  "@settingsInviteWhatsAppMessage": {
-    "description": "Full WhatsApp invite message. mode = couple|family|friends|solo (solo falls into other).",
-    "placeholders": {
-      "mode": {
-        "type": "String"
-      },
-      "code": {
-        "type": "String"
-      }
-    }
-  },
   "settingsHouseholdRoleUpdated": "✅ Role updated",
   "settingsHouseholdRenamed": "✅ Home renamed",
   "settingsHouseholdTasksEnabledSnack": "✅ Household tasks enabled",
@@ -2301,10 +2167,6 @@
   "expensesTabRecurring": "Recurring",
   "expensesTabGoals": "Goals",
   "expensesFabMovement": "Entry",
-  "expensesEmptyCta": "Log a movement",
-  "@expensesEmptyCta": {
-    "description": "CTA button inside the empty movements feed."
-  },
   "expensesFabNewSubscription": "New subscription",
   "expensesFabNewGoal": "New goal",
   "expensesActivityRecentEyebrow": "RECENT ACTIVITY",
@@ -3013,21 +2875,24 @@
   "premiumPaywallCloseTooltip": "Close",
   "premiumPaywallEyebrow": "HomeSync Premium",
   "premiumPaywallTitle": "Automate your household without duplicate entry",
-  "premiumPaywallSubtitle": "Payments, shopping, and stats working together so the balance always stays clear.",
+  "premiumPaywallSubtitle": "Payments, shopping and budgets working together so the balance always stays clear.",
   "premiumBenefitRecurringPayments": "Recurring payments",
   "premiumBenefitRecurringPaymentsDesc": "Schedule subscriptions, services, and installments so they repeat on their own and do not get lost during the month.",
   "premiumBenefitShoppingFinanceSync": "Shopping connected to Finance",
   "premiumBenefitShoppingFinanceSyncDesc": "Link shopping-list products with real expenses and avoid entering the same purchase twice.",
-  "premiumBenefitAdvancedStats": "Advanced stats",
-  "premiumBenefitAdvancedStatsDesc": "Analyze expenses, tasks, and progress with deeper views by category and period.",
   "premiumBenefitFullCustomization": "Full customization",
   "premiumBenefitFullCustomizationDesc": "Choose colors, themes, and custom avatars so the household feels like yours.",
   "premiumRestorePurchases": "Restore purchases",
   "premiumCancelAnytime": "Cancel anytime",
-  "premiumFreeTrialAvailable": "Free Trial Available",
-  "premiumActivateButton": "Activate Premium",
-  "premiumTestingModeLabel": "Testing mode · no charge",
-  "premiumSavePercent": "Save 20%",
+  "premiumSavePercent": "Save {percent}%",
+  "@premiumSavePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    },
+    "description": "Badge del plan anual. percent se calcula con los precios reales de la tienda; se oculta si no hay plan mensual para comparar."
+  },
   "premiumChoosePlanTitle": "Choose your plan",
   "premiumAnnualPlan": "Annual",
   "premiumMonthlyPlan": "Monthly",
@@ -3050,7 +2915,7 @@
   "premiumActiveBenefitsTitle": "Enabled benefits",
   "premiumContinueButton": "Continue",
   "premiumDeactivateTesting": "Deactivate Premium (testing)",
-  "premiumStoreErrorTitle": "Error connecting to store",
+  "premiumStoreErrorTitle": "We couldn't reach the store",
   "premiumDeveloperModeButton": "Developer Mode: Activate Premium",
   "faqSheetTitle": "Frequently Asked Questions",
   "faqSheetSubtitle": "Help tailored to your home",
@@ -3117,8 +2982,8 @@
   "faqWhatWeeklyDuelsAnswer": "No. In Couple mode, the week is viewed as shared effort: you can see how many tasks were completed and how they were shared, with no winner, score or bonus.",
   "faqFamilyRanking": "How does the family ranking work?",
   "faqFamilyRankingAnswer": "Every week the family competes in a healthy way: the ranking shows who earned the most XP completing tasks. At week's close there's a winner with a crown and bonus, and the weekly summary shows how everyone did.",
-  "faqWhatSpecialEvents": "What is the weekly couple event?",
-  "faqWhatSpecialEventsAnswer": "Every week brings an idea designed for the two of you: recreate your first date, cook together or have a screen-free night. Completing it saves a shared moment and advances your couple achievements, with no coins or obligations.",
+  "faqWhatSpecialEvents": "What's in the Couple tab?",
+  "faqWhatSpecialEventsAnswer": "It's your weekly check-in: how chores were split (no winners), where money stands between you, and pending suggestions. If something always lands on one side, it suggests taking turns. You can also send your partner a note.",
   "faqContributionBalance": "What is the contribution balance?",
   "faqContributionBalanceAnswer": "It's the month's neutral snapshot: it combines completed tasks and shared expenses to show how much each person is contributing to the household. No winners or losers — it's for talking with data, not competing.",
   "faqRewardsStore": "How does the rewards store work?",
@@ -3235,7 +3100,7 @@
   "shoppingListTitle": "Current list",
   "shoppingAllDone": "All sorted",
   "shoppingListResolved": "List resolved",
-  "shoppingEmptyFirstLineDone": "Fridge is stocked.\nNeed anything today?",
+  "shoppingEmptyFirstLineDone": "Your list is empty.\nWhat's missing at home?",
   "shoppingEmptyFirstLineBought": "All done.\nWant to add something else?",
   "shoppingEmptyHint": "Add products using the categories\nor the search bar below.",
   "shoppingRecentSection": "Buy again",
@@ -3349,42 +3214,8 @@
   "rewardsProposalSentToast": "Proposal sent.",
   "rewardsPrizeCreatedToast": "Prize created successfully.",
   "rewardsEmptyNoChildStore": "There are no prizes in your store yet.",
-  "rewardsChallengeCompletePrompt": "Did you complete the challenge?",
-  "rewardsChallengeCompleteBody": "What joy! By confirming, both of you will receive {count} coins.",
-  "@rewardsChallengeCompleteBody": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "rewardsNotYet": "Not yet",
   "rewardsYesWeDid": "Yes, we did it",
-  "rewardsChallengeTitle": "Challenge: {title}",
-  "@rewardsChallengeTitle": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
-  "rewardsChallengeCompleted": "Challenge completed",
-  "rewardsChallengeCompletedBody": "Both earned {count} coins. Keep nurturing your connection.",
-  "@rewardsChallengeCompletedBody": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "rewardsChallengeError": "Error completing the challenge: {error}",
-  "@rewardsChallengeError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "rewardsDeletePrompt": "Delete prize?",
   "rewardsDeleteBody": "\"{title}\" will be removed from the boutique.",
   "@rewardsDeleteBody": {
@@ -3535,65 +3366,6 @@
       }
     }
   },
-  "coupleChallengeWeeklyPill": "Weekly special {number} of {total}",
-  "@coupleChallengeWeeklyPill": {
-    "description": "Pill label on the couple challenge card indicating which weekly special this is.",
-    "placeholders": {
-      "number": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "coupleChallengeExpandTooltip": "Expand",
-  "coupleChallengeShowLess": "Show less",
-  "coupleChallengeShowMore": "See full details",
-  "coupleChallengeSharedReward": "A moment for both of you",
-  "coupleChallengeSharedRewardBody": "{count, plural, =0{You haven't saved any special moments yet} =1{1 shared moment} other{{count} shared moments}}",
-  "@coupleChallengeSharedRewardBody": {
-    "description": "Number of weekly couple events completed and saved as shared moments.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "coupleChallengeWeDidIt": "We did it",
-  "coupleChallengeDoneThisWeek": "Saved as a shared moment",
-  "coupleChallengeAlreadyDone": "You already saved this week's special.",
-  "coupleSpaceWeekEyebrow": "OUR WEEK",
-  "coupleSpaceTasksReady": "{done} of {total} tasks done",
-  "@coupleSpaceTasksReady": {
-    "description": "Shared household task progress during the current week.",
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "coupleSpaceNoTasksPlanned": "A quiet week so far",
-  "coupleSpaceRemainingTasks": "{count, plural, =0{No tasks left} =1{1 task left} other{{count} tasks left}}",
-  "@coupleSpaceRemainingTasks": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "coupleSpaceNeedsAttention": "{count, plural, =1{1 needs attention} other{{count} need attention}}",
-  "@coupleSpaceNeedsAttention": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "coupleSpaceWeekSupport": "Home moves forward when you share what weighs on you.",
   "coupleSpaceTaskEffortEyebrow": "EFFORT",
   "coupleSpaceTaskEffortTitle": "How demanding is it?",
   "coupleSpaceTaskEffortSubtitle": "Difficulty helps you share tasks more fairly; it doesn't generate points or coins.",
@@ -3605,39 +3377,13 @@
       }
     }
   },
-  "coupleSpaceDistributionAction": "See how it was shared",
-  "coupleSpaceDistributionTitle": "How the week was shared",
-  "coupleSpaceDistributionSubtitle": "A snapshot for conversation, with no winners or scores.",
-  "coupleSpaceTasksDone": "{count, plural, =0{No completed tasks} =1{1 completed task} other{{count} completed tasks}}",
-  "@coupleSpaceTasksDone": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "coupleSpaceForConnection": "To connect",
-  "coupleSpaceSpecialMemoryBody": "When you complete it, you save the memory and move forward together in your couple achievements.",
-  "coupleSpaceSkipWeek": "Skip this week",
-  "coupleSpaceSkipToast": "We'll leave it for another time. It won't affect any achievement.",
-  "coupleSpaceUndo": "Show again",
-  "coupleSpaceSpecialConfirmTitle": "Save this moment?",
-  "coupleSpaceSpecialConfirmBody": "Only confirm if you both took part and felt comfortable. It adds no coins and creates no debt.",
-  "coupleSpaceSpecialCompletedTitle": "One more moment together",
-  "coupleSpaceSpecialCompletedBody": "It was saved in your shared history.",
-  "coupleSpacePlansTitle": "Plans and wishes",
   "coupleSpacePlansSubtitle": "Free proposals: accept, postpone or withdraw them without consequences.",
   "coupleSpaceProposeAction": "Propose something",
-  "coupleSpaceProposalsEmptyTitle": "No proposals yet",
-  "coupleSpaceProposalsEmptyBody": "Start a conversation, suggest a plan or ask for support without putting a price on it.",
-  "coupleSpaceProposalAwaiting": "Waiting for a response",
-  "coupleSpaceProposalRespond": "Respond",
   "coupleSpaceProposalAccepted": "Agreed",
   "coupleSpaceProposalDeferred": "For later",
   "@coupleSpaceProposalDeferred": {
     "description": "Visible status for a proposal the couple decided to revisit later."
   },
-  "coupleSpaceProposalMine": "Your proposal",
   "coupleSpaceProposalCategoryTalk": "Let's talk",
   "coupleSpaceProposalCategoryPlan": "Plan together",
   "coupleSpaceProposalCategoryAffection": "Affection",
@@ -3671,7 +3417,6 @@
   "coupleSpaceProposalWithdrawnToast": "You withdrew the proposal.",
   "coupleSpaceProposalArchivedToast": "Plan archived.",
   "coupleSpaceLoadError": "We couldn't load this space.",
-  "coupleSpaceRetry": "Try again",
   "tourStepLabel": "Step {current} of {total}",
   "@tourStepLabel": {
     "placeholders": {
@@ -3820,12 +3565,8 @@
   "weeklyWinnerFallbackPlayer": "Player",
   "weeklyWinnerClose": "Close",
   "weeklyWinnerContinue": "Continue",
-  "loveNoteDialogTitle": "New love note",
   "loveNoteHint": "Write something tender...",
   "loveNoteSent": "Note sent with love",
-  "loveNoteSendMessageTitle": "Send message to your partner",
-  "loveNotePremiumHintActive": "Surprise with a special note today.",
-  "loveNotePremiumHintInactive": "Premium feature. Unlock it to send notes.",
   "weeklyProgressTitle": "Weekly progress",
   "weeklyProgressSubtitle": "Follow how the week is going, who's taken the lead, and how much rhythm you have together.",
   "weeklyProgressWeekLabel": "Current week · {weekRange}",
@@ -3894,9 +3635,6 @@
   "rewardsDescriptionSuggestionHint": "Explain why your partner should approve this wish.",
   "rewardsDescriptionPrizeHint": "A short detail to describe the prize.",
   "rewardsValidationMinLength": "Tell us a bit more so it's easy to evaluate.",
-  "loveNoteSendTitle": "Send a message to your partner",
-  "loveNoteSendSubtitle": "Surprise them with a special note today.",
-  "loveNotePremiumFeature": "Premium feature. Unlock it to send notes.",
   "statsWeeklyProgressTitle": "Weekly Progress",
   "statsWeeklyProgressSubtitle": "Follow how the week is going, who took the lead and how much rhythm you have together.",
   "faceoffWeeklyDuelLabel": "WEEKLY DUEL",
@@ -3973,7 +3711,6 @@
   "statsNoDataTitle": "No data yet",
   "statsNoDataSubtitle": "Complete some tasks to see your areas of dominance.",
   "commonRefresh": "Refresh data",
-  "rewardsChallengeCompleteConfirm": "Yes, we did it",
   "rewardsWaitingResponse": "waiting for response",
   "rewardsTapToApprove": "tap to approve or remove",
   "rewardsCostCoins": "{cost} coins",
@@ -4698,19 +4435,17 @@
   "scheduleErrorPickWeekday": "Pick at least one day for the custom recurrence.",
   "scheduleErrorPickMonthDay": "Pick at least one date to repeat the task.",
   "invitationTitle": "Invite to household",
-  "invitationSubtitleFamily": "Share this code with your family members.",
-  "invitationSubtitleFriends": "Share this code with your roommates to add them to the household.",
+  "invitationSubtitleFamily": "Share this code with your family.",
+  "invitationSubtitleFriends": "Share this code with the people you live with.",
   "invitationSubtitleDefault": "Share this code so someone can join your household.",
   "invitationTapToCopy": "Tap to copy",
   "invitationCopied": "Code copied to clipboard",
   "invitationShareWhatsApp": "Share via WhatsApp",
   "invitationRetry": "Retry generating code",
-  "invitationWhatsAppFailed": "Couldn't open WhatsApp. Code copied.",
-  "invitationIntroCouple": "Hi! Join me on HomeSync to organize our expenses and tasks together.",
+  "invitationIntroCouple": "Hi! Join me on HomeSync so we can organize our chores and expenses.",
   "invitationIntroFamily": "Hi! I'm inviting you to join our family household on HomeSync.",
-  "invitationIntroFriends": "Hi! Join our shared place on HomeSync to organize the flat better.",
+  "invitationIntroFriends": "Hi! Join our shared place on HomeSync so we can keep the house organized.",
   "invitationIntroDefault": "Hi! I'm inviting you to join our household on HomeSync.",
-  "invitationShareBody": "{intro}\n\nDownload the app and enter this code: *{code}*\n\nLet's organize our household together!",
   "avatarPickerTitle": "Your Visual Identity",
   "avatarPickerSubtitle": "Pick an avatar from the collection or create your own",
   "avatarPickerUpdated": "Avatar updated successfully",
@@ -4739,241 +4474,6 @@
   "avatarPickerCreatingTitle": "Creating your avatar...",
   "avatarPickerCreatingSubtitle": "It may take a few seconds.",
   "settingsMemberRemoved": "✅ {name} has been removed from the household",
-  "setupGenerateCodeError": "Error generating code: {error}",
-  "coupleChallenge1Title": "Recreating your first date",
-  "coupleChallenge1Description": "Go back to where it all began.\n\nTry to recreate the little details: the food, the clothes, the phrases, the nerves.\n\nTalk about who you were back then and how much you have grown together.\n\nIt will be impossible not to laugh at old memories and feel grateful for everything you have lived.",
-  "coupleChallenge1Motivation": "Sometimes the best way to see how far you have come is to go back to the beginning.",
-  "coupleChallenge1Category": "Experiential",
-  "coupleChallenge1Location": "Outdoors",
-  "coupleChallenge1Timing": "Anytime",
-  "coupleChallenge2Title": "Candlelight dinner",
-  "coupleChallenge2Description": "All you need is a few candles or warm lights, a meal, and something delicious to drink.\n\nTurn off the lights, slow down, and let the silence fill with soft music and long looks.\n\nThe menu does not matter as much as the presence of the person in front of you.",
-  "coupleChallenge2Motivation": "A perfect date to reconnect without distractions and remember why you choose each other every day.",
-  "coupleChallenge2Category": "Romantic",
-  "coupleChallenge2Location": "At home",
-  "coupleChallenge2Timing": "Night",
-  "coupleChallenge3Title": "Shared dream list",
-  "coupleChallenge3Description": "Grab paper and a pen. Write down at least 10 things you would love to achieve together as a couple: trips, goals, or dreams.\n\nRead them out loud to each other and keep the list as a reminder.",
-  "coupleChallenge3Motivation": "Shared dreams do not just bring you closer. They also give your story direction.",
-  "coupleChallenge3Category": "Emotional",
-  "coupleChallenge3Location": "At home",
-  "coupleChallenge3Timing": "Afternoon",
-  "coupleChallenge4Title": "Home karaoke",
-  "coupleChallenge4Description": "Turn the volume up, pick your songs, and let the fun begin. You do not need a microphone or a perfect voice, just attitude.\n\nBetween laughs, you will discover how freeing it is to laugh together.",
-  "coupleChallenge4Motivation": "Love can be off-key too, as long as you are singing to the same rhythm.",
-  "coupleChallenge4Category": "Playful",
-  "coupleChallenge4Location": "At home",
-  "coupleChallenge4Timing": "Night",
-  "coupleChallenge5Title": "Painting together",
-  "coupleChallenge5Description": "Get some paper and brushes. It does not matter if you do not know how to draw. The idea is to let your mind go, laugh at the lines, and enjoy the color.\n\nPaint something that represents you as a couple.",
-  "coupleChallenge5Motivation": "Art is not looking for perfection. It is looking for connection.",
-  "coupleChallenge5Category": "Creative",
-  "coupleChallenge5Location": "At home",
-  "coupleChallenge5Timing": "Flexible",
-  "coupleChallenge6Title": "Movie marathon",
-  "coupleChallenge6Description": "Create your own little cinema: dim lights, blankets, snacks, and a list of movies chosen by both of you.\n\nWatching movies together is also about side glances and laughing in sync.",
-  "coupleChallenge6Motivation": "Little things are often what make love feel big.",
-  "coupleChallenge6Category": "Relaxed",
-  "coupleChallenge6Location": "At home",
-  "coupleChallenge6Timing": "Night",
-  "coupleChallenge7Title": "Photo walk",
-  "coupleChallenge7Description": "Go out for a walk without a plan and try to capture what usually goes unnoticed: a shadow, a smile, a reflection.\n\nTake pictures of whatever makes you stop.",
-  "coupleChallenge7Motivation": "Sometimes seeing the world through a lens is the best way to look at each other again.",
-  "coupleChallenge7Category": "Adventure",
-  "coupleChallenge7Location": "City",
-  "coupleChallenge7Timing": "Afternoon",
-  "coupleChallenge8Title": "Spontaneous picnic",
-  "coupleChallenge8Description": "A blanket, a few snacks, cold drinks, and a desire to share the moment.\n\nFind a park, a square, or even your backyard, settle in, and let the conversation flow.\n\nAdd a card game, a book, or simply stare at the sky together.",
-  "coupleChallenge8Motivation": "You do not have to go far to feel like you escaped the world together.",
-  "coupleChallenge8Category": "Experiential",
-  "coupleChallenge8Location": "Outdoors",
-  "coupleChallenge8Timing": "Afternoon",
-  "coupleChallenge9Title": "Letters that do not disappear",
-  "coupleChallenge9Description": "Write each other a letter. Not on your phone, with paper and ink.\n\nPut on soft music, make something tasty, and let yourselves drift.\n\nWrite what you admire, what you are grateful for, and what you dream about.\n\nAt the end, exchange them and read them out loud.",
-  "coupleChallenge9Motivation": "Letters stay, words can be reread, but what lasts the most is how they make you feel.",
-  "coupleChallenge9Category": "Emotional",
-  "coupleChallenge9Location": "At home",
-  "coupleChallenge9Timing": "Night",
-  "coupleChallenge10Title": "Total disconnect",
-  "coupleChallenge10Description": "Turn off your phones, the TV, and every outside notification for one night.\n\nRead, cook, talk, play, or simply hold each other without interruptions.\n\nYou will discover that when digital noise fades, a different kind of silence appears: the one that makes room for presence.",
-  "coupleChallenge10Motivation": "This date is not measured in minutes, but in real connection.",
-  "coupleChallenge10Category": "Emotional",
-  "coupleChallenge10Location": "At home",
-  "coupleChallenge10Timing": "Night",
-  "coupleChallenge11Title": "Jar of questions",
-  "coupleChallenge11Description": "Fill a jar with little slips of paper containing funny or deep questions.\n\n\"What was the first thing you thought when you met me?\" or \"What dream have you still not dared to tell me about?\"\n\nDraw them at random and answer without filters. You will end up somewhere between laughter and long gazes.",
-  "coupleChallenge11Motivation": "Some conversations do not appear until you invite them in.",
-  "coupleChallenge11Category": "Playful",
-  "coupleChallenge11Location": "At home",
-  "coupleChallenge11Timing": "Anytime",
-  "coupleChallenge23Title": "Breakfast with a view",
-  "coupleChallenge23Description": "Change the setting of breakfast: make something delicious and go find a view. It can be a park, a rooftop, or a bench in a square.\n\nTake the time to enjoy the fresh air and coffee without checking the clock.",
-  "coupleChallenge23Motivation": "Coffee tastes better when the horizon is the limit.",
-  "coupleChallenge23Category": "Exploration",
-  "coupleChallenge23Location": "Outdoors",
-  "coupleChallenge23Timing": "Morning",
-  "coupleChallenge24Title": "At the edge of the world",
-  "coupleChallenge24Description": "Pick a place where the horizon feels endless: a shore, a river, or a lagoon. Bring something to sit on and simply watch the sun go down.\n\nWrite a note together about what you dream of and save it for the future.",
-  "coupleChallenge24Motivation": "Shared silence in front of water can say more than a thousand words.",
-  "coupleChallenge24Category": "Emotional",
-  "coupleChallenge24Location": "Nature",
-  "coupleChallenge24Timing": "Sunset",
-  "coupleChallenge25Title": "Unknown destination",
-  "coupleChallenge25Description": "Go for a walk without a map or GPS. Pick a direction at random and every five blocks one of you decides where to turn.\n\nDiscover new corners of your city as if you were lost tourists.",
-  "coupleChallenge25Motivation": "Getting lost together is one of the best ways to find each other.",
-  "coupleChallenge25Category": "Exploration",
-  "coupleChallenge25Location": "City",
-  "coupleChallenge25Timing": "Afternoon",
-  "coupleChallenge26Title": "Present-moment ritual",
-  "coupleChallenge26Description": "Create a space with warm light and soft music. Each of you writes down three things you want to leave behind, like fears or anger, and three things you are grateful for in the other person.\n\nBurn what you want to let go of and keep the gratitude notes in a jar.",
-  "coupleChallenge26Motivation": "Clearing the past makes room for a brighter future.",
-  "coupleChallenge26Category": "Emotional",
-  "coupleChallenge26Location": "At home",
-  "coupleChallenge26Timing": "Night",
-  "coupleChallenge27Title": "Architect of surprises",
-  "coupleChallenge27Description": "One of you plans a small surprise: a note on the pillow, a favorite meal prepared in secret, or a tiny clue leading to a little adventure.\n\nThe key is the mystery and the detail that was thought through for the other person only.",
-  "coupleChallenge27Motivation": "Love lives in the details that say \"I was thinking of you.\"",
-  "coupleChallenge27Category": "Thoughtful",
-  "coupleChallenge27Location": "Anywhere",
-  "coupleChallenge27Timing": "Surprise",
-  "coupleChallenge28Title": "A caring gesture",
-  "coupleChallenge28Description": "Ask each other what simple gesture would feel good today: making a favorite drink, cooking something nice or offering a massage, only if it feels natural and you both feel comfortable.\n\nIt is not a debt or a required turn. It is an invitation to care with tenderness and freedom.",
-  "coupleChallenge28Motivation": "Care feels best when it is offered and received freely.",
-  "coupleChallenge28Category": "Everyday",
-  "coupleChallenge28Location": "At home",
-  "coupleChallenge28Timing": "Night",
-  "coupleChallenge29Title": "Stories on stage",
-  "coupleChallenge29Description": "Pick a famous scene from a movie and try to recreate it with whatever you have at home. Do not aim for perfection, aim for laughter and complicity.\n\nAt the end, invent your own ending together.",
-  "coupleChallenge29Motivation": "Pretending to be someone else can help you rediscover who you are together.",
-  "coupleChallenge29Category": "Playful",
-  "coupleChallenge29Location": "At home",
-  "coupleChallenge29Timing": "Anytime",
-  "coupleChallenge30Title": "Flavors with a story",
-  "coupleChallenge30Description": "Choose three flavors such as tea, chocolate, fruit or cheese, and for each one share a personal memory connected to it: a trip, childhood or a person.\n\nLet taste awaken stories you still have not told each other.",
-  "coupleChallenge30Motivation": "Every bite can open a door to a memory.",
-  "coupleChallenge30Category": "Experiential",
-  "coupleChallenge30Location": "Anywhere",
-  "coupleChallenge30Timing": "Night",
-  "coupleChallenge31Title": "The art of doing nothing",
-  "coupleChallenge31Description": "Turn off alarms and forget the to-do list. Spend a day without schedules: read in bed, watch old shows, or talk without a destination.\n\nGive yourselves the luxury of inhabiting time without the pressure to be productive.",
-  "coupleChallenge31Motivation": "Time \"wasted\" together is time gained in connection.",
-  "coupleChallenge31Category": "Relaxed",
-  "coupleChallenge31Location": "At home",
-  "coupleChallenge31Timing": "All day",
-  "coupleChallenge32Title": "Market Sunday",
-  "coupleChallenge32Description": "Go to a local market with cloth bags and mate. Do not focus on buying a lot. Focus on the colors, the smells, and the people.\n\nChoose one unusual ingredient to cook something new when you get back home.",
-  "coupleChallenge32Motivation": "Routine can have its own handmade kind of magic.",
-  "coupleChallenge32Category": "Exploration",
-  "coupleChallenge32Location": "City",
-  "coupleChallenge32Timing": "Morning",
-  "coupleChallenge33Title": "Under the stars",
-  "coupleChallenge33Description": "Find a spot away from city lights. Bring a blanket, open sky, and silence.\n\nCount stars, invent your own constellations, or simply feel the immensity together.",
-  "coupleChallenge33Motivation": "The whole universe fits in the space between the two of you.",
-  "coupleChallenge33Category": "Romantic",
-  "coupleChallenge33Location": "Nature",
-  "coupleChallenge33Timing": "Night",
-  "coupleChallenge34Title": "Night of the senses",
-  "coupleChallenge34Description": "Choose textures, aromas and flavors together that are safe for both of you. The person guessing can close their eyes if they want, and either of you can pause or change something at any time.\n\nA gentle activity for noticing sensations, with no pressure.",
-  "coupleChallenge34Motivation": "Shared curiosity can be a form of connection too.",
-  "coupleChallenge34Category": "Sensory",
-  "coupleChallenge34Location": "At home",
-  "coupleChallenge34Timing": "Night",
-  "coupleChallenge35Title": "Shared reading",
-  "coupleChallenge35Description": "Choose a book, poem, or article and read it out loud, taking turns with each section. Listen to each other's tone and pauses.\n\nWhen you finish, share what the story made you think or feel.",
-  "coupleChallenge35Motivation": "Words are a bridge between two minds.",
-  "coupleChallenge35Category": "Intellectual",
-  "coupleChallenge35Location": "Quiet place",
-  "coupleChallenge35Timing": "Night",
-  "coupleChallenge36Title": "Micro-theater date",
-  "coupleChallenge36Description": "Find a micro-theater performance or a short play. Experience the intensity of a story that feels close and alive.\n\nThen take a walk while talking about what made you laugh, cry, or reflect.",
-  "coupleChallenge36Motivation": "Living a thousand lives in one night, always hand in hand.",
-  "coupleChallenge36Category": "Cultural",
-  "coupleChallenge36Location": "City",
-  "coupleChallenge36Timing": "Night",
-  "coupleChallenge37Title": "Trip without luggage",
-  "coupleChallenge37Description": "Choose a country and turn your home into that destination for one night: typical food, music, and atmosphere from that place.\n\nTravel without a passport and imagine what you would do if you were really there.",
-  "coupleChallenge37Motivation": "The best destination is the one you create between the two of you.",
-  "coupleChallenge37Category": "Creative",
-  "coupleChallenge37Location": "At home",
-  "coupleChallenge37Timing": "Night",
-  "coupleChallenge38Title": "The secret envelope",
-  "coupleChallenge38Description": "One of you prepares three envelopes with instructions to open in stages: an outfit, a meeting place, and a special ending.\n\nThe magic is in the anticipation of not knowing what comes next.",
-  "coupleChallenge38Motivation": "Every envelope is an \"I thought of you\" waiting to be opened.",
-  "coupleChallenge38Category": "Adventure",
-  "coupleChallenge38Location": "Surprise",
-  "coupleChallenge38Timing": "All afternoon",
-  "coupleChallenge39Title": "Promises at dawn",
-  "coupleChallenge39Description": "Go somewhere high enough to watch the sun rise. When the first ray appears, promise one small thing for your relationship.\n\nA habit, a wish, or a change you want to begin with the new day.",
-  "coupleChallenge39Motivation": "Every sunrise is a chance to begin again.",
-  "coupleChallenge39Category": "Emotional",
-  "coupleChallenge39Location": "Outdoors",
-  "coupleChallenge39Timing": "Dawn",
-  "coupleChallenge40Title": "Building patience",
-  "coupleChallenge40Description": "Spend the afternoon putting together a puzzle side by side, with mate or wine nearby.\n\nBetween pieces, let calm conversations and comfortable silence flow.",
-  "coupleChallenge40Motivation": "Putting together small things is practice for the patience bigger things require.",
-  "coupleChallenge40Category": "Relaxed",
-  "coupleChallenge40Location": "At home",
-  "coupleChallenge40Timing": "Afternoon",
-  "coupleChallenge41Title": "A full day of gratitude",
-  "coupleChallenge41Description": "Today's challenge: spend 24 hours without a single complaint. Every time someone complains, they have to balance it with something they are grateful for.\n\nAt the end of the day, go over all the good things you noticed.",
-  "coupleChallenge41Motivation": "Changing the focus can change the entire relationship.",
-  "coupleChallenge41Category": "Emotional",
-  "coupleChallenge41Location": "Anywhere",
-  "coupleChallenge41Timing": "All day",
-  "coupleChallenge42Title": "Time capsule",
-  "coupleChallenge42Description": "Choose five objects that represent your present: a photo, a ticket, a note. Put them in a box and seal it with a future opening date.\n\nWrite a letter to your future selves describing how you feel today.",
-  "coupleChallenge42Motivation": "Saving the present is a gift you leave for the future.",
-  "coupleChallenge42Category": "Emotional",
-  "coupleChallenge42Location": "At home",
-  "coupleChallenge42Timing": "Night",
-  "coupleChallenge43Title": "Blind painting",
-  "coupleChallenge43Description": "One person covers their eyes and the other guides them with their voice to draw lines and colors on a sheet of paper. Then switch roles.\n\nTrust each other's voice and laugh at the abstract result you created together.",
-  "coupleChallenge43Motivation": "Love can be painted with your eyes closed too.",
-  "coupleChallenge43Category": "Playful",
-  "coupleChallenge43Location": "At home",
-  "coupleChallenge43Timing": "Anytime",
-  "coupleChallenge44Title": "Our own podcast",
-  "coupleChallenge44Description": "Record yourselves talking as if you were hosting a podcast. Pick a theme: your story, a trip, or what love has taught you.\n\nDo not try to sound perfect. Try to sound real. Keep it as a little voice capsule.",
-  "coupleChallenge44Motivation": "Recording the voice of love is a way of keeping a living memory.",
-  "coupleChallenge44Category": "Creative",
-  "coupleChallenge44Location": "Quiet place",
-  "coupleChallenge44Timing": "Anytime",
-  "coupleChallenge45Title": "Delayed messages",
-  "coupleChallenge45Description": "Each of you writes a letter to the other, but do not read them now. Exchange them and choose a date one week from now to open them.\n\nEnjoy the sweet waiting and the comfort of knowing a love message is waiting for you.",
-  "coupleChallenge45Motivation": "Love can also be written in delayed time.",
-  "coupleChallenge45Category": "Emotional",
-  "coupleChallenge45Location": "At home",
-  "coupleChallenge45Timing": "Night",
-  "coupleChallenge46Title": "Projection of memories",
-  "coupleChallenge46Description": "Look for photos, videos, and messages from when you first met. Watch together how much you have grown and which obstacles you have overcome.\n\nRediscover the path that brought you to today.",
-  "coupleChallenge46Motivation": "Looking back is one of the best ways to value the present.",
-  "coupleChallenge46Category": "Emotional",
-  "coupleChallenge46Location": "At home",
-  "coupleChallenge46Timing": "Night",
-  "coupleChallenge47Title": "The yes day",
-  "coupleChallenge47Description": "For one whole day, the rule is to say yes to every reasonable proposal the other person makes: ice cream, a walk, a nap.\n\nLet yourselves be carried by the flow of a day without noes.",
-  "coupleChallenge47Motivation": "Too much structure wears you down. Flow brings you closer.",
-  "coupleChallenge47Category": "Playful",
-  "coupleChallenge47Location": "Anywhere",
-  "coupleChallenge47Timing": "All day",
-  "coupleChallenge48Title": "Toast to the future",
-  "coupleChallenge48Description": "Prepare your favorite drink and make a toast while looking each other in the eyes. Write down one intention for the next chapter: a trip or a shared goal.\n\nSeal the toast with a smile that says, \"thank you for being here.\"",
-  "coupleChallenge48Motivation": "Toasting what is coming is a way of honoring what you already are.",
-  "coupleChallenge48Category": "Emotional",
-  "coupleChallenge48Location": "Anywhere",
-  "coupleChallenge48Timing": "Night",
-  "coupleChallenge49Title": "Experimental cooking",
-  "coupleChallenge49Description": "Choose three random ingredients you already have at home and try to create a brand-new dish together.\n\nNo looking up recipes. Use your instincts, taste as you go, and laugh if the experiment gets weird.",
-  "coupleChallenge49Motivation": "Improvised flavor always carries something special.",
-  "coupleChallenge49Category": "Creative",
-  "coupleChallenge49Location": "Kitchen",
-  "coupleChallenge49Timing": "Lunch/Dinner",
-  "coupleChallenge50Title": "Wall of wishes",
-  "coupleChallenge50Description": "Stick notes with wishes, gratitude, or goals on a wall or mirror. Let the wall grow throughout the week.\n\nRead every note at the end and keep them as witnesses of your intentions.",
-  "coupleChallenge50Motivation": "Making a desire visible is the first step toward making it real.",
-  "coupleChallenge50Category": "Thoughtful",
-  "coupleChallenge50Location": "At home",
-  "coupleChallenge50Timing": "All week",
   "rewardCategoryTreats": "Treats",
   "rewardCategoryMoments": "Moments",
   "rewardCategoryPerks": "Perks",
@@ -5216,63 +4716,7 @@
   "mainIdentityLoadError": "Identity load error. Try closing and reopening the app:",
   "notifLoveNoteTitle": "\ud83d\udc8c You have a special note",
   "notifLoveNoteBody": "Your partner sent you a love note \u2764\ufe0f",
-  "coupleFundTitle": "Our fund",
-  "@coupleFundTitle": {
-    "description": "Titulo del bloque del fondo compartido en el espacio de pareja."
-  },
-  "coupleFundEyebrow": "WHAT YOU BUILD",
-  "coupleFundBalance": "{amount} added",
-  "@coupleFundBalance": {
-    "description": "Saldo del fondo. Monedas simbolicas, nunca dinero real.",
-    "placeholders": {"amount": {"type": "int"}}
-  },
-  "coupleFundWeekAdded": "{count, plural, =0{Nothing added this week yet} =1{Added 1 this week} other{Added {count} this week}}",
-  "@coupleFundWeekAdded": {
-    "placeholders": {"count": {"type": "int"}}
-  },
-  "coupleFundRhythm": "active {weeks} of the last {window} weeks",
-  "@coupleFundRhythm": {
-    "description": "Ritmo del hogar: semanas activas sobre la ventana. Nunca 'racha'.",
-    "placeholders": {"weeks": {"type": "int"}, "window": {"type": "int"}}
-  },
-  "coupleFundNoGoalTitle": "No goal picked yet",
-  "coupleFundNoGoalBody": "Pick something to celebrate together. Every task you finish gets you closer.",
-  "coupleFundChooseGoal": "Pick a goal",
-  "coupleFundChangeGoal": "Change goal",
-  "coupleFundToGoal": "{current} / {cost} \u2192 {title}",
-  "@coupleFundToGoal": {
-    "placeholders": {"current": {"type": "int"}, "cost": {"type": "int"}, "title": {"type": "String"}}
-  },
-  "coupleFundRemaining": "{count, plural, =1{1 to go} other{{count} to go}}",
-  "@coupleFundRemaining": {
-    "placeholders": {"count": {"type": "int"}}
-  },
-  "coupleFundReadyTitle": "You reached the goal!",
-  "coupleFundReadyBody": "Decide together how you want to celebrate.",
-  "coupleFundConfirm": "Confirm",
-  "coupleFundConfirmed": "You confirmed",
-  "coupleFundWithdrawConfirm": "Withdraw my confirmation",
-  "coupleFundWaitingOthers": "{count, plural, =1{1 confirmation to go} other{{count} confirmations to go}}",
-  "@coupleFundWaitingOthers": {
-    "placeholders": {"count": {"type": "int"}}
-  },
-  "coupleFundUnlockedMessage": "Goal unlocked. There's a proposal waiting to agree on when.",
-  "coupleFundPickerTitle": "What do you want to unlock?",
-  "coupleFundPickerSubtitle": "One goal at a time. Change it whenever you like without losing what you built.",
-  "coupleFundCustomOption": "Create your own",
-  "coupleFundCustomTitleLabel": "What do you want to celebrate?",
-  "coupleFundCustomCostLabel": "Goal",
-  "coupleFundCustomCostHelper": "Between 50 and 2000",
-  "coupleFundSave": "Set goal",
-  "coupleFundError": "We couldn't update the fund",
-  "coupleFundFromGoalBadge": "From the fund",
-  "coupleFundCatalogMovieNight": "Movie night at home",
-  "coupleFundCatalogPicnic": "Picnic",
-  "coupleFundCatalogDinnerOut": "Dinner out",
-  "coupleFundCatalogDayTrip": "Day trip",
-  "coupleFundCatalogWeekendAway": "Weekend away",
   "contributionTitle": "How it was split",
-  "contributionEyebrow": "THIS WEEK",
   "contributionEmpty": "No tasks completed this week yet.",
   "contributionRhythmLabel": "Household rhythm",
   "contributionRhythmValue": "{weeks} of the last {window} weeks",
@@ -5280,7 +4724,6 @@
     "description": "Ritmo: semanas activas sobre la ventana. Nunca 'racha'.",
     "placeholders": {"weeks": {"type": "int"}, "window": {"type": "int"}}
   },
-  "contributionRhythmHint": "Not a streak: a quiet week lowers it without breaking anything.",
   "contributionTasksLabel": "{count, plural, =0{no tasks} =1{1 task} other{{count} tasks}}",
   "@contributionTasksLabel": {
     "placeholders": {"count": {"type": "int"}}
@@ -5289,11 +4732,381 @@
   "@contributionDemandingLabel": {
     "placeholders": {"count": {"type": "int"}}
   },
-  "contributionSkewed": "The {category} ones kept landing on the same side.",
-  "@contributionSkewed": {
-    "description": "Lectura accionable, nunca un puntaje ni un reproche.",
-    "placeholders": {"category": {"type": "String"}}
+  "coupleWeekOf": "Week of {date}",
+  "@coupleWeekOf": {
+    "description": "Encabezado de la pestaña Pareja con el lunes de la semana en curso.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   },
-  "contributionBalanced": "This week was evenly split.",
-  "contributionNoDurationNote": "The split is measured in tasks and how many heavy ones each took."
+  "coupleWeekYou": "You",
+  "coupleWeekSplitSemantics": "This week's split: you {mine}, {name} {theirs}.",
+  "@coupleWeekSplitSemantics": {
+    "placeholders": {
+      "mine": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      },
+      "theirs": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleWeekReadingBalanced": "Nicely even: you split the week well.",
+  "coupleWeekReadingCategoryPartner": "{category}: {name} did almost all of it this week.",
+  "@coupleWeekReadingCategoryPartner": {
+    "description": "Lectura accionable, nunca un reproche.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekReadingCategoryMe": "{category}: you did almost all of it this week.",
+  "@coupleWeekReadingCategoryMe": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekReadingOverallPartner": "{name} did most of the tasks this week.",
+  "@coupleWeekReadingOverallPartner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekReadingOverallMe": "You did most of the tasks this week.",
+  "coupleWeekProposeTurns": "Suggest taking turns",
+  "coupleWeekOfferHand": "Offer a hand",
+  "coupleWeekTurnsProposalTitle": "Can we take turns with {category}?",
+  "@coupleWeekTurnsProposalTitle": {
+    "description": "Propuesta pre-redactada; la persona la puede editar antes de mandarla.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekOfferProposalTitle": "I'll take care of {category} this week",
+  "@coupleWeekOfferProposalTitle": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekTurnsProposalTitleGeneral": "Can we split this week's tasks more evenly?",
+  "coupleWeekOfferProposalTitleGeneral": "I'll pick up more tasks this week",
+  "coupleWeekSeeTasks": "See tasks",
+  "coupleWeekRemaining": "{count, plural, =0{Nothing left for this week} =1{1 task left this week} other{{count} tasks left this week}}",
+  "@coupleWeekRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleWeekOverdue": "{count, plural, =1{1 overdue} other{{count} overdue}}",
+  "@coupleWeekOverdue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleWeekMoneyTitle": "Money",
+  "coupleWeekMoneySeeAll": "See activity",
+  "coupleWeekMoneyEven": "You're all square.",
+  "coupleWeekMoneyYouOwe": "You owe {name} {amount}.",
+  "@coupleWeekMoneyYouOwe": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekMoneyTheyOwe": "{name} owes you {amount}.",
+  "@coupleWeekMoneyTheyOwe": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekMoneyPaid": "This month you put in {mine} and {name} put in {theirs} for shared expenses.",
+  "@coupleWeekMoneyPaid": {
+    "placeholders": {
+      "mine": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      },
+      "theirs": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekMoneyNoExpenses": "No shared expenses logged this month yet.",
+  "coupleWeekMoneySharedTotal": "You've spent {amount} together this month.",
+  "@coupleWeekMoneySharedTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekMoneySharedPaid": "You paid {mine} · {name} paid {theirs}",
+  "@coupleWeekMoneySharedPaid": {
+    "placeholders": {
+      "mine": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      },
+      "theirs": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekMoneySettle": "Settle up",
+  "coupleWeekMoneyRecordPayment": "Record payment",
+  "coupleWeekMoneyError": "We couldn't load this month's money.",
+  "coupleWeekAsksTitle": "Between you",
+  "coupleWeekAsksSubtitle": "Plans, asks and talks. “Not now” is always a fine answer.",
+  "coupleWeekAsksEmpty": "Nothing pending between you.",
+  "coupleWeekAsksEmptyHint": "To ask for a hand or suggest a plan, tap “{action}”.",
+  "@coupleWeekAsksEmptyHint": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekAskToAnswer": "Your turn",
+  "coupleWeekAskWaiting": "Waiting for {name}",
+  "@coupleWeekAskWaiting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekAskFrom": "From {name} · {when}",
+  "@coupleWeekAskFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekAskFromYou": "Yours · {when}",
+  "@coupleWeekAskFromYou": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekNoteTitle": "A note for {name}",
+  "@coupleWeekNoteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekNoteBody": "It shows up as an envelope on their home screen.",
+  "coupleProposalPushTitle": "{name} suggested something",
+  "@coupleProposalPushTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleProposalAnsweredPushTitle": "{name} answered your suggestion",
+  "@coupleProposalAnsweredPushTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleProposalAnsweredPushBody": "{answer}: {title}",
+  "@coupleProposalAnsweredPushBody": {
+    "placeholders": {
+      "answer": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "loveNotePushTitle": "💌 {name} left you a note",
+  "@loveNotePushTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "loveNotePushBody": "Open HomeSync to read it.",
+  "loveNoteEnvelopeFrom": "{name} wrote to you",
+  "@loveNoteEnvelopeFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "loveNoteEnvelopeSaved": "Saved at home",
+  "partnerInviteTitle": "This is better with two",
+  "partnerInviteBody": "Once your partner joins, you'll see how the week was split, the money between you and what you plan together.",
+  "partnerInviteCodeLabel": "Code for your partner",
+  "partnerInviteCodeSemantics": "Invite code {code}. Tap to copy it.",
+  "@partnerInviteCodeSemantics": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "partnerInviteShare": "Invite on WhatsApp",
+  "partnerInviteShareOther": "Share another way",
+  "partnerInviteCopy": "Copy code",
+  "partnerInviteMessageCopied": "Invite copied: paste it anywhere.",
+  "partnerInviteHint": "They download HomeSync, tap “I have a code” and enter this one.",
+  "partnerInviteHomeTitle": "Your partner hasn't joined yet",
+  "partnerInviteHomeBody": "Send them the code and start sharing chores and expenses.",
+  "partnerInviteHomeAction": "Invite",
+  "invitationShareMessage": "{intro}\n\n1. Get HomeSync: {link}\n2. Tap “I have a code” and enter: *{code}*",
+  "@invitationShareMessage": {
+    "description": "Mensaje completo de invitación para WhatsApp u otras apps. Incluye el link a la tienda.",
+    "placeholders": {
+      "intro": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "setupStartTitle": "Chores and expenses, shared evenly.",
+  "setupStartBody": "Split the chores, log who paid for what and see where you stand. No spreadsheets, no arguments.",
+  "setupStartBulletTasks": "Household chores, visible to both of you",
+  "setupStartBulletMoney": "Shared expenses and an up-to-date balance",
+  "setupStartBulletWeek": "A weekly look at how things were split",
+  "setupStartCreate": "Start my household",
+  "setupStartJoin": "I have a code",
+  "setupStartJoinTitle": "Join a household",
+  "setupStartJoinBody": "Enter the 6-character code you were sent.",
+  "setupStartJoinNameLabel": "What's your name?",
+  "setupStartJoinCodeLabel": "Code",
+  "setupStartJoinButton": "Join",
+  "setupStartTime": "It takes less than a minute.",
+  "setupHouseholdTitle": "Tell us about your home",
+  "setupHouseholdSubtitle": "We'll tailor the app to how you live.",
+  "setupHouseholdModeLabel": "Who do you share your home with?",
+  "setupHouseholdNameLabel": "Your name",
+  "setupHouseholdFinanceNote": "You'll start splitting expenses 50/50. You can change it anytime in Settings.",
+  "setupFamilyHouseholdNameFor": "{name}'s family",
+  "@setupFamilyHouseholdNameFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "setupInviteTitle": "{mode, select, couple{Invite your partner} family{Invite your family} friends{Invite your housemates} other{Invite someone}}",
+  "@setupInviteTitle": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupInviteBody": "{mode, select, couple{HomeSync works best with two: once they join, you'll see chores, money and your weekly check-in together.} family{Once they join, everyone sees what's theirs and what's shared.} friends{Once they join, chores and money stay clear for everyone.} other{Share the code so they can join your household.}}",
+  "@setupInviteBody": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupInviteCodeLabel": "Your invite code",
+  "setupInviteHint": "{mode, select, family{They download HomeSync, tap “I have a code” and enter this one.} friends{They download HomeSync, tap “I have a code” and enter this one.} other{They download HomeSync, tap “I have a code” and enter this one.}}",
+  "@setupInviteHint": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupInviteLater": "I'll do it later",
+  "setupInviteDone": "Done, I sent it",
+  "homeNextStepExpenseTitle": "Log your first shared expense",
+  "homeNextStepExpenseBody": "So the app can keep track of who paid what.",
+  "homeNextStepExpenseAction": "Add",
+  "premiumProductsUnavailableTitle": "We couldn't load the plans",
+  "premiumProductsUnavailableBody": "Check your connection and try again. If you already paid, restore your purchase.",
+  "premiumRestoreNothing": "We didn't find any purchases to restore.",
+  "premiumRestoreError": "We couldn't restore your purchase. Try again.",
+  "coupleWeekReadingEarly": "{count, plural, =1{1 task so far this week: too early to read the split.} other{{count} tasks so far this week: too early to read the split.}}",
+  "@coupleWeekReadingEarly": {
+    "description": "Reading on the couple week card when only a few tasks (1-3) were done this week, too few to judge the split. Never a reproach.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceCardRecordPaymentButton": "Record payment",
+  "@balanceCardRecordPaymentButton": {
+    "description": "Action on the couple Home balance card when the partner owes the current user: records that the partner already paid them back."
+  },
+  "homeActivityLoadError": "We couldn't load the activity.",
+  "@homeActivityLoadError": {
+    "description": "Inline error on the couple Home when the recent activity feed fails to load. Shown next to a Retry button."
+  },
+  "expensesSummaryLoadError": "We couldn't load this month's summary.",
+  "@expensesSummaryLoadError": {
+    "description": "Inline error on the Finances tab when the monthly summary card fails to load. Shown next to a Retry button."
+  },
+  "expensesFeedLoadError": "We couldn't load your transactions.",
+  "@expensesFeedLoadError": {
+    "description": "Inline error on the Finances tab when the transactions list fails to load. Shown next to a Retry button."
+  },
+  "premiumBenefitBudgetsRecap": "Budgets and monthly recap",
+  "@premiumBenefitBudgetsRecap": {
+    "description": "Premium benefit title on the paywall: per-category budgets plus the end-of-month recap. Replaced the old 'Advanced stats' benefit, which had no Premium feature behind it."
+  },
+  "premiumBenefitBudgetsRecapDesc": "Set limits per category and see each month's wrap-up: where the money went and who paid for what.",
+  "@premiumBenefitBudgetsRecapDesc": {
+    "description": "Premium benefit description on the paywall for budgets and the monthly recap."
+  }
 }
