@@ -22,7 +22,10 @@ dependencies:
   shared_preferences: ^2.3.0
 
   # State management
-  flutter_riverpod: ^3.3.2
+  # 3.4.2 or newer: 3.4.0 and 3.4.2 fix the "setState() or markNeedsBuild()
+  # called during build" errors that 1.2.3 logged from MainScreen and
+  # HomeCoupleView when a stale provider was flushed inside build.
+  flutter_riverpod: ^3.4.2
   riverpod_annotation: ^4.0.3
 
   # UI Framework / Icons
