@@ -192,7 +192,7 @@ shorebird release android --dart-define=APP_ENV=production --dart-define=AUTH_MO
 
 ### 🟢 Post-launch (hardening)
 - [ ] Índices en FKs + drop de índices sin uso/duplicados — §1.5
-- [ ] Retención de `application_logs` (>30d) — §1.5
+- [x] Retención de `application_logs` (>30d) — §1.5. Hecho el 2026-09-27: 30 días de detalle y resumen diario (`20260927090000`).
 - [ ] Consolidar policies permisivas múltiples — §1.5
 - [ ] Mover `pg_net` fuera de `public` — §1.5
 - [ ] Limpiar keystores duplicados/`.old` — §3.4

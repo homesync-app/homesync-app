@@ -8,6 +8,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/semantic_tap.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 
 class FamilyWeeklySummarySection extends ConsumerWidget {
@@ -405,7 +406,9 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
                 children: List.generate(tabs.length, (i) {
                   final selected = _selectedTab == i;
                   return Expanded(
-                    child: GestureDetector(
+                    child: SemanticTap(
+                      selected: selected,
+                      inMutuallyExclusiveGroup: true,
                       onTap: () => setState(() => _selectedTab = i),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 220),

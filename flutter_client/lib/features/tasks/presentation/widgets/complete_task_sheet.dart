@@ -22,6 +22,7 @@ import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
+import 'package:homesync_client/shared/widgets/semantic_tap.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -730,7 +731,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           final avatarUrl = user?['avatar_url'] as String?;
           final isSelected = _selectedMemberIds.contains(userId);
 
-          return GestureDetector(
+          return SemanticTap(
+            checked: isSelected,
             onTap: () {
               AppHaptics.selection();
               setState(() {
@@ -837,7 +839,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     required VoidCallback onTap,
   }) {
     final theme = context.theme;
-    return GestureDetector(
+    return SemanticTap(
+      selected: isSelected,
       onTap: () {
         AppHaptics.selection();
         onTap();
@@ -986,7 +989,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         ? _selectedCategories.isEmpty
         : _selectedCategories.contains(normId);
 
-    return GestureDetector(
+    return SemanticTap(
+      selected: isSelected,
       onTap: () {
         AppHaptics.tap();
         setState(() {
@@ -1186,7 +1190,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
     return KeyedSubtree(
       key: itemKey,
-      child: GestureDetector(
+      child: SemanticTap(
+        checked: isSelected,
         onTap: () {
           AppHaptics.tap();
           _toggleTask(task);

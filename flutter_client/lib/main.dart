@@ -266,17 +266,18 @@ void main() async {
         in details.informationCollector?.call() ?? <DiagnosticsNode>[]) {
       diagnosticLines.add(node.toString());
     }
+    final diagnostics = diagnosticLines.join('\n');
     final fullContext = <String, dynamic>{
       ...richContext,
       'library': details.library,
       'context': details.context?.toString(),
       'summary': details.summary.toString(),
-      'full_diagnostics': diagnosticLines.join('\n'),
+      // Clipped: the full stack already travels in stack_trace, and the
+      // server drops oversized contexts anyway.
+      'full_diagnostics': diagnostics.length > _maxRemoteDiagnosticsLength
+          ? diagnostics.substring(0, _maxRemoteDiagnosticsLength)
+          : diagnostics,
     };
-    if (details.stack != null) {
-      fullContext['stack_frames_head'] =
-          details.stack.toString().split('\n').take(20).join('\n');
-    }
     rpc.logApplicationError(
       message: details.exceptionAsString(),
       stackTrace: details.stack?.toString(),
@@ -352,6 +353,11 @@ void main() async {
 const _benignFrameworkWarnings = <String>[
   'ListTile background color or ink splashes may be invisible',
 ];
+
+/// Longest `full_diagnostics` sent to application_logs. Framework errors can
+/// carry the whole widget chain; the first few thousand characters are enough
+/// to triage.
+const _maxRemoteDiagnosticsLength = 4000;
 
 bool _isBenignFrameworkWarning(FlutterErrorDetails details) {
   final message = details.exceptionAsString();

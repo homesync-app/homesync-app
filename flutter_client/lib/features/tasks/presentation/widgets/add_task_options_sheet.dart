@@ -19,6 +19,7 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_loader.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/semantic_tap.dart';
 
 import 'create_task_dialog.dart';
 import 'task_creation_result.dart';
@@ -420,7 +421,9 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         : context.theme.textSecondary;
     final theme = context.theme;
 
-    return GestureDetector(
+    return SemanticTap(
+      selected: isSelected,
+      inMutuallyExclusiveGroup: true,
       onTap: () => setState(() => _selectedCategory = id),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),

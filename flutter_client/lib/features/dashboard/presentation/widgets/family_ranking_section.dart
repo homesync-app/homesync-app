@@ -9,6 +9,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
+import 'package:homesync_client/shared/widgets/semantic_tap.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 // We'll define tabs dynamically in the build method to support localization
@@ -239,7 +240,9 @@ class _RankingContent extends StatelessWidget {
                     children: List.generate(tabs.length, (i) {
                       final selected = selectedTab == i;
                       return Expanded(
-                        child: GestureDetector(
+                        child: SemanticTap(
+                          selected: selected,
+                          inMutuallyExclusiveGroup: true,
                           onTap: () => onTabChanged(i),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 220),

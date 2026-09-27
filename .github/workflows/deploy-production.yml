@@ -1,9 +1,21 @@
 name: Deploy to Google Play
 
+# Publicar a producción es manual: un push a main ya no dispara este
+# workflow. Se corre sobre main desde Actions, o con gh, confirmando la
+# versión de pubspec.yaml (sin el +build):
+#   gh workflow run deploy-production.yml --ref main -f confirm_version=1.5.0
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      confirm_version:
+        description: "Versión a publicar, igual a pubspec.yaml sin el +build (ej. 1.5.0)"
+        required: true
+        type: string
+
+# Nunca dos publicaciones a la vez.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 jobs:
   pre-deploy-smoke:
@@ -14,6 +26,25 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Confirm release
+        env:
+          CONFIRM_VERSION: ${{ inputs.confirm_version }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "❌ Solo se publica desde main (este run es de $GITHUB_REF)."
+            exit 1
+          fi
+          version=$(sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' flutter_client/pubspec.yaml | head -n 1)
+          if [ -z "$version" ]; then
+            echo "❌ No encontré 'version:' en flutter_client/pubspec.yaml."
+            exit 1
+          fi
+          if [ "$CONFIRM_VERSION" != "$version" ]; then
+            echo "❌ La confirmación ($CONFIRM_VERSION) no coincide con pubspec.yaml ($version)."
+            exit 1
+          fi
+          echo "✅ Publicando $version desde main"
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -33,17 +64,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
+      # Bloqueante: si la base de producción no pasa el smoke, no se publica.
       - name: Run production smoke checks
-        continue-on-error: true
         env:
           PROD_DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
         run: |
           if [ -z "$PROD_DATABASE_URL" ]; then
-            echo "⚠️ PROD_DATABASE_URL not set — skipping smoke checks"
-            exit 0
+            echo "❌ Falta el secret PROD_DATABASE_URL: sin smoke no se publica."
+            exit 1
           fi
-          python3 scripts/prod_ops/run_post_deploy_smoke.py --db-url "$PROD_DATABASE_URL" || \
-            echo "⚠️ Smoke checks failed (DB unreachable from CI) — not blocking deploy"
+          python3 scripts/prod_ops/run_post_deploy_smoke.py --db-url "$PROD_DATABASE_URL"
 
   build-and-deploy:
     name: Build and Deploy
@@ -245,9 +275,10 @@ jobs:
             fi
           done
 
-      # Publicacion directa: track production con status completed. La release
-      # queda enviada a revision de Google y se publica sola al aprobarse
-      # (sin click de promocion en Play Console).
+      # Track production con status completed: la release queda enviada a
+      # revisión de Google y se publica sola al aprobarse. Solo se llega acá
+      # corriendo este workflow a mano, con la versión confirmada y el smoke
+      # previo en verde.
       - name: Deploy to Google Play (Production)
         if: env.KEYSTORE_AVAILABLE == 'true'
         uses: r0adkll/upload-google-play@v1.1.3

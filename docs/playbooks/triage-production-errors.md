@@ -4,7 +4,9 @@ Objetivo: cuando alguien pida "mira que errores hay" o "arregla el error mas imp
 
 ## Fuentes
 
-- `public.application_logs`: errores/crashes/logs capturados por Flutter y visibles en `homesync_admin` > Bandeja > Crashes / Logs.
+- `public.application_logs`: errores/crashes/logs capturados por Flutter y visibles en `homesync_admin` > Bandeja > Crashes / Logs. Guarda el detalle de los últimos 30 días.
+  - Los conteos son un piso, no el total: la app manda el mismo error una vez cada 5 minutos (máximo 10 por minuto y 100 por sesión), y la base acepta hasta 30 filas cada 10 minutos y 300 por día por usuario.
+- `public.application_log_daily_rollups`: resumen diario de los logs ya borrados (nivel, firma del mensaje, primer frame de la app, versión). Sirve para ver si un error viejo volvió.
 - `public.error_issues`: agrupacion deduplicada de errores, con estado operativo (`open`, `investigating`, `fixed`, `ignored`) y notas para seguimiento.
 - Firebase Crashlytics: respaldo para crashes nativos Android/iOS. Usarlo si falta contexto en Supabase.
 
@@ -71,6 +73,23 @@ order by
   occurrences desc,
   last_seen desc
 limit 10;
+```
+
+   Para ver si un error ya había pasado antes de los últimos 30 días:
+
+```sql
+select
+  level,
+  signature,
+  first_app_frame,
+  sum(events)::int as events,
+  max(users) as max_users_per_day,
+  min(day) as first_day,
+  max(day) as last_day
+from public.application_log_daily_rollups
+group by level, signature, first_app_frame
+order by events desc
+limit 20;
 ```
 
 4. Elegir el grupo con mas impacto: prioridad `critical`, luego cantidad de ocurrencias, luego usuarios afectados, luego recencia.

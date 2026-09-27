@@ -6,6 +6,7 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/theme_palettes.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/semantic_tap.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class SettingsLoadingCard extends StatelessWidget {
@@ -347,7 +348,9 @@ class SettingsLanguageCard extends StatelessWidget {
               return Padding(
                 padding:
                     EdgeInsets.only(bottom: i < options.length - 1 ? 8 : 0),
-                child: GestureDetector(
+                child: SemanticTap(
+                  selected: isSelected,
+                  inMutuallyExclusiveGroup: true,
                   onTap: () => onLocaleChanged(locale),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
@@ -497,7 +500,12 @@ class SettingsCurrencyCard extends StatelessWidget {
             runSpacing: 8,
             children: supportedCurrencies.map((currency) {
               final isSelected = currentCurrency.code == currency.code;
-              return GestureDetector(
+              return SemanticTap(
+                selected: isSelected,
+                inMutuallyExclusiveGroup: true,
+                // Without it the reader spells out the symbol first.
+                label: '${currency.code} · ${_currencyName(t, currency)}',
+                excludeChildSemantics: true,
                 onTap: () => onCurrencyChanged(currency),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
@@ -528,13 +536,18 @@ class SettingsCurrencyCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        '${currency.code} · ${_currencyName(t, currency)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight:
-                              isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: isSelected ? theme.primary : theme.textPrimary,
+                      // At 1.3x on a 320 dp screen the selected USD chip
+                      // overflowed by 27 px: the name wraps instead.
+                      Flexible(
+                        child: Text(
+                          '${currency.code} · ${_currencyName(t, currency)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight:
+                                isSelected ? FontWeight.w800 : FontWeight.w600,
+                            color:
+                                isSelected ? theme.primary : theme.textPrimary,
+                          ),
                         ),
                       ),
                       if (isSelected) ...[
@@ -602,7 +615,9 @@ class SettingsThemeModeSelector extends StatelessWidget {
               child: Padding(
                 padding:
                     EdgeInsets.only(right: mode != ThemeMode.system ? 8 : 0),
-                child: GestureDetector(
+                child: SemanticTap(
+                  selected: isSelected,
+                  inMutuallyExclusiveGroup: true,
                   onTap: () => onModeChanged(mode),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
@@ -933,7 +948,9 @@ class SettingsProfileCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              GestureDetector(
+              SemanticTap(
+                label: t.settingsProfileAvatarAction,
+                excludeChildSemantics: true,
                 onTap: onAvatarTap,
                 child: Hero(
                   tag: 'user-profile-avatar',

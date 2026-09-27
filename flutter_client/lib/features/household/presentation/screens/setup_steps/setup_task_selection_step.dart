@@ -8,6 +8,7 @@ import 'package:homesync_client/features/household/presentation/providers/setup_
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
+import 'package:homesync_client/shared/widgets/semantic_tap.dart';
 
 import '../setup_widgets.dart';
 
@@ -190,7 +191,8 @@ class _TaskChip extends StatelessWidget {
       template,
     );
 
-    return GestureDetector(
+    return SemanticTap(
+      selected: isSelected,
       onTap: onTap,
       child: AnimatedContainer(
         duration: AppMotion.normal,

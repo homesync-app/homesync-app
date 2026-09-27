@@ -5,6 +5,7 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/semantic_tap.dart';
 
 /// Shared body for the couple/family finance configuration.
 ///
@@ -215,7 +216,9 @@ class CoupleFinanceConfigBody extends StatelessWidget {
     required bool isActive,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return SemanticTap(
+      selected: isActive,
+      inMutuallyExclusiveGroup: true,
       onTap: () {
         AppHaptics.selection();
         onTap();
@@ -225,9 +228,8 @@ class CoupleFinanceConfigBody extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: AppInsets.itemGap),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isActive
-              ? theme.surface
-              : theme.surface.withValues(alpha: 0.5),
+          color:
+              isActive ? theme.surface : theme.surface.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(AppRadii.lg),
           border: Border.all(
             color: isActive ? tone : Colors.transparent,
@@ -255,9 +257,7 @@ class CoupleFinanceConfigBody extends StatelessWidget {
               ),
               child: Icon(
                 icon,
-                color: isActive
-                    ? tone
-                    : theme.textMuted.withValues(alpha: 0.8),
+                color: isActive ? tone : theme.textMuted.withValues(alpha: 0.8),
                 size: AppControlSizes.iconLg,
               ),
             ),

@@ -446,6 +446,8 @@ Unique: (user_id, type, reference_id) — idempotente via ON CONFLICT DO NOTHING
 | created_at | TIMESTAMPTZ | default now() |
 
 #### `application_logs`
+Errores que manda la app. Guarda el detalle de los últimos 30 días; lo anterior queda en `application_log_daily_rollups`. El trigger `application_logs_guard_insert` acepta hasta 30 filas cada 10 minutos y 300 por día por usuario (el resto se descarta sin error) y recorta `message` (2000), `stack_trace` (16000) y un `context` de más de 16 KB. Solo admins leen.
+
 | Columna | Tipo |
 |---------|------|
 | id | UUID PK |
@@ -456,6 +458,21 @@ Unique: (user_id, type, reference_id) — idempotente via ON CONFLICT DO NOTHING
 | context | JSONB nullable |
 | device_info | JSONB nullable |
 | created_at | TIMESTAMPTZ |
+
+#### `application_log_daily_rollups`
+Resumen de los logs que `prune_application_logs()` borra: una fila por día (UTC), nivel, firma del mensaje (primera línea sin números ni ids), primer frame de la app y versión. Solo admins leen.
+
+| Columna | Tipo | Notas |
+|---------|------|-------|
+| day | DATE | PK junto con level, signature, first_app_frame y app_version |
+| level | TEXT | |
+| signature | TEXT | hasta 200 caracteres |
+| first_app_frame | TEXT | `package:homesync_client/...` o vacío |
+| app_version | TEXT | o vacío |
+| events | INTEGER | filas resumidas |
+| users | INTEGER | usuarios distintos en el día |
+| first_seen_at | TIMESTAMPTZ | |
+| last_seen_at | TIMESTAMPTZ | |
 
 #### `error_issues`
 Agrupacion operativa de `application_logs` para que Codex/admin puedan priorizar, marcar estado y cerrar errores sin leer cientos de filas crudas.
@@ -603,6 +620,11 @@ expense_templates.id ← planned_expenses.template_id
 | get_coin_history(p_user_id) | TABLE | Historial de coins |
 | get_member_activity_stats(p_user_id) | TABLE | Stats de actividad |
 | complete_couple_challenge_v1(...) | JSONB | Completa el desafío semanal de pareja atómicamente: registra `couple_challenge_completions` + acredita XP/coins a cada miembro vía ledger + actividad en el feed. Idempotente por `(household_id, week_index)` y `request_id`. Reemplaza el flujo client-side de 3 llamadas; NO crea tarea. |
+
+### Sistema
+| Funcion | Retorna | Proposito |
+|---------|---------|-----------|
+| prune_application_logs(p_keep_days default 30) | TABLE(rolled_up_rows, deleted_rows, rollup_groups) | Resume en `application_log_daily_rollups` y borra los logs de más de `p_keep_days` días (mínimo 7). Solo service_role; lo corre el cron `prune-application-logs-daily` a las 06:40 UTC |
 
 ---
 

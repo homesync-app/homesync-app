@@ -27,6 +27,16 @@ class AnimatedPress extends StatefulWidget {
   final Widget Function(BuildContext context, double t, Widget? child)?
       pressBuilder;
 
+  /// Label for presses without readable text, such as icon-only buttons.
+  final String? semanticLabel;
+
+  /// Selected state, for tabs and chips built on top of this press.
+  final bool? selected;
+
+  /// Reads only [semanticLabel] and skips the children: for a styled
+  /// Material button used as decoration, or text that would be read twice.
+  final bool excludeChildSemantics;
+
   const AnimatedPress({
     super.key,
     required this.child,
@@ -38,6 +48,9 @@ class AnimatedPress extends StatefulWidget {
     this.haptic = AppPressHaptic.none,
     this.longPressHaptic = AppPressHaptic.medium,
     this.pressBuilder,
+    this.semanticLabel,
+    this.selected,
+    this.excludeChildSemantics = false,
   });
 
   @override
@@ -70,7 +83,7 @@ class _AnimatedPressState extends State<AnimatedPress> {
         ? const CupertinoMotion.smooth()
         : const MaterialSpringMotion.standardSpatialFast();
 
-    return GestureDetector(
+    final gesture = GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTapDown: _isActive ? (_) => _pressDown() : null,
       onTapUp: _isActive
@@ -98,6 +111,23 @@ class _AnimatedPressState extends State<AnimatedPress> {
         },
         child: widget.child,
       ),
+    );
+
+    // Every press is announced as a button, enabled only while it has a
+    // callback. Before, a screen reader heard the child's text with no role,
+    // and a disabled press still sounded tappable.
+    final onActivate = widget.onTap ?? widget.onPressed;
+    return Semantics(
+      container: true,
+      button: true,
+      enabled: _isActive,
+      selected: widget.selected,
+      label: widget.semanticLabel,
+      excludeSemantics: widget.excludeChildSemantics,
+      // Excluding the children also drops the GestureDetector's actions.
+      onTap: widget.excludeChildSemantics ? onActivate : null,
+      onLongPress: widget.excludeChildSemantics ? widget.onLongPress : null,
+      child: gesture,
     );
   }
 

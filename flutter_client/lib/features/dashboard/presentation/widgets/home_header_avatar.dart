@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
@@ -18,6 +19,10 @@ class HomeHeaderAvatar extends StatelessWidget {
   final double premiumMaxWidth;
   final double premiumMaxHeight;
 
+  /// Read by screen readers. Defaults to the Settings title because in every
+  /// home the header avatar opens Settings.
+  final String? semanticLabel;
+
   const HomeHeaderAvatar({
     super.key,
     this.name,
@@ -34,6 +39,7 @@ class HomeHeaderAvatar extends StatelessWidget {
     this.premiumHeight = 102,
     this.premiumMaxWidth = 150,
     this.premiumMaxHeight = 150,
+    this.semanticLabel,
   });
 
   @override
@@ -46,6 +52,10 @@ class HomeHeaderAvatar extends StatelessWidget {
 
     return AnimatedPress(
       onTap: onTap,
+      // The avatar's own initials or image add nothing to the label.
+      semanticLabel:
+          semanticLabel ?? AppLocalizations.of(context).settingsAppBarTitle,
+      excludeChildSemantics: true,
       child: child,
     );
   }
