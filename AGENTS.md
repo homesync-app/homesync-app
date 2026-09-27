@@ -73,6 +73,14 @@ Shorebird está instalado y configurado (`flutter_client/shorebird.yaml`, app_id
 
 **Regla**: si el cambio es solo Dart (lógica, UI, providers), preferir `shorebird patch` en vez de subir una release completa. Solo hacer release completa si hay cambios en código nativo, permisos, assets o dependencias con código nativo.
 
+**Publicar en Play (CI)**: un push a `main` ya no publica. `deploy-production.yml` se corre a mano sobre `main` confirmando la versión de `pubspec.yaml` sin el `+build`:
+
+```bash
+gh workflow run deploy-production.yml --ref main -f confirm_version=1.5.0
+```
+
+Antes de construir corre el smoke de producción, y si falla (o falta `PROD_DATABASE_URL`) no publica. `scripts/ci_guard.py` rechaza en los workflows `|| true`, `|| echo`, `|| exit 0` y `continue-on-error: true`; una excepción real va con `# ci-guard: allow <motivo>` en esa línea.
+
 ## Convenciones (OBLIGATORIO)
 
 - **Código**: nombres en inglés (`expenses`, `household`, `settings`)
@@ -211,3 +219,18 @@ dart run arb_translate
   "Tengo un código" en el setup, una sola vez por instalación. Solo Android.
 - Pedido de reseña (`ReviewPromptService`): tras dejar el balance en cero o a la décima tarea,
   con al menos 7 días de uso y 120 días entre pedidos. Play aplica su propia cuota encima.
+- Logs remotos: todo pasa por `AdminRpcService.logApplicationError`, que aplica `RemoteLogThrottle`
+  (el mismo error una vez cada 5 minutos, máximo 10 por minuto y 100 por sesión). Si el insert
+  falla se usa `log.w`, nunca `log.e`: `log.e` vuelve a entrar al mismo sink. En la base, el trigger
+  `application_logs_guard_insert` limita por usuario y el cron `prune-application-logs-daily` deja
+  30 días de detalle y resume lo anterior en `application_log_daily_rollups`.
+- Riverpod `^3.4.2` como mínimo: con 3.3.2, leer un provider desactualizado dentro de `build`
+  tiraba "setState() or markNeedsBuild() called during build" (MainScreen y HomeCoupleView en
+  1.2.3). Lo cubre `test/riverpod_build_flush_regression_test.dart`, que falla con 3.3.2.
+- Accesibilidad: `AnimatedPress` ya es un botón para el lector de pantalla (rol, habilitado,
+  `selected`, `semanticLabel` para íconos sin texto). No envolverlo en otro `Semantics(button:)`
+  ni en un `Tooltip`: quedan fuera de su nodo. Para chips, pestañas y opciones con
+  `GestureDetector`, usar `SemanticTap` (`selected`, `checked`, `inMutuallyExclusiveGroup`).
+- Texto grande: `MaterialApp.builder` limita la escala del sistema a 1.3x. Los textos en filas
+  angostas van en `Flexible` o `FittedBox`; `test/accessibility_semantics_test.dart` prueba 1.3x en
+  320 dp con la fuente Outfit real.
