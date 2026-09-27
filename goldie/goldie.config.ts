@@ -9,12 +9,12 @@ import type { GoldieConfig } from "goldie";
 // reinstala); goldie se usa para frame / manifest / verify / studio.
 // Titulos y paleta: flutter_client/playstore_assets/STORE_LISTING_2026-09.md.
 // Rutas relativas a este archivo (goldie las resuelve desde aca).
-const APP_ROOT = "..";
+const APP_ROOT = ".";
 
 const config: GoldieConfig = {
   appRoot: APP_ROOT,
   android: {
-    appPath: `${APP_ROOT}/flutter_client/build/app/outputs/flutter-apk/app-release.apk`,
+    appPath: `../flutter_client/build/app/outputs/flutter-apk/app-release.apk`,
     applicationId: "com.blas.homesync",
   },
   devices: ["pixel-10-pro"],
