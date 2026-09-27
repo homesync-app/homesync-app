@@ -2909,8 +2909,45 @@
   "@premiumPaywallEyebrow": {
     "description": "Short premium paywall badge shown above the title."
   },
-  "premiumPaywallTitle": "Automatizá tu hogar sin cargar dos veces",
-  "premiumPaywallSubtitle": "Pagos, compras y presupuestos trabajando juntos para que el balance esté siempre claro.",
+  "premiumPaywallEyebrowFor": "Premium · {name}",
+  "@premiumPaywallEyebrowFor": {
+    "description": "Badge personalizado del paywall. name es el nombre propio del hogar (ej. 'Casa Pérez') o los nombres de la pareja ('Sofi y Mati').",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumPaywallCoupleNames": "{first} y {second}",
+  "@premiumPaywallCoupleNames": {
+    "description": "Nombres de los dos miembros de una pareja para el badge del paywall. first = el usuario actual.",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumPaywallTitle": "{type, select, couple{Un solo plan para los dos} family{Un solo plan para toda la familia} friends{Un solo plan para toda la casa} other{Automatizá tu hogar sin cargar dos veces}}",
+  "@premiumPaywallTitle": {
+    "description": "Título del paywall según el tipo de hogar (couple/family/friends/solo). Premium se activa para todo el hogar.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumPaywallSubtitle": "{type, select, couple{Paga uno y lo usan los dos: pagos, compras y presupuestos trabajando juntos.} family{Paga uno y lo usa toda la familia, también quienes se sumen después.} friends{Paga uno y lo usan todos en la casa, también quienes se sumen después.} other{Pagos, compras y presupuestos trabajando juntos para que el balance esté siempre claro.}}",
+  "@premiumPaywallSubtitle": {
+    "description": "Subtítulo del paywall según el tipo de hogar. La suscripción de un miembro activa Premium para todo el hogar.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
   "premiumBenefitRecurringPayments": "Pagos recurrentes",
   "@premiumBenefitRecurringPayments": {
     "description": "Premium benefit title for scheduled or recurring payments."
@@ -2958,7 +2995,32 @@
       }
     }
   },
-  "premiumContinueWithPlan": "Continuar",
+  "premiumActivateAnnualCta": "Activar Premium · {price}/año",
+  "@premiumActivateAnnualCta": {
+    "description": "Botón de compra del paywall con el plan anual elegido. price es el precio de la tienda ya formateado.",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumActivateMonthlyCta": "Activar Premium · {price}/mes",
+  "@premiumActivateMonthlyCta": {
+    "description": "Botón de compra del paywall con el plan mensual elegido. price es el precio de la tienda ya formateado.",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumLegalTerms": "Términos",
+  "@premiumLegalTerms": {
+    "description": "Link corto a los Términos de uso, debajo del botón de compra."
+  },
+  "premiumLegalPrivacy": "Privacidad",
+  "@premiumLegalPrivacy": {
+    "description": "Link corto a la Política de privacidad, debajo del botón de compra."
+  },
   "premiumAlreadyActiveTitle": "Premium activo en tu hogar",
   "premiumAlreadyActiveBody": "Todo listo: las funciones premium ya están disponibles para este hogar.",
   "premiumActiveStatusPill": "Plan activo",

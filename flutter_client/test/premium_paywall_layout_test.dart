@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/premium_animated_avatar.dart';
@@ -10,6 +13,11 @@ import 'package:purchases_flutter/purchases_flutter.dart' as rc;
 class _FakePremiumNotifier extends PremiumNotifier {
   @override
   Future<bool> build() async => false;
+}
+
+class _NoMembers extends HouseholdMembersNotifier {
+  @override
+  Future<List<MemberModel>> build() async => const [];
 }
 
 void main() {
@@ -25,6 +33,9 @@ void main() {
           premiumProductsProvider.overrideWith(
             (ref) async => <rc.Package>[],
           ),
+          currentHouseholdProvider.overrideWith((ref) async => null),
+          householdMembersProvider.overrideWith(_NoMembers.new),
+          currentUserIdProvider.overrideWithValue(null),
         ],
         child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,

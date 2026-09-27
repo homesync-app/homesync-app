@@ -174,6 +174,9 @@ export const EVENT_MOTIONS = {
     // pose estable lo resuelve el player fundiendo al PNG al terminar.
     tada: {
       loop: 'oneshot',
+      // El salto sube mas que el aire del encuadre normal: sin headroom, la
+      // normalizacion de escala le cortaba las orejas (feedback 2026-09-27).
+      headroom: 1.15,
       // El player sostiene el ULTIMO frame como pose de reposo: el prompt
       // usa una linea de tiempo explicita para que el gesto termine ANTES
       // del final y el ultimo segundo sea pose sentada quieta, ojos abiertos.

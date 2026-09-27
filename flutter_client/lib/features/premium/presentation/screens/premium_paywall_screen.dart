@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
+import 'package:homesync_client/config/app_legal_links.dart';
+import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/services/analytics_service.dart';
@@ -14,6 +16,9 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/mascot_motion_provider.dart';
+import 'package:homesync_client/features/household/domain/models/household_model.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/premium/domain/premium_pricing.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_amount.dart';
@@ -21,7 +26,9 @@ import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/design/app_button.dart';
 import 'package:homesync_client/shared/widgets/premium_animated_avatar.dart';
+import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:purchases_flutter/purchases_flutter.dart' as rc;
+import 'package:url_launcher/url_launcher.dart';
 
 const String _kMascotDir = 'assets/images/premium_3d_avatars';
 const Map<AvatarMotion, String> _kMascotMotions = {
@@ -146,10 +153,13 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
               padding: EdgeInsets.fromLTRB(
                 20,
                 // Debajo de la barra de estado, solapado con la fila de la X
-                // para que el hero arranque bien arriba.
-                MediaQuery.paddingOf(context).top + 8,
+                // para que el hero arranque bien arriba. Deja ~14px para el
+                // salto del tada, que se asoma por encima de la caja del gato
+                // (si no, las orejas quedan bajo la camara/barra de estado).
+                MediaQuery.paddingOf(context).top + 16,
                 20,
-                isPremium ? 24 : 320,
+                // Alto del panel de compra flotante (planes + CTA + legales).
+                isPremium ? 24 : 344,
               ),
               child: Column(
                 children: [
@@ -240,13 +250,56 @@ class _HeroMascotState extends State<_HeroMascot> {
   }
 }
 
-class _HeroHeader extends StatelessWidget {
+/// Nombres que pone la app al crear el hogar: no dicen nada del usuario, asi
+/// que el badge no los muestra ("Premium · Mi Hogar" suena a plantilla).
+const Set<String> _kGenericHouseholdNames = {
+  'mi hogar',
+  'mi familia',
+  'my home',
+  'my household',
+  'my family',
+  'hogar',
+};
+
+class _HeroHeader extends ConsumerWidget {
   const _HeroHeader();
 
+  /// Para quien es el Premium: el nombre propio del hogar si lo tiene; si
+  /// no, en pareja, los dos nombres (primero el del usuario). null = badge
+  /// generico.
+  String? _audienceName(
+    AppLocalizations t,
+    HouseholdModel? household,
+    List<MemberModel> members,
+    String? currentUserId,
+  ) {
+    final name = household?.name.trim() ?? '';
+    final generic = _kGenericHouseholdNames.contains(name.toLowerCase()) ||
+        name.toLowerCase() == t.setupFamilyDefaultName.toLowerCase();
+    if (name.isNotEmpty && !generic) return name;
+
+    if (household?.householdType == 'couple' && members.length == 2) {
+      final me = members.firstWhere(
+        (m) => m.userId == currentUserId,
+        orElse: () => members.first,
+      );
+      final partner = members.firstWhere((m) => !identical(m, me));
+      return t.premiumPaywallCoupleNames(me.displayName, partner.displayName);
+    }
+    return null;
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
+    final household = ref.watch(currentHouseholdProvider).value;
+    final members = ref.watch(householdMembersProvider).value ?? const [];
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final type = household?.householdType ?? 'solo';
+    final audience = _audienceName(t, household, members, currentUserId);
+    // Las caras del hogar reemplazan al icono: Premium se activa para todos.
+    final faces = type == 'solo' ? const <MemberModel>[] : members.take(3);
 
     return Column(
       children: [
@@ -262,7 +315,7 @@ class _HeroHeader extends StatelessWidget {
             .fadeIn(duration: 250.ms),
         const SizedBox(height: 10),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: EdgeInsets.fromLTRB(faces.isEmpty ? 12 : 5, 5, 12, 5),
           decoration: BoxDecoration(
             color: AppColors.accentGold.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(AppRadii.pill),
@@ -273,18 +326,27 @@ class _HeroHeader extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.workspace_premium_rounded,
-                color: AppColors.accentGold,
-                size: 14,
-              ),
-              const SizedBox(width: 5),
-              Text(
-                t.premiumPaywallEyebrow,
-                style: AppTypography.caption.copyWith(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: theme.textPrimary,
+              if (faces.isEmpty)
+                const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: AppColors.accentGold,
+                  size: 14,
+                )
+              else
+                _MemberFaces(members: faces.toList()),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  audience == null
+                      ? t.premiumPaywallEyebrow
+                      : t.premiumPaywallEyebrowFor(audience),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.caption.copyWith(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: theme.textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -292,7 +354,7 @@ class _HeroHeader extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          t.premiumPaywallTitle,
+          t.premiumPaywallTitle(type),
           textAlign: TextAlign.center,
           style: AppTypography.heroAmount.copyWith(
             fontSize: 24,
@@ -304,7 +366,7 @@ class _HeroHeader extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Text(
-            t.premiumPaywallSubtitle,
+            t.premiumPaywallSubtitle(type),
             textAlign: TextAlign.center,
             style: AppTypography.body.copyWith(
               fontSize: 13.5,
@@ -315,6 +377,50 @@ class _HeroHeader extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Avatares del hogar superpuestos dentro del badge del paywall.
+class _MemberFaces extends StatelessWidget {
+  final List<MemberModel> members;
+
+  const _MemberFaces({required this.members});
+
+  static const double _radius = 9;
+  static const double _ring = 1.5;
+  static const double _overlap = 6;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    const diameter = (_radius + _ring) * 2;
+    return SizedBox(
+      width: diameter + (members.length - 1) * (diameter - _overlap),
+      height: diameter,
+      child: Stack(
+        children: [
+          for (var i = 0; i < members.length; i++)
+            Positioned(
+              left: i * (diameter - _overlap),
+              child: Container(
+                padding: const EdgeInsets.all(_ring),
+                decoration: BoxDecoration(
+                  color: theme.background,
+                  shape: BoxShape.circle,
+                ),
+                child: CustomUserAvatar(
+                  name: members[i].displayName,
+                  userId: members[i].userId,
+                  avatarUrl: members[i].avatarUrl,
+                  radius: _radius,
+                  forceCircular: true,
+                  allowMotion: false,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -681,11 +787,27 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
                             semanticsLabel: t.commonLoading,
                           ),
                         )
-                      : Text(
-                          t.premiumContinueWithPlan,
-                          style: AppTypography.cardTitle.copyWith(
-                            fontSize: 16.5,
-                            color: Colors.white,
+                      // El monto en el botón: se paga sabiendo cuánto y cada
+                      // cuánto, sin volver a mirar las tarjetas de arriba.
+                      : Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              _isAnnual(selectedPackage)
+                                  ? t.premiumActivateAnnualCta(
+                                      selectedPackage.storeProduct.priceString,
+                                    )
+                                  : t.premiumActivateMonthlyCta(
+                                      selectedPackage.storeProduct.priceString,
+                                    ),
+                              maxLines: 1,
+                              style: AppTypography.cardTitle.copyWith(
+                                fontSize: 16.5,
+                                color: Colors.white,
+                                fontFeatures: kTabularFigures,
+                              ),
+                            ),
                           ),
                         ),
                 ),
@@ -693,8 +815,11 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
             ),
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          // Wrap: con texto grande (accesibilidad) baja de linea en vez de
+          // desbordar el panel.
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 t.premiumCancelAnytime,
@@ -732,7 +857,75 @@ class _PurchasePanelState extends ConsumerState<_PurchasePanel> {
               ),
             ],
           ),
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              _LegalLink(
+                label: t.premiumLegalTerms,
+                url: AppLegalLinks.termsOfUse,
+              ),
+              Text(
+                '·',
+                style: AppTypography.caption.copyWith(
+                  fontSize: 11,
+                  color: theme.textMuted,
+                ),
+              ),
+              _LegalLink(
+                label: t.premiumLegalPrivacy,
+                url: AppLegalLinks.privacyPolicy,
+              ),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _LegalLink extends StatelessWidget {
+  final String label;
+  final String url;
+
+  const _LegalLink({required this.label, required this.url});
+
+  Future<void> _open(BuildContext context) async {
+    final t = AppLocalizations.of(context);
+    final uri = Uri.parse(url);
+    final opened = await canLaunchUrl(uri) &&
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      AppSnackBar.show(
+        context,
+        message: t.settingsLinkOpenError,
+        type: AppSnackBarType.error,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return TextButton(
+      style: TextButton.styleFrom(
+        minimumSize: Size.zero,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      onPressed: () {
+        AppHaptics.tap();
+        _open(context);
+      },
+      child: Text(
+        label,
+        style: AppTypography.caption.copyWith(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: theme.textMuted,
+          decoration: TextDecoration.underline,
+          decorationColor: theme.textMuted,
+        ),
       ),
     );
   }

@@ -7,6 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 
+/// Lado en px del encuadre normal de los WebP animados (SIZE de
+/// tools/avatar_animation/postprocess.mjs). Un frame mas ancho trae headroom
+/// arriba para gestos que salen del cuadro (el salto del tada).
+const int kAnimatedAvatarBaseFramePx = 480;
+
 /// Movimientos disponibles para un avatar premium animado.
 /// idle es el saludo/respiracion ambiental; el resto son eventos.
 enum AvatarMotion { idle, victory, versus, celebrate, tada }
@@ -388,16 +393,34 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
         ),
       );
     }
+    // Clips con headroom (frame mas grande que el encuadre base, ver
+    // postprocess.mjs): el encuadre normal va anclado abajo al centro, asi
+    // que se dibujan mas grandes y el excedente desborda hacia arriba y a los
+    // costados sin mover al personaje ni cambiar el layout. Sin esto el salto
+    // del tada salia con las orejas cortadas.
+    final headroom = _frame!.width / kAnimatedAvatarBaseFramePx;
+    final paintSize = headroom > 1.01 ? widget.size * headroom : widget.size;
     // RepaintBoundary: cada frame del WebP marca dirty solo esta capa en
     // vez de repintar hasta el boundary ancestro (la card/pantalla entera).
     return _withBreathing(
-      RepaintBoundary(
-        child: RawImage(
-          image: _frame,
-          width: widget.size,
-          height: widget.size,
-          fit: BoxFit.contain,
-          filterQuality: FilterQuality.medium,
+      SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: OverflowBox(
+          alignment: Alignment.bottomCenter,
+          minWidth: paintSize,
+          maxWidth: paintSize,
+          minHeight: paintSize,
+          maxHeight: paintSize,
+          child: RepaintBoundary(
+            child: RawImage(
+              image: _frame,
+              width: paintSize,
+              height: paintSize,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.medium,
+            ),
+          ),
         ),
       ),
     );

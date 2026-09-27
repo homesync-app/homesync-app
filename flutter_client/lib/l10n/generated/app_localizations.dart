@@ -6753,17 +6753,29 @@ abstract class AppLocalizations {
   /// **'HomeSync Premium'**
   String get premiumPaywallEyebrow;
 
-  /// No description provided for @premiumPaywallTitle.
+  /// Badge personalizado del paywall. name es el nombre propio del hogar (ej. 'Casa Pérez') o los nombres de la pareja ('Sofi y Mati').
   ///
   /// In es, this message translates to:
-  /// **'Automatizá tu hogar sin cargar dos veces'**
-  String get premiumPaywallTitle;
+  /// **'Premium · {name}'**
+  String premiumPaywallEyebrowFor(String name);
 
-  /// No description provided for @premiumPaywallSubtitle.
+  /// Nombres de los dos miembros de una pareja para el badge del paywall. first = el usuario actual.
   ///
   /// In es, this message translates to:
-  /// **'Pagos, compras y presupuestos trabajando juntos para que el balance esté siempre claro.'**
-  String get premiumPaywallSubtitle;
+  /// **'{first} y {second}'**
+  String premiumPaywallCoupleNames(String first, String second);
+
+  /// Título del paywall según el tipo de hogar (couple/family/friends/solo). Premium se activa para todo el hogar.
+  ///
+  /// In es, this message translates to:
+  /// **'{type, select, couple{Un solo plan para los dos} family{Un solo plan para toda la familia} friends{Un solo plan para toda la casa} other{Automatizá tu hogar sin cargar dos veces}}'**
+  String premiumPaywallTitle(String type);
+
+  /// Subtítulo del paywall según el tipo de hogar. La suscripción de un miembro activa Premium para todo el hogar.
+  ///
+  /// In es, this message translates to:
+  /// **'{type, select, couple{Paga uno y lo usan los dos: pagos, compras y presupuestos trabajando juntos.} family{Paga uno y lo usa toda la familia, también quienes se sumen después.} friends{Paga uno y lo usan todos en la casa, también quienes se sumen después.} other{Pagos, compras y presupuestos trabajando juntos para que el balance esté siempre claro.}}'**
+  String premiumPaywallSubtitle(String type);
 
   /// Premium benefit title for scheduled or recurring payments.
   ///
@@ -6861,11 +6873,29 @@ abstract class AppLocalizations {
   /// **'{price}/mes'**
   String premiumMonthlyEquivalent(String price);
 
-  /// No description provided for @premiumContinueWithPlan.
+  /// Botón de compra del paywall con el plan anual elegido. price es el precio de la tienda ya formateado.
   ///
   /// In es, this message translates to:
-  /// **'Continuar'**
-  String get premiumContinueWithPlan;
+  /// **'Activar Premium · {price}/año'**
+  String premiumActivateAnnualCta(String price);
+
+  /// Botón de compra del paywall con el plan mensual elegido. price es el precio de la tienda ya formateado.
+  ///
+  /// In es, this message translates to:
+  /// **'Activar Premium · {price}/mes'**
+  String premiumActivateMonthlyCta(String price);
+
+  /// Link corto a los Términos de uso, debajo del botón de compra.
+  ///
+  /// In es, this message translates to:
+  /// **'Términos'**
+  String get premiumLegalTerms;
+
+  /// Link corto a la Política de privacidad, debajo del botón de compra.
+  ///
+  /// In es, this message translates to:
+  /// **'Privacidad'**
+  String get premiumLegalPrivacy;
 
   /// No description provided for @premiumAlreadyActiveTitle.
   ///

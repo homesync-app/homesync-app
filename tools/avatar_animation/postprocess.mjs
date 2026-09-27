@@ -139,11 +139,25 @@ function processTake(file) {
   // Reescala el personaje dentro del cuadro cropeado para que su altura
   // relativa coincida con la del sticker estatico, antes del resize final
   // -- corrige el salto de tamano al asentar (crossfade al PNG/WebP fijo).
-  const normalize = Math.abs(scaleFactor - 1) > 0.01
-    ? `scale=trunc(iw*${scaleFactor}/2)*2:trunc(ih*${scaleFactor}/2)*2,` +
-      `pad=w='max(iw\\,${croppedSize})':h='max(ih\\,${croppedSize})':x='(ow-iw)/2':y='(oh-ih)/2':color=0x00000000@0,` +
-      `crop=${croppedSize}:${croppedSize}:(iw-${croppedSize})/2:(ih-${croppedSize})/2,`
-    : '';
+  // headroom > 1: lienzo mas grande que el encuadre normal, con el encuadre
+  // normal anclado abajo al centro. Sin esto, el reescalado de arriba empuja
+  // fuera del cuadro lo que salta (orejas cortadas en el tada del gato). El
+  // player de Flutter deduce el headroom del ancho del frame (frame / 480)
+  // y dibuja el excedente por encima de la caja del avatar.
+  const headroom = eventCfg?.headroom ?? 1;
+  const extSize = Math.round((croppedSize * headroom) / 2) * 2;
+  const outSize = Math.round((Number(SIZE) * headroom) / 2) * 2;
+  const scaleChain =
+    `scale=trunc(iw*${scaleFactor}/2)*2:trunc(ih*${scaleFactor}/2)*2,`;
+  const normalize = headroom > 1
+    ? scaleChain +
+      `pad=w=iw+${2 * extSize}:h=ih+${2 * extSize}:x=${extSize}:y=${extSize}:color=0x00000000@0,` +
+      `crop=${extSize}:${extSize}:(iw-${extSize})/2:(ih-${2 * extSize}+${croppedSize})/2,`
+    : Math.abs(scaleFactor - 1) > 0.01
+      ? scaleChain +
+        `pad=w='max(iw\\,${croppedSize})':h='max(ih\\,${croppedSize})':x='(ow-iw)/2':y='(oh-ih)/2':color=0x00000000@0,` +
+        `crop=${croppedSize}:${croppedSize}:(iw-${croppedSize})/2:(ih-${croppedSize})/2,`
+      : '';
 
   // Cadena base hasta el alfa limpio y escalado.
   // despill de ffmpeg solo soporta green/blue; para magenta se hace a mano
@@ -180,7 +194,7 @@ function processTake(file) {
       ? magentaDespill
       : `geq=a='if(lt(alpha(X,Y),48),0,alpha(X,Y))':r='r(X,Y)':g='g(X,Y)':b='b(X,Y)'`,
     normalize.replace(/,$/, ''),
-    `scale=${SIZE}:${SIZE}:flags=lanczos`,
+    `scale=${outSize}:${outSize}:flags=lanczos`,
   ].filter(Boolean).join(',');
 
   // tail segun modo:

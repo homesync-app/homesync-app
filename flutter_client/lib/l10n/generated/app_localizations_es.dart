@@ -4273,11 +4273,46 @@ class AppLocalizationsEs extends AppLocalizations {
   String get premiumPaywallEyebrow => 'HomeSync Premium';
 
   @override
-  String get premiumPaywallTitle => 'Automatizá tu hogar sin cargar dos veces';
+  String premiumPaywallEyebrowFor(String name) {
+    return 'Premium · $name';
+  }
 
   @override
-  String get premiumPaywallSubtitle =>
-      'Pagos, compras y presupuestos trabajando juntos para que el balance esté siempre claro.';
+  String premiumPaywallCoupleNames(String first, String second) {
+    return '$first y $second';
+  }
+
+  @override
+  String premiumPaywallTitle(String type) {
+    String _temp0 = intl.Intl.selectLogic(
+      type,
+      {
+        'couple': 'Un solo plan para los dos',
+        'family': 'Un solo plan para toda la familia',
+        'friends': 'Un solo plan para toda la casa',
+        'other': 'Automatizá tu hogar sin cargar dos veces',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String premiumPaywallSubtitle(String type) {
+    String _temp0 = intl.Intl.selectLogic(
+      type,
+      {
+        'couple':
+            'Paga uno y lo usan los dos: pagos, compras y presupuestos trabajando juntos.',
+        'family':
+            'Paga uno y lo usa toda la familia, también quienes se sumen después.',
+        'friends':
+            'Paga uno y lo usan todos en la casa, también quienes se sumen después.',
+        'other':
+            'Pagos, compras y presupuestos trabajando juntos para que el balance esté siempre claro.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get premiumBenefitRecurringPayments => 'Pagos recurrentes';
@@ -4336,7 +4371,20 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get premiumContinueWithPlan => 'Continuar';
+  String premiumActivateAnnualCta(String price) {
+    return 'Activar Premium · $price/año';
+  }
+
+  @override
+  String premiumActivateMonthlyCta(String price) {
+    return 'Activar Premium · $price/mes';
+  }
+
+  @override
+  String get premiumLegalTerms => 'Términos';
+
+  @override
+  String get premiumLegalPrivacy => 'Privacidad';
 
   @override
   String get premiumAlreadyActiveTitle => 'Premium activo en tu hogar';

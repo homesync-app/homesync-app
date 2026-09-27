@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
+import 'package:homesync_client/config/app_legal_links.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
@@ -272,17 +273,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 icon: Icons.privacy_tip_outlined,
                                 iconColor: AppColors.textSecondary,
                                 title: t.settingsLegalPrivacyPolicy,
-                                onTap: () => _openUrl(
-                                  'https://homesync-app.github.io/homesync-privacy/',
-                                ),
+                                onTap: () =>
+                                    _openUrl(AppLegalLinks.privacyPolicy),
                               ),
                               SettingsNavRow(
                                 icon: Icons.description_outlined,
                                 iconColor: AppColors.textSecondary,
                                 title: t.settingsLegalTermsOfUse,
-                                onTap: () => _openUrl(
-                                  'https://homesync-app.github.io/homesync-privacy/terms.html',
-                                ),
+                                onTap: () => _openUrl(AppLegalLinks.termsOfUse),
                               ),
                             ],
                           ),
