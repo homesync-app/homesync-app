@@ -134,6 +134,7 @@ class SubscriptionSuggestionBanner extends ConsumerWidget {
                   },
                   style: FilledButton.styleFrom(
                     backgroundColor: theme.primary,
+                    foregroundColor: Colors.white,
                     visualDensity: VisualDensity.compact,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadii.pill),

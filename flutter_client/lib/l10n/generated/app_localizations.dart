@@ -461,7 +461,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAppearanceSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Elige el tema visual de la app'**
+  /// **'Elegí el tema visual de la app'**
   String get settingsAppearanceSubtitle;
 
   /// No description provided for @settingsThemeModeTitle.
@@ -1943,7 +1943,7 @@ abstract class AppLocalizations {
   /// Empty-state body for the activity feed. 'aca' = 'aquí' in Argentine voseo.
   ///
   /// In es, this message translates to:
-  /// **'Cuando haya una tarea o un gasto nuevo, aparece aca.'**
+  /// **'Cuando haya una tarea o un gasto nuevo, aparece acá.'**
   String get homeCoupleActivityEmptyBody;
 
   /// Snackbar shown when the user tries to settle but their user id can't be resolved.
@@ -2118,7 +2118,7 @@ abstract class AppLocalizations {
   /// Snackbar shown when completing a task returns null (silent failure).
   ///
   /// In es, this message translates to:
-  /// **'No pudimos completar la tarea. Intenta de nuevo.'**
+  /// **'No pudimos completar la tarea. Intentá de nuevo.'**
   String get homeFriendsTaskCompleteError;
 
   /// No description provided for @homeFriendsShoppingTitle.
@@ -2220,7 +2220,7 @@ abstract class AppLocalizations {
   /// Short badge on the balance card when the current user owes money.
   ///
   /// In es, this message translates to:
-  /// **'Debes'**
+  /// **'Debés'**
   String get balanceCardBadgeOwes;
 
   /// Short badge on the balance card when the current user is owed money.
@@ -2376,7 +2376,7 @@ abstract class AppLocalizations {
   /// Small line above the 'Tienda' button in the child hero card. Voseo 'podés' written without accent in source.
   ///
   /// In es, this message translates to:
-  /// **'Mira que premios podes alcanzar.'**
+  /// **'Mirá qué premios podés alcanzar.'**
   String get homeFamilyChildRewardsPrompt;
 
   /// Activity feed section title shown to a child member. First-person possessive.
@@ -2418,7 +2418,7 @@ abstract class AppLocalizations {
   /// Empty-state shown when the household shopping list has nothing pending.
   ///
   /// In es, this message translates to:
-  /// **'Lista al dia'**
+  /// **'Lista al día'**
   String get homeFamilyShoppingAllDone;
 
   /// Tappable footer indicating how many more items are in the shopping list beyond the visible 3.
@@ -2472,13 +2472,13 @@ abstract class AppLocalizations {
   /// No description provided for @familyTasksEmptyTitle.
   ///
   /// In es, this message translates to:
-  /// **'Todo al dia'**
+  /// **'Todo al día'**
   String get familyTasksEmptyTitle;
 
   /// No description provided for @familyTasksEmptyChildSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Hoy podes descansar o mirar la tienda.'**
+  /// **'Hoy podés descansar o mirar la tienda.'**
   String get familyTasksEmptyChildSubtitle;
 
   /// No description provided for @familyTasksEmptyOtherSubtitle.
@@ -2742,7 +2742,7 @@ abstract class AppLocalizations {
   /// No description provided for @setupSnackPickAtLeastOneTask.
   ///
   /// In es, this message translates to:
-  /// **'Selecciona al menos una tarea'**
+  /// **'Seleccioná al menos una tarea'**
   String get setupSnackPickAtLeastOneTask;
 
   /// No description provided for @setupSnackUnknownError.
@@ -9078,7 +9078,7 @@ abstract class AppLocalizations {
   /// No description provided for @rewardsTitleRequiredError.
   ///
   /// In es, this message translates to:
-  /// **'Escribe el nombre del deseo.'**
+  /// **'Escribí el nombre del deseo.'**
   String get rewardsTitleRequiredError;
 
   /// No description provided for @rewardsTitleMinLengthError.
@@ -12367,13 +12367,13 @@ abstract class AppLocalizations {
   /// No description provided for @homeNoHouseholdSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Crea o unite a un hogar para comenzar.'**
+  /// **'Creá o unite a un hogar para comenzar.'**
   String get homeNoHouseholdSubtitle;
 
   /// No description provided for @mainIdentityLoadError.
   ///
   /// In es, this message translates to:
-  /// **'Error de carga de identidad. Intenta salir de la app y volver a entrar:'**
+  /// **'Error de carga de identidad. Intentá salir de la app y volver a entrar:'**
   String get mainIdentityLoadError;
 
   /// No description provided for @notifLoveNoteTitle.
@@ -13089,6 +13089,258 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'{count, plural, =1{{amount} en 1 gasto.} other{{amount} en {count} gastos.}}'**
   String weeklySummaryTopCategoryBody(int count, String amount);
+
+  /// Botón para salir del tour guiado (coachmarks) del inicio.
+  ///
+  /// In es, this message translates to:
+  /// **'Saltar'**
+  String get coachmarkSkip;
+
+  /// Etiqueta chica arriba de una burbuja de gasto en 'Movimientos del hogar' del inicio.
+  ///
+  /// In es, this message translates to:
+  /// **'Gasto del hogar'**
+  String get activityBubbleHouseholdExpense;
+
+  /// Etiqueta chica arriba de una burbuja de liquidación (saldar deuda) en 'Movimientos del hogar'.
+  ///
+  /// In es, this message translates to:
+  /// **'Equilibrio'**
+  String get activityBubbleSettlement;
+
+  /// Sugerencia de ahorro cuando el sobrante del mes alcanza para terminar la meta. {amount} es lo que le falta a la meta, ya formateado.
+  ///
+  /// In es, this message translates to:
+  /// **'Según tu plan, este mes te sobra plata: con {amount} completás tu meta \"{goal}\".'**
+  String savingsSuggesterCompleteMessage(String amount, String goal);
+
+  /// Snackbar al guardar un gasto dividido sin nadie elegido.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegí al menos una persona para dividir el gasto.'**
+  String get expenseSplitErrorNoMembers;
+
+  /// Snackbar cuando los montos fijos del reparto no suman el total. {amount} ya viene formateado con la moneda.
+  ///
+  /// In es, this message translates to:
+  /// **'Los montos del reparto tienen que sumar el total ({amount}).'**
+  String expenseSplitErrorFixedTotal(String amount);
+
+  /// Tarjeta de tarea (familia/amigos): alguien la marcó como hecha y espera revisión.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} la marcó como hecha'**
+  String familyTaskCardMarkedDoneBy(String name);
+
+  /// Tarjeta de tarea: pendiente de revisión, vista por quien puede aprobar.
+  ///
+  /// In es, this message translates to:
+  /// **'Lista para revisar'**
+  String get familyTaskCardReadyToReview;
+
+  /// Tarjeta de tarea en vista de niño: espera que un adulto la apruebe.
+  ///
+  /// In es, this message translates to:
+  /// **'Esperando aprobación'**
+  String get familyTaskCardAwaitingApproval;
+
+  /// Tarjeta de tarea: espera revisión de un adulto.
+  ///
+  /// In es, this message translates to:
+  /// **'Esperando que un adulto la revise'**
+  String get familyTaskCardAwaitingAdult;
+
+  /// Tarjeta de tarea sin responsable y vencida.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendiente de coordinar'**
+  String get familyTaskCardUnassignedOverdue;
+
+  /// Tarjeta de tarea sin responsable para hoy.
+  ///
+  /// In es, this message translates to:
+  /// **'A coordinar'**
+  String get familyTaskCardUnassignedToday;
+
+  /// Tarjeta de tarea en vista de niño: su tarea, vencida.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu misión pendiente'**
+  String get familyTaskCardMyMissionOverdue;
+
+  /// Tarjeta de tarea en vista de niño: su tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu misión'**
+  String get familyTaskCardMyMission;
+
+  /// Tarjeta de tarea: la tarea es del usuario y está vencida.
+  ///
+  /// In es, this message translates to:
+  /// **'Te quedó pendiente'**
+  String get familyTaskCardMineOverdue;
+
+  /// Tarjeta de tarea: la tarea es del usuario, para hoy.
+  ///
+  /// In es, this message translates to:
+  /// **'Te toca hoy'**
+  String get familyTaskCardMineToday;
+
+  /// Tarjeta de tarea vencida de otro integrante sin nombre conocido.
+  ///
+  /// In es, this message translates to:
+  /// **'Le quedó a otro integrante'**
+  String get familyTaskCardOtherOverdue;
+
+  /// Tarjeta de tarea de otro integrante sin nombre conocido.
+  ///
+  /// In es, this message translates to:
+  /// **'Para otro integrante'**
+  String get familyTaskCardOther;
+
+  /// Tarjeta de tarea vencida de otro integrante.
+  ///
+  /// In es, this message translates to:
+  /// **'Le quedó a {name}'**
+  String familyTaskCardNamedOverdue(String name);
+
+  /// Tarjeta de tarea de otro integrante.
+  ///
+  /// In es, this message translates to:
+  /// **'Para {name}'**
+  String familyTaskCardNamed(String name);
+
+  /// Píldora de urgencia: el usuario puede aprobar la tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisar'**
+  String get familyTaskCardUrgencyReview;
+
+  /// Píldora de urgencia: la tarea espera revisión.
+  ///
+  /// In es, this message translates to:
+  /// **'En revisión'**
+  String get familyTaskCardUrgencyInReview;
+
+  /// Píldora de urgencia: tarea vencida.
+  ///
+  /// In es, this message translates to:
+  /// **'Vencida'**
+  String get familyTaskCardUrgencyOverdue;
+
+  /// Píldora de urgencia: tarea para hoy.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy'**
+  String get familyTaskCardUrgencyToday;
+
+  /// Píldora de urgencia: tarea con fecha futura.
+  ///
+  /// In es, this message translates to:
+  /// **'Próxima'**
+  String get familyTaskCardUrgencyUpcoming;
+
+  /// Píldora: la tarea rota entre {count} integrantes.
+  ///
+  /// In es, this message translates to:
+  /// **'Rota entre {count}'**
+  String familyTaskCardRotation(int count);
+
+  /// Feed del hogar (familia): alguien saldó una deuda.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} equilibró la cuenta'**
+  String familyFeedSettled(String name);
+
+  /// Feed del hogar (familia): alguien terminó una tarea que espera revisión. Sigue el nombre de la tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} dejó lista'**
+  String familyFeedLeftReady(String name);
+
+  /// Feed del hogar (familia): alguien completó una tarea. Sigue el nombre de la tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} completó'**
+  String familyFeedCompleted(String name);
+
+  /// Feed del hogar (familia): alguien cargó un gasto.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} registró un gasto'**
+  String familyFeedAddedExpense(String name);
+
+  /// Feed del hogar (familia): evento sin tipo conocido.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} hizo algo en el hogar'**
+  String familyFeedDidSomething(String name);
+
+  /// Feed del hogar: nombre de respaldo cuando no hay nombre.
+  ///
+  /// In es, this message translates to:
+  /// **'Alguien'**
+  String get familyFeedSomeone;
+
+  /// Feed del hogar: alguien espera que revisen su tarea. Sigue el nombre de la tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} espera revisión de'**
+  String familyFeedWaitingReview(String name);
+
+  /// Snackbar al aprobar o devolver una tarea que ya no existe.
+  ///
+  /// In es, this message translates to:
+  /// **'No encontramos esa tarea para revisar.'**
+  String get familyFeedTaskNotFound;
+
+  /// Snackbar cuando falla aprobar una tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos aprobar la tarea.'**
+  String get familyFeedApproveFailed;
+
+  /// Snackbar al aprobar una tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'Tarea aprobada.'**
+  String get familyFeedApproved;
+
+  /// Snackbar cuando falla devolver una tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos devolver la tarea.'**
+  String get familyFeedReturnFailed;
+
+  /// Snackbar al devolver una tarea para que la corrijan.
+  ///
+  /// In es, this message translates to:
+  /// **'La tarea volvió para corregir.'**
+  String get familyFeedReturned;
+
+  /// Botón del feed: devolver la tarea para corregir.
+  ///
+  /// In es, this message translates to:
+  /// **'Devolver'**
+  String get familyFeedReturn;
+
+  /// Botón del feed: aprobar la tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'Aprobar'**
+  String get familyFeedApprove;
+
+  /// Píldora del feed con las coins que da una tarea.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 coin} other{{count} coins}}'**
+  String familyFeedCoins(int count);
+
+  /// Aviso al pie de la lista de tareas del inicio familiar cuando hay más atrasadas que las que se muestran.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{Hay 1 tarea atrasada más.} other{Hay {count} tareas atrasadas más.}}'**
+  String familyTasksMoreOverdue(int count);
 }
 
 class _AppLocalizationsDelegate

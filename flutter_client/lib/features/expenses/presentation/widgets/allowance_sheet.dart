@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -352,7 +353,7 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
                 Expanded(
                   child: Text(
                     t.allowanceActiveScheduleInfo(
-                      '\$${activeForRecipient.amount.round()}',
+                      ref.watch(currencyProvider).format(activeForRecipient.amount),
                       activeForRecipient.dayOfMonth,
                     ),
                     style: AppTypography.caption.copyWith(

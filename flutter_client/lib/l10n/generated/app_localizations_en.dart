@@ -8238,4 +8238,171 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get coachmarkSkip => 'Skip';
+
+  @override
+  String get activityBubbleHouseholdExpense => 'Household expense';
+
+  @override
+  String get activityBubbleSettlement => 'Settle-up';
+
+  @override
+  String savingsSuggesterCompleteMessage(String amount, String goal) {
+    return 'Based on your plan, you have money left over this month: $amount would complete your \"$goal\" goal.';
+  }
+
+  @override
+  String get expenseSplitErrorNoMembers =>
+      'Choose at least one person to split the expense with.';
+
+  @override
+  String expenseSplitErrorFixedTotal(String amount) {
+    return 'The split amounts need to add up to the total ($amount).';
+  }
+
+  @override
+  String familyTaskCardMarkedDoneBy(String name) {
+    return '$name marked it done';
+  }
+
+  @override
+  String get familyTaskCardReadyToReview => 'Ready to review';
+
+  @override
+  String get familyTaskCardAwaitingApproval => 'Waiting for approval';
+
+  @override
+  String get familyTaskCardAwaitingAdult => 'Waiting for an adult to review it';
+
+  @override
+  String get familyTaskCardUnassignedOverdue => 'Still needs someone';
+
+  @override
+  String get familyTaskCardUnassignedToday => 'Needs someone';
+
+  @override
+  String get familyTaskCardMyMissionOverdue => 'Your pending mission';
+
+  @override
+  String get familyTaskCardMyMission => 'Your mission';
+
+  @override
+  String get familyTaskCardMineOverdue => 'Still on your list';
+
+  @override
+  String get familyTaskCardMineToday => 'Your turn today';
+
+  @override
+  String get familyTaskCardOtherOverdue => 'Still pending for someone else';
+
+  @override
+  String get familyTaskCardOther => 'For another member';
+
+  @override
+  String familyTaskCardNamedOverdue(String name) {
+    return 'Still pending for $name';
+  }
+
+  @override
+  String familyTaskCardNamed(String name) {
+    return 'For $name';
+  }
+
+  @override
+  String get familyTaskCardUrgencyReview => 'Review';
+
+  @override
+  String get familyTaskCardUrgencyInReview => 'In review';
+
+  @override
+  String get familyTaskCardUrgencyOverdue => 'Overdue';
+
+  @override
+  String get familyTaskCardUrgencyToday => 'Today';
+
+  @override
+  String get familyTaskCardUrgencyUpcoming => 'Upcoming';
+
+  @override
+  String familyTaskCardRotation(int count) {
+    return 'Rotates among $count';
+  }
+
+  @override
+  String familyFeedSettled(String name) {
+    return '$name settled up';
+  }
+
+  @override
+  String familyFeedLeftReady(String name) {
+    return '$name finished';
+  }
+
+  @override
+  String familyFeedCompleted(String name) {
+    return '$name completed';
+  }
+
+  @override
+  String familyFeedAddedExpense(String name) {
+    return '$name added an expense';
+  }
+
+  @override
+  String familyFeedDidSomething(String name) {
+    return '$name did something at home';
+  }
+
+  @override
+  String get familyFeedSomeone => 'Someone';
+
+  @override
+  String familyFeedWaitingReview(String name) {
+    return '$name is waiting for a review of';
+  }
+
+  @override
+  String get familyFeedTaskNotFound => 'We couldn\'t find that task to review.';
+
+  @override
+  String get familyFeedApproveFailed => 'We couldn\'t approve the task.';
+
+  @override
+  String get familyFeedApproved => 'Task approved.';
+
+  @override
+  String get familyFeedReturnFailed => 'We couldn\'t send the task back.';
+
+  @override
+  String get familyFeedReturned => 'The task was sent back to fix.';
+
+  @override
+  String get familyFeedReturn => 'Send back';
+
+  @override
+  String get familyFeedApprove => 'Approve';
+
+  @override
+  String familyFeedCoins(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count coins',
+      one: '1 coin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String familyTasksMoreOverdue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'There are $count more overdue tasks.',
+      one: 'There\'s 1 more overdue task.',
+    );
+    return '$_temp0';
+  }
 }

@@ -1052,18 +1052,15 @@ class CategoryMapping {
     ])) {
       return Icons.lunch_dining_rounded;
     }
-    if (_containsAny(content, const [
-      'helado',
-      'postre',
-      'torta',
-      'cafe',
-      'café',
-      'medialuna',
-      'panaderia',
-      'panadería',
-      'pasteleria',
-      'pastelería',
-    ])) {
+    // Panaderia, cafe y postres van separados: agruparlos hacia que una
+    // compra en la panaderia mostrara un helado.
+    if (_containsAny(content, _bakeryTerms)) {
+      return Icons.bakery_dining_rounded;
+    }
+    if (_containsAny(content, _cafeTerms)) {
+      return Icons.local_cafe_rounded;
+    }
+    if (_containsAny(content, _dessertTerms)) {
       return Icons.icecream_rounded;
     }
     if (_containsAny(content, const [
@@ -1242,18 +1239,15 @@ class CategoryMapping {
     ])) {
       return const Color(0xFFEF6C3E);
     }
-    if (_containsAny(content, const [
-      'helado',
-      'postre',
-      'torta',
-      'cafe',
-      'café',
-      'medialuna',
-      'panaderia',
-      'panadería',
-      'pasteleria',
-      'pastelería',
-    ])) {
+    // Panaderia, cafe y postres van separados: agruparlos hacia que una
+    // compra en la panaderia mostrara un helado.
+    if (_containsAny(content, _bakeryTerms)) {
+      return const Color(0xFFD97706);
+    }
+    if (_containsAny(content, _cafeTerms)) {
+      return const Color(0xFF8D5A3B);
+    }
+    if (_containsAny(content, _dessertTerms)) {
       return const Color(0xFFEC4899);
     }
     if (_containsAny(content, const [
@@ -1407,6 +1401,38 @@ class CategoryMapping {
 
     return null;
   }
+
+  static const List<String> _bakeryTerms = [
+    'panaderia',
+    'panadería',
+    'pasteleria',
+    'pastelería',
+    'medialuna',
+    'medialunas',
+    'facturas',
+    'bakery',
+    'croissant',
+    'pastry',
+  ];
+
+  static const List<String> _cafeTerms = [
+    'cafe',
+    'café',
+    'cafeteria',
+    'cafetería',
+    'coffee',
+  ];
+
+  static const List<String> _dessertTerms = [
+    'helado',
+    'heladeria',
+    'heladería',
+    'postre',
+    'torta',
+    'ice cream',
+    'dessert',
+    'cake',
+  ];
 
   static bool _containsAny(String content, List<String> terms) {
     for (final term in terms) {

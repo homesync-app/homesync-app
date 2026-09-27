@@ -195,9 +195,8 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            remainingOverdueCount == 1
-                                ? 'Hay 1 tarea atrasada más pendiente.'
-                                : 'Hay $remainingOverdueCount tareas atrasadas más pendientes.',
+                            AppLocalizations.of(context)
+                                .familyTasksMoreOverdue(remainingOverdueCount),
                             style: AppTypography.caption.copyWith(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,

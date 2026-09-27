@@ -1,16 +1,26 @@
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 
+/// Por que no se pudo armar el reparto. El texto lo pone la UI (ARB): aca
+/// solo va el motivo, asi el builder no hardcodea copy en un idioma.
+enum ExpenseSplitValidationError {
+  /// Reparto entre miembros sin ningun miembro elegido.
+  noMembersSelected,
+
+  /// Montos fijos que no suman el total del gasto.
+  fixedAmountsMismatch,
+}
+
 class ExpenseSplitBuildResult {
   final List<Map<String, dynamic>> splits;
-  final String? validationMessage;
+  final ExpenseSplitValidationError? validationError;
 
   const ExpenseSplitBuildResult({
     required this.splits,
-    this.validationMessage,
+    this.validationError,
   });
 
-  bool get hasValidationError => validationMessage != null;
+  bool get hasValidationError => validationError != null;
 }
 
 class ExpenseSplitBuilder {
@@ -59,8 +69,7 @@ class ExpenseSplitBuilder {
       if (selectedMembers.isEmpty) {
         return const ExpenseSplitBuildResult(
           splits: [],
-          validationMessage:
-              'Debes seleccionar al menos un miembro para dividir.',
+          validationError: ExpenseSplitValidationError.noMembersSelected,
         );
       }
 
@@ -95,8 +104,7 @@ class ExpenseSplitBuilder {
       if ((totalFixed - amount).abs() > 0.01) {
         return ExpenseSplitBuildResult(
           splits: splits,
-          validationMessage:
-              'El reparto debe sumar el total (\$${amount.toStringAsFixed(2)})',
+          validationError: ExpenseSplitValidationError.fixedAmountsMismatch,
         );
       }
 

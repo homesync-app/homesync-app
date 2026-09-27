@@ -169,7 +169,11 @@ class ActivityChatBubble extends ConsumerWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 6),
                         child: Text(
-                          isSettlement ? 'Equilibrio' : 'Gasto del hogar',
+                          isSettlement
+                              ? AppLocalizations.of(context)
+                                  .activityBubbleSettlement
+                              : AppLocalizations.of(context)
+                                  .activityBubbleHouseholdExpense,
                           style: AppTypography.caption.copyWith(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,

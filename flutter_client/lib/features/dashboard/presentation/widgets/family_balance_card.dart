@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -7,7 +9,7 @@ import 'package:homesync_client/features/expenses/domain/models/expense_model.da
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
-class FamilyBalanceCard extends StatelessWidget {
+class FamilyBalanceCard extends ConsumerWidget {
   final List<HouseholdBalanceModel> balances;
   final String title;
   final String? currentUserId;
@@ -20,9 +22,10 @@ class FamilyBalanceCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
+    final currency = ref.watch(currencyProvider);
     final isSingleMember = balances.length == 1;
     final visibleBalances = currentUserId == null
         ? balances
@@ -46,7 +49,7 @@ class FamilyBalanceCard extends StatelessWidget {
             : (isNegative ? t.balanceCardStatusOwed : t.balanceCardStatusFavor);
     final headline = myBalance == null
         ? t.balanceCardMovements(pendingCount)
-        : '${isNegative ? '-' : isPositive ? '+' : ''}\$${balanceValue.abs().toStringAsFixed(2)}';
+        : currency.format(isSettled ? 0 : balanceValue, signed: true);
     final statusBadge = isSettled
         ? t.balanceCardBadgeSettled
         : (isNegative ? t.balanceCardBadgeOwes : t.balanceCardBadgeFavor);
@@ -211,7 +214,7 @@ class FamilyBalanceCard extends StatelessWidget {
               ...visibleBalances.asMap().entries.map(
                     (entry) => Column(
                       children: [
-                        _buildMemberBalance(entry.value, theme, t),
+                        _buildMemberBalance(entry.value, theme, t, currency),
                         if (entry.key != visibleBalances.length - 1)
                           Padding(
                             padding:
@@ -327,6 +330,7 @@ class FamilyBalanceCard extends StatelessWidget {
     HouseholdBalanceModel balance,
     AppThemeColors theme,
     AppLocalizations t,
+    AppCurrency currency,
   ) {
     final bool isNegative = balance.balance < -0.01;
     final bool isPositive = balance.balance > 0.01;
@@ -366,7 +370,8 @@ class FamilyBalanceCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${isPositive ? '+' : ''}\$${balance.balance.abs().toStringAsFixed(2)}',
+                // El rojo ya marca la deuda: el monto va sin signo menos.
+                currency.format(balance.balance.abs(), signed: isPositive),
                 style: AppTypography.cardTitle.copyWith(
                   fontSize: 15.5,
                   color: isNegative
