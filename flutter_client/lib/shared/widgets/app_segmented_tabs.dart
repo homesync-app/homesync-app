@@ -46,6 +46,7 @@ class AppSegmentedTabs extends StatelessWidget {
                   child: AnimatedPress(
                     scale: 0.97,
                     haptic: AppPressHaptic.selection,
+                    selected: isSelected,
                     onTap: () => controller.animateTo(index),
                     child: SingleMotionBuilder(
                       motion: const MaterialSpringMotion.standardSpatialFast(),

@@ -274,88 +274,85 @@ class _ApprovalsTile extends ConsumerWidget {
     final hasPending = (count ?? 0) > 0;
     final accent = hasPending ? theme.primary : AppColors.sage;
 
-    return Semantics(
-      button: true,
-      child: AnimatedPress(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const PendingApprovalsScreen(),
-            ),
-          );
-        },
-        scale: 0.97,
-        haptic: AppPressHaptic.selection,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-          decoration: BoxDecoration(
-            color: hasPending
-                ? accent.withValues(alpha: theme.isDarkMode ? 0.14 : 0.08)
-                : theme.surface,
-            borderRadius: BorderRadius.circular(AppRadii.xxl),
-            border: Border.all(
-              color: hasPending
-                  ? accent.withValues(alpha: 0.16)
-                  : theme.border.withValues(alpha: 0.55),
-            ),
+    return AnimatedPress(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const PendingApprovalsScreen(),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (isLoading)
-                const ShimmerLoading(height: 44, width: 44, borderRadius: 12)
-              else
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(AppRadii.sm),
-                  ),
-                  child: Center(
-                    child: hasPending
-                        ? Text(
-                            '$count',
-                            style: AppTypography.sectionTitle.copyWith(
-                              fontSize: 19,
-                              height: 1.0,
-                              color: accent,
-                            ),
-                          )
-                        : Icon(
-                            Icons.check_rounded,
-                            size: 20,
+        );
+      },
+      scale: 0.97,
+      haptic: AppPressHaptic.selection,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: hasPending
+              ? accent.withValues(alpha: theme.isDarkMode ? 0.14 : 0.08)
+              : theme.surface,
+          borderRadius: BorderRadius.circular(AppRadii.xxl),
+          border: Border.all(
+            color: hasPending
+                ? accent.withValues(alpha: 0.16)
+                : theme.border.withValues(alpha: 0.55),
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isLoading)
+              const ShimmerLoading(height: 44, width: 44, borderRadius: 12)
+            else
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
+                ),
+                child: Center(
+                  child: hasPending
+                      ? Text(
+                          '$count',
+                          style: AppTypography.sectionTitle.copyWith(
+                            fontSize: 19,
+                            height: 1.0,
                             color: accent,
                           ),
-                  ),
-                ),
-              const SizedBox(height: 12),
-              Text(
-                t.homeFamilyApprovalsTileLabel.toUpperCase(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.eyebrow.copyWith(
-                  fontSize: 10.5,
-                  color: theme.textMuted,
+                        )
+                      : Icon(
+                          Icons.check_rounded,
+                          size: 20,
+                          color: accent,
+                        ),
                 ),
               ),
-              const SizedBox(height: 3),
-              Text(
-                isLoading
-                    ? '—'
-                    : hasPending
-                        ? t.homeFamilyApprovalsPendingLabel(count)
-                        : t.homeFamilyApprovalsAllClear,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.caption.copyWith(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: theme.textPrimary,
-                ),
+            const SizedBox(height: 12),
+            Text(
+              t.homeFamilyApprovalsTileLabel.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.eyebrow.copyWith(
+                fontSize: 10.5,
+                color: theme.textMuted,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              isLoading
+                  ? '—'
+                  : hasPending
+                      ? t.homeFamilyApprovalsPendingLabel(count)
+                      : t.homeFamilyApprovalsAllClear,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.caption.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: theme.textPrimary,
+              ),
+            ),
+          ],
         ),
       ),
     );

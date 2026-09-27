@@ -54,93 +54,90 @@ class SpentBentoTile extends ConsumerWidget {
           )
         : monthName;
 
-    return Semantics(
-      button: true,
-      child: AnimatedPress(
-        onTap: onTap,
-        scale: 0.98,
-        haptic: AppPressHaptic.selection,
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: theme.heroGradient,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return AnimatedPress(
+      onTap: onTap,
+      scale: 0.98,
+      haptic: AppPressHaptic.selection,
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: theme.heroGradient,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(AppRadii.xxl),
+          border: Border.all(color: theme.border.withValues(alpha: 0.5)),
+        ),
+        child: Stack(
+          children: [
+            // Decorative soft orbs, echoes the rings/chips of the sibling
+            // bento tiles.
+            Positioned(
+              right: -38,
+              top: -38,
+              child: _DecorOrb(
+                size: 110,
+                color: theme.primary.withValues(alpha: 0.08),
+              ),
             ),
-            borderRadius: BorderRadius.circular(AppRadii.xxl),
-            border: Border.all(color: theme.border.withValues(alpha: 0.5)),
-          ),
-          child: Stack(
-            children: [
-              // Decorative soft orbs, echoes the rings/chips of the sibling
-              // bento tiles.
-              Positioned(
-                right: -38,
-                top: -38,
-                child: _DecorOrb(
-                  size: 110,
-                  color: theme.primary.withValues(alpha: 0.08),
-                ),
+            Positioned(
+              right: 16,
+              bottom: -46,
+              child: _DecorOrb(
+                size: 84,
+                color: theme.primary.withValues(alpha: 0.05),
               ),
-              Positioned(
-                right: 16,
-                bottom: -46,
-                child: _DecorOrb(
-                  size: 84,
-                  color: theme.primary.withValues(alpha: 0.05),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label.toUpperCase(),
-                      style: AppTypography.eyebrow.copyWith(
-                        fontSize: 10.5,
-                        color: theme.textSecondary,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label.toUpperCase(),
+                    style: AppTypography.eyebrow.copyWith(
+                      fontSize: 10.5,
+                      color: theme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildAmount(theme, t, currency, spent),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          footerLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.caption.copyWith(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: theme.textSecondary,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildAmount(theme, t, currency, spent),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            footerLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.caption.copyWith(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w700,
-                              color: theme.textSecondary,
-                            ),
-                          ),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: theme.primary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
                         ),
-                        const SizedBox(width: 8),
-                        Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: theme.primary.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 15,
-                            color: theme.primary,
-                          ),
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 15,
+                          color: theme.primary,
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

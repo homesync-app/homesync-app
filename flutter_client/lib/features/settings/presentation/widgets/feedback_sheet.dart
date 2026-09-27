@@ -16,6 +16,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
+import 'package:homesync_client/shared/widgets/semantic_tap.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -434,7 +435,9 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
   ) {
     final isSelected = _type == type;
     return Expanded(
-      child: GestureDetector(
+      child: SemanticTap(
+        selected: isSelected,
+        inMutuallyExclusiveGroup: true,
         onTap: () {
           AppHaptics.selection();
           setState(() => _type = type);

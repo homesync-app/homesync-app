@@ -551,6 +551,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
                     child: Center(
                       child: AnimatedPress(
                         scale: 0.92,
+                        semanticLabel:
+                            AppLocalizations.of(context).settingsAppBarTitle,
                         onTap: () => _openSettings(context),
                         // Padding interno al GestureDetector: el área táctil
                         // queda en 48x48 sin agrandar el botón visible.

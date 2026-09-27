@@ -17,6 +17,7 @@ import 'package:homesync_client/features/tasks/presentation/utils/task_localizat
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
+import 'package:homesync_client/shared/widgets/semantic_tap.dart';
 
 import 'task_creation_result.dart';
 
@@ -789,6 +790,11 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                           ),
                           child: AnimatedPress(
                             scale: _isLoading ? 1 : 0.97,
+                            // The ElevatedButton below is only styling
+                            // (onPressed: null): read this press alone.
+                            semanticLabel: AppLocalizations.of(context)
+                                .createTaskCreateButton,
+                            excludeChildSemantics: true,
                             onTap: _isLoading ? null : _handleSubmit,
                             child: ElevatedButton(
                               onPressed: null,
@@ -1420,7 +1426,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       children: _difficulties.map((difficulty) {
         final isSelected = _selectedDifficulty == difficulty['id'];
         return Expanded(
-          child: GestureDetector(
+          child: SemanticTap(
+            selected: isSelected,
+            inMutuallyExclusiveGroup: true,
             onTap: () {
               setState(() {
                 _selectedDifficulty = difficulty['id'] as String;
@@ -1513,7 +1521,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              GestureDetector(
+              SemanticTap(
+                checked: _customRewards,
                 onTap: () => setState(() {
                   _customRewards = !_customRewards;
                   if (!_customRewards) {

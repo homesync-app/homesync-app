@@ -28,6 +28,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_completion_flow_mixin.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/semantic_tap.dart';
 
 class HomeFriendsView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -151,7 +152,9 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        GestureDetector(
+        SemanticTap(
+          label: t.settingsAppBarTitle,
+          excludeChildSemantics: true,
           onTap: widget.onAvatarTap,
           child: Hero(
             tag: 'user_avatar_main',
@@ -192,6 +195,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
 
   Widget _buildNotificationBadge(AppThemeColors theme) {
     return AnimatedPress(
+      semanticLabel: AppLocalizations.of(context).notificationsTitle,
       onPressed: () async {
         await Navigator.push(
           context,

@@ -15,6 +15,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/category_p
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/semantic_tap.dart';
 
 const int _maxTaskXpReward = 50;
 const int _maxTaskCoinReward = 5;
@@ -442,7 +443,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                           final color =
                               AppColors.fromHex(cat['color'] ?? '#94A3B8');
 
-                          return GestureDetector(
+                          return SemanticTap(
+                            selected: isSelected,
+                            inMutuallyExclusiveGroup: true,
                             onTap: () =>
                                 setState(() => _selectedCategory = cat['id']),
                             child: AnimatedContainer(
