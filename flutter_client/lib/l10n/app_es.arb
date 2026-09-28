@@ -193,7 +193,7 @@
   "settingsSectionLegalTitle": "Privacidad",
   "settingsSectionLegalSubtitle": "Politica de privacidad y terminos de uso.",
   "settingsAppearanceTitle": "Apariencia",
-  "settingsAppearanceSubtitle": "Elige el tema visual de la app",
+  "settingsAppearanceSubtitle": "Elegí el tema visual de la app",
   "settingsThemeModeTitle": "Modo del Tema",
   "settingsThemeModeLight": "Claro",
   "settingsThemeModeDark": "Oscuro",
@@ -874,7 +874,7 @@
     "description": "Section title above the recent-activity feed on the couple home."
   },
   "homeCoupleActivityEmptyTitle": "Todavia no hay movimientos",
-  "homeCoupleActivityEmptyBody": "Cuando haya una tarea o un gasto nuevo, aparece aca.",
+  "homeCoupleActivityEmptyBody": "Cuando haya una tarea o un gasto nuevo, aparece acá.",
   "@homeCoupleActivityEmptyBody": {
     "description": "Empty-state body for the activity feed. 'aca' = 'aquí' in Argentine voseo."
   },
@@ -1015,7 +1015,7 @@
   },
   "homeFriendsTasksTitle": "Tareas del piso",
   "homeFriendsTasksSubtitle": "Lo que sigue pendiente para mantener todo en orden.",
-  "homeFriendsTaskCompleteError": "No pudimos completar la tarea. Intenta de nuevo.",
+  "homeFriendsTaskCompleteError": "No pudimos completar la tarea. Intentá de nuevo.",
   "@homeFriendsTaskCompleteError": {
     "description": "Snackbar shown when completing a task returns null (silent failure)."
   },
@@ -1068,7 +1068,7 @@
   "@balanceCardBadgeSettled": {
     "description": "Short badge on the balance card when the current user's balance is settled (zero)."
   },
-  "balanceCardBadgeOwes": "Debes",
+  "balanceCardBadgeOwes": "Debés",
   "@balanceCardBadgeOwes": {
     "description": "Short badge on the balance card when the current user owes money."
   },
@@ -1220,7 +1220,7 @@
       }
     }
   },
-  "homeFamilyChildRewardsPrompt": "Mira que premios podes alcanzar.",
+  "homeFamilyChildRewardsPrompt": "Mirá qué premios podés alcanzar.",
   "@homeFamilyChildRewardsPrompt": {
     "description": "Small line above the 'Tienda' button in the child hero card. Voseo 'podés' written without accent in source."
   },
@@ -1239,7 +1239,7 @@
   "homeFamilyActivityEmptyTitle": "Todavía no hay actividad reciente",
   "homeFamilyActivityEmptyBody": "Las tareas, gastos y compras van a aparecer acá.",
   "homeFamilyShoppingTitle": "Compras del hogar",
-  "homeFamilyShoppingAllDone": "Lista al dia",
+  "homeFamilyShoppingAllDone": "Lista al día",
   "@homeFamilyShoppingAllDone": {
     "description": "Empty-state shown when the household shopping list has nothing pending."
   },
@@ -1269,8 +1269,8 @@
   "@familyTasksTitleTeen": {
     "description": "Section title shown to a teen member on the family home."
   },
-  "familyTasksEmptyTitle": "Todo al dia",
-  "familyTasksEmptyChildSubtitle": "Hoy podes descansar o mirar la tienda.",
+  "familyTasksEmptyTitle": "Todo al día",
+  "familyTasksEmptyChildSubtitle": "Hoy podés descansar o mirar la tienda.",
   "familyTasksEmptyOtherSubtitle": "No hay tareas programadas para hoy.",
   "familyTasksMarkTitle": "Marcar tarea",
   "familyTasksMarkBodyApproval": "Se va a marcar \"{taskTitle}\" como realizada por {actorName} y se enviará a revisión.",
@@ -1425,7 +1425,7 @@
     "description": "Fallback name when creating a family-mode household without an explicit name."
   },
   "setupSnackJoinedHousehold": "¡Te uniste al hogar!",
-  "setupSnackPickAtLeastOneTask": "Selecciona al menos una tarea",
+  "setupSnackPickAtLeastOneTask": "Seleccioná al menos una tarea",
   "setupSnackUnknownError": "Error desconocido",
   "setupSnackOnboardingFailed": "No se pudo completar el onboarding. Intentá de nuevo.",
   "setupSnackCodeCopied": "¡Código copiado al portapapeles! 📋",
@@ -3736,7 +3736,7 @@
   "achievementsIconicMoments": "Momentos icónicos",
   "duelHistoryLastWeek": "Semana pasada",
   "duelVsText": " vs ",
-  "rewardsTitleRequiredError": "Escribe el nombre del deseo.",
+  "rewardsTitleRequiredError": "Escribí el nombre del deseo.",
   "rewardsTitleMinLengthError": "Usa al menos 3 caracteres.",
   "rewardsTitleHint": "Ej: Masaje de 20 minutos",
   "rewardsTargetTypeAdult": "Adultos",
@@ -5434,8 +5434,8 @@
   "homeLoadingHousehold": "Cargando hogar...",
   "homeErrorLoadHousehold": "No pudimos cargar tu hogar.",
   "homeNoHouseholdTitle": "No perteneces a un hogar todav\u00eda",
-  "homeNoHouseholdSubtitle": "Crea o unite a un hogar para comenzar.",
-  "mainIdentityLoadError": "Error de carga de identidad. Intenta salir de la app y volver a entrar:",
+  "homeNoHouseholdSubtitle": "Creá o unite a un hogar para comenzar.",
+  "mainIdentityLoadError": "Error de carga de identidad. Intentá salir de la app y volver a entrar:",
   "notifLoveNoteTitle": "\ud83d\udc8c Ten\u00e9s una nota especial",
   "notifLoveNoteBody": "Tu pareja te mand\u00f3 una nota de amor \u2764\ufe0f",
   "contributionTitle": "C\u00f3mo se reparti\u00f3",
@@ -5917,6 +5917,247 @@
       },
       "amount": {
         "type": "String"
+      }
+    }
+  },
+  "coachmarkSkip": "Saltar",
+  "@coachmarkSkip": {
+    "description": "Botón para salir del tour guiado (coachmarks) del inicio."
+  },
+  "activityBubbleHouseholdExpense": "Gasto del hogar",
+  "@activityBubbleHouseholdExpense": {
+    "description": "Etiqueta chica arriba de una burbuja de gasto en 'Movimientos del hogar' del inicio."
+  },
+  "activityBubbleSettlement": "Equilibrio",
+  "@activityBubbleSettlement": {
+    "description": "Etiqueta chica arriba de una burbuja de liquidación (saldar deuda) en 'Movimientos del hogar'."
+  },
+  "savingsSuggesterCompleteMessage": "Según tu plan, este mes te sobra plata: con {amount} completás tu meta \"{goal}\".",
+  "@savingsSuggesterCompleteMessage": {
+    "description": "Sugerencia de ahorro cuando el sobrante del mes alcanza para terminar la meta. {amount} es lo que le falta a la meta, ya formateado.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "expenseSplitErrorNoMembers": "Elegí al menos una persona para dividir el gasto.",
+  "@expenseSplitErrorNoMembers": {
+    "description": "Snackbar al guardar un gasto dividido sin nadie elegido."
+  },
+  "expenseSplitErrorFixedTotal": "Los montos del reparto tienen que sumar el total ({amount}).",
+  "@expenseSplitErrorFixedTotal": {
+    "description": "Snackbar cuando los montos fijos del reparto no suman el total. {amount} ya viene formateado con la moneda.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "familyTaskCardMarkedDoneBy": "{name} la marcó como hecha",
+  "@familyTaskCardMarkedDoneBy": {
+    "description": "Tarjeta de tarea (familia/amigos): alguien la marcó como hecha y espera revisión.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "familyTaskCardReadyToReview": "Lista para revisar",
+  "@familyTaskCardReadyToReview": {
+    "description": "Tarjeta de tarea: pendiente de revisión, vista por quien puede aprobar."
+  },
+  "familyTaskCardAwaitingApproval": "Esperando aprobación",
+  "@familyTaskCardAwaitingApproval": {
+    "description": "Tarjeta de tarea en vista de niño: espera que un adulto la apruebe."
+  },
+  "familyTaskCardAwaitingAdult": "Esperando que un adulto la revise",
+  "@familyTaskCardAwaitingAdult": {
+    "description": "Tarjeta de tarea: espera revisión de un adulto."
+  },
+  "familyTaskCardUnassignedOverdue": "Pendiente de coordinar",
+  "@familyTaskCardUnassignedOverdue": {
+    "description": "Tarjeta de tarea sin responsable y vencida."
+  },
+  "familyTaskCardUnassignedToday": "A coordinar",
+  "@familyTaskCardUnassignedToday": {
+    "description": "Tarjeta de tarea sin responsable para hoy."
+  },
+  "familyTaskCardMyMissionOverdue": "Tu misión pendiente",
+  "@familyTaskCardMyMissionOverdue": {
+    "description": "Tarjeta de tarea en vista de niño: su tarea, vencida."
+  },
+  "familyTaskCardMyMission": "Tu misión",
+  "@familyTaskCardMyMission": {
+    "description": "Tarjeta de tarea en vista de niño: su tarea."
+  },
+  "familyTaskCardMineOverdue": "Te quedó pendiente",
+  "@familyTaskCardMineOverdue": {
+    "description": "Tarjeta de tarea: la tarea es del usuario y está vencida."
+  },
+  "familyTaskCardMineToday": "Te toca hoy",
+  "@familyTaskCardMineToday": {
+    "description": "Tarjeta de tarea: la tarea es del usuario, para hoy."
+  },
+  "familyTaskCardOtherOverdue": "Le quedó a otro integrante",
+  "@familyTaskCardOtherOverdue": {
+    "description": "Tarjeta de tarea vencida de otro integrante sin nombre conocido."
+  },
+  "familyTaskCardOther": "Para otro integrante",
+  "@familyTaskCardOther": {
+    "description": "Tarjeta de tarea de otro integrante sin nombre conocido."
+  },
+  "familyTaskCardNamedOverdue": "Le quedó a {name}",
+  "@familyTaskCardNamedOverdue": {
+    "description": "Tarjeta de tarea vencida de otro integrante.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "familyTaskCardNamed": "Para {name}",
+  "@familyTaskCardNamed": {
+    "description": "Tarjeta de tarea de otro integrante.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "familyTaskCardUrgencyReview": "Revisar",
+  "@familyTaskCardUrgencyReview": {
+    "description": "Píldora de urgencia: el usuario puede aprobar la tarea."
+  },
+  "familyTaskCardUrgencyInReview": "En revisión",
+  "@familyTaskCardUrgencyInReview": {
+    "description": "Píldora de urgencia: la tarea espera revisión."
+  },
+  "familyTaskCardUrgencyOverdue": "Vencida",
+  "@familyTaskCardUrgencyOverdue": {
+    "description": "Píldora de urgencia: tarea vencida."
+  },
+  "familyTaskCardUrgencyToday": "Hoy",
+  "@familyTaskCardUrgencyToday": {
+    "description": "Píldora de urgencia: tarea para hoy."
+  },
+  "familyTaskCardUrgencyUpcoming": "Próxima",
+  "@familyTaskCardUrgencyUpcoming": {
+    "description": "Píldora de urgencia: tarea con fecha futura."
+  },
+  "familyTaskCardRotation": "Rota entre {count}",
+  "@familyTaskCardRotation": {
+    "description": "Píldora: la tarea rota entre {count} integrantes.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "familyFeedSettled": "{name} equilibró la cuenta",
+  "@familyFeedSettled": {
+    "description": "Feed del hogar (familia): alguien saldó una deuda.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "familyFeedLeftReady": "{name} dejó lista",
+  "@familyFeedLeftReady": {
+    "description": "Feed del hogar (familia): alguien terminó una tarea que espera revisión. Sigue el nombre de la tarea.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "familyFeedCompleted": "{name} completó",
+  "@familyFeedCompleted": {
+    "description": "Feed del hogar (familia): alguien completó una tarea. Sigue el nombre de la tarea.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "familyFeedAddedExpense": "{name} registró un gasto",
+  "@familyFeedAddedExpense": {
+    "description": "Feed del hogar (familia): alguien cargó un gasto.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "familyFeedDidSomething": "{name} hizo algo en el hogar",
+  "@familyFeedDidSomething": {
+    "description": "Feed del hogar (familia): evento sin tipo conocido.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "familyFeedSomeone": "Alguien",
+  "@familyFeedSomeone": {
+    "description": "Feed del hogar: nombre de respaldo cuando no hay nombre."
+  },
+  "familyFeedWaitingReview": "{name} espera revisión de",
+  "@familyFeedWaitingReview": {
+    "description": "Feed del hogar: alguien espera que revisen su tarea. Sigue el nombre de la tarea.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "familyFeedTaskNotFound": "No encontramos esa tarea para revisar.",
+  "@familyFeedTaskNotFound": {
+    "description": "Snackbar al aprobar o devolver una tarea que ya no existe."
+  },
+  "familyFeedApproveFailed": "No pudimos aprobar la tarea.",
+  "@familyFeedApproveFailed": {
+    "description": "Snackbar cuando falla aprobar una tarea."
+  },
+  "familyFeedApproved": "Tarea aprobada.",
+  "@familyFeedApproved": {
+    "description": "Snackbar al aprobar una tarea."
+  },
+  "familyFeedReturnFailed": "No pudimos devolver la tarea.",
+  "@familyFeedReturnFailed": {
+    "description": "Snackbar cuando falla devolver una tarea."
+  },
+  "familyFeedReturned": "La tarea volvió para corregir.",
+  "@familyFeedReturned": {
+    "description": "Snackbar al devolver una tarea para que la corrijan."
+  },
+  "familyFeedReturn": "Devolver",
+  "@familyFeedReturn": {
+    "description": "Botón del feed: devolver la tarea para corregir."
+  },
+  "familyFeedApprove": "Aprobar",
+  "@familyFeedApprove": {
+    "description": "Botón del feed: aprobar la tarea."
+  },
+  "familyFeedCoins": "{count, plural, =1{1 coin} other{{count} coins}}",
+  "@familyFeedCoins": {
+    "description": "Píldora del feed con las coins que da una tarea.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "familyTasksMoreOverdue": "{count, plural, =1{Hay 1 tarea atrasada más.} other{Hay {count} tareas atrasadas más.}}",
+  "@familyTasksMoreOverdue": {
+    "description": "Aviso al pie de la lista de tareas del inicio familiar cuando hay más atrasadas que las que se muestran.",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   }

@@ -116,8 +116,8 @@ void main() {
 
       expect(result.hasValidationError, isTrue);
       expect(
-        result.validationMessage,
-        'Debes seleccionar al menos un miembro para dividir.',
+        result.validationError,
+        ExpenseSplitValidationError.noMembersSelected,
       );
       expect(result.splits, isEmpty);
     });
@@ -166,8 +166,8 @@ void main() {
 
       expect(result.hasValidationError, isTrue);
       expect(
-        result.validationMessage,
-        'El reparto debe sumar el total (\$100.00)',
+        result.validationError,
+        ExpenseSplitValidationError.fixedAmountsMismatch,
       );
       expect(result.splits, [
         {'user_id': memberA.userId, 'amount': 40.0},

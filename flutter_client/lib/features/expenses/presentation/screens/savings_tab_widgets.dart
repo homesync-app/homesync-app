@@ -715,11 +715,16 @@ class _SavingsSuggesterCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  t.savingsSuggesterMessage(
-                    currency.format(suggestion.surplus),
-                    suggestion.percentageBoost.toStringAsFixed(1),
-                    suggestion.goal.title,
-                  ),
+                  suggestion.completesGoal
+                      ? t.savingsSuggesterCompleteMessage(
+                          currency.format(suggestion.amount),
+                          suggestion.goal.title,
+                        )
+                      : t.savingsSuggesterMessage(
+                          currency.format(suggestion.amount),
+                          '${suggestion.percentageBoost}',
+                          suggestion.goal.title,
+                        ),
                   style: AppTypography.body.copyWith(
                     fontWeight: FontWeight.w600,
                     height: 1.35,

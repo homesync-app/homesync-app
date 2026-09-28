@@ -450,14 +450,39 @@ class PaginatedSavingsGoals extends _$PaginatedSavingsGoals {
 
 class SavingsSuggestion {
   final SavingsGoalModel goal;
-  final double surplus;
-  final double percentageBoost;
 
-  SavingsSuggestion({
+  /// Lo que conviene aportar: el sobrante del mes, pero nunca mas de lo que
+  /// le falta a la meta. Proponer todo el sobrante daba avances del 171%.
+  final double amount;
+
+  /// Cuanto avanza la meta con [amount], en puntos enteros de 0 a 100.
+  final int percentageBoost;
+
+  /// El sobrante alcanza para terminar la meta.
+  final bool completesGoal;
+
+  const SavingsSuggestion({
     required this.goal,
-    required this.surplus,
+    required this.amount,
     required this.percentageBoost,
+    required this.completesGoal,
   });
+
+  /// Arma la sugerencia para [goal] con el sobrante [surplus] del mes, o null
+  /// si no hay nada util que proponer.
+  static SavingsSuggestion? forGoal(SavingsGoalModel goal, double surplus) {
+    if (goal.targetAmount <= 0 || surplus <= 0) return null;
+    final remaining = goal.targetAmount - goal.currentAmount;
+    if (remaining <= 0) return null;
+    final amount = surplus < remaining ? surplus : remaining;
+    final boost = (amount / goal.targetAmount * 100).round().clamp(1, 100);
+    return SavingsSuggestion(
+      goal: goal,
+      amount: amount,
+      percentageBoost: boost,
+      completesGoal: surplus >= remaining,
+    );
+  }
 }
 
 @riverpod
@@ -486,13 +511,7 @@ Future<SavingsSuggestion?> savingsSuggester(Ref ref) async {
   eligibleGoals.sort((a, b) => b.progress.compareTo(a.progress));
   final targetGoal = eligibleGoals.first;
 
-  return SavingsSuggestion(
-    goal: targetGoal,
-    surplus: surplus,
-    percentageBoost: targetGoal.targetAmount > 0
-        ? (surplus / targetGoal.targetAmount) * 100
-        : 0,
-  );
+  return SavingsSuggestion.forGoal(targetGoal, surplus);
 }
 
 /// What the current user is allowed to do with savings goals.

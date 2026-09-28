@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -56,7 +57,7 @@ class ContributionBalanceCard extends ConsumerWidget {
           async.when(
             data: (balance) => balance.isEmpty
                 ? _buildEmpty(theme, t)
-                : _buildContent(theme, t, balance),
+                : _buildContent(theme, t, balance, ref.watch(currencyProvider)),
             loading: () => const Padding(
               padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
               child: Center(child: AppLoader()),
@@ -103,6 +104,7 @@ class ContributionBalanceCard extends ConsumerWidget {
     AppThemeColors theme,
     AppLocalizations t,
     ContributionBalance balance,
+    AppCurrency currency,
   ) {
     // Orden estable por nombre (NO por aporte) para evitar lectura competitiva.
     final members = [...balance.members]..sort(
@@ -119,6 +121,7 @@ class ContributionBalanceCard extends ConsumerWidget {
             totalTasks: balance.totalTasks,
             totalPaid: balance.totalPaid,
             t: t,
+            currency: currency,
           ),
           if (m != members.last) const SizedBox(height: 14),
         ],
@@ -154,12 +157,14 @@ class _MemberRow extends StatelessWidget {
     required this.totalTasks,
     required this.totalPaid,
     required this.t,
+    required this.currency,
   });
 
   final MemberContribution member;
   final int totalTasks;
   final double totalPaid;
   final AppLocalizations t;
+  final AppCurrency currency;
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +201,7 @@ class _MemberRow extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               _ShareBar(
-                label: '\$${member.amountPaid.toStringAsFixed(0)}',
+                label: currency.format(member.amountPaid),
                 fraction: paidShare,
                 color: AppColors.accentTeal,
                 theme: theme,

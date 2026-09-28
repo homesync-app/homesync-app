@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/errors/error_messages.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
@@ -62,7 +63,10 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     final timeLabel =
         formatTaskActivityTimeLabel(AppLocalizations.of(context), activity);
 
-    final userName = _firstName((data['user_name'] as String?)?.trim());
+    final userName = _firstName(
+      (data['user_name'] as String?)?.trim(),
+      AppLocalizations.of(context),
+    );
     final avatarUrl =
         (data['avatar_url'] ?? data['creator_avatar_url']) as String?;
     final detailTitle = _normalizedText(
@@ -147,7 +151,12 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _headlineFor(type, userName, isSettlement: isSettlement),
+                      _headlineFor(
+                        AppLocalizations.of(context),
+                        type,
+                        userName,
+                        isSettlement: isSettlement,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.caption.copyWith(
@@ -272,20 +281,21 @@ class FamilyActivityFeedItem extends ConsumerWidget {
   }
 
   String _headlineFor(
+    AppLocalizations t,
     String? type,
     String userName, {
     bool isSettlement = false,
   }) {
-    if (isSettlement) return '$userName equilibró la cuenta';
+    if (isSettlement) return t.familyFeedSettled(userName);
     switch (type) {
       case 'task_pending_approval':
-        return '$userName dejó lista';
+        return t.familyFeedLeftReady(userName);
       case 'task':
-        return '$userName completó';
+        return t.familyFeedCompleted(userName);
       case 'expense':
-        return '$userName registró un gasto';
+        return t.familyFeedAddedExpense(userName);
       default:
-        return '$userName hizo una acción';
+        return t.familyFeedDidSomething(userName);
     }
   }
 
@@ -316,9 +326,9 @@ class FamilyActivityFeedItem extends ConsumerWidget {
         .trim();
   }
 
-  String _firstName(String? name) {
+  String _firstName(String? name, AppLocalizations t) {
     final value = name?.trim();
-    if (value == null || value.isEmpty) return 'Alguien';
+    if (value == null || value.isEmpty) return t.familyFeedSomeone;
     return value.split(' ').first;
   }
 
@@ -352,7 +362,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     if (taskId == null || taskId.isEmpty) {
       _showSnackBar(
         context,
-        'No encontramos esa tarea para revisar.',
+        AppLocalizations.of(context).familyFeedTaskNotFound,
         AppSnackBarType.error,
       );
       return;
@@ -364,18 +374,26 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       if (!ok) {
         _showSnackBar(
           context,
-          'No pudimos aprobar la tarea.',
+          AppLocalizations.of(context).familyFeedApproveFailed,
           AppSnackBarType.error,
         );
         return;
       }
       _refreshAfterReview(ref);
-      _showSnackBar(context, 'Tarea aprobada.', AppSnackBarType.success);
+      _showSnackBar(
+        context,
+        AppLocalizations.of(context).familyFeedApproved,
+        AppSnackBarType.success,
+      );
     } catch (error) {
       if (!context.mounted) return;
       _showSnackBar(
         context,
-        'No pudimos aprobar la tarea: $error',
+        friendlyErrorMessage(
+          error,
+          t: AppLocalizations.of(context),
+          fallback: AppLocalizations.of(context).familyFeedApproveFailed,
+        ),
         AppSnackBarType.error,
       );
     }
@@ -390,7 +408,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     if (taskId == null || taskId.isEmpty) {
       _showSnackBar(
         context,
-        'No encontramos esa tarea para revisar.',
+        AppLocalizations.of(context).familyFeedTaskNotFound,
         AppSnackBarType.error,
       );
       return;
@@ -402,7 +420,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       if (!ok) {
         _showSnackBar(
           context,
-          'No pudimos devolver la tarea.',
+          AppLocalizations.of(context).familyFeedReturnFailed,
           AppSnackBarType.error,
         );
         return;
@@ -410,14 +428,18 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       _refreshAfterReview(ref);
       _showSnackBar(
         context,
-        'La tarea volvio para corregir.',
+        AppLocalizations.of(context).familyFeedReturned,
         AppSnackBarType.info,
       );
     } catch (error) {
       if (!context.mounted) return;
       _showSnackBar(
         context,
-        'No pudimos devolver la tarea: $error',
+        friendlyErrorMessage(
+          error,
+          t: AppLocalizations.of(context),
+          fallback: AppLocalizations.of(context).familyFeedReturnFailed,
+        ),
         AppSnackBarType.error,
       );
     }
@@ -533,7 +555,8 @@ class _PendingApprovalActivityCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '$userName espera revisión de',
+                              AppLocalizations.of(context)
+                                  .familyFeedWaitingReview(userName),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTypography.caption.copyWith(
@@ -598,8 +621,8 @@ class _PendingApprovalActivityCard extends StatelessWidget {
                     _ReviewMetaPill(
                       color: AppColors.coinGreen,
                       icon: Icons.monetization_on_rounded,
-                      label:
-                          '${coinsReward!} ${coinsReward == 1 ? "coin" : "coins"}',
+                      label: AppLocalizations.of(context)
+                          .familyFeedCoins(coinsReward!),
                     ),
                 ],
               ),
@@ -610,7 +633,7 @@ class _PendingApprovalActivityCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _ReviewActionButton(
-                      label: 'Devolver',
+                      label: AppLocalizations.of(context).familyFeedReturn,
                       icon: Icons.reply_rounded,
                       color: accent,
                       surfaceColor: mutedCardColor,
@@ -621,7 +644,7 @@ class _PendingApprovalActivityCard extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: _ReviewActionButton(
-                      label: 'Aprobar',
+                      label: AppLocalizations.of(context).familyFeedApprove,
                       icon: Icons.check_rounded,
                       color: accent,
                       surfaceColor: mutedCardColor,

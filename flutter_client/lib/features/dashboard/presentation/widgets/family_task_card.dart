@@ -74,8 +74,9 @@ class FamilyTaskCard extends StatelessWidget {
     final accent = isPendingReview
         ? const Color(0xFFE59A2F)
         : dashboardCategoryAccent(context, task.category);
-    final contextLabel = _displayContextLabel();
-    final urgency = _urgencyLabel();
+    final t = AppLocalizations.of(context);
+    final contextLabel = _displayContextLabel(t);
+    final urgency = _urgencyLabel(t);
 
     return AppCompletionFeedback(
       isCompleting: isCompleting,
@@ -169,7 +170,8 @@ class FamilyTaskCard extends StatelessWidget {
                         if (task.hasRotation)
                           _FamilyTaskPill(
                             icon: Icons.autorenew_rounded,
-                            label: 'Rota entre ${task.rotationPool.length}',
+                            label: AppLocalizations.of(context)
+                                .familyTaskCardRotation(task.rotationPool.length),
                             color: const Color(0xFF5A94E1),
                           ),
                       ],
@@ -315,51 +317,59 @@ class FamilyTaskCard extends StatelessWidget {
     );
   }
 
-  String? _displayContextLabel() {
+  String? _displayContextLabel(AppLocalizations t) {
     if (task.isPendingApproval) {
       if (canApprovePending) {
         if (completedMember != null) {
-          return '${completedMember!.displayName} la marcó como hecha';
+          return t.familyTaskCardMarkedDoneBy(completedMember!.displayName);
         }
-        return 'Lista para revisar';
+        return t.familyTaskCardReadyToReview;
       }
-      if (isChildView) return 'Esperando aprobación';
-      return 'Esperando que un adulto la revise';
+      if (isChildView) return t.familyTaskCardAwaitingApproval;
+      return t.familyTaskCardAwaitingAdult;
     }
 
     if (task.assignedTo == null) {
-      if (task.isOverdue) return 'Pendiente de coordinar';
-      if (task.isDueToday) return 'A coordinar';
+      if (task.isOverdue) return t.familyTaskCardUnassignedOverdue;
+      if (task.isDueToday) return t.familyTaskCardUnassignedToday;
       return null;
     }
 
     if (_isAssignedToCurrentUser) {
       if (isChildView) {
-        return task.isOverdue ? 'Tu misión pendiente' : 'Tu misión';
+        return task.isOverdue
+            ? t.familyTaskCardMyMissionOverdue
+            : t.familyTaskCardMyMission;
       }
-      return task.isOverdue ? 'Te quedó pendiente' : 'Te toca hoy';
+      return task.isOverdue
+          ? t.familyTaskCardMineOverdue
+          : t.familyTaskCardMineToday;
     }
 
-    if (assignedMember == null) {
-      return task.isOverdue ? 'Le quedó a otro' : 'Para otro integrante';
-    }
-
-    final name = _firstName(assignedMember!.displayName);
+    final name = assignedMember == null
+        ? ''
+        : _firstName(assignedMember!.displayName);
     if (name.isEmpty) {
-      return task.isOverdue ? 'Le quedó a otro' : 'Para otro integrante';
+      return task.isOverdue
+          ? t.familyTaskCardOtherOverdue
+          : t.familyTaskCardOther;
     }
-    return task.isOverdue ? 'Le quedó a $name' : 'Para $name';
+    return task.isOverdue
+        ? t.familyTaskCardNamedOverdue(name)
+        : t.familyTaskCardNamed(name);
   }
 
   String _firstName(String name) => name.trim().split(RegExp(r'\s+')).first;
 
-  String? _urgencyLabel() {
+  String? _urgencyLabel(AppLocalizations t) {
     if (task.isPendingApproval) {
-      return canApprovePending ? 'Revisar' : 'En revisión';
+      return canApprovePending
+          ? t.familyTaskCardUrgencyReview
+          : t.familyTaskCardUrgencyInReview;
     }
-    if (task.isOverdue) return 'Vencida';
-    if (task.isDueToday) return 'Hoy';
-    if (task.dueAt != null) return 'Próxima';
+    if (task.isOverdue) return t.familyTaskCardUrgencyOverdue;
+    if (task.isDueToday) return t.familyTaskCardUrgencyToday;
+    if (task.dueAt != null) return t.familyTaskCardUrgencyUpcoming;
     return null;
   }
 }

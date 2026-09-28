@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
@@ -21,14 +22,13 @@ import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 class HouseholdBillsCard extends ConsumerWidget {
   const HouseholdBillsCard({super.key});
 
-  String _formatCurrency(num value) => '\$${value.toStringAsFixed(0)}';
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     final isPremium = ref.watch(premiumProvider).value ?? false;
     final templatesAsync = ref.watch(expenseTemplateControllerProvider);
+    final currency = ref.watch(currencyProvider);
 
     // Solo gastos fijos compartidos (no ingresos, no personales).
     final bills = (templatesAsync.value ?? const <ExpenseTemplateModel>[])
@@ -86,7 +86,7 @@ class HouseholdBillsCard extends ConsumerWidget {
           else if (bills.isEmpty)
             _buildEmpty(theme, t)
           else ...[
-            ...bills.map((bill) => _buildBillRow(context, theme, t, bill)),
+            ...bills.map((bill) => _buildBillRow(context, theme, t, bill, currency)),
             const SizedBox(height: 14),
             _buildAddButton(context, t),
           ],
@@ -170,6 +170,7 @@ class HouseholdBillsCard extends ConsumerWidget {
     AppThemeColors theme,
     AppLocalizations t,
     ExpenseTemplateModel bill,
+    AppCurrency currency,
   ) {
     final emoji = CategoryMapping.categoryIcons[bill.category] ?? '🏠';
     return InkWell(
@@ -215,7 +216,7 @@ class HouseholdBillsCard extends ConsumerWidget {
               ),
             ),
             Text(
-              t.householdBillsPerMonth(_formatCurrency(bill.defaultAmount)),
+              t.householdBillsPerMonth(currency.format(bill.defaultAmount)),
               style: AppTypography.bodyStrong.copyWith(
                 color: theme.textPrimary,
               ),

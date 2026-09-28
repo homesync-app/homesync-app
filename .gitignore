@@ -115,3 +115,6 @@ supabase/.env.claude
 
 # Kotlin build session data generada por `flutter build` (Gradle/KGP)
 flutter_client/android/.kotlin/
+
+# Goldie: capturas generadas (se regeneran con goldie/capture.sh + goldie frame)
+goldie/out/

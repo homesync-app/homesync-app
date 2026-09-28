@@ -922,7 +922,7 @@ class _SkipButton extends StatelessWidget {
             ),
           ),
           child: Text(
-            'Saltar',
+            AppLocalizations.of(context).coachmarkSkip,
             style: AppTypography.caption.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,

@@ -621,7 +621,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         if (!mounted) return;
         AppSnackBar.show(
           context,
-          message: splitResult.validationMessage!,
+          message: switch (splitResult.validationError!) {
+            ExpenseSplitValidationError.noMembersSelected =>
+              AppLocalizations.of(context).expenseSplitErrorNoMembers,
+            ExpenseSplitValidationError.fixedAmountsMismatch =>
+              AppLocalizations.of(context).expenseSplitErrorFixedTotal(
+                ref.read(currencyProvider).format(amountParsed),
+              ),
+          },
           type: AppSnackBarType.error,
         );
         setState(() => _isLoading = false);

@@ -380,7 +380,10 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
             ),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(t.commonDelete),
           ),

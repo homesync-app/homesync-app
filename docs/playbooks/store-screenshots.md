@@ -86,3 +86,31 @@ separadas por idioma (`es/`, `en/`).
 - **Idioma:** cambiar desde la app (Settings → Idioma), no hace falta tocar el
   locale del dispositivo. Las capturas 2026-07 se hicieron con el escenario:
   6 tareas activas (3 Sofi / 3 Mati, sin vencidas) + 52 verificadas de historial.
+
+## Con Goldie (marco, titulares y verificación de specs)
+
+`goldie/` tiene la config (`goldie.config.ts`: escenas, titulares es-AR/en-US,
+paleta de la ficha) y `capture.sh`. Requiere `npm i -g goldie`, ffmpeg y un
+AVD con perfil Pixel 9/10 Pro (`HomeSync_Pixel_9_Pro`, 1280×2856).
+
+**No usar `goldie capture`**: desinstala y reinstala la app, y eso borra la
+sesión de la cuenta demo. En su lugar:
+
+1. APK release x64 (`flutter build apk --release --target-platform android-x64
+   --dart-define-from-file=.env.production --dart-define=APP_ENV=production`),
+   instalar con `adb install -r` (conserva la sesión).
+2. Iniciar sesión como la cuenta demo owner. Lo hace el owner, no un agente:
+   script local en `tmp/seed/login_demo_emulator.sh` (lee `.env.claude`).
+3. Idioma desde Ajustes → Idioma dentro de la app (la imagen con Play Store no
+   deja cambiar el locale del sistema por adb). Zona horaria:
+   `adb shell service call alarm 3 s16 America/Argentina/Buenos_Aires`.
+4. `bash goldie/capture.sh` → `goldie/out/raw/` + manifest.
+5. `GOLDIE_CONFIG=$PWD/goldie/goldie.config.ts goldie frame --locale es-AR`
+   (y `en-US`) → `goldie/out/screenshots/pixel-10-pro/<locale>/`, 1080×1920.
+
+Notas: el tema necesita `copyHeightRatio`/`deviceWidthRatio` o el layout
+`classic` no dibuja el teléfono. Para la tanda en inglés, los textos libres de
+la demo se traducen temporalmente con `tmp/seed/demo_titles_to_en.sql` y se
+revierten con `demo_titles_to_es.sql`. Sin notas de amor sin leer para la
+owner, o el Inicio muestra el sobre.
+

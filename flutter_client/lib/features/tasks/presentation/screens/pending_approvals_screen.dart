@@ -367,6 +367,7 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
               onPressed: () => Navigator.pop(dialogCtx, controller.text.trim()),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.accentRed,
+                foregroundColor: Colors.white,
               ),
               child: Text(t.pendingApprovalsRejectButton),
             ),

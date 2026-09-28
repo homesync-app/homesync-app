@@ -306,7 +306,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsAppearanceTitle => 'Apariencia';
 
   @override
-  String get settingsAppearanceSubtitle => 'Elige el tema visual de la app';
+  String get settingsAppearanceSubtitle => 'Elegí el tema visual de la app';
 
   @override
   String get settingsThemeModeTitle => 'Modo del Tema';
@@ -1203,7 +1203,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get homeCoupleActivityEmptyBody =>
-      'Cuando haya una tarea o un gasto nuevo, aparece aca.';
+      'Cuando haya una tarea o un gasto nuevo, aparece acá.';
 
   @override
   String get homeCoupleSettlementErrorNoUser =>
@@ -1314,7 +1314,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get homeFriendsTaskCompleteError =>
-      'No pudimos completar la tarea. Intenta de nuevo.';
+      'No pudimos completar la tarea. Intentá de nuevo.';
 
   @override
   String get homeFriendsShoppingTitle => 'Compras del piso';
@@ -1373,7 +1373,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get balanceCardBadgeSettled => 'Al día';
 
   @override
-  String get balanceCardBadgeOwes => 'Debes';
+  String get balanceCardBadgeOwes => 'Debés';
 
   @override
   String get balanceCardBadgeFavor => 'A favor';
@@ -1491,7 +1491,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get homeFamilyChildRewardsPrompt => 'Mira que premios podes alcanzar.';
+  String get homeFamilyChildRewardsPrompt => 'Mirá qué premios podés alcanzar.';
 
   @override
   String get homeFamilyChildActivityTitle => 'Mis logros';
@@ -1514,7 +1514,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeFamilyShoppingTitle => 'Compras del hogar';
 
   @override
-  String get homeFamilyShoppingAllDone => 'Lista al dia';
+  String get homeFamilyShoppingAllDone => 'Lista al día';
 
   @override
   String homeFamilyShoppingMoreItems(int count) {
@@ -1555,11 +1555,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get familyTasksTitleTeen => 'Tareas del hogar';
 
   @override
-  String get familyTasksEmptyTitle => 'Todo al dia';
+  String get familyTasksEmptyTitle => 'Todo al día';
 
   @override
   String get familyTasksEmptyChildSubtitle =>
-      'Hoy podes descansar o mirar la tienda.';
+      'Hoy podés descansar o mirar la tienda.';
 
   @override
   String get familyTasksEmptyOtherSubtitle =>
@@ -1735,7 +1735,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get setupSnackJoinedHousehold => '¡Te uniste al hogar!';
 
   @override
-  String get setupSnackPickAtLeastOneTask => 'Selecciona al menos una tarea';
+  String get setupSnackPickAtLeastOneTask => 'Seleccioná al menos una tarea';
 
   @override
   String get setupSnackUnknownError => 'Error desconocido';
@@ -5789,7 +5789,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get duelVsText => ' vs ';
 
   @override
-  String get rewardsTitleRequiredError => 'Escribe el nombre del deseo.';
+  String get rewardsTitleRequiredError => 'Escribí el nombre del deseo.';
 
   @override
   String get rewardsTitleMinLengthError => 'Usa al menos 3 caracteres.';
@@ -7789,11 +7789,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get homeNoHouseholdSubtitle =>
-      'Crea o unite a un hogar para comenzar.';
+      'Creá o unite a un hogar para comenzar.';
 
   @override
   String get mainIdentityLoadError =>
-      'Error de carga de identidad. Intenta salir de la app y volver a entrar:';
+      'Error de carga de identidad. Intentá salir de la app y volver a entrar:';
 
   @override
   String get notifLoveNoteTitle => '💌 Tenés una nota especial';
@@ -8332,6 +8332,173 @@ class AppLocalizationsEs extends AppLocalizations {
       locale: localeName,
       other: '$amount en $count gastos.',
       one: '$amount en 1 gasto.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coachmarkSkip => 'Saltar';
+
+  @override
+  String get activityBubbleHouseholdExpense => 'Gasto del hogar';
+
+  @override
+  String get activityBubbleSettlement => 'Equilibrio';
+
+  @override
+  String savingsSuggesterCompleteMessage(String amount, String goal) {
+    return 'Según tu plan, este mes te sobra plata: con $amount completás tu meta \"$goal\".';
+  }
+
+  @override
+  String get expenseSplitErrorNoMembers =>
+      'Elegí al menos una persona para dividir el gasto.';
+
+  @override
+  String expenseSplitErrorFixedTotal(String amount) {
+    return 'Los montos del reparto tienen que sumar el total ($amount).';
+  }
+
+  @override
+  String familyTaskCardMarkedDoneBy(String name) {
+    return '$name la marcó como hecha';
+  }
+
+  @override
+  String get familyTaskCardReadyToReview => 'Lista para revisar';
+
+  @override
+  String get familyTaskCardAwaitingApproval => 'Esperando aprobación';
+
+  @override
+  String get familyTaskCardAwaitingAdult => 'Esperando que un adulto la revise';
+
+  @override
+  String get familyTaskCardUnassignedOverdue => 'Pendiente de coordinar';
+
+  @override
+  String get familyTaskCardUnassignedToday => 'A coordinar';
+
+  @override
+  String get familyTaskCardMyMissionOverdue => 'Tu misión pendiente';
+
+  @override
+  String get familyTaskCardMyMission => 'Tu misión';
+
+  @override
+  String get familyTaskCardMineOverdue => 'Te quedó pendiente';
+
+  @override
+  String get familyTaskCardMineToday => 'Te toca hoy';
+
+  @override
+  String get familyTaskCardOtherOverdue => 'Le quedó a otro integrante';
+
+  @override
+  String get familyTaskCardOther => 'Para otro integrante';
+
+  @override
+  String familyTaskCardNamedOverdue(String name) {
+    return 'Le quedó a $name';
+  }
+
+  @override
+  String familyTaskCardNamed(String name) {
+    return 'Para $name';
+  }
+
+  @override
+  String get familyTaskCardUrgencyReview => 'Revisar';
+
+  @override
+  String get familyTaskCardUrgencyInReview => 'En revisión';
+
+  @override
+  String get familyTaskCardUrgencyOverdue => 'Vencida';
+
+  @override
+  String get familyTaskCardUrgencyToday => 'Hoy';
+
+  @override
+  String get familyTaskCardUrgencyUpcoming => 'Próxima';
+
+  @override
+  String familyTaskCardRotation(int count) {
+    return 'Rota entre $count';
+  }
+
+  @override
+  String familyFeedSettled(String name) {
+    return '$name equilibró la cuenta';
+  }
+
+  @override
+  String familyFeedLeftReady(String name) {
+    return '$name dejó lista';
+  }
+
+  @override
+  String familyFeedCompleted(String name) {
+    return '$name completó';
+  }
+
+  @override
+  String familyFeedAddedExpense(String name) {
+    return '$name registró un gasto';
+  }
+
+  @override
+  String familyFeedDidSomething(String name) {
+    return '$name hizo algo en el hogar';
+  }
+
+  @override
+  String get familyFeedSomeone => 'Alguien';
+
+  @override
+  String familyFeedWaitingReview(String name) {
+    return '$name espera revisión de';
+  }
+
+  @override
+  String get familyFeedTaskNotFound => 'No encontramos esa tarea para revisar.';
+
+  @override
+  String get familyFeedApproveFailed => 'No pudimos aprobar la tarea.';
+
+  @override
+  String get familyFeedApproved => 'Tarea aprobada.';
+
+  @override
+  String get familyFeedReturnFailed => 'No pudimos devolver la tarea.';
+
+  @override
+  String get familyFeedReturned => 'La tarea volvió para corregir.';
+
+  @override
+  String get familyFeedReturn => 'Devolver';
+
+  @override
+  String get familyFeedApprove => 'Aprobar';
+
+  @override
+  String familyFeedCoins(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count coins',
+      one: '1 coin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String familyTasksMoreOverdue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Hay $count tareas atrasadas más.',
+      one: 'Hay 1 tarea atrasada más.',
     );
     return '$_temp0';
   }
