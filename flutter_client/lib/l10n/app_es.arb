@@ -166,7 +166,7 @@
       }
     }
   },
-  "settingsAppBarTitle": "Configuracion",
+  "settingsAppBarTitle": "Configuración",
   "@settingsAppBarTitle": {
     "description": "Large title at the top of the Settings screen."
   },
@@ -179,7 +179,7 @@
     "description": "Tiny uppercase label above a section in Settings. Stays uppercase in all locales."
   },
   "settingsSectionProfileTitle": "Tu espacio",
-  "settingsSectionProfileSubtitle": "Avatar, nombre y datos basicos de tu cuenta.",
+  "settingsSectionProfileSubtitle": "Avatar, nombre y datos básicos de tu cuenta.",
   "settingsSectionHouseholdEyebrow": "HOGAR",
   "settingsSectionHouseholdTitle": "Casa compartida",
   "settingsSectionHouseholdSubtitle": "Miembros, invitaciones y reglas del hogar.",
@@ -187,11 +187,11 @@
   "settingsSectionAppTitle": "Preferencias",
   "settingsSectionAppSubtitle": "Tema, notificaciones, ayuda y feedback.",
   "settingsSectionAccountEyebrow": "CUENTA",
-  "settingsSectionAccountTitle": "Sesion y seguridad",
+  "settingsSectionAccountTitle": "Sesión y seguridad",
   "settingsSectionAccountSubtitle": "Salir de la cuenta o reiniciar tus datos si lo necesitas.",
   "settingsSectionLegalEyebrow": "LEGAL",
   "settingsSectionLegalTitle": "Privacidad",
-  "settingsSectionLegalSubtitle": "Politica de privacidad y terminos de uso.",
+  "settingsSectionLegalSubtitle": "Política de privacidad y términos de uso.",
   "settingsAppearanceTitle": "Apariencia",
   "settingsAppearanceSubtitle": "Elegí el tema visual de la app",
   "settingsThemeModeTitle": "Modo del Tema",
@@ -222,7 +222,7 @@
   "@settingsPremiumFeedbackRewardNote": {
     "description": "Note below the Premium card encouraging users to report bugs or suggest useful improvements in exchange for possible free Premium months."
   },
-  "settingsPremiumFeatureShoppingFinanceSync": "Sincronizacion Shopping a Finanzas",
+  "settingsPremiumFeatureShoppingFinanceSync": "Sincronización de compras con finanzas",
   "@settingsPremiumFeatureShoppingFinanceSync": {
     "description": "Premium feature label: when a shopping list item is purchased, it auto-creates a finance/expense entry."
   },
@@ -239,11 +239,11 @@
     "description": "Snackbar shown to minors when they tap a premium-locked theme palette. Argentine voseo."
   },
   "settingsReplayTourTitle": "Ver guia de nuevo",
-  "settingsReplayTourSubtitle": "Repasa la introduccion del hogar",
+  "settingsReplayTourSubtitle": "Repasá la introducción del hogar",
   "settingsFeedbackTitle": "Enviar feedback",
   "settingsFeedbackSubtitle": "Reporta un bug o sugiere una mejora",
-  "settingsLegalPrivacyPolicy": "Politica de Privacidad",
-  "settingsLegalTermsOfUse": "Terminos de Uso",
+  "settingsLegalPrivacyPolicy": "Política de privacidad",
+  "settingsLegalTermsOfUse": "Términos de uso",
   "settingsNotificationsEnabled": "🔔 Notificaciones activadas",
   "settingsNotificationsDisabled": "🔕 Notificaciones desactivadas",
   "settingsProfileNameUpdated": "✅ Nombre actualizado",
@@ -257,7 +257,7 @@
   "settingsRenameProfileLabel": "Nombre",
   "settingsNotificationsTitle": "Notificaciones",
   "settingsFaqTitle": "Preguntas Frecuentes",
-  "settingsLogoutButton": "Cerrar Sesion",
+  "settingsLogoutButton": "Cerrar sesión",
   "@settingsLogoutButton": {
     "description": "Big outlined button at the bottom of Settings to sign the user out of the app."
   },
@@ -269,14 +269,14 @@
   "@settingsResetAccountButton": {
     "description": "Destructive button label: wipes all the user's data and removes them from the current household."
   },
-  "settingsLogoutDialogTitle": "Cerrar sesión?",
+  "settingsLogoutDialogTitle": "¿Cerrar sesión?",
   "settingsLogoutDialogBody": "Vas a tener que iniciar sesión de nuevo para acceder a tu hogar.",
   "settingsLogoutDialogConfirm": "Salir",
   "@settingsLogoutDialogConfirm": {
     "description": "Confirm button on the sign-out dialog. Short — fits next to a Cancel button."
   },
-  "settingsResetDialogTitle": "Reiniciar todo?",
-  "settingsResetDialogBody": "Esta accion borrara todas tus tareas, gastos y progreso de forma permanente, y te quitara del hogar actual para que puedas configurar uno nuevo o unirte a otro.",
+  "settingsResetDialogTitle": "¿Reiniciar todo?",
+  "settingsResetDialogBody": "Esta acción borrará todas tus tareas, gastos y progreso de forma permanente, y te quitará del hogar actual para que puedas configurar uno nuevo o unirte a otro.",
   "settingsResetDialogConfirm": "Reiniciar",
   "@settingsResetDialogConfirm": {
     "description": "Destructive confirm button on the reset-account dialog."
@@ -873,7 +873,7 @@
   "@homeCoupleActivityTitle": {
     "description": "Section title above the recent-activity feed on the couple home."
   },
-  "homeCoupleActivityEmptyTitle": "Todavia no hay movimientos",
+  "homeCoupleActivityEmptyTitle": "Todavía no hay movimientos",
   "homeCoupleActivityEmptyBody": "Cuando haya una tarea o un gasto nuevo, aparece acá.",
   "@homeCoupleActivityEmptyBody": {
     "description": "Empty-state body for the activity feed. 'aca' = 'aquí' in Argentine voseo."
@@ -1211,7 +1211,7 @@
   "@homeFamilyChildHeroTitle": {
     "description": "Hero card title shown to a child on the family home."
   },
-  "homeFamilyChildHeroBody": "{firstName}, cada mision aprobada suma coins para la tienda.",
+  "homeFamilyChildHeroBody": "{firstName}, cada misión aprobada suma coins para la tienda.",
   "@homeFamilyChildHeroBody": {
     "description": "Hero card body for a child. Tells them every approved task awards coins they can spend in the store.",
     "placeholders": {
@@ -1479,7 +1479,7 @@
   "settingsHouseholdEmptyBody": "Unite a un equipo existente con un código de invitación para empezar a compartir tareas y gastos.",
   "settingsHouseholdJoinWithCodeButton": "Unirse con código",
   "settingsHouseholdTasksToggleTitle": "Tareas del hogar",
-  "settingsHouseholdTasksToggleOnSubtitle": "Mostrar tareas, progreso y accesos rapidos.",
+  "settingsHouseholdTasksToggleOnSubtitle": "Mostrar tareas, progreso y accesos rápidos.",
   "settingsHouseholdTasksToggleOffSubtitle": "Ocultar tareas y dejar solo finanzas y compras.",
   "settingsHouseholdMembersEyebrow": "MIEMBROS",
   "settingsHouseholdMembersCount": "{count, plural, =1{1 miembro} other{{count} miembros}}",
@@ -1505,7 +1505,7 @@
   "settingsHouseholdJoinDialogBody": "Ingresá el código de invitación que te compartieron para unirte al hogar:",
   "settingsHouseholdJoinDialogConfirm": "Unirme",
   "settingsHouseholdEditMenuRenameTitle": "Editar nombre",
-  "settingsHouseholdEditMenuRenameSubtitle": "Cambia el nombre de tu hogar",
+  "settingsHouseholdEditMenuRenameSubtitle": "Cambiá el nombre de tu hogar",
   "settingsHouseholdEditMenuInviteTitle": "Código de invitación",
   "settingsHouseholdEditMenuInviteSubtitleExisting": "Compartir o generar nuevo código",
   "settingsHouseholdEditMenuInviteSubtitleNone": "Generar código para invitar",
@@ -2145,7 +2145,7 @@
       }
     }
   },
-  "weeklySummaryForgottenSubtitle": "Esta recurrente quedo en el camino — {overdueLabel}.",
+  "weeklySummaryForgottenSubtitle": "Esta recurrente quedó en el camino — {overdueLabel}.",
   "@weeklySummaryForgottenSubtitle": {
     "description": "Subtitle for the most-forgotten recurring task card. {overdueLabel} is the overdue text.",
     "placeholders": {
@@ -2763,11 +2763,11 @@
   "@expensesFormSaveButtonUpdated": {
     "description": "Save button success state label when editing an existing expense."
   },
-  "expensesFormSaveButtonSaveIncome": "Guardar Ingreso",
+  "expensesFormSaveButtonSaveIncome": "Guardar ingreso",
   "@expensesFormSaveButtonSaveIncome": {
     "description": "Save button idle label when creating an income entry."
   },
-  "expensesFormSaveButtonSaveExpense": "Guardar Gasto",
+  "expensesFormSaveButtonSaveExpense": "Guardar gasto",
   "@expensesFormSaveButtonSaveExpense": {
     "description": "Save button idle label when creating an expense entry."
   },
@@ -3737,7 +3737,7 @@
   "duelHistoryLastWeek": "Semana pasada",
   "duelVsText": " vs ",
   "rewardsTitleRequiredError": "Escribí el nombre del deseo.",
-  "rewardsTitleMinLengthError": "Usa al menos 3 caracteres.",
+  "rewardsTitleMinLengthError": "Usá al menos 3 caracteres.",
   "rewardsTitleHint": "Ej: Masaje de 20 minutos",
   "rewardsTargetTypeAdult": "Adultos",
   "rewardsTargetTypeChild": "Chicos",
@@ -4915,7 +4915,7 @@
   "@scheduleSubtitle": {
     "description": "Subtitle of the schedule task sheet."
   },
-  "scheduleSectionRepeat": "REPETICION",
+  "scheduleSectionRepeat": "REPETICIÓN",
   "@scheduleSectionRepeat": {
     "description": "Uppercase section header for the repetition options."
   },
@@ -5068,7 +5068,7 @@
   "@avatarPickerTitle": {
     "description": "Title of the avatar picker bottom sheet."
   },
-  "avatarPickerSubtitle": "Elegi un avatar de la coleccion o crea el tuyo propio",
+  "avatarPickerSubtitle": "Elegí un avatar de la colección o creá el tuyo propio",
   "@avatarPickerSubtitle": {
     "description": "Subtitle of the avatar picker sheet."
   },
@@ -5159,7 +5159,7 @@
   "@avatarPickerGooglePhotoTitle": {
     "description": "Title of the option to use the Google account photo as avatar."
   },
-  "avatarPickerGooglePhotoSubtitle": "Usa la imagen de tu cuenta de Google como avatar.",
+  "avatarPickerGooglePhotoSubtitle": "Usá la imagen de tu cuenta de Google como avatar.",
   "@avatarPickerGooglePhotoSubtitle": {
     "description": "Subtitle of the Google photo avatar option."
   },
@@ -6160,5 +6160,92 @@
         "type": "int"
       }
     }
+  },
+  "familyFeedRedeemedReward": "{name} canjeó un premio",
+  "@familyFeedRedeemedReward": {
+    "description": "Feed del hogar (familia): alguien canjeó un premio de la tienda con sus coins. El nombre del premio va debajo.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPaletteOrange": "Naranja",
+  "@settingsPaletteOrange": {
+    "description": "Nombre del color de tema naranja (el original). Lo lee el lector de pantalla en el selector de color de Configuración."
+  },
+  "settingsPaletteDark": "Oscuro",
+  "@settingsPaletteDark": {
+    "description": "Nombre del color de tema casi negro, para el lector de pantalla."
+  },
+  "settingsPaletteIndigo": "Índigo",
+  "@settingsPaletteIndigo": {
+    "description": "Nombre del color de tema índigo, para el lector de pantalla."
+  },
+  "settingsPaletteRose": "Rosa",
+  "@settingsPaletteRose": {
+    "description": "Nombre del color de tema rosa, para el lector de pantalla."
+  },
+  "settingsPaletteEmerald": "Esmeralda",
+  "@settingsPaletteEmerald": {
+    "description": "Nombre del color de tema verde esmeralda, para el lector de pantalla."
+  },
+  "settingsPaletteViolet": "Violeta",
+  "@settingsPaletteViolet": {
+    "description": "Nombre del color de tema violeta, para el lector de pantalla."
+  },
+  "settingsPaletteAmber": "Ámbar",
+  "@settingsPaletteAmber": {
+    "description": "Nombre del color de tema ámbar, para el lector de pantalla."
+  },
+  "settingsPaletteCyan": "Cian",
+  "@settingsPaletteCyan": {
+    "description": "Nombre del color de tema cian, para el lector de pantalla."
+  },
+  "settingsPaletteLocked": "{name}, requiere Premium",
+  "@settingsPaletteLocked": {
+    "description": "Lectura del lector de pantalla para un color de tema bloqueado sin Premium. name = nombre del color.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesFormAmountTotalLabel": "Monto total",
+  "@expensesFormAmountTotalLabel": {
+    "description": "Etiqueta sobre el monto grande del formulario de gasto o ingreso."
+  },
+  "estimatedIncomeSheetTitle": "Ingreso mensual estimado",
+  "@estimatedIncomeSheetTitle": {
+    "description": "Título de la hoja para cargar un ingreso mensual estimado (no crea movimientos, solo sirve para calcular el balance)."
+  },
+  "estimatedIncomeSheetSubtitle": "Solo para calcular tu balance. No crea movimientos.",
+  "@estimatedIncomeSheetSubtitle": {
+    "description": "Aclaración bajo el título de la hoja de ingreso estimado."
+  },
+  "estimatedIncomeSheetAmountEyebrow": "MONTO NETO MENSUAL",
+  "@estimatedIncomeSheetAmountEyebrow": {
+    "description": "Etiqueta en mayúsculas sobre el campo del monto del ingreso estimado."
+  },
+  "estimatedIncomeSheetPaydayEyebrow": "DÍA DE COBRO",
+  "@estimatedIncomeSheetPaydayEyebrow": {
+    "description": "Etiqueta en mayúsculas sobre el selector del día del mes en que se cobra."
+  },
+  "estimatedIncomeSheetRemove": "Quitar ingreso estimado",
+  "@estimatedIncomeSheetRemove": {
+    "description": "Botón secundario para borrar el ingreso estimado cargado."
+  },
+  "estimatedIncomeSheetDayLabel": "Día {day}",
+  "@estimatedIncomeSheetDayLabel": {
+    "description": "Lectura del lector de pantalla para cada día del selector de día de cobro.",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFamilyActivityErrorBody": "No pudimos cargar la actividad del hogar.",
+  "@homeFamilyActivityErrorBody": {
+    "description": "Error en la sección de actividad reciente del inicio familiar, junto a un botón Reintentar."
   }
 }

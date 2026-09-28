@@ -1,3 +1,4 @@
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
@@ -13,6 +14,7 @@ import '../../domain/entities/app_notification.dart';
   AppLocalizations t,
   AppNotification n, {
   String? localeName,
+  AppCurrency? currency,
 }) {
   final params = n.params;
   final fallback = (title: n.title, body: n.body);
@@ -24,6 +26,9 @@ import '../../domain/entities/app_notification.dart';
     final raw = params[key];
     final value = raw is num ? raw : num.tryParse('$raw');
     if (value == null) return '';
+    // With the user's currency: a hardcoded `$` read wrong for euros and
+    // reais.
+    if (currency != null) return currency.format(value);
     final formatted =
         NumberFormat.decimalPattern(localeName ?? t.localeName).format(value);
     return '\$$formatted';

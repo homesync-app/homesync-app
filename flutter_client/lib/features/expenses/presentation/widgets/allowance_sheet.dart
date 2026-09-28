@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
@@ -8,6 +7,7 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/allowance_schedule_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -72,16 +72,16 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
   Future<void> _send() async {
     if (_loading) return;
     final t = AppLocalizations.of(context);
-    // es-AR sin centavos: coma = decimal al parsear, pero se redondea.
-    final amount = double.tryParse(
-      _amountController.text.replaceAll('.', '').replaceAll(',', '.'),
-    )?.roundToDouble();
+    // In the field's format: a `12.50` typed for cents no longer reads as
+    // 1250.
+    final amount =
+        ref.read(currencyProvider).inputFormat.parse(_amountController.text);
 
     if (_recipientId == null) {
       setState(() => _errorMessage = t.allowanceRecipientRequired);
       return;
     }
-    if (amount == null || amount <= 0) {
+    if (amount <= 0) {
       setState(() => _errorMessage = t.allowanceAmountInvalid);
       return;
     }
@@ -260,17 +260,19 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
                     TextField(
                       controller: _amountController,
                       keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                          ref.watch(currencyProvider).inputFormat.keyboardType,
                       textInputAction: TextInputAction.next,
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                        AmountInputFormatter(
+                          ref.watch(currencyProvider).inputFormat,
+                        ),
                       ],
                       style: AppTypography.sectionTitle.copyWith(
                         fontSize: 22,
                         color: theme.textPrimary,
                       ),
                       decoration: InputDecoration(
-                        prefixText: r'$ ',
+                        prefixText: ref.watch(currencyProvider).inputPrefix(),
                         hintText: '0',
                         filled: true,
                         fillColor: theme.surfaceVariant.withValues(alpha: 0.42),
@@ -353,7 +355,9 @@ class _AllowanceSheetState extends ConsumerState<AllowanceSheet> {
                 Expanded(
                   child: Text(
                     t.allowanceActiveScheduleInfo(
-                      ref.watch(currencyProvider).format(activeForRecipient.amount),
+                      ref
+                          .watch(currencyProvider)
+                          .format(activeForRecipient.amount),
                       activeForRecipient.dayOfMonth,
                     ),
                     style: AppTypography.caption.copyWith(

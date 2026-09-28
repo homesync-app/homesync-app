@@ -158,7 +158,6 @@ String? financeTitleKeyFor(
       return 'financeTitleInsurance';
     case 'celu':
     case 'celular':
-    case 'celu blas':
     case 'phone':
       return 'financeTitlePhone';
   }

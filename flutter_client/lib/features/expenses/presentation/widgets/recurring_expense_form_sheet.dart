@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
@@ -16,7 +18,6 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
-import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import 'expense_category_matcher.dart';
@@ -107,9 +108,7 @@ class _RecurringExpenseFormSheetState
     final template = widget.template;
     if (template != null) {
       _titleController.text = template.title;
-      _amountController.text = NumberFormat.decimalPattern('es_ES').format(
-        template.defaultAmount.round(),
-      );
+      _amountController.text = _amountFormat.format(template.defaultAmount);
       _dayOfMonth = template.dayOfMonth;
       _category = template.category;
       _splitType = template.splitType;
@@ -121,8 +120,7 @@ class _RecurringExpenseFormSheetState
         _titleController.text = widget.initialTitle!;
       }
       if (widget.initialAmount != null) {
-        _amountController.text = NumberFormat.decimalPattern('es_ES')
-            .format(widget.initialAmount!.round());
+        _amountController.text = _amountFormat.format(widget.initialAmount!);
       }
       if (widget.initialCategory != null) {
         _category = widget.initialCategory!;
@@ -156,10 +154,11 @@ class _RecurringExpenseFormSheetState
     }
   }
 
+  AmountInputFormat get _amountFormat => ref.read(currencyProvider).inputFormat;
+
   double? _parseAmount(String raw) {
-    final normalized = raw.trim().replaceAll('.', '').replaceAll(',', '.');
-    if (normalized.isEmpty) return null;
-    return double.tryParse(normalized);
+    if (raw.trim().isEmpty) return null;
+    return _amountFormat.parse(raw);
   }
 
   Future<void> _initializeDefaultPayer() async {
@@ -175,23 +174,6 @@ class _RecurringExpenseFormSheetState
       );
       // If members are not available yet, the selector will show loading/error.
     }
-  }
-
-  void _onAmountChanged(String value) {
-    final clean = value.replaceAll('.', '').replaceAll(',', '');
-    if (clean.isEmpty) {
-      _amountController.text = '';
-      return;
-    }
-
-    final parsed = int.tryParse(clean);
-    if (parsed == null) return;
-
-    final formatted = NumberFormat.decimalPattern('es_ES').format(parsed);
-    _amountController.value = TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
   }
 
   DateTime _calculateNextExecutionDate(int day) {
@@ -685,8 +667,10 @@ class _RecurringExpenseFormSheetState
   Widget _buildAmountField() {
     return TextFormField(
       controller: _amountController,
-      keyboardType: TextInputType.number,
-      onChanged: _onAmountChanged,
+      keyboardType: ref.watch(currencyProvider).inputFormat.keyboardType,
+      inputFormatters: [
+        AmountInputFormatter(ref.watch(currencyProvider).inputFormat),
+      ],
       validator: (value) {
         final amount = _parseAmount(value ?? '');
         if (amount == null) {
@@ -699,7 +683,7 @@ class _RecurringExpenseFormSheetState
       },
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context).recurringExpenseAmountLabel,
-        prefixText: r'$ ',
+        prefixText: ref.watch(currencyProvider).inputPrefix(),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadii.lg),
         ),

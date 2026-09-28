@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart'
     show sharedPreferencesProvider;
+import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:intl/intl.dart';
 
 const _kCurrencyKey = 'app_currency_code';
@@ -23,23 +26,41 @@ class AppCurrency {
   /// write them locally.
   final bool symbolFirst;
 
+  /// Decimal places amount fields take: none for pesos, where people type
+  /// whole amounts, and cents for dollars, euros and reais.
+  final int inputDecimals;
+
   const AppCurrency({
     required this.code,
     required this.symbol,
     required this.locale,
     this.symbolFirst = false,
+    this.inputDecimals = 0,
   });
 
+  /// How amount fields read and write numbers in this currency.
+  AmountInputFormat get inputFormat {
+    final english = locale.startsWith('en');
+    return AmountInputFormat(
+      groupSeparator: english ? ',' : '.',
+      decimalSeparator: english ? '.' : ',',
+      decimals: inputDecimals,
+    );
+  }
+
+  /// Formats [amount] for display. Without [decimalDigits], cents show only
+  /// for currencies that take them and only when there are some: `$12.50`
+  /// and `$12`, while pesos stay whole (`$ 12.500`).
   String format(
     num amount, {
     bool signed = false,
-    int decimalDigits = 0,
+    int? decimalDigits,
   }) {
     final value = amount.toDouble();
     final formatter = NumberFormat.currency(
       locale: locale,
       symbol: symbol,
-      decimalDigits: decimalDigits,
+      decimalDigits: decimalDigits ?? displayDecimalsFor(value),
       customPattern: symbolFirst ? _kSymbolFirstPattern : null,
     );
     return '${_sign(value, signed: signed)}${formatter.format(value.abs())}';
@@ -60,6 +81,14 @@ class AppCurrency {
 
   String inputPrefix() => '$symbol ';
 
+  /// Decimals [format] shows for [value] by default. Count-up animations use
+  /// it with their target so the cents don't flicker while rolling.
+  int displayDecimalsFor(num value) {
+    if (inputDecimals == 0) return 0;
+    final scale = math.pow(10, inputDecimals);
+    return (value.abs() * scale).round() % scale == 0 ? 0 : inputDecimals;
+  }
+
   static String _sign(double value, {bool signed = false}) {
     if (value < 0) return '-';
     return signed && value > 0 ? '+' : '';
@@ -77,16 +106,19 @@ const supportedCurrencies = <AppCurrency>[
     code: 'USD',
     symbol: r'$',
     locale: 'en_US',
+    inputDecimals: 2,
   ),
   AppCurrency(
     code: 'EUR',
     symbol: '€',
     locale: 'es_ES',
+    inputDecimals: 2,
   ),
   AppCurrency(
     code: 'BRL',
     symbol: r'R$',
     locale: 'pt_BR',
+    inputDecimals: 2,
   ),
   AppCurrency(
     code: 'CLP',

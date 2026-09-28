@@ -89,83 +89,101 @@ class SoloActivityTile extends ConsumerWidget {
         _TrailingFigure(t.activityCoinsMinus(rewardCost), rewardAccent),
     ].take(2).toList();
 
+    // One node for screen readers instead of separate texts.
+    final semanticLabel = [
+      title,
+      timeLabel,
+      ...figures.map((figure) => figure.label),
+    ].join(', ');
+    final tile = Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(color: theme.border.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.1),
+              borderRadius: AppRadii.inner(AppRadii.lg, 12),
+            ),
+            child: Icon(
+              activityIcon(type, category, isSettlement: isSettlement),
+              size: 20,
+              color: accent,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyStrong.copyWith(
+                    fontSize: 14.5,
+                    height: 1.2,
+                    color: theme.textPrimary.withValues(alpha: 0.92),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  timeLabel,
+                  style: AppTypography.caption.copyWith(
+                    fontSize: 11,
+                    color: theme.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (figures.isNotEmpty) ...[
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < figures.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 3),
+                  Text(
+                    figures[i].label,
+                    style: TextStyle(
+                      color: figures[i].color,
+                      fontSize: i == 0 ? 13.5 : 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
+                    ).tabular,
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+    // Rewards have no detail sheet: a labeled row, not a button.
+    if (!activityHasDetail(activity)) {
+      return Semantics(
+        container: true,
+        label: semanticLabel,
+        excludeSemantics: true,
+        child: tile,
+      );
+    }
     return AnimatedPress(
       onTap: () => openActivityDetail(context, ref, activity),
       scale: 0.985,
       haptic: AppPressHaptic.selection,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
-        decoration: BoxDecoration(
-          color: theme.surface,
-          borderRadius: BorderRadius.circular(AppRadii.lg),
-          border: Border.all(color: theme.border.withValues(alpha: 0.4)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.1),
-                borderRadius: AppRadii.inner(AppRadii.lg, 12),
-              ),
-              child: Icon(
-                activityIcon(type, category, isSettlement: isSettlement),
-                size: 20,
-                color: accent,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.bodyStrong.copyWith(
-                      fontSize: 14.5,
-                      height: 1.2,
-                      color: theme.textPrimary.withValues(alpha: 0.92),
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    timeLabel,
-                    style: AppTypography.caption.copyWith(
-                      fontSize: 11,
-                      color: theme.textMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (figures.isNotEmpty) ...[
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  for (var i = 0; i < figures.length; i++) ...[
-                    if (i > 0) const SizedBox(height: 3),
-                    Text(
-                      figures[i].label,
-                      style: TextStyle(
-                        color: figures[i].color,
-                        fontSize: i == 0 ? 13.5 : 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.2,
-                      ).tabular,
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
+      semanticLabel: semanticLabel,
+      excludeChildSemantics: true,
+      child: tile,
     );
   }
 }

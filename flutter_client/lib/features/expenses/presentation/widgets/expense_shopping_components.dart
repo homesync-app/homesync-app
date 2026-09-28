@@ -445,7 +445,8 @@ class _ExpenseShoppingIntegrationCardState
                                       BorderRadius.circular(AppRadii.pill),
                                 ),
                                 child: Text(
-                                  'PREMIUM',
+                                  AppLocalizations.of(context)
+                                      .settingsPremiumBadge,
                                   style: AppTypography.caption.copyWith(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w700,

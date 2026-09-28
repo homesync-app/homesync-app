@@ -31,7 +31,7 @@ class ActivityChatBubble extends ConsumerWidget {
     final creatorId = activity['creator_id'] as String?;
     final isMe = creatorId == currentUserId;
     final isReward = showGamification && type == 'reward';
-    final hasDetail = type == 'task' || type == 'expense';
+    final hasDetail = activityHasDetail(activity);
     // Un equilibrio de saldo (settle_debt_v1) llega como expense con
     // type='settlement' en metadata. Reusamos los slots de header + titulo
     // existentes para no agrandar la tarjeta (titulo/icono centralizados en
@@ -185,7 +185,7 @@ class ActivityChatBubble extends ConsumerWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 6),
                         child: Text(
-                          'Premio canjeado',
+                          t.rewardsRedeemed,
                           style: AppTypography.caption.copyWith(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,

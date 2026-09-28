@@ -11,20 +11,21 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_presentation.dart'
     show
+        activityDisplayTitle,
+        activityHasDetail,
         activityIsSettlement,
+        activityParseAmount,
+        activityReadInt,
         formatActivityTimeAgo,
-        formatTaskActivityTimeLabel;
+        formatTaskActivityTimeLabel,
+        localizedActivityTitle,
+        openActivityDetail;
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
     show dashboardCategoryAccent;
-import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_detail_cache.dart';
-import 'package:homesync_client/features/expenses/presentation/widgets/expense_detail_sheet.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
-import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_amount.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
@@ -60,25 +61,30 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     final createdAt =
         DateTime.tryParse(activity['created_at'] as String? ?? '')?.toLocal() ??
             DateTime.now();
-    final timeLabel =
-        formatTaskActivityTimeLabel(AppLocalizations.of(context), activity);
+    final t = AppLocalizations.of(context);
+    final timeLabel = formatTaskActivityTimeLabel(t, activity);
 
-    final userName = _firstName(
-      (data['user_name'] as String?)?.trim(),
-      AppLocalizations.of(context),
-    );
+    final userName = _firstName((data['user_name'] as String?)?.trim(), t);
     final avatarUrl =
         (data['avatar_url'] ?? data['creator_avatar_url']) as String?;
-    final detailTitle = _normalizedText(
-      _localizedActivityTitle(context, data),
+    final category = data['category'] as String?;
+    // Same title rules as the couple and solo feeds: a title that is only a
+    // category reads in the UI language, and legacy text gets repaired.
+    final detailTitle = activityDisplayTitle(
+      t,
+      localizedActivityTitle(t, data),
+      category,
+      isExpense: type == 'expense',
     );
-    final amount = _parseAmount(data['amount']);
-    final xpReward =
-        _readInt(data['xp_reward'] ?? data['xp_per_user'] ?? data['xp']);
-    final coinsReward = _readInt(
+    final amount = activityParseAmount(data['amount']);
+    final xpReward = activityReadInt(
+      data['xp_reward'] ?? data['xp_per_user'] ?? data['xp'],
+    );
+    final coinsReward = activityReadInt(
       data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],
     );
-    final category = data['category'] as String?;
+    final rewardCost =
+        type == 'reward' ? activityReadInt(data['reward_cost']) : null;
     final accent = _activityAccent(context, type, category);
     final currentUserId = ref.watch(currentUserIdProvider);
     final currentMember = ref.watch(householdMembersProvider).whenOrNull(
@@ -102,7 +108,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
         coinsReward: coinsReward,
         accent: accent,
         canReview: canReview,
-        onTap: () => _openDetail(context, ref, type, data),
+        onTap: () => openActivityDetail(context, ref, activity),
         onApprove: () => _approvePendingTask(context, ref, data),
         onReject: () => _rejectPendingTask(context, ref, data),
       );
@@ -112,172 +118,120 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     // timeline, plus avatar + "who" eyebrow because family is multi-person):
     // avatar, eyebrow + title + plain relative time, and the key figures on
     // the trailing edge instead of a row of bordered pills.
+    final currency = ref.watch(currencyProvider);
     final figures = <_TrailingFigure>[
       if (amount != null)
-        _TrailingFigure(_formatCurrency(ref, amount), theme.textPrimary),
+        _TrailingFigure(currency.format(amount), theme.textPrimary),
       if (xpReward != null && xpReward > 0)
         _TrailingFigure('+$xpReward XP', AppColors.xpGold),
       if (coinsReward != null && coinsReward > 0)
-        _TrailingFigure(
-          AppLocalizations.of(context).activityCoinsPlus(coinsReward),
-          AppColors.coinGreen,
-        ),
+        _TrailingFigure(t.activityCoinsPlus(coinsReward), AppColors.coinGreen),
+      if (rewardCost != null && rewardCost > 0)
+        _TrailingFigure(t.activityCoinsMinus(rewardCost), AppColors.accentGold),
     ].take(2).toList();
+    final headline =
+        _headlineFor(t, type, userName, isSettlement: isSettlement);
+    // One node for screen readers (who, what, when and the figures) instead
+    // of four loose texts inside a button with no label.
+    final semanticLabel = [
+      '$headline: $detailTitle',
+      timeLabel,
+      ...figures.map((figure) => figure.label),
+    ].join(', ');
 
-    return Semantics(
-      button: true,
-      child: AnimatedPress(
-        onTap: () => _openDetail(context, ref, type, data),
-        scale: 0.985,
-        haptic: AppPressHaptic.selection,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
-          decoration: BoxDecoration(
-            color: theme.surface,
-            borderRadius: BorderRadius.circular(AppRadii.lg),
-            border: Border.all(color: theme.border.withValues(alpha: 0.4)),
+    final row = Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(color: theme.border.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          CustomUserAvatar(
+            name: userName,
+            avatarUrl: avatarUrl,
+            radius: 18,
+            forceCircular: true,
           ),
-          child: Row(
-            children: [
-              CustomUserAvatar(
-                name: userName,
-                avatarUrl: avatarUrl,
-                radius: 18,
-                forceCircular: true,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _headlineFor(
-                        AppLocalizations.of(context),
-                        type,
-                        userName,
-                        isSettlement: isSettlement,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.caption.copyWith(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: theme.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      detailTitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodyStrong.copyWith(
-                        fontSize: 14.5,
-                        height: 1.2,
-                        color: theme.textPrimary.withValues(alpha: 0.92),
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      timeLabel,
-                      style: AppTypography.caption.copyWith(
-                        fontSize: 11,
-                        color: theme.textMuted,
-                      ),
-                    ),
-                  ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  headline,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.caption.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: theme.textSecondary,
+                  ),
                 ),
-              ),
-              if (figures.isNotEmpty) ...[
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (var i = 0; i < figures.length; i++) ...[
-                      if (i > 0) const SizedBox(height: 3),
-                      Text(
-                        figures[i].label,
-                        style: TextStyle(
-                          color: figures[i].color,
-                          fontSize: i == 0 ? 13.5 : 11,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.2,
-                        ).tabular,
-                      ),
-                    ],
-                  ],
+                const SizedBox(height: 2),
+                Text(
+                  detailTitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyStrong.copyWith(
+                    fontSize: 14.5,
+                    height: 1.2,
+                    color: theme.textPrimary.withValues(alpha: 0.92),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  timeLabel,
+                  style: AppTypography.caption.copyWith(
+                    fontSize: 11,
+                    color: theme.textMuted,
+                  ),
                 ),
               ],
-            ],
+            ),
           ),
-        ),
+          if (figures.isNotEmpty) ...[
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < figures.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 3),
+                  Text(
+                    figures[i].label,
+                    style: TextStyle(
+                      color: figures[i].color,
+                      fontSize: i == 0 ? 13.5 : 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
+                    ).tabular,
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ],
       ),
     );
-  }
-
-  Future<void> _openDetail(
-    BuildContext context,
-    WidgetRef ref,
-    String? type,
-    Map<String, dynamic> data,
-  ) async {
-    if (type == 'task' || type == 'task_pending_approval') {
-      final completedAt = data['completed_at'] ??
-          data['last_completed_at'] ??
-          activity['created_at'];
-      final taskData = <String, dynamic>{
-        ...data,
-        'title': data['task_title'] ?? data['title'],
-        'category': data['category'] ?? 'limpieza',
-        'xp_reward': data['xp_reward'] ?? data['xp_per_user'] ?? data['xp'],
-        'coin_reward':
-            data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],
-        'completed_at': completedAt,
-        'activity_id': activity['id'],
-        'completed_user': {
-          'full_name': data['user_name'],
-          'avatar_url': data['avatar_url'] ?? data['creator_avatar_url'],
-          'id': activity['creator_id'],
-        },
-      };
-      await TaskDetailSheet.show(context, taskData);
-      return;
-    }
-
-    if (type == 'expense') {
-      final expenseId = data['expense_id']?.toString();
-      if (expenseId == null || expenseId.isEmpty) return;
-      // Open instantly with the data the feed already shows — the sheet
-      // enriches itself (splits, description) in place, so tapping an expense
-      // feels as immediate as tapping a task instead of waiting on a network
-      // round-trip with no feedback.
-      final createdAt = DateTime.tryParse(
-            activity['created_at'] as String? ?? '',
-          )?.toLocal() ??
-          DateTime.now();
-      // Detalle precalentado (batch de MainScreen) = sheet completo al toque.
-      final cached = ref.read(expenseDetailCacheProvider)[expenseId];
-      ExpenseDetailSheet.show(
-        context,
-        cached ??
-            ExpenseModel(
-              id: expenseId,
-              title: activityIsSettlement(data)
-                  ? AppLocalizations.of(context).activitySettlementTitle
-                  : data['title']?.toString() ?? '',
-              titleKey: data['title_key']?.toString(),
-              amount: _parseAmount(data['amount']) ?? 0,
-              category: data['category'] as String?,
-              householdId: activity['household_id']?.toString() ?? '',
-              paidBy: activity['creator_id']?.toString() ?? '',
-              paidAt: createdAt,
-              createdAt: createdAt,
-              payerFullName: data['user_name'] as String?,
-              payerAvatarUrl:
-                  (data['avatar_url'] ?? data['creator_avatar_url']) as String?,
-            ),
+    // Rewards have no detail sheet: a labeled row, not a button.
+    if (!activityHasDetail(activity)) {
+      return Semantics(
+        container: true,
+        label: semanticLabel,
+        excludeSemantics: true,
+        child: row,
       );
     }
+    return AnimatedPress(
+      onTap: () => openActivityDetail(context, ref, activity),
+      scale: 0.985,
+      haptic: AppPressHaptic.selection,
+      semanticLabel: semanticLabel,
+      excludeChildSemantics: true,
+      child: row,
+    );
   }
 
   String _headlineFor(
@@ -294,6 +248,8 @@ class FamilyActivityFeedItem extends ConsumerWidget {
         return t.familyFeedCompleted(userName);
       case 'expense':
         return t.familyFeedAddedExpense(userName);
+      case 'reward':
+        return t.familyFeedRedeemedReward(userName);
       default:
         return t.familyFeedDidSomething(userName);
     }
@@ -305,52 +261,10 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     return dashboardCategoryAccent(context, category);
   }
 
-  int? _readInt(dynamic raw) {
-    if (raw == null) return null;
-    if (raw is num) return raw.toInt();
-    return int.tryParse(raw.toString());
-  }
-
-  double? _parseAmount(dynamic raw) {
-    if (raw == null) return null;
-    if (raw is num) return raw.toDouble();
-    return double.tryParse(raw.toString());
-  }
-
-  String _normalizedText(String raw) {
-    return raw
-        .replaceAll('Completó la tarea:', '')
-        .replaceAll('Agregó un gasto:', '')
-        .replaceAll('Canjeó un premio:', '')
-        .replaceAll('  ', ' ')
-        .trim();
-  }
-
   String _firstName(String? name, AppLocalizations t) {
     final value = name?.trim();
     if (value == null || value.isEmpty) return t.familyFeedSomeone;
     return value.split(' ').first;
-  }
-
-  String _formatCurrency(WidgetRef ref, double amount) {
-    return ref.read(currencyProvider).format(amount);
-  }
-
-  String _localizedActivityTitle(
-    BuildContext context,
-    Map<String, dynamic> data,
-  ) {
-    final t = AppLocalizations.of(context);
-    if (activityIsSettlement(data)) return t.activitySettlementTitle;
-    final fallback = data['task_title'] ??
-        data['title'] ??
-        data['description'] ??
-        t.activityFallbackTitle;
-    return localizedTaskCatalogText(
-      AppLocalizations.of(context),
-      data['title_key'] as String?,
-      fallback.toString(),
-    );
   }
 
   Future<void> _approvePendingTask(
@@ -510,152 +424,159 @@ class _PendingApprovalActivityCard extends StatelessWidget {
     final mutedCardColor = theme.isDarkMode
         ? theme.surfaceContainer
         : Colors.white.withValues(alpha: 0.52);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: accent.withValues(alpha: theme.isDarkMode ? 0.34 : 0.28),
-            width: 1.1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowBase.withValues(
-                alpha: theme.isDarkMode ? 0.22 : 0.08,
-              ),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
-            ),
-          ],
+    // The splash needs a transparent Material above the card fill: an
+    // InkWell around an opaque Container paints it underneath, unseen.
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: accent.withValues(alpha: theme.isDarkMode ? 0.34 : 0.28),
+          width: 1.1,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowBase.withValues(
+              alpha: theme.isDarkMode ? 0.22 : 0.08,
+            ),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(22),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CustomUserAvatar(
-                  name: userName,
-                  avatarUrl: avatarUrl,
-                  radius: 20,
-                  forceCircular: true,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomUserAvatar(
+                      name: userName,
+                      avatarUrl: avatarUrl,
+                      radius: 20,
+                      forceCircular: true,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  AppLocalizations.of(context)
+                                      .familyFeedWaitingReview(userName),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.caption.copyWith(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.05,
+                                    color: accent.withValues(alpha: 0.94),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  detailTitle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.cardTitle.copyWith(
+                                    fontSize: 15.5,
+                                    height: 1.18,
+                                    color: theme.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: accent.withValues(alpha: 0.10),
+                              borderRadius: BorderRadius.circular(11),
+                            ),
+                            child: Icon(
+                              Icons.fact_check_rounded,
+                              color: accent,
+                              size: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 13),
+                Padding(
+                  padding: const EdgeInsets.only(left: 54),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _ReviewMetaPill(
+                        color: theme.textMuted,
+                        icon: Icons.access_time_rounded,
+                        label: timeLabel,
+                      ),
+                      if (xpReward != null && xpReward! > 0)
+                        _ReviewMetaPill(
+                          color: AppColors.xpGold,
+                          icon: Icons.star_rounded,
+                          label: '${xpReward!} XP',
+                        ),
+                      if (coinsReward != null && coinsReward! > 0)
+                        _ReviewMetaPill(
+                          color: AppColors.coinGreen,
+                          icon: Icons.monetization_on_rounded,
+                          label: AppLocalizations.of(context)
+                              .familyFeedCoins(coinsReward!),
+                        ),
+                    ],
+                  ),
+                ),
+                if (canReview) ...[
+                  const SizedBox(height: 15),
+                  Row(
                     children: [
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppLocalizations.of(context)
-                                  .familyFeedWaitingReview(userName),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTypography.caption.copyWith(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                height: 1.05,
-                                color: accent.withValues(alpha: 0.94),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              detailTitle,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTypography.cardTitle.copyWith(
-                                fontSize: 15.5,
-                                height: 1.18,
-                                color: theme.textPrimary,
-                              ),
-                            ),
-                          ],
+                        child: _ReviewActionButton(
+                          label: AppLocalizations.of(context).familyFeedReturn,
+                          icon: Icons.reply_rounded,
+                          color: accent,
+                          surfaceColor: mutedCardColor,
+                          filled: false,
+                          onPressed: onReject,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 30,
-                        height: 30,
-                        decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(11),
-                        ),
-                        child: Icon(
-                          Icons.fact_check_rounded,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _ReviewActionButton(
+                          label: AppLocalizations.of(context).familyFeedApprove,
+                          icon: Icons.check_rounded,
                           color: accent,
-                          size: 16,
+                          surfaceColor: mutedCardColor,
+                          filled: true,
+                          onPressed: onApprove,
                         ),
                       ),
                     ],
                   ),
-                ),
+                ],
               ],
             ),
-            const SizedBox(height: 13),
-            Padding(
-              padding: const EdgeInsets.only(left: 54),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _ReviewMetaPill(
-                    color: theme.textMuted,
-                    icon: Icons.access_time_rounded,
-                    label: timeLabel,
-                  ),
-                  if (xpReward != null && xpReward! > 0)
-                    _ReviewMetaPill(
-                      color: AppColors.xpGold,
-                      icon: Icons.star_rounded,
-                      label: '${xpReward!} XP',
-                    ),
-                  if (coinsReward != null && coinsReward! > 0)
-                    _ReviewMetaPill(
-                      color: AppColors.coinGreen,
-                      icon: Icons.monetization_on_rounded,
-                      label: AppLocalizations.of(context)
-                          .familyFeedCoins(coinsReward!),
-                    ),
-                ],
-              ),
-            ),
-            if (canReview) ...[
-              const SizedBox(height: 15),
-              Row(
-                children: [
-                  Expanded(
-                    child: _ReviewActionButton(
-                      label: AppLocalizations.of(context).familyFeedReturn,
-                      icon: Icons.reply_rounded,
-                      color: accent,
-                      surfaceColor: mutedCardColor,
-                      filled: false,
-                      onPressed: onReject,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _ReviewActionButton(
-                      label: AppLocalizations.of(context).familyFeedApprove,
-                      icon: Icons.check_rounded,
-                      color: accent,
-                      surfaceColor: mutedCardColor,
-                      filled: true,
-                      onPressed: onApprove,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );

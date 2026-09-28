@@ -454,7 +454,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                 text: TextSpan(
                   children: [
                     TextSpan(
-                      text: NumberFormat.decimalPattern('es_AR').format(
+                      text: NumberFormat.decimalPattern(t.localeName).format(
                         animatedValue.round(),
                       ),
                       style: TextStyle(

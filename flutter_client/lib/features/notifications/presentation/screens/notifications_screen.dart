@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
@@ -205,6 +206,7 @@ class _NotificationCard extends ConsumerWidget {
     final content = localizedNotificationContent(
       t,
       notification,
+      currency: ref.watch(currencyProvider),
     );
     return InkWell(
       onTap: () async {

@@ -72,23 +72,14 @@ class ExpenseFixedSplitManager {
   void onChanged(String userId, String value, List<MemberModel> members) {
     if (_isProgrammaticUpdate) return;
 
-    final clean = value.replaceAll('.', '').replaceAll(',', '');
-    if (clean.isEmpty) {
-      _amounts[userId] = 0.0;
-      syncControllerTextIfNeeded(userId, 0.0);
-      _applyIntelligentRemainder(userId, members);
-      _onStateChanged();
-      return;
-    }
-
-    final parsed = int.tryParse(clean);
-    if (parsed == null) return;
-
+    final parsed = _parseAmount(value);
     final total = _parseAmount(_readTotalInput());
-    final entered =
-        parsed.toDouble().clamp(0.0, total > 0 ? total : parsed.toDouble());
+    final entered = parsed.clamp(0.0, total > 0 ? total : parsed);
     _amounts[userId] = entered;
-    syncControllerTextIfNeeded(userId, entered);
+    // The field's formatter already wrote the text. Rewriting it on every key
+    // would drop a decimal separator the user is about to follow with cents,
+    // so only a capped amount gets rewritten.
+    if (entered != parsed) syncControllerTextIfNeeded(userId, entered);
     _applyIntelligentRemainder(userId, members);
     _onStateChanged();
   }

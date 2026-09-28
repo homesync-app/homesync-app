@@ -23,6 +23,7 @@ import 'package:homesync_client/features/shopping/utils/shopping_localization.da
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_feed_entry_motion.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 import 'package:intl/intl.dart';
 import 'family_finance_section.dart';
@@ -410,10 +411,13 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: Text(t.commonRetry, style: AppTypography.caption.copyWith(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),),
+            child: Text(
+              t.commonRetry,
+              style: AppTypography.caption.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),
@@ -927,8 +931,27 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             ],
           ),
         ),
-        error: (_, __) =>
-            const SizedBox.shrink(key: ValueKey('activity-error')),
+        // A failed load used to hide the whole section, with no way to retry.
+        error: (_, __) => KeyedSubtree(
+          key: const ValueKey('activity-error'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                resolvedTitle,
+                style: AppTypography.sectionTitle.copyWith(
+                  fontSize: 18,
+                  color: theme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              AppInlineError(
+                message: t.homeFamilyActivityErrorBody,
+                onRetry: () => ref.invalidate(recentActivityRemoteProvider),
+              ),
+            ],
+          ),
+        ),
         data: (activities) {
           final header = Text(
             resolvedTitle,

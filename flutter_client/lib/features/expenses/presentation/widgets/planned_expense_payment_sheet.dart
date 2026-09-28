@@ -7,6 +7,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
@@ -55,10 +56,12 @@ class _PlannedExpensePaymentSheetState
   @override
   void initState() {
     super.initState();
-    // es-AR sin centavos: enteros redondeados, como el form de gastos
-    // (los centavos "ya no son nada y molestan visualmente").
-    _amountController.text = NumberFormat.decimalPattern('es_ES')
-        .format(widget.plannedExpense.amount.round());
+    // Same format as the expense form: whole pesos, cents in currencies that
+    // use them.
+    _amountController.text = ref
+        .read(currencyProvider)
+        .inputFormat
+        .format(widget.plannedExpense.amount);
     _paidBy = widget.plannedExpense.payerId;
   }
 
@@ -95,31 +98,9 @@ class _PlannedExpensePaymentSheetState
     return adults.isNotEmpty ? adults : members;
   }
 
-  /// es-AR sin centavos: el monto vive como entero. La coma se interpreta
-  /// como separador decimal (no de miles) para no leer "1.500,50" como
-  /// 150.050 (×100), pero el resultado se redondea — los centavos son ruido.
-  /// Misma convención que _parseFormattedAmount del form de gastos.
   double? _parseAmount(String raw) {
-    final normalized = raw.trim().replaceAll('.', '').replaceAll(',', '.');
-    if (normalized.isEmpty) return null;
-    final parsed = double.tryParse(normalized);
-    return parsed?.roundToDouble();
-  }
-
-  void _onAmountChanged(String val) {
-    final parsed = _parseAmount(val);
-    if (parsed == null) {
-      _amountController.text = '';
-      return;
-    }
-
-    // Enteros con puntos de miles; una coma tipeada se traga al instante.
-    final formatted =
-        NumberFormat.decimalPattern('es_ES').format(parsed.round());
-    _amountController.value = TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
+    if (raw.trim().isEmpty) return null;
+    return ref.read(currencyProvider).inputFormat.parse(raw);
   }
 
   Future<void> _confirmPayment() async {
@@ -273,8 +254,10 @@ class _PlannedExpensePaymentSheetState
         TextField(
           autofocus: true,
           controller: _amountController,
-          onChanged: _onAmountChanged,
-          keyboardType: TextInputType.number,
+          keyboardType: ref.watch(currencyProvider).inputFormat.keyboardType,
+          inputFormatters: [
+            AmountInputFormatter(ref.watch(currencyProvider).inputFormat),
+          ],
           style: AppTypography.heroAmount.copyWith(
             fontSize: 32,
             color: theme.textPrimary,

@@ -353,7 +353,7 @@ abstract class AppLocalizations {
   /// Large title at the top of the Settings screen.
   ///
   /// In es, this message translates to:
-  /// **'Configuracion'**
+  /// **'Configuración'**
   String get settingsAppBarTitle;
 
   /// Tooltip on the back arrow in Settings header.
@@ -377,7 +377,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsSectionProfileSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Avatar, nombre y datos basicos de tu cuenta.'**
+  /// **'Avatar, nombre y datos básicos de tu cuenta.'**
   String get settingsSectionProfileSubtitle;
 
   /// No description provided for @settingsSectionHouseholdEyebrow.
@@ -425,7 +425,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsSectionAccountTitle.
   ///
   /// In es, this message translates to:
-  /// **'Sesion y seguridad'**
+  /// **'Sesión y seguridad'**
   String get settingsSectionAccountTitle;
 
   /// No description provided for @settingsSectionAccountSubtitle.
@@ -449,7 +449,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsSectionLegalSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Politica de privacidad y terminos de uso.'**
+  /// **'Política de privacidad y términos de uso.'**
   String get settingsSectionLegalSubtitle;
 
   /// No description provided for @settingsAppearanceTitle.
@@ -527,7 +527,7 @@ abstract class AppLocalizations {
   /// Premium feature label: when a shopping list item is purchased, it auto-creates a finance/expense entry.
   ///
   /// In es, this message translates to:
-  /// **'Sincronizacion Shopping a Finanzas'**
+  /// **'Sincronización de compras con finanzas'**
   String get settingsPremiumFeatureShoppingFinanceSync;
 
   /// Premium feature label: scheduled/recurring expenses like Netflix, gym, etc.
@@ -557,7 +557,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsReplayTourSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Repasa la introduccion del hogar'**
+  /// **'Repasá la introducción del hogar'**
   String get settingsReplayTourSubtitle;
 
   /// No description provided for @settingsFeedbackTitle.
@@ -575,13 +575,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsLegalPrivacyPolicy.
   ///
   /// In es, this message translates to:
-  /// **'Politica de Privacidad'**
+  /// **'Política de privacidad'**
   String get settingsLegalPrivacyPolicy;
 
   /// No description provided for @settingsLegalTermsOfUse.
   ///
   /// In es, this message translates to:
-  /// **'Terminos de Uso'**
+  /// **'Términos de uso'**
   String get settingsLegalTermsOfUse;
 
   /// No description provided for @settingsNotificationsEnabled.
@@ -665,7 +665,7 @@ abstract class AppLocalizations {
   /// Big outlined button at the bottom of Settings to sign the user out of the app.
   ///
   /// In es, this message translates to:
-  /// **'Cerrar Sesion'**
+  /// **'Cerrar sesión'**
   String get settingsLogoutButton;
 
   /// Tiny uppercase label above the destructive 'reset account' button. Stays uppercase in all locales.
@@ -683,7 +683,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsLogoutDialogTitle.
   ///
   /// In es, this message translates to:
-  /// **'Cerrar sesión?'**
+  /// **'¿Cerrar sesión?'**
   String get settingsLogoutDialogTitle;
 
   /// No description provided for @settingsLogoutDialogBody.
@@ -701,13 +701,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsResetDialogTitle.
   ///
   /// In es, this message translates to:
-  /// **'Reiniciar todo?'**
+  /// **'¿Reiniciar todo?'**
   String get settingsResetDialogTitle;
 
   /// No description provided for @settingsResetDialogBody.
   ///
   /// In es, this message translates to:
-  /// **'Esta accion borrara todas tus tareas, gastos y progreso de forma permanente, y te quitara del hogar actual para que puedas configurar uno nuevo o unirte a otro.'**
+  /// **'Esta acción borrará todas tus tareas, gastos y progreso de forma permanente, y te quitará del hogar actual para que puedas configurar uno nuevo o unirte a otro.'**
   String get settingsResetDialogBody;
 
   /// Destructive confirm button on the reset-account dialog.
@@ -1937,7 +1937,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeCoupleActivityEmptyTitle.
   ///
   /// In es, this message translates to:
-  /// **'Todavia no hay movimientos'**
+  /// **'Todavía no hay movimientos'**
   String get homeCoupleActivityEmptyTitle;
 
   /// Empty-state body for the activity feed. 'aca' = 'aquí' in Argentine voseo.
@@ -2370,7 +2370,7 @@ abstract class AppLocalizations {
   /// Hero card body for a child. Tells them every approved task awards coins they can spend in the store.
   ///
   /// In es, this message translates to:
-  /// **'{firstName}, cada mision aprobada suma coins para la tienda.'**
+  /// **'{firstName}, cada misión aprobada suma coins para la tienda.'**
   String homeFamilyChildHeroBody(String firstName);
 
   /// Small line above the 'Tienda' button in the child hero card. Voseo 'podés' written without accent in source.
@@ -2850,7 +2850,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsHouseholdTasksToggleOnSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Mostrar tareas, progreso y accesos rapidos.'**
+  /// **'Mostrar tareas, progreso y accesos rápidos.'**
   String get settingsHouseholdTasksToggleOnSubtitle;
 
   /// No description provided for @settingsHouseholdTasksToggleOffSubtitle.
@@ -2940,7 +2940,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsHouseholdEditMenuRenameSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Cambia el nombre de tu hogar'**
+  /// **'Cambiá el nombre de tu hogar'**
   String get settingsHouseholdEditMenuRenameSubtitle;
 
   /// No description provided for @settingsHouseholdEditMenuInviteTitle.
@@ -4926,7 +4926,7 @@ abstract class AppLocalizations {
   /// Subtitle for the most-forgotten recurring task card. {overdueLabel} is the overdue text.
   ///
   /// In es, this message translates to:
-  /// **'Esta recurrente quedo en el camino — {overdueLabel}.'**
+  /// **'Esta recurrente quedó en el camino — {overdueLabel}.'**
   String weeklySummaryForgottenSubtitle(String overdueLabel);
 
   /// Spending card text when the household spent less than the previous week.
@@ -6306,13 +6306,13 @@ abstract class AppLocalizations {
   /// Save button idle label when creating an income entry.
   ///
   /// In es, this message translates to:
-  /// **'Guardar Ingreso'**
+  /// **'Guardar ingreso'**
   String get expensesFormSaveButtonSaveIncome;
 
   /// Save button idle label when creating an expense entry.
   ///
   /// In es, this message translates to:
-  /// **'Guardar Gasto'**
+  /// **'Guardar gasto'**
   String get expensesFormSaveButtonSaveExpense;
 
   /// Empty state shown when there are no household members to assign as payer.
@@ -9114,7 +9114,7 @@ abstract class AppLocalizations {
   /// No description provided for @rewardsTitleMinLengthError.
   ///
   /// In es, this message translates to:
-  /// **'Usa al menos 3 caracteres.'**
+  /// **'Usá al menos 3 caracteres.'**
   String get rewardsTitleMinLengthError;
 
   /// No description provided for @rewardsTitleHint.
@@ -11310,7 +11310,7 @@ abstract class AppLocalizations {
   /// Uppercase section header for the repetition options.
   ///
   /// In es, this message translates to:
-  /// **'REPETICION'**
+  /// **'REPETICIÓN'**
   String get scheduleSectionRepeat;
 
   /// Uppercase section header for the assignee selector.
@@ -11532,7 +11532,7 @@ abstract class AppLocalizations {
   /// Subtitle of the avatar picker sheet.
   ///
   /// In es, this message translates to:
-  /// **'Elegi un avatar de la coleccion o crea el tuyo propio'**
+  /// **'Elegí un avatar de la colección o creá el tuyo propio'**
   String get avatarPickerSubtitle;
 
   /// Snackbar shown when the avatar is updated successfully.
@@ -11646,7 +11646,7 @@ abstract class AppLocalizations {
   /// Subtitle of the Google photo avatar option.
   ///
   /// In es, this message translates to:
-  /// **'Usa la imagen de tu cuenta de Google como avatar.'**
+  /// **'Usá la imagen de tu cuenta de Google como avatar.'**
   String get avatarPickerGooglePhotoSubtitle;
 
   /// Title of the custom avatar source selection sheet.
@@ -13371,6 +13371,114 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'{count, plural, =1{Hay 1 tarea atrasada más.} other{Hay {count} tareas atrasadas más.}}'**
   String familyTasksMoreOverdue(int count);
+
+  /// Feed del hogar (familia): alguien canjeó un premio de la tienda con sus coins. El nombre del premio va debajo.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} canjeó un premio'**
+  String familyFeedRedeemedReward(String name);
+
+  /// Nombre del color de tema naranja (el original). Lo lee el lector de pantalla en el selector de color de Configuración.
+  ///
+  /// In es, this message translates to:
+  /// **'Naranja'**
+  String get settingsPaletteOrange;
+
+  /// Nombre del color de tema casi negro, para el lector de pantalla.
+  ///
+  /// In es, this message translates to:
+  /// **'Oscuro'**
+  String get settingsPaletteDark;
+
+  /// Nombre del color de tema índigo, para el lector de pantalla.
+  ///
+  /// In es, this message translates to:
+  /// **'Índigo'**
+  String get settingsPaletteIndigo;
+
+  /// Nombre del color de tema rosa, para el lector de pantalla.
+  ///
+  /// In es, this message translates to:
+  /// **'Rosa'**
+  String get settingsPaletteRose;
+
+  /// Nombre del color de tema verde esmeralda, para el lector de pantalla.
+  ///
+  /// In es, this message translates to:
+  /// **'Esmeralda'**
+  String get settingsPaletteEmerald;
+
+  /// Nombre del color de tema violeta, para el lector de pantalla.
+  ///
+  /// In es, this message translates to:
+  /// **'Violeta'**
+  String get settingsPaletteViolet;
+
+  /// Nombre del color de tema ámbar, para el lector de pantalla.
+  ///
+  /// In es, this message translates to:
+  /// **'Ámbar'**
+  String get settingsPaletteAmber;
+
+  /// Nombre del color de tema cian, para el lector de pantalla.
+  ///
+  /// In es, this message translates to:
+  /// **'Cian'**
+  String get settingsPaletteCyan;
+
+  /// Lectura del lector de pantalla para un color de tema bloqueado sin Premium. name = nombre del color.
+  ///
+  /// In es, this message translates to:
+  /// **'{name}, requiere Premium'**
+  String settingsPaletteLocked(String name);
+
+  /// Etiqueta sobre el monto grande del formulario de gasto o ingreso.
+  ///
+  /// In es, this message translates to:
+  /// **'Monto total'**
+  String get expensesFormAmountTotalLabel;
+
+  /// Título de la hoja para cargar un ingreso mensual estimado (no crea movimientos, solo sirve para calcular el balance).
+  ///
+  /// In es, this message translates to:
+  /// **'Ingreso mensual estimado'**
+  String get estimatedIncomeSheetTitle;
+
+  /// Aclaración bajo el título de la hoja de ingreso estimado.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo para calcular tu balance. No crea movimientos.'**
+  String get estimatedIncomeSheetSubtitle;
+
+  /// Etiqueta en mayúsculas sobre el campo del monto del ingreso estimado.
+  ///
+  /// In es, this message translates to:
+  /// **'MONTO NETO MENSUAL'**
+  String get estimatedIncomeSheetAmountEyebrow;
+
+  /// Etiqueta en mayúsculas sobre el selector del día del mes en que se cobra.
+  ///
+  /// In es, this message translates to:
+  /// **'DÍA DE COBRO'**
+  String get estimatedIncomeSheetPaydayEyebrow;
+
+  /// Botón secundario para borrar el ingreso estimado cargado.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar ingreso estimado'**
+  String get estimatedIncomeSheetRemove;
+
+  /// Lectura del lector de pantalla para cada día del selector de día de cobro.
+  ///
+  /// In es, this message translates to:
+  /// **'Día {day}'**
+  String estimatedIncomeSheetDayLabel(int day);
+
+  /// Error en la sección de actividad reciente del inicio familiar, junto a un botón Reintentar.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar la actividad del hogar.'**
+  String get homeFamilyActivityErrorBody;
 }
 
 class _AppLocalizationsDelegate

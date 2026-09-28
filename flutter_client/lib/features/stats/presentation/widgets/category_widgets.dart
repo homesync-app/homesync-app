@@ -184,10 +184,13 @@ class CategoryDetailCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadii.lg),
             ),
             child: Center(
-              child: Text(icon, style: AppTypography.body.copyWith(
-                fontSize: 28,
-                fontWeight: FontWeight.w400,
-              ),),
+              child: Text(
+                icon,
+                style: AppTypography.body.copyWith(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 20),
@@ -235,7 +238,7 @@ class CategoryDetailCard extends StatelessWidget {
                 ),
               ),
               Text(
-                'XP TOTAL',
+                AppLocalizations.of(context).categoriesXpTotal,
                 style: AppTypography.eyebrow.copyWith(
                   fontSize: 9,
                   color: color.withValues(alpha: 0.5),

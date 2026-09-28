@@ -354,7 +354,11 @@ class SavingsTab extends ConsumerWidget {
                     child: AnimatedAmount(
                       value: goal.currentAmount.toDouble(),
                       locale: currency.locale,
-                      format: currency.format,
+                      format: (value) => currency.format(
+                        value,
+                        decimalDigits:
+                            currency.displayDecimalsFor(goal.currentAmount),
+                      ),
                       style: AppTypography.heroAmount.copyWith(
                         fontSize: 24,
                         height: 0.98,

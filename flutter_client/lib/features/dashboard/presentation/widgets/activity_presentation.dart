@@ -92,6 +92,10 @@ String _normalizedText(String raw) {
   // del repo (test/text_encoding_guard_test.dart, mismo truco que usa el
   // propio guard): son datos a reparar, no un error de encoding del archivo.
   return raw
+      // Prefijos que escribían RPCs viejos en el título de la actividad.
+      .replaceAll('Completó la tarea:', '')
+      .replaceAll('Agregó un gasto:', '')
+      .replaceAll('Canjeó un premio:', '')
       .replaceAll('CompletÃ\u00B3 la tarea:', '')
       .replaceAll('AgregÃ\u00B3 un gasto:', '')
       .replaceAll('CanjeÃ\u00B3 un premio:', '')
@@ -188,6 +192,17 @@ bool _looksLikeDateOnlyTimestamp(dynamic raw) {
   return normalized.contains('T00:00:00') || normalized.contains('T12:00:00');
 }
 
+/// Whether [openActivityDetail] opens a sheet for [activity]. Rows without
+/// one (rewards, expenses without an id) should not read as buttons.
+bool activityHasDetail(Map<String, dynamic> activity) {
+  final type = activity['type'] as String?;
+  if (type == 'task' || type == 'task_pending_approval') return true;
+  if (type != 'expense') return false;
+  final data = (activity['data'] as Map<String, dynamic>?) ?? {};
+  final expenseId = data['expense_id']?.toString();
+  return expenseId != null && expenseId.isNotEmpty;
+}
+
 /// Opens the right detail sheet for a feed activity (task or expense).
 /// Reward activities have no detail sheet and are a no-op.
 Future<void> openActivityDetail(
@@ -198,7 +213,7 @@ Future<void> openActivityDetail(
   final type = activity['type'] as String?;
   final data = (activity['data'] as Map<String, dynamic>?) ?? {};
 
-  if (type == 'task') {
+  if (type == 'task' || type == 'task_pending_approval') {
     final completedAt = data['completed_at'] ??
         data['last_completed_at'] ??
         activity['created_at'];

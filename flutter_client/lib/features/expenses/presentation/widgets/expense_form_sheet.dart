@@ -17,6 +17,7 @@ import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/utils/receipt_matcher.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
@@ -251,7 +252,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   void _loadExpenseData(ExpenseModel exp) {
     _titleController.text = exp.title;
-    _amountController.text = exp.amount.toString();
+    // Written in the field's own format: `toString()` gave `1500.0`, which
+    // saving read back as 15000.
+    _amountController.text = _amountFormat.format(exp.amount);
     if (exp.category != null) {
       _selectedCategory = _currentCategories.firstWhere(
         (c) => c['id'] == exp.category,
@@ -562,10 +565,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       return;
     }
 
-    final cleanAmtStr =
-        _amountController.text.replaceAll('.', '').replaceAll(',', '.');
-    final amountParsed = double.tryParse(cleanAmtStr);
-    if (amountParsed == null || amountParsed <= 0) {
+    final amountParsed = _amountFormat.parse(_amountController.text);
+    if (amountParsed <= 0) {
       setState(() {
         _shakeTrigger++;
         _errorMessage = t.expensesFormValidationAmountRequired;
@@ -1121,47 +1122,20 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     if (_ocrAmountUncertain) {
       setState(() => _ocrAmountUncertain = false);
     }
-    String clean = val.replaceAll('.', '').replaceAll(',', '');
-    if (clean.isEmpty) {
-      _amountController.text = '';
-      return;
-    }
-    int? parsed = int.tryParse(clean);
-    if (parsed != null) {
-      String formatted = NumberFormat.decimalPattern('es_ES').format(parsed);
-      _amountController.value = TextEditingValue(
-        text: formatted,
-        selection: TextSelection.collapsed(offset: formatted.length),
-      );
-    }
   }
 
-  double _parseFormattedAmount(String value) {
-    final normalized = value.trim().replaceAll('.', '').replaceAll(',', '.');
-    if (normalized.isEmpty) return 0.0;
-    return double.tryParse(normalized) ?? 0.0;
-  }
+  /// Separators and decimals of the amount fields, from the user's currency.
+  /// The field's formatter already groups thousands as the user types.
+  AmountInputFormat get _amountFormat => ref.read(currencyProvider).inputFormat;
 
-  String _formatInputAmount(double value) {
-    if (value <= 0) return '';
-    return NumberFormat.decimalPattern('es_ES').format(value.round());
-  }
+  double _parseFormattedAmount(String value) => _amountFormat.parse(value);
 
-  /// Formatea el monto detectado por OCR para el input del formulario.
-  /// En ARS ocultamos centavos porque los tickets argentinos los muestran,
-  /// pero para la carga diaria solo agregan ruido visual.
-  String _formatAmountFromOcr(double amount) {
-    if (amount <= 0) return '';
-    final currency = ref.read(currencyProvider);
-    if (currency.code == 'ARS') {
-      return NumberFormat.decimalPattern('es_ES').format(amount.round());
-    }
+  String _formatInputAmount(double value) => _amountFormat.format(value);
 
-    final intPart = amount.truncate();
-    final decPart = ((amount - intPart) * 100).round().abs();
-    final intFormatted = NumberFormat('#,##0', 'es_ES').format(intPart);
-    return '$intFormatted,${decPart.toString().padLeft(2, '0')}';
-  }
+  /// Formatea el monto detectado por OCR para el input del formulario. En
+  /// pesos se redondea (los tickets traen centavos que en la carga diaria
+  /// solo agregan ruido); en monedas con centavos se conservan.
+  String _formatAmountFromOcr(double amount) => _amountFormat.format(amount);
 
   void _dismissKeyboard() {
     _fixedSplitManager.dismissKeyboard();
@@ -1521,6 +1495,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
           return ExpenseFixedSplitRow(
             member: m,
+            currency: ref.watch(currencyProvider),
             controller: controller,
             focusNode: focusNode,
             onChanged: (val) =>
@@ -1530,12 +1505,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       );
     } else if (_splitMode == SplitType.gift) {
       return _buildInfoBox(
-        'Este gasto no afectará el balance ${caps.actionMemberLabel(t)}.',
+        t.expensesFormInfoBoxGift(caps.actionMemberLabel(t)),
         AppColors.primary,
       );
     } else if (_splitMode == SplitType.personal) {
       return _buildInfoBox(
-        'Registrado como gasto personal.',
+        t.expensesFormInfoBoxPersonal,
         theme.textSecondary,
       );
     }

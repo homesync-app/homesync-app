@@ -247,7 +247,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get settingsAppBarTitle => 'Configuracion';
+  String get settingsAppBarTitle => 'Configuración';
 
   @override
   String get settingsBackTooltip => 'Volver';
@@ -260,7 +260,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsSectionProfileSubtitle =>
-      'Avatar, nombre y datos basicos de tu cuenta.';
+      'Avatar, nombre y datos básicos de tu cuenta.';
 
   @override
   String get settingsSectionHouseholdEyebrow => 'HOGAR';
@@ -286,7 +286,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsSectionAccountEyebrow => 'CUENTA';
 
   @override
-  String get settingsSectionAccountTitle => 'Sesion y seguridad';
+  String get settingsSectionAccountTitle => 'Sesión y seguridad';
 
   @override
   String get settingsSectionAccountSubtitle =>
@@ -300,7 +300,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsSectionLegalSubtitle =>
-      'Politica de privacidad y terminos de uso.';
+      'Política de privacidad y términos de uso.';
 
   @override
   String get settingsAppearanceTitle => 'Apariencia';
@@ -341,7 +341,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsPremiumFeatureShoppingFinanceSync =>
-      'Sincronizacion Shopping a Finanzas';
+      'Sincronización de compras con finanzas';
 
   @override
   String get settingsPremiumFeatureRecurringPayments =>
@@ -358,7 +358,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsReplayTourTitle => 'Ver guia de nuevo';
 
   @override
-  String get settingsReplayTourSubtitle => 'Repasa la introduccion del hogar';
+  String get settingsReplayTourSubtitle => 'Repasá la introducción del hogar';
 
   @override
   String get settingsFeedbackTitle => 'Enviar feedback';
@@ -367,10 +367,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsFeedbackSubtitle => 'Reporta un bug o sugiere una mejora';
 
   @override
-  String get settingsLegalPrivacyPolicy => 'Politica de Privacidad';
+  String get settingsLegalPrivacyPolicy => 'Política de privacidad';
 
   @override
-  String get settingsLegalTermsOfUse => 'Terminos de Uso';
+  String get settingsLegalTermsOfUse => 'Términos de uso';
 
   @override
   String get settingsNotificationsEnabled => '🔔 Notificaciones activadas';
@@ -412,7 +412,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsFaqTitle => 'Preguntas Frecuentes';
 
   @override
-  String get settingsLogoutButton => 'Cerrar Sesion';
+  String get settingsLogoutButton => 'Cerrar sesión';
 
   @override
   String get settingsDangerZoneEyebrow => 'ZONA DE PELIGRO';
@@ -421,7 +421,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsResetAccountButton => 'Reiniciar Datos de Cuenta';
 
   @override
-  String get settingsLogoutDialogTitle => 'Cerrar sesión?';
+  String get settingsLogoutDialogTitle => '¿Cerrar sesión?';
 
   @override
   String get settingsLogoutDialogBody =>
@@ -431,11 +431,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsLogoutDialogConfirm => 'Salir';
 
   @override
-  String get settingsResetDialogTitle => 'Reiniciar todo?';
+  String get settingsResetDialogTitle => '¿Reiniciar todo?';
 
   @override
   String get settingsResetDialogBody =>
-      'Esta accion borrara todas tus tareas, gastos y progreso de forma permanente, y te quitara del hogar actual para que puedas configurar uno nuevo o unirte a otro.';
+      'Esta acción borrará todas tus tareas, gastos y progreso de forma permanente, y te quitará del hogar actual para que puedas configurar uno nuevo o unirte a otro.';
 
   @override
   String get settingsResetDialogConfirm => 'Reiniciar';
@@ -1199,7 +1199,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeCoupleActivityTitle => 'Movimientos del hogar';
 
   @override
-  String get homeCoupleActivityEmptyTitle => 'Todavia no hay movimientos';
+  String get homeCoupleActivityEmptyTitle => 'Todavía no hay movimientos';
 
   @override
   String get homeCoupleActivityEmptyBody =>
@@ -1487,7 +1487,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String homeFamilyChildHeroBody(String firstName) {
-    return '$firstName, cada mision aprobada suma coins para la tienda.';
+    return '$firstName, cada misión aprobada suma coins para la tienda.';
   }
 
   @override
@@ -1837,7 +1837,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsHouseholdTasksToggleOnSubtitle =>
-      'Mostrar tareas, progreso y accesos rapidos.';
+      'Mostrar tareas, progreso y accesos rápidos.';
 
   @override
   String get settingsHouseholdTasksToggleOffSubtitle =>
@@ -1898,7 +1898,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsHouseholdEditMenuRenameSubtitle =>
-      'Cambia el nombre de tu hogar';
+      'Cambiá el nombre de tu hogar';
 
   @override
   String get settingsHouseholdEditMenuInviteTitle => 'Código de invitación';
@@ -3184,7 +3184,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String weeklySummaryForgottenSubtitle(String overdueLabel) {
-    return 'Esta recurrente quedo en el camino — $overdueLabel.';
+    return 'Esta recurrente quedó en el camino — $overdueLabel.';
   }
 
   @override
@@ -4004,10 +4004,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get expensesFormSaveButtonUpdated => 'Actualizado';
 
   @override
-  String get expensesFormSaveButtonSaveIncome => 'Guardar Ingreso';
+  String get expensesFormSaveButtonSaveIncome => 'Guardar ingreso';
 
   @override
-  String get expensesFormSaveButtonSaveExpense => 'Guardar Gasto';
+  String get expensesFormSaveButtonSaveExpense => 'Guardar gasto';
 
   @override
   String get expensesFormMembersEmpty =>
@@ -5792,7 +5792,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rewardsTitleRequiredError => 'Escribí el nombre del deseo.';
 
   @override
-  String get rewardsTitleMinLengthError => 'Usa al menos 3 caracteres.';
+  String get rewardsTitleMinLengthError => 'Usá al menos 3 caracteres.';
 
   @override
   String get rewardsTitleHint => 'Ej: Masaje de 20 minutos';
@@ -7116,7 +7116,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get scheduleSubtitle => 'Elegí cómo se repite y quién queda a cargo.';
 
   @override
-  String get scheduleSectionRepeat => 'REPETICION';
+  String get scheduleSectionRepeat => 'REPETICIÓN';
 
   @override
   String get scheduleSectionResponsible => 'RESPONSABLE';
@@ -7248,7 +7248,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get avatarPickerSubtitle =>
-      'Elegi un avatar de la coleccion o crea el tuyo propio';
+      'Elegí un avatar de la colección o creá el tuyo propio';
 
   @override
   String get avatarPickerUpdated => 'Avatar actualizado con exito';
@@ -7316,7 +7316,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get avatarPickerGooglePhotoSubtitle =>
-      'Usa la imagen de tu cuenta de Google como avatar.';
+      'Usá la imagen de tu cuenta de Google como avatar.';
 
   @override
   String get avatarPickerCustomSheetTitle => 'Avatar personalizado';
@@ -8502,4 +8502,66 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String familyFeedRedeemedReward(String name) {
+    return '$name canjeó un premio';
+  }
+
+  @override
+  String get settingsPaletteOrange => 'Naranja';
+
+  @override
+  String get settingsPaletteDark => 'Oscuro';
+
+  @override
+  String get settingsPaletteIndigo => 'Índigo';
+
+  @override
+  String get settingsPaletteRose => 'Rosa';
+
+  @override
+  String get settingsPaletteEmerald => 'Esmeralda';
+
+  @override
+  String get settingsPaletteViolet => 'Violeta';
+
+  @override
+  String get settingsPaletteAmber => 'Ámbar';
+
+  @override
+  String get settingsPaletteCyan => 'Cian';
+
+  @override
+  String settingsPaletteLocked(String name) {
+    return '$name, requiere Premium';
+  }
+
+  @override
+  String get expensesFormAmountTotalLabel => 'Monto total';
+
+  @override
+  String get estimatedIncomeSheetTitle => 'Ingreso mensual estimado';
+
+  @override
+  String get estimatedIncomeSheetSubtitle =>
+      'Solo para calcular tu balance. No crea movimientos.';
+
+  @override
+  String get estimatedIncomeSheetAmountEyebrow => 'MONTO NETO MENSUAL';
+
+  @override
+  String get estimatedIncomeSheetPaydayEyebrow => 'DÍA DE COBRO';
+
+  @override
+  String get estimatedIncomeSheetRemove => 'Quitar ingreso estimado';
+
+  @override
+  String estimatedIncomeSheetDayLabel(int day) {
+    return 'Día $day';
+  }
+
+  @override
+  String get homeFamilyActivityErrorBody =>
+      'No pudimos cargar la actividad del hogar.';
 }

@@ -792,7 +792,8 @@ class _ContributionSheetState extends ConsumerState<_ContributionSheet> {
   }
 
   Future<void> _submit() async {
-    final amount = parseAmountInput(_amountController.text);
+    final amount =
+        ref.read(currencyProvider).inputFormat.parse(_amountController.text);
     if (amount <= 0 || _submitting) return;
     setState(() => _submitting = true);
 
@@ -1021,12 +1022,16 @@ class _ContributionSheetState extends ConsumerState<_ContributionSheet> {
                             child: TextField(
                               controller: _amountController,
                               autofocus: true,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
+                              keyboardType: ref
+                                  .watch(currencyProvider)
+                                  .inputFormat
+                                  .keyboardType,
                               textInputAction: TextInputAction.done,
-                              inputFormatters: [ThousandsInputFormatter()],
+                              inputFormatters: [
+                                AmountInputFormatter(
+                                  ref.watch(currencyProvider).inputFormat,
+                                ),
+                              ],
                               style: AppTypography.heroAmount.copyWith(
                                 fontSize: 36,
                                 color: theme.textPrimary,
@@ -1246,7 +1251,9 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
     final e = widget.existing;
     _titleController = TextEditingController(text: e?.title ?? '');
     _amountController = TextEditingController(
-      text: e != null ? e.targetAmount.toStringAsFixed(0) : '',
+      text: e != null
+          ? ref.read(currencyProvider).inputFormat.format(e.targetAmount)
+          : '',
     );
     _selectedEmoji = e?.icon ?? '🎯';
     _selectedColor = e != null ? AppColors.fromHex(e.color) : AppColors.primary;
@@ -1262,7 +1269,8 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
 
   void _save() {
     final title = _titleController.text.trim();
-    final amount = parseAmountInput(_amountController.text);
+    final amount =
+        ref.read(currencyProvider).inputFormat.parse(_amountController.text);
     if (title.isEmpty || amount <= 0) return;
     final colorHex =
         '#${_selectedColor.toARGB32().toRadixString(16).substring(2)}';
@@ -1583,8 +1591,12 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
   }) {
     return TextField(
       controller: controller,
-      keyboardType: number ? TextInputType.number : TextInputType.text,
-      inputFormatters: number ? [ThousandsInputFormatter()] : null,
+      keyboardType: number
+          ? ref.watch(currencyProvider).inputFormat.keyboardType
+          : TextInputType.text,
+      inputFormatters: number
+          ? [AmountInputFormatter(ref.watch(currencyProvider).inputFormat)]
+          : null,
       style: TextStyle(
         fontWeight: number ? FontWeight.w900 : FontWeight.w800,
         fontSize: number ? 22 : 18,

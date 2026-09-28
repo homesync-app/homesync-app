@@ -1,12 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:intl/intl.dart';
 
 class ExpenseFormHeader extends StatelessWidget {
   final bool isEditing;
@@ -255,6 +256,9 @@ class ExpenseInfoBox extends StatelessWidget {
 
 class ExpenseAmountField extends StatefulWidget {
   final TextEditingController controller;
+
+  /// Symbol, separators and decimals of the field.
+  final AppCurrency currency;
   final ValueChanged<String> onChanged;
   final bool showScanAction;
   final bool isScanningReceipt;
@@ -273,6 +277,7 @@ class ExpenseAmountField extends StatefulWidget {
   const ExpenseAmountField({
     super.key,
     required this.controller,
+    required this.currency,
     required this.onChanged,
     this.showScanAction = false,
     this.isScanningReceipt = false,
@@ -379,22 +384,16 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
     );
   }
 
-  double _parseAmountText(String value) {
-    final normalized = value.trim().replaceAll('.', '').replaceAll(',', '.');
-    return double.tryParse(normalized) ?? 0;
-  }
+  double _parseAmountText(String value) =>
+      widget.currency.inputFormat.parse(value);
 
   String _formatAnimatedAmount(double value) {
-    final hasDecimals = _ocrTargetText.contains(',');
-    if (!hasDecimals) {
-      return NumberFormat.decimalPattern('es_ES').format(value.round());
+    final format = widget.currency.inputFormat;
+    // Whole numbers while rolling, unless the target itself has cents.
+    if (_ocrTargetAmount == _ocrTargetAmount.roundToDouble()) {
+      return format.format(value.round());
     }
-
-    final clamped = value.clamp(0, _ocrTargetAmount);
-    final intPart = clamped.truncate();
-    final decPart = ((clamped - intPart) * 100).round().abs();
-    final intFormatted = NumberFormat('#,##0', 'es_ES').format(intPart);
-    return '$intFormatted,${decPart.toString().padLeft(2, '0')}';
+    return format.format(value.clamp(0, _ocrTargetAmount));
   }
 
   @override
@@ -420,7 +419,7 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
           Column(
             children: [
               Text(
-                'Monto total',
+                AppLocalizations.of(context).expensesFormAmountTotalLabel,
                 style: AppTypography.caption.copyWith(
                   fontSize: 13,
                   color: theme.textSecondary,
@@ -468,7 +467,7 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
                           Padding(
                             padding: const EdgeInsets.only(right: 10, top: 2),
                             child: Text(
-                              '\$',
+                              widget.currency.symbol,
                               style: AppTypography.sectionTitle.copyWith(
                                 fontSize: 26,
                                 fontWeight: FontWeight.w700,
@@ -491,7 +490,13 @@ class _ExpenseAmountFieldState extends State<ExpenseAmountField>
                                 focusNode: _amountFocusNode,
                                 controller: widget.controller,
                                 onChanged: widget.onChanged,
-                                keyboardType: TextInputType.number,
+                                keyboardType:
+                                    widget.currency.inputFormat.keyboardType,
+                                inputFormatters: [
+                                  AmountInputFormatter(
+                                    widget.currency.inputFormat,
+                                  ),
+                                ],
                                 style: AppTypography.heroAmount.copyWith(
                                   letterSpacing: -1.2,
                                   color: theme.textPrimary,
@@ -856,8 +861,8 @@ class ExpenseTitleField extends StatelessWidget {
               ),
               decoration: InputDecoration(
                 hintText: isIncome
-                    ? '¿De qué es el ingreso? (Opcional)'
-                    : '¿Qué compraste? (Opcional)',
+                    ? AppLocalizations.of(context).expensesFormTitleHintIncome
+                    : AppLocalizations.of(context).expensesFormTitleHintExpense,
                 hintStyle: AppTypography.body.copyWith(
                   fontSize: 16,
                   color: theme.textMuted,

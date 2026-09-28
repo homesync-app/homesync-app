@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_design_tokens.dart';
@@ -82,7 +83,7 @@ class _NotificationBellState extends ConsumerState<NotificationBell>
             child: child,
           ),
           child: IconButton(
-            tooltip: 'Notificaciones',
+            tooltip: AppLocalizations.of(context).notificationsTitle,
             icon: Icon(
               _unreadCount > 0
                   ? Icons.notifications_rounded

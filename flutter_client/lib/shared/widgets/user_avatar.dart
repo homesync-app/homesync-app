@@ -290,7 +290,7 @@ class CustomUserAvatar extends ConsumerWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
+                  child: Text(AppLocalizations.of(context).commonCancel),
                 ),
                 TextButton(
                   onPressed: () {

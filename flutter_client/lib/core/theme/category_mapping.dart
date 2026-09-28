@@ -658,7 +658,7 @@ class CategoryMapping {
     'investment': 'Inversión',
     'inversión': 'Inversión',
     'alquiler_premium': 'Renta',
-    'pension': 'Pensub/Jubilación',
+    'pension': 'Pensión/Jubilación',
     'crypto': 'Cripto / Inversión',
     'prestamo': 'Préstamo',
     'entertainment': 'Ocio y planes',

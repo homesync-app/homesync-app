@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/estimated_income_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
+import 'package:homesync_client/shared/widgets/semantic_tap.dart';
 
 class EstimatedIncomeSheet extends ConsumerStatefulWidget {
   const EstimatedIncomeSheet({super.key});
@@ -41,7 +43,8 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
     super.initState();
     final current = ref.read(estimatedIncomeNotifierProvider).value;
     if (current != null && current.isSet) {
-      _amountController.text = current.amount.toStringAsFixed(0);
+      _amountController.text =
+          ref.read(currencyProvider).inputFormat.format(current.amount);
       _dayOfMonth = current.dayOfMonth;
     }
   }
@@ -53,17 +56,18 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
   }
 
   Future<void> _save() async {
-    final raw = _amountController.text.trim().replaceAll(',', '.');
-    final amount = double.tryParse(raw);
-    if (amount == null || amount <= 0) return;
+    // Read with the field's separators: `150.000` used to parse as 150.
+    final amount =
+        ref.read(currencyProvider).inputFormat.parse(_amountController.text);
+    if (amount <= 0) return;
 
     setState(() => _saving = true);
     await ref
         .read(estimatedIncomeNotifierProvider.notifier)
         .save(amount: amount, dayOfMonth: _dayOfMonth);
+    if (!mounted) return;
     setState(() => _saving = false);
-
-    if (mounted) Navigator.of(context).pop();
+    Navigator.of(context).pop();
   }
 
   Future<void> _clear() async {
@@ -74,6 +78,8 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    final amountFormat = ref.watch(currencyProvider).inputFormat;
     final existing = ref.watch(estimatedIncomeNotifierProvider).value;
 
     return Container(
@@ -113,31 +119,34 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
                 ),
               ),
               const SizedBox(width: 14),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Ingreso mensual estimado',
-                    style: AppTypography.cardTitle.copyWith(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: theme.textPrimary,
+              // Expanded so the subtitle wraps instead of overflowing.
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.estimatedIncomeSheetTitle,
+                      style: AppTypography.cardTitle.copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: theme.textPrimary,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Solo para calcular tu balance. No crea movimientos.',
-                    style: AppTypography.caption.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: theme.textMuted,
+                    Text(
+                      t.estimatedIncomeSheetSubtitle,
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: theme.textMuted,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
           const SizedBox(height: 28),
           Text(
-            'MONTO NETO MENSUAL',
+            t.estimatedIncomeSheetAmountEyebrow,
             style: AppTypography.eyebrow.copyWith(
               color: theme.textMuted,
             ),
@@ -145,10 +154,8 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
           const SizedBox(height: 8),
           TextField(
             controller: _amountController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-            ],
+            keyboardType: amountFormat.keyboardType,
+            inputFormatters: [AmountInputFormatter(amountFormat)],
             style: AppTypography.heroAmount.copyWith(
               fontSize: 32,
               color: theme.textPrimary,
@@ -166,7 +173,7 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
           ),
           const SizedBox(height: 20),
           Text(
-            'DÍA DE COBRO',
+            t.estimatedIncomeSheetPaydayEyebrow,
             style: AppTypography.eyebrow.copyWith(
               color: theme.textMuted,
             ),
@@ -200,7 +207,7 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
                       ),
                     )
                   : Text(
-                      'Guardar',
+                      t.commonSave,
                       style: AppTypography.cardTitle.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
@@ -214,7 +221,7 @@ class _EstimatedIncomeSheetState extends ConsumerState<EstimatedIncomeSheet> {
               child: TextButton(
                 onPressed: _clear,
                 child: Text(
-                  'Quitar ingreso estimado',
+                  t.estimatedIncomeSheetRemove,
                   style: AppTypography.bodyStrong.copyWith(
                     color: theme.textMuted,
                   ),
@@ -245,8 +252,13 @@ class _DayPicker extends StatelessWidget {
         itemBuilder: (context, index) {
           final day = index + 1;
           final isSelected = day == selected;
-          return GestureDetector(
+          return SemanticTap(
             onTap: () => onChanged(day),
+            selected: isSelected,
+            inMutuallyExclusiveGroup: true,
+            label:
+                AppLocalizations.of(context).estimatedIncomeSheetDayLabel(day),
+            excludeChildSemantics: true,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               width: 44,

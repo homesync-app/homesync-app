@@ -8452,4 +8452,66 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String familyFeedRedeemedReward(String name) {
+    return '$name redeemed a reward';
+  }
+
+  @override
+  String get settingsPaletteOrange => 'Orange';
+
+  @override
+  String get settingsPaletteDark => 'Dark';
+
+  @override
+  String get settingsPaletteIndigo => 'Indigo';
+
+  @override
+  String get settingsPaletteRose => 'Rose';
+
+  @override
+  String get settingsPaletteEmerald => 'Emerald';
+
+  @override
+  String get settingsPaletteViolet => 'Violet';
+
+  @override
+  String get settingsPaletteAmber => 'Amber';
+
+  @override
+  String get settingsPaletteCyan => 'Cyan';
+
+  @override
+  String settingsPaletteLocked(String name) {
+    return '$name, requires Premium';
+  }
+
+  @override
+  String get expensesFormAmountTotalLabel => 'Total amount';
+
+  @override
+  String get estimatedIncomeSheetTitle => 'Estimated monthly income';
+
+  @override
+  String get estimatedIncomeSheetSubtitle =>
+      'Only used to work out your balance. It doesn\'t add any entries.';
+
+  @override
+  String get estimatedIncomeSheetAmountEyebrow => 'NET MONTHLY AMOUNT';
+
+  @override
+  String get estimatedIncomeSheetPaydayEyebrow => 'PAYDAY';
+
+  @override
+  String get estimatedIncomeSheetRemove => 'Remove estimated income';
+
+  @override
+  String estimatedIncomeSheetDayLabel(int day) {
+    return 'Day $day';
+  }
+
+  @override
+  String get homeFamilyActivityErrorBody =>
+      'We couldn\'t load the household activity.';
 }

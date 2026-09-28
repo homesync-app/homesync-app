@@ -211,9 +211,16 @@ class SettingsThemePalettePicker extends StatelessWidget {
               final isFreePalette =
                   ThemePalette.freeNames.contains(palette.name);
               final isLocked = !isPremium && !isFreePalette;
+              final paletteName = _paletteLabel(t, palette);
 
-              return GestureDetector(
+              // A bare colored circle read as nothing to a screen reader.
+              return SemanticTap(
                 onTap: () => isLocked ? onLockedTap() : onPaletteTap(palette),
+                selected: isSelected,
+                inMutuallyExclusiveGroup: true,
+                label: isLocked
+                    ? t.settingsPaletteLocked(paletteName)
+                    : paletteName,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
                   child: AnimatedContainer(
@@ -258,6 +265,30 @@ class SettingsThemePalettePicker extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Localized name of a theme palette. [ThemePalette.name] is the stored
+/// identity key (Spanish), not display copy.
+String _paletteLabel(AppLocalizations t, ThemePalette palette) {
+  switch (palette.name) {
+    case 'Naranja (Original)':
+      return t.settingsPaletteOrange;
+    case 'Oscuro':
+      return t.settingsPaletteDark;
+    case 'Índigo':
+      return t.settingsPaletteIndigo;
+    case 'Rosa':
+      return t.settingsPaletteRose;
+    case 'Esmeralda':
+      return t.settingsPaletteEmerald;
+    case 'Violeta':
+      return t.settingsPaletteViolet;
+    case 'Ámbar':
+      return t.settingsPaletteAmber;
+    case 'Cian':
+      return t.settingsPaletteCyan;
+  }
+  return palette.name;
 }
 
 /// Card to switch the app language (System default / Spanish / English).

@@ -7,6 +7,7 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
@@ -16,7 +17,6 @@ import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
-import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 /// Aporte mensual automático a una meta: gestiona la plantilla recurrente
@@ -74,23 +74,8 @@ class _GoalAutoContributionSheetState
   }
 
   double? _parseAmount(String raw) {
-    final normalized = raw.trim().replaceAll('.', '').replaceAll(',', '.');
-    if (normalized.isEmpty) return null;
-    return double.tryParse(normalized)?.roundToDouble();
-  }
-
-  void _onAmountChanged(String val) {
-    final parsed = _parseAmount(val);
-    if (parsed == null) {
-      _amountController.text = '';
-      return;
-    }
-    final formatted =
-        NumberFormat.decimalPattern('es_ES').format(parsed.round());
-    _amountController.value = TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
+    if (raw.trim().isEmpty) return null;
+    return ref.read(currencyProvider).inputFormat.parse(raw);
   }
 
   DateTime _nextExecutionDate(int day) {
@@ -247,8 +232,10 @@ class _GoalAutoContributionSheetState
           if (!_prefilled) {
             _prefilled = true;
             if (existing != null) {
-              _amountController.text = NumberFormat.decimalPattern('es_ES')
-                  .format(existing.defaultAmount.round());
+              _amountController.text = ref
+                  .read(currencyProvider)
+                  .inputFormat
+                  .format(existing.defaultAmount);
               _dayOfMonth = existing.dayOfMonth;
             }
           }
@@ -310,8 +297,13 @@ class _GoalAutoContributionSheetState
                 TextField(
                   autofocus: existing == null,
                   controller: _amountController,
-                  onChanged: _onAmountChanged,
-                  keyboardType: TextInputType.number,
+                  keyboardType:
+                      ref.watch(currencyProvider).inputFormat.keyboardType,
+                  inputFormatters: [
+                    AmountInputFormatter(
+                      ref.watch(currencyProvider).inputFormat,
+                    ),
+                  ],
                   style: AppTypography.heroAmount.copyWith(
                     fontSize: 28,
                     color: theme.textPrimary,

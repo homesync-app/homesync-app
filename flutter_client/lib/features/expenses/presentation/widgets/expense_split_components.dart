@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
@@ -136,6 +138,9 @@ class ExpenseEqualSplitSelection extends StatelessWidget {
 
 class ExpenseFixedSplitRow extends StatelessWidget {
   final MemberModel member;
+
+  /// Symbol, separators and decimals of the field.
+  final AppCurrency currency;
   final TextEditingController controller;
   final FocusNode focusNode;
   final ValueChanged<String> onChanged;
@@ -143,6 +148,7 @@ class ExpenseFixedSplitRow extends StatelessWidget {
   const ExpenseFixedSplitRow({
     super.key,
     required this.member,
+    required this.currency,
     required this.controller,
     required this.focusNode,
     required this.onChanged,
@@ -179,7 +185,7 @@ class ExpenseFixedSplitRow extends StatelessWidget {
             ),
           ),
           Text(
-            '\$',
+            currency.symbol,
             style: TextStyle(
               color: theme.textMuted,
               fontWeight: FontWeight.bold,
@@ -197,7 +203,8 @@ class ExpenseFixedSplitRow extends StatelessWidget {
             child: TextFormField(
               controller: controller,
               focusNode: focusNode,
-              keyboardType: TextInputType.number,
+              keyboardType: currency.inputFormat.keyboardType,
+              inputFormatters: [AmountInputFormatter(currency.inputFormat)],
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 color: theme.textPrimary,

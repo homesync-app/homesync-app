@@ -91,6 +91,7 @@ extension _ExpenseFormBuilders on _ExpenseFormSheetState {
   Widget _buildAmountField() {
     return ExpenseAmountField(
       controller: _amountController,
+      currency: ref.watch(currencyProvider),
       onChanged: _onAmountChanged,
       showScanAction: !_isIncome,
       isScanningReceipt: _isScanningReceipt,
@@ -448,7 +449,9 @@ extension _ExpenseFormBuilders on _ExpenseFormSheetState {
                           const Icon(Icons.check_rounded, size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            _isIncome ? 'Guardar Ingreso' : 'Guardar Gasto',
+                            _isIncome
+                                ? t.expensesFormSaveButtonSaveIncome
+                                : t.expensesFormSaveButtonSaveExpense,
                             style: AppTypography.cardTitle.copyWith(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
