@@ -317,6 +317,7 @@ async function productGuide(args: Record<string, unknown>) {
     generated_at: docs.generated_at,
     ...(part === "all" || part === "product" ? { product_guide: docs["product-guide"] } : {}),
     ...(part === "all" || part === "brand" ? { brand_brief: docs["muse-brief"] } : {}),
+    ...(part === "all" || part === "faq" ? { faq: docs["muse-faq"] } : {}),
   };
 }
 
@@ -342,11 +343,11 @@ const TOOLS = [
   },
   {
     name: "get_product_guide",
-    description: "Todo sobre HomeSync: qué hace, cada tipo de hogar (pareja, familia, convivencia, solo), cada funcionalidad, qué es Premium, qué NO hace (no prometer), personajes demo, público, tono de marca y reglas de comunicación. Leela antes de escribir cualquier contenido.",
+    description: "Todo sobre HomeSync: qué hace, cada tipo de hogar (pareja, familia, convivencia, solo), cada funcionalidad, qué es Premium, qué NO hace (no prometer), personajes demo, público, tono de marca, reglas de comunicación y preguntas operativas (calendario, filtros, métricas, marca visual, cuentas). Leela antes de escribir cualquier contenido.",
     inputSchema: {
       type: "object",
       properties: {
-        part: { type: "string", enum: ["all", "product", "brand"], default: "all", description: "product = guía de producto; brand = público, tono y reglas." },
+        part: { type: "string", enum: ["all", "product", "brand", "faq"], default: "all", description: "product = guía de producto; brand = público, tono y reglas; faq = calendario, filtros, métricas, token, marca visual y cuentas." },
       },
     },
     annotations: { readOnlyHint: true },
