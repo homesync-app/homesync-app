@@ -306,6 +306,20 @@ async function contentKit(args: Record<string, unknown>) {
   return { generated_at: kit.generated_at, rules: kit.rules, bio_links: kit.bio_links, count: items.length, items };
 }
 
+// Guía de producto + brief de marca (docs/marketing), subidos por publish_kit.py.
+async function productGuide(args: Record<string, unknown>) {
+  const url = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/marketing/product_guide.json?v=${Date.now()}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`product_guide.json: HTTP ${res.status}`);
+  const docs = await res.json();
+  const part = String(args.part ?? "all");
+  return {
+    generated_at: docs.generated_at,
+    ...(part === "all" || part === "product" ? { product_guide: docs["product-guide"] } : {}),
+    ...(part === "all" || part === "brand" ? { brand_brief: docs["muse-brief"] } : {}),
+  };
+}
+
 const daysArg = { type: "integer", minimum: 1, maximum: 365, default: 30, description: "Ventana en días hacia atrás desde hoy." };
 const TOOLS = [
   {
@@ -322,6 +336,17 @@ const TOOLS = [
       properties: {
         days: daysArg,
         group_by: { type: "string", enum: ["source", "campaign", "medium"], default: "source", description: "Agrupar por utm_source, utm_campaign o utm_medium." },
+      },
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: "get_product_guide",
+    description: "Todo sobre HomeSync: qué hace, cada tipo de hogar (pareja, familia, convivencia, solo), cada funcionalidad, qué es Premium, qué NO hace (no prometer), personajes demo, público, tono de marca y reglas de comunicación. Leela antes de escribir cualquier contenido.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        part: { type: "string", enum: ["all", "product", "brand"], default: "all", description: "product = guía de producto; brand = público, tono y reglas." },
       },
     },
     annotations: { readOnlyHint: true },
@@ -359,6 +384,8 @@ async function callTool(db: SupabaseClient, name: string, args: Record<string, u
       return await dailySignups(db, days);
     case "get_content_kit":
       return await contentKit(args);
+    case "get_product_guide":
+      return await productGuide(args);
     default:
       return undefined;
   }

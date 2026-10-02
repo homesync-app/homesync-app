@@ -6,6 +6,8 @@ credencial en su propio aviso seguro.
 
 El servidor es la Edge Function `growth-mcp` (Supabase, desplegada). Le da a Muse:
 
+- **Todo sobre la app** (`get_product_guide`): la guía de producto
+  (`product-guide.md`) y el brief de marca (`muse-brief.md`).
 - **El contenido para publicar** (`get_content_kit`): cada carrusel, reel, post e
   historia con sus URLs públicas, el texto, los hashtags, la red, el día del
   calendario y el link de Play con UTM. Muse lo publica en Instagram con su conector
