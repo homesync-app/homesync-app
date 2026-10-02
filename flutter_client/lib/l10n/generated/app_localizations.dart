@@ -6033,12 +6033,6 @@ abstract class AppLocalizations {
   /// **'Empezá hoy mismo a organizar tus finanzas del hogar.'**
   String get expensesEmptyDefaultSubtitle;
 
-  /// Snackbar shown when receipt OCR fails. {error} is the raw exception text.
-  ///
-  /// In es, this message translates to:
-  /// **'No se pudo leer el ticket: {error}'**
-  String expensesFormOcrError(String error);
-
   /// Aviso cuando el servidor detecta que la misma imagen de ticket ya se escaneó con éxito recientemente
   ///
   /// In es, this message translates to:
@@ -6074,6 +6068,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'El escaneo tardó demasiado. Revisá tu conexión y volvé a intentar.'**
   String get expensesFormOcrTimeout;
+
+  /// Snackbar shown when the receipt could not be read (AI failed or returned unusable data). Friendly copy, no technical details.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos leer el ticket. Probá con más luz y con el ticket entero en la foto.'**
+  String get expensesFormOcrFailed;
+
+  /// Snackbar shown when the user hit the daily receipt-scan cap (cost guard, ~100 per day).
+  ///
+  /// In es, this message translates to:
+  /// **'Llegaste al límite de escaneos por hoy. Podés cargar el gasto a mano.'**
+  String get expensesFormOcrDailyLimit;
+
+  /// Snackbar warning when the scanned total does not add up with the receipt line items.
+  ///
+  /// In es, this message translates to:
+  /// **'El total no coincide con la suma de los productos. Revisá el monto antes de guardar.'**
+  String get expensesFormOcrAmountMismatch;
+
+  /// Snackbar warning when an existing household expense has the same amount and date as the scanned receipt.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya cargaste «{title}» por este monto el {date}. Revisá que no sea el mismo gasto.'**
+  String expensesFormOcrPossibleDuplicate(String title, DateTime date);
 
   /// Validation error when the amount field is empty or invalid.
   ///

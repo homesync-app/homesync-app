@@ -3847,11 +3847,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Empezá hoy mismo a organizar tus finanzas del hogar.';
 
   @override
-  String expensesFormOcrError(String error) {
-    return 'No se pudo leer el ticket: $error';
-  }
-
-  @override
   String get expensesFormOcrDuplicate =>
       'Este ticket ya fue escaneado hace poco. Revisá que no cargues el gasto dos veces.';
 
@@ -3875,6 +3870,26 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get expensesFormOcrTimeout =>
       'El escaneo tardó demasiado. Revisá tu conexión y volvé a intentar.';
+
+  @override
+  String get expensesFormOcrFailed =>
+      'No pudimos leer el ticket. Probá con más luz y con el ticket entero en la foto.';
+
+  @override
+  String get expensesFormOcrDailyLimit =>
+      'Llegaste al límite de escaneos por hoy. Podés cargar el gasto a mano.';
+
+  @override
+  String get expensesFormOcrAmountMismatch =>
+      'El total no coincide con la suma de los productos. Revisá el monto antes de guardar.';
+
+  @override
+  String expensesFormOcrPossibleDuplicate(String title, DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.MMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'Ya cargaste «$title» por este monto el $dateString. Revisá que no sea el mismo gasto.';
+  }
 
   @override
   String get expensesFormValidationAmountRequired => 'Ingresá un monto válido.';

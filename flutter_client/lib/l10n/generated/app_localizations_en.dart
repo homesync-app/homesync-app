@@ -3822,11 +3822,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start organizing your household finances today.';
 
   @override
-  String expensesFormOcrError(String error) {
-    return 'Couldn\'t read the receipt: $error';
-  }
-
-  @override
   String get expensesFormOcrDuplicate =>
       'This receipt was already scanned recently. Make sure you\'re not adding the expense twice.';
 
@@ -3850,6 +3845,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get expensesFormOcrTimeout =>
       'The scan took too long. Check your connection and try again.';
+
+  @override
+  String get expensesFormOcrFailed =>
+      'We couldn\'t read the receipt. Try better lighting with the whole receipt in the photo.';
+
+  @override
+  String get expensesFormOcrDailyLimit =>
+      'You\'ve reached today\'s scan limit. You can still add the expense manually.';
+
+  @override
+  String get expensesFormOcrAmountMismatch =>
+      'The total doesn\'t match the sum of the items. Check the amount before saving.';
+
+  @override
+  String expensesFormOcrPossibleDuplicate(String title, DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.MMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'You already added “$title” for this amount on $dateString. Make sure it isn\'t the same expense.';
+  }
 
   @override
   String get expensesFormValidationAmountRequired => 'Enter a valid amount.';

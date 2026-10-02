@@ -5,7 +5,7 @@
 - **Frontend**: Flutter 3.47.5 / Dart 3.13 con Riverpod 3.x. CI (`tests.yml`) y el deploy (`deploy-production.yml`, `shorebird release --flutter-version=3.47.5`) fijan la misma versión: para subir Flutter, cambiar los dos workflows juntos y confirmar que Shorebird la soporta.
 - **Backend**: Supabase (Postgres + Edge Functions + Storage + Realtime)
 - **Auth**: Firebase Auth (Google + email/password) → Supabase Third-Party Auth (JWT de Firebase como access token de Supabase)
-- **OCR**: Edge Function `scan-receipt` → Gemini 3.1 Flash-Lite (migrado desde 2.5 Flash, deprecado 17-jun-2026). Usa structured output (`responseSchema`) y `thinkingLevel` (serie 3.x; NO `thinkingBudget`).
+- **OCR**: Edge Function `scan-receipt` → Gemini 3.5 Flash-Lite (`thinkingLevel: minimal`), con Gemini 3.8 Flash de respaldo (`low`: 3.7/3.8 Flash dan error con `minimal`). El respaldo solo corre si el principal está caído o si el total no cierra con la suma de las líneas (`amountCheck`). Todo dentro de un presupuesto de 45 s (el cliente corta a 60). Structured output (`responseSchema`), sin `temperature` (Gemini 3 pide el default) y `thinkingLevel` (NO `thinkingBudget`). Los comercios se recuerdan por CUIT en `merchant_preferences` (RPC `remember_merchant_preference`). La cámara usa el escáner de documentos de ML Kit en Android (plugin nativo: cambiarlo requiere `shorebird release`).
 
 ## Estructura
 

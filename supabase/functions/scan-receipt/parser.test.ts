@@ -10,7 +10,9 @@ import {
   assert,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
+  checkAmount,
   extractJsonString,
+  normalizeCuit,
   normalizeOcrResult,
   VALID_CATEGORIES,
 } from "./parser.ts";
@@ -198,4 +200,93 @@ Deno.test("normalizeOcrResult: realistic end-to-end Gemini payload", () => {
   assertEquals(result.category, "supermarket");
   assertEquals(result.items, ["Leche", "Pan"]);
   assertEquals(result.confidence, 0.95);
+});
+
+Deno.test("checkAmount: la suma de líneas cierra con el total", () => {
+  assertEquals(
+    checkAmount({ amount: 3500, linePrices: [1000, 2500], discountTotal: null, extraCharges: null }),
+    "ok",
+  );
+});
+
+Deno.test("checkAmount: descuentos restan y recargos suman", () => {
+  assertEquals(
+    checkAmount({ amount: 3000, linePrices: [1000, 2500], discountTotal: 500, extraCharges: null }),
+    "ok",
+  );
+  // Descuento informado como negativo: se toma el valor absoluto.
+  assertEquals(
+    checkAmount({ amount: 3000, linePrices: [1000, 2500], discountTotal: -500, extraCharges: null }),
+    "ok",
+  );
+  assertEquals(
+    checkAmount({ amount: 3850, linePrices: [1000, 2500], discountTotal: null, extraCharges: 350 }),
+    "ok",
+  );
+});
+
+Deno.test("checkAmount: monto mal leído (12.500 como 12,5) es mismatch", () => {
+  assertEquals(
+    checkAmount({ amount: 12.5, linePrices: [5000, 7500], discountTotal: null, extraCharges: null }),
+    "mismatch",
+  );
+});
+
+Deno.test("checkAmount: tolera redondeo de $2 o 1%", () => {
+  assertEquals(
+    checkAmount({ amount: 101, linePrices: [99.5], discountTotal: null, extraCharges: null }),
+    "ok",
+  );
+  assertEquals(
+    checkAmount({ amount: 100000, linePrices: [99200], discountTotal: null, extraCharges: null }),
+    "ok",
+  );
+});
+
+Deno.test("checkAmount: sin líneas o con precios faltantes es unknown", () => {
+  assertEquals(
+    checkAmount({ amount: 8000, linePrices: [], discountTotal: null, extraCharges: null }),
+    "unknown",
+  );
+  assertEquals(
+    checkAmount({ amount: 8000, linePrices: [1000, null], discountTotal: null, extraCharges: null }),
+    "unknown",
+  );
+});
+
+Deno.test("checkAmount: ticket con productos y sin total es missing", () => {
+  assertEquals(
+    checkAmount({ amount: null, linePrices: [1000], discountTotal: null, extraCharges: null }),
+    "missing",
+  );
+  assertEquals(
+    checkAmount({ amount: null, linePrices: [], discountTotal: null, extraCharges: null }),
+    "unknown",
+  );
+});
+
+Deno.test("normalizeOcrResult: amountCheck usa líneas repetidas antes del dedupe", () => {
+  const r = normalizeOcrResult({
+    amount: 2000,
+    items: [
+      { raw: "LECHE ENT", name: "Leche", price: 1000 },
+      { raw: "LECHE ENT", name: "Leche", price: 1000 },
+    ],
+  });
+  assertEquals(r.items, ["Leche"]);
+  assertEquals(r.amountCheck, "ok");
+});
+
+Deno.test("normalizeCuit: valida dígito verificador y limpia guiones", () => {
+  assertEquals(normalizeCuit("30-50001091-2"), "30500010912");
+  assertEquals(normalizeCuit("20123456786"), "20123456786");
+  assertEquals(normalizeCuit("30-50001091-3"), null);
+  assertEquals(normalizeCuit("123"), null);
+  assertEquals(normalizeCuit(null), null);
+});
+
+Deno.test("normalizeOcrResult: merchantTaxId y categorías nuevas", () => {
+  const r = normalizeOcrResult({ merchant_tax_id: "30-50001091-2", category: "utilities" });
+  assertEquals(r.merchantTaxId, "30500010912");
+  assertEquals(r.category, "utilities");
 });

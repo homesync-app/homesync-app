@@ -348,7 +348,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         setState(() {
           _shoppingRevealPhase = _ShoppingRevealPhase.preparing;
         });
-        _matchOcrItemsToShoppingList(result.rawItems);
+        _matchOcrItemsToShoppingList(result.itemNames);
         if (!_waitForAmountRevealBeforeShopping) {
           _scheduleShoppingReveal();
         }
@@ -362,7 +362,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           t.expensesFormOcrImageTooLarge(sizeMb.toStringAsFixed(1)),
         ScanAuthException() => t.expensesFormOcrSessionExpired,
         ScanTimeoutException() => t.expensesFormOcrTimeout,
-        _ => t.expensesFormOcrError(e.toString()),
+        ScanDailyLimitException() => t.expensesFormOcrDailyLimit,
+        // ScanFailedException y cualquier otro error: copy amigable, nunca el
+        // texto crudo de la excepción (antes se veía "FunctionException(...)").
+        _ => t.expensesFormOcrFailed,
       };
       AppSnackBar.show(
         context,
@@ -378,7 +381,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   void _prefillFromScan(ReceiptScanResult result) {
     setState(() {
       _scanResult = result;
-      _ocrAmountUncertain = result.hasLowConfidence && result.amount != null;
+      _ocrAmountUncertain = result.amountUncertain;
 
       final merchant = result.merchant;
       if ((merchant ?? '').isNotEmpty) {
@@ -402,23 +405,35 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       }
     });
 
-    if (result.hasLowConfidence && mounted) {
-      final t = AppLocalizations.of(context);
-      AppSnackBar.show(
-        context,
-        message: t.expensesFormOcrLowConfidence,
-        type: AppSnackBarType.warning,
-        duration: const Duration(milliseconds: 2400),
+    if (!mounted) return;
+    // Un solo aviso, el más importante: un snackbar tapa al anterior.
+    // 1. Ya hay un gasto con el mismo monto y fecha (otra foto del mismo
+    //    ticket, o lo cargó la pareja a mano).
+    // 2. La misma imagen ya se escaneó (hash).
+    // 3. El total no cierra con las líneas del ticket.
+    // 4. La IA se autocalificó baja.
+    // Ninguno bloquea: el usuario decide.
+    final t = AppLocalizations.of(context);
+    final duplicate = result.possibleDuplicate;
+    final String? warning;
+    if (duplicate != null && duplicate.paidAt != null) {
+      warning = t.expensesFormOcrPossibleDuplicate(
+        duplicate.title,
+        duplicate.paidAt!,
       );
+    } else if (duplicate != null || result.isDuplicate) {
+      warning = t.expensesFormOcrDuplicate;
+    } else if (result.amountCheck == 'mismatch' && result.amount != null) {
+      warning = t.expensesFormOcrAmountMismatch;
+    } else if (result.hasLowConfidence) {
+      warning = t.expensesFormOcrLowConfidence;
+    } else {
+      warning = null;
     }
-
-    // El servidor detectó (hash de imagen) que este ticket exacto ya se
-    // escaneó hace poco: avisar para evitar el gasto duplicado. No bloquea.
-    if (result.isDuplicate && mounted) {
-      final t = AppLocalizations.of(context);
+    if (warning != null) {
       AppSnackBar.show(
         context,
-        message: t.expensesFormOcrDuplicate,
+        message: warning,
         type: AppSnackBarType.warning,
         duration: const Duration(milliseconds: 3200),
       );
@@ -741,6 +756,20 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           amountEdited: ocrAmount != null
               ? (amountParsed - ocrAmount).abs() > 0.009
               : null,
+        );
+      }
+
+      // Recordar cómo nombra el hogar a este comercio (por CUIT): el próximo
+      // ticket del mismo comercio llega con este título y categoría.
+      final merchantTaxId = _scanResult?.merchantTaxId;
+      final savedTitle = _titleController.text.trim();
+      if (merchantTaxId != null && !_isIncome && savedTitle.isNotEmpty) {
+        unawaited(
+          ReceiptScanService(Supabase.instance.client).rememberMerchant(
+            taxId: merchantTaxId,
+            title: savedTitle,
+            category: _selectedCategory?['id'] as String?,
+          ),
         );
       }
 

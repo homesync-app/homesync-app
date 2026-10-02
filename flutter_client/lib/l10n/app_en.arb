@@ -2554,15 +2554,6 @@
     }
   },
   "expensesEmptyDefaultSubtitle": "Start organizing your household finances today.",
-  "expensesFormOcrError": "Couldn't read the receipt: {error}",
-  "@expensesFormOcrError": {
-    "description": "Snackbar shown when receipt OCR fails. {error} is the raw exception text.",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "expensesFormOcrDuplicate": "This receipt was already scanned recently. Make sure you're not adding the expense twice.",
   "@expensesFormOcrDuplicate": {
     "description": "Warning when the server detects the exact same receipt image was successfully scanned recently"
@@ -2591,6 +2582,31 @@
   "expensesFormOcrTimeout": "The scan took too long. Check your connection and try again.",
   "@expensesFormOcrTimeout": {
     "description": "Snackbar shown when the receipt scan request times out (slow or hung mobile network)."
+  },
+  "expensesFormOcrFailed": "We couldn't read the receipt. Try better lighting with the whole receipt in the photo.",
+  "@expensesFormOcrFailed": {
+    "description": "Snackbar shown when the receipt could not be read (AI failed or returned unusable data). Friendly copy, no technical details."
+  },
+  "expensesFormOcrDailyLimit": "You've reached today's scan limit. You can still add the expense manually.",
+  "@expensesFormOcrDailyLimit": {
+    "description": "Snackbar shown when the user hit the daily receipt-scan cap (cost guard, ~100 per day)."
+  },
+  "expensesFormOcrAmountMismatch": "The total doesn't match the sum of the items. Check the amount before saving.",
+  "@expensesFormOcrAmountMismatch": {
+    "description": "Snackbar warning when the scanned total does not add up with the receipt line items."
+  },
+  "expensesFormOcrPossibleDuplicate": "You already added “{title}” for this amount on {date}. Make sure it isn't the same expense.",
+  "@expensesFormOcrPossibleDuplicate": {
+    "description": "Snackbar warning when an existing household expense has the same amount and date as the scanned receipt.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "date": {
+        "type": "DateTime",
+        "format": "MMMd"
+      }
+    }
   },
   "expensesFormValidationAmountRequired": "Enter a valid amount.",
   "@expensesFormValidationAmountRequired": {

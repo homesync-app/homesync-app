@@ -18,7 +18,18 @@ export interface OcrResult {
   /// Van a ai_raw_items para telemetría/panel admin.
   rawItems: string[];
   confidence: number;
+  /// Resultado del chequeo aritmético (suma de líneas − descuentos + recargos
+  /// contra el total). Ver [checkAmount].
+  amountCheck: AmountCheck;
+  /// CUIT del comercio (11 dígitos, dígito verificador válido) o null.
+  merchantTaxId: string | null;
 }
+
+/// - ok: la suma de las líneas cierra con el total.
+/// - mismatch: no cierra → el monto es dudoso.
+/// - missing: el ticket tiene productos pero el modelo no encontró el total.
+/// - unknown: no hay con qué verificar (sin líneas, o alguna sin precio).
+export type AmountCheck = "ok" | "mismatch" | "missing" | "unknown";
 
 /// Forma cruda de lo que puede devolver Gemini antes de normalizar.
 /// `items` puede venir como strings (formato viejo / defensivo) o como
@@ -30,6 +41,9 @@ export interface OcrParsedInput {
   category?: unknown;
   items?: unknown;
   confidence?: unknown;
+  discount_total?: unknown;
+  extra_charges?: unknown;
+  merchant_tax_id?: unknown;
 }
 
 export const VALID_CATEGORIES = [
@@ -42,6 +56,11 @@ export const VALID_CATEGORIES = [
   "electronics",
   "pets",
   "education",
+  // Categorías de la app que antes el OCR no podía sugerir: una factura de
+  // luz/internet caía en "other".
+  "utilities",
+  "rent",
+  "mercadolibre",
   "other",
 ] as const;
 
@@ -72,23 +91,32 @@ export const RESPONSE_SCHEMA = {
       type: "array",
       items: {
         type: "object",
+        // price: importe de la línea. Habilita el chequeo aritmético contra
+        // el total (checkAmount) a costa de ~4 tokens por ítem.
         properties: {
           raw: { type: "string" },
           name: { type: "string" },
+          price: { type: "number", nullable: true },
         },
-        required: ["raw", "name"],
-        propertyOrdering: ["raw", "name"],
+        required: ["raw", "name", "price"],
+        propertyOrdering: ["raw", "name", "price"],
       },
     },
+    discount_total: { type: "number", nullable: true },
+    extra_charges: { type: "number", nullable: true },
+    merchant_tax_id: { type: "string", nullable: true },
     confidence: { type: "number" },
   },
   required: ["amount", "category", "items", "confidence"],
   propertyOrdering: [
     "merchant",
+    "merchant_tax_id",
     "amount",
     "date",
     "category",
     "items",
+    "discount_total",
+    "extra_charges",
     "confidence",
   ],
 } as const;
@@ -177,6 +205,13 @@ export function normalizeOcrResult(
       : "other";
 
   const itemsIn = Array.isArray(parsed.items) ? parsed.items : [];
+  // Precios de TODAS las líneas, antes del dedupe por nombre: dos líneas
+  // "Leche" son dos importes que suman al total.
+  const linePrices: (number | null)[] = itemsIn.map((it) => {
+    if (!it || typeof it !== "object") return null;
+    const price = (it as { price?: unknown }).price;
+    return typeof price === "number" && isFinite(price) ? price : null;
+  });
   const items: string[] = [];
   const rawItems: string[] = [];
   const seenNames = new Set<string>();
@@ -212,5 +247,73 @@ export function normalizeOcrResult(
       ? Math.min(1, Math.max(0, parsed.confidence))
       : 0;
 
-  return { merchant, amount, date, category, items, rawItems, confidence };
+  const amountCheck = checkAmount({
+    amount,
+    linePrices,
+    discountTotal: finiteOrNull(parsed.discount_total),
+    extraCharges: finiteOrNull(parsed.extra_charges),
+  });
+
+  return {
+    merchant,
+    amount,
+    date,
+    category,
+    items,
+    rawItems,
+    confidence,
+    amountCheck,
+    merchantTaxId: normalizeCuit(parsed.merchant_tax_id),
+  };
+}
+
+function finiteOrNull(v: unknown): number | null {
+  return typeof v === "number" && isFinite(v) ? v : null;
+}
+
+/**
+ * Verifica que el total cierre con las líneas del ticket:
+ * suma(precios) − descuentos + recargos ≈ amount.
+ *
+ * Reemplaza a `confidence` como señal de "monto dudoso": el modelo se
+ * autocalifica 0.9–1.0 en casi todos los tickets, así que esa señal no
+ * discrimina. La aritmética sí.
+ *
+ * Tolerancia: el mayor entre $2 y 1% del total (redondeos de centavos y
+ * descuentos prorrateados por línea).
+ */
+export function checkAmount(input: {
+  amount: number | null;
+  linePrices: (number | null)[];
+  discountTotal: number | null;
+  extraCharges: number | null;
+}): AmountCheck {
+  const { amount, linePrices } = input;
+  if (amount == null) return linePrices.length > 0 ? "missing" : "unknown";
+  if (linePrices.length === 0 || linePrices.some((p) => p == null)) {
+    return "unknown";
+  }
+  const sum = (linePrices as number[]).reduce((a, b) => a + b, 0);
+  const expected = sum - Math.abs(input.discountTotal ?? 0) +
+    Math.abs(input.extraCharges ?? 0);
+  const tolerance = Math.max(2, amount * 0.01);
+  return Math.abs(expected - amount) <= tolerance ? "ok" : "mismatch";
+}
+
+const CUIT_WEIGHTS = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+
+/**
+ * CUIT/CUIL argentino → 11 dígitos sin guiones, o null si no valida el dígito
+ * verificador. Es la clave con la que el hogar "recuerda" cómo llama a un
+ * comercio, así que un CUIT mal leído no debe pasar.
+ */
+export function normalizeCuit(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const digits = v.replace(/[\s.\-]/g, "");
+  if (!/^\d{11}$/.test(digits)) return null;
+  const sum = CUIT_WEIGHTS.reduce((acc, w, i) => acc + w * Number(digits[i]), 0);
+  let check = 11 - (sum % 11);
+  if (check === 11) check = 0;
+  if (check === 10) return null;
+  return check === Number(digits[10]) ? digits : null;
 }

@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart' as fa;
+import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/expenses/domain/models/receipt_scan_result.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,7 +13,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// Servicio de escaneo de tickets.
 ///
 /// Flujo:
-/// [scan] — pick imagen → comprimir → mandar bytes a Edge Function → OCR.
+/// [scan] — capturar (escáner de documentos en Android, si no image_picker)
+/// → comprimir → mandar bytes a Edge Function → OCR.
 ///
 /// La imagen NO toca Supabase Storage. El OCR es efímero y la app persiste
 /// únicamente datos estructurados del gasto.
@@ -33,15 +35,8 @@ class ReceiptScanService {
   /// [source] puede ser [ImageSource.camera] o [ImageSource.gallery].
   /// Devuelve null si el usuario canceló.
   Future<ReceiptScanResult?> scan({required ImageSource source}) async {
-    // 1. Pick imagen
-    final picked = await _picker.pickImage(
-      source: source,
-      maxWidth: 1920,
-      maxHeight: 1920,
-      imageQuality: 90,
-      requestFullMetadata:
-          false, // usa Android Photo Picker sin pedir permisos de galería completa
-    );
+    // 1. Capturar imagen
+    final picked = await _capture(source);
     if (picked == null) return null;
 
     // 2. Comprimir agresivamente a WebP ~60-120 KB
@@ -125,11 +120,14 @@ class ReceiptScanService {
       // El SDK lanza FunctionException para respuestas no-2xx antes de que
       // podamos ver response.status. El 429 acá es el anti-abuso liviano del
       // servidor (no un límite por tier: el OCR es gratis para todos).
+      final details = e.details;
       if (e.status == 429) {
-        final details = e.details;
         final retryAfter = details is Map
             ? (details['retryAfterSeconds'] as num?)?.toInt()
             : null;
+        if (details is Map && details['error'] == 'daily_limit') {
+          throw const ScanDailyLimitException();
+        }
         throw ScanRateLimitException(retryAfterSeconds: retryAfter ?? 60);
       }
       if (e.status == 413) {
@@ -137,25 +135,24 @@ class ReceiptScanService {
           sizeMb: imageBytes.length / 1024 / 1024,
         );
       }
-      rethrow;
+      if (e.status == 401) throw const ScanAuthException();
+      // 422 (la IA no devolvió datos legibles) y 502 (Gemini no respondió):
+      // para el usuario es lo mismo, el ticket no se pudo leer.
+      throw ScanFailedException(status: e.status);
     } on TimeoutException {
       throw const ScanTimeoutException();
     }
 
     log.d('[ReceiptScan] Respuesta status=${response.status}');
 
-    if (response.status != 200 || response.data == null) {
-      throw Exception(
-        'Error en el escaneo (status ${response.status}): ${response.data}',
-      );
-    }
 
-    final responseData = response.data as Map<String, dynamic>;
+    final rawData = response.data;
+    final responseData =
+        rawData is Map<String, dynamic> ? rawData : const <String, dynamic>{};
     final data = responseData['data'] as Map<String, dynamic>?;
-    if (data == null) {
-      throw Exception(
-        'Respuesta inválida del servidor de OCR: ${response.data}',
-      );
+    if (response.status != 200 || data == null) {
+      log.w('[ReceiptScan] Invalid response status=${response.status}');
+      throw ScanFailedException(status: response.status);
     }
 
     log.d(
@@ -166,7 +163,78 @@ class ReceiptScanService {
       imageFile.path,
       logId: responseData['logId'] as String?,
       isDuplicate: responseData['duplicateScan'] as bool? ?? false,
+      possibleDuplicate: switch (responseData['possibleDuplicate']) {
+        final Map<String, dynamic> dup => PossibleDuplicateExpense.fromJson(dup),
+        _ => null,
+      },
     );
+  }
+
+  /// Cámara en Android: escáner de documentos de ML Kit (Google Play
+  /// services). Detecta los bordes del ticket, lo recorta y lo endereza, así
+  /// la resolución que ve Gemini se gasta en el ticket y no en la mesa. No
+  /// pide permiso de cámara (la UI es de Play services).
+  ///
+  /// Si el escáner no está disponible (sin Play services, módulo que no se
+  /// pudo bajar) cae a la cámara de image_picker. Galería: siempre
+  /// image_picker (Android Photo Picker, sin permisos).
+  Future<XFile?> _capture(ImageSource source) async {
+    if (source == ImageSource.camera && Platform.isAndroid) {
+      final scanner = DocumentScanner(
+        options: DocumentScannerOptions(
+          mode: ScannerMode.base,
+          pageLimit: 1,
+          documentFormats: const {DocumentFormat.jpeg},
+        ),
+      );
+      try {
+        final result = await scanner.scanDocument();
+        final path = result.images?.firstOrNull;
+        if (path != null) return XFile(path);
+        return null;
+      } on PlatformException catch (e) {
+        if ((e.message ?? '').toLowerCase().contains('cancel')) return null;
+        log.w('[ReceiptScan] Document scanner unavailable, falling back to camera', error: e);
+      } finally {
+        unawaited(scanner.close());
+      }
+    }
+    return _picker.pickImage(
+      source: source,
+      // Sin achicar de más: un ticket largo en vertical quedaba en ~640 px de
+      // ancho con el tope anterior de 1920 en el lado largo. La compresión a
+      // WebP de abajo lo lleva a lado corto ≥1024.
+      maxWidth: 2048,
+      maxHeight: 4096,
+      imageQuality: 90,
+      requestFullMetadata:
+          false, // usa Android Photo Picker sin pedir permisos de galería completa
+    );
+  }
+
+  /// Recuerda cómo llama el hogar a este comercio (CUIT) para que el próximo
+  /// ticket del mismo comercio venga con ese nombre y categoría. Best-effort.
+  Future<void> rememberMerchant({
+    required String taxId,
+    required String title,
+    String? category,
+  }) async {
+    try {
+      await _supabase.rpc<void>(
+        'remember_merchant_preference',
+        params: {
+          'p_tax_id': taxId,
+          'p_title': title,
+          'p_category': category,
+        },
+      );
+    } catch (e, st) {
+      log.w(
+        '[ReceiptScan] remember_merchant_preference failed',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   /// Genera una URL firmada de corta duración para mostrar el ticket en UI.
@@ -200,6 +268,22 @@ class ScanRateLimitException implements Exception {
   final int retryAfterSeconds;
 
   const ScanRateLimitException({required this.retryAfterSeconds});
+}
+
+/// El servidor aplicó el techo diario de scans por usuario.
+class ScanDailyLimitException implements Exception {
+  const ScanDailyLimitException();
+}
+
+/// El ticket no se pudo leer: la IA no respondió (502) o no devolvió datos
+/// usables (422). El mensaje al usuario es el mismo; [status] queda para logs.
+class ScanFailedException implements Exception {
+  final int status;
+
+  const ScanFailedException({required this.status});
+
+  @override
+  String toString() => 'ScanFailedException(status: $status)';
 }
 
 /// La imagen comprimida supera el límite de 5 MB (cliente o servidor 413).
