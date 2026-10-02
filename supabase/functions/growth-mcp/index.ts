@@ -6,7 +6,7 @@ import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-
 // Solo devuelve AGREGADOS: conteos por día, modo de hogar o campaña. Nunca
 // ids, emails, nombres ni el referrer crudo. Los hogares demo/QA se excluyen.
 //
-// Auth: GROWTH_MCP_TOKEN, por header `Authorization: Bearer <token>` o, para
+// Auth: GROWTH_MCP_TOKEN, por header `Authorization: Bearer <token>`, `x-api-key` o, para
 // clientes que no dejan configurar headers, en la URL (`?token=<token>`).
 // verify_jwt=false en config.toml: el gateway no tiene que pedir un JWT.
 
@@ -43,8 +43,9 @@ function isAuthorized(req: Request) {
   if (!expected) return false;
   const header = req.headers.get("Authorization") ?? "";
   const fromHeader = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+  const fromApiKey = req.headers.get("x-api-key")?.trim() ?? "";
   const fromQuery = new URL(req.url).searchParams.get("token") ?? "";
-  const given = fromHeader || fromQuery;
+  const given = fromHeader || fromApiKey || fromQuery;
   return given.length > 0 && timingSafeEqual(given, expected);
 }
 

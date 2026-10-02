@@ -12,12 +12,39 @@ volver a capturar.
 | `carousels/02_familia_misiones` | Misiones, aprobación, premios y ranking (6) | 1080×1350 |
 | `carousels/03_pareja_semana` | La semana de la pareja, propuestas, plata (5) | 1080×1350 |
 | `carousels/04_mesada` | Mesada y Modo Padres (4) | 1080×1350 |
+| `carousels/05_pareja_como_dividir_gastos` | Valor: 3 formas de dividir gastos (6) | 1080×1350 |
+| `carousels/06_familia_tareas_por_edad` | Valor: tareas según la edad (7) | 1080×1350 |
+| `carousels/07_solo_checklist_semanal` | Valor: rutina para vivir solo (6) | 1080×1350 |
 | `posts/` | 4 frases sueltas | 1080×1350 |
 | `stories/` | 3 historias | 1080×1920 |
 | `reels/` | 5 videos verticales sin audio (9–22 s) | 1080×1920, 30 fps |
 
 Los reels van **sin audio** a propósito: en TikTok e Instagram se elige un sonido
 en tendencia al publicar, y eso pesa más en el alcance que cualquier música fija.
+
+## Qué funciona en 2026 (y cómo lo aplica el kit)
+
+- **El gancho decide todo.** En Reels y TikTok la gente decide en los primeros 0,5 a
+  3 segundos; el algoritmo mide sobre todo retención. Cada reel abre con una frase
+  grande (1,3 s) antes de mostrar la app. En carruseles, la placa 1 promete algo
+  concreto y la 2 vuelve a enganchar (IG la muestra a quien pasó de largo).
+- **Duración.** Reels de 7 a 30 s para ganchos y demos cortas; los del kit van de 9 a
+  23 s.
+- **Carruseles de 5 a 8 placas** con valor real (tips, guías, checklists). Lo que más
+  empuja hoy es que los **guarden y compartan**: por eso los cierres dicen "Guardalo"
+  o "Mandáselo a tu pareja" y los carruseles 05-07 son contenido útil con la app al
+  final, no publicidad.
+- **Texto en pantalla y en el copy con palabras que la gente busca** ("cómo dividir
+  gastos en pareja", "tareas para niños por edad", "vivir solo"): TikTok funciona cada
+  vez más como buscador.
+- **Constancia:** 3 a 5 videos por semana en TikTok. **Responder comentarios en la
+  primera hora.**
+- **Sonido en tendencia** elegido al publicar (los reels van sin audio).
+- Cuando un orgánico anda bien, se puede **promocionar ese mismo video** (Spark Ads en
+  TikTok, "Promocionar" en IG) en vez de hacer un anuncio nuevo.
+
+Fuentes: Hootsuite (Reels y algoritmo 2026), Opus Clip (fórmulas de gancho),
+Adpicto / Carouselli (carruseles 2026), Shopify / Stackmatix (TikTok 2026).
 
 ## Cuentas
 
@@ -34,7 +61,7 @@ Las cuentas las crea el owner (no un agente). Mismo nombre en las dos redes:
 ```
 Que la casa sea pareja 🏠
 Tareas, plata y compras repartidas entre todos.
-Pareja · Familia · Convivencia
+Pareja · Familia · Solo
 Gratis en Android 👇
 ```
 
@@ -70,6 +97,9 @@ hábil (TikTok premia la frecuencia). Los reels se suben a las dos redes.
 | 10 | Post `03_frase` | — |
 | 11 | Reel `03_familia_canje` | Reel nuevo (grabar) |
 | 12 | Carrusel `04_mesada` + post `02_frase` | Reel nuevo (grabar) |
+| 13 | Carrusel `05_pareja_como_dividir_gastos` | Versión en video del carrusel 05 |
+| 15 | Carrusel `06_familia_tareas_por_edad` | Versión en video del carrusel 06 |
+| 17 | Carrusel `07_solo_checklist_semanal` | Versión en video del carrusel 07 |
 
 Horarios que suelen andar en Argentina: 12–13 h y 20–22 h. Después de la primera
 semana, mirar en `growth-mcp` (`get_acquisition_funnel` agrupado por source)
@@ -116,6 +146,18 @@ Voseo, sin culpar a nadie, emojis clásicos. Los hashtags van al final (en TikTo
 
 **Reel 05 · tour**
 > Así se ve un día en casa de los Romero 🏠 #organizacióndelhogar #familia #apps
+
+**Carrusel 05 · cómo dividir gastos**
+> ¿Mitad y mitad, proporcional o todo junto? 💸 Las 3 formas más comunes de dividir la plata en pareja, y lo que sí o sí conviene hablar. Guardalo para la próxima charla.
+> #finanzasenpareja #parejas #dividirgastos #convivencia
+
+**Carrusel 06 · tareas por edad**
+> ¿Qué puede hacer tu hijo en casa según la edad? 🧹 Una guía para empezar. Guardala y compartila con otra familia.
+> #tareasparaniños #crianza #montessori #maternidad #paternidad
+
+**Carrusel 07 · vivir solo**
+> Vivir solo sin que la casa te gane 🏠 La rutina mínima: 5 minutos por día, un rato por semana y una revisión por mes.
+> #vivirsolo #organizacióndelhogar #rutina #limpieza
 
 **Frases**
 - 01: "La casa no se limpia sola." → *Etiquetá a quien tiene que leer esto 👀*
