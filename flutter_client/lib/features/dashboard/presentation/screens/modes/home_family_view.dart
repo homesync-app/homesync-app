@@ -181,6 +181,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 theme,
                 title:
                     AppLocalizations.of(context).homeFamilyChildActivityTitle,
+                // "Mis logros": only what the child did, not the adults'
+                // expenses or everyone else's chores.
+                onlyCreatorId: currentUserId,
               ),
             ),
           ] else if (isTeen) ...[
@@ -913,8 +916,15 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   Widget _buildActivitySection(
     AppThemeColors theme, {
     String? title,
+    String? onlyCreatorId,
   }) {
-    final activitiesAsync = ref.watch(recentActivityProvider);
+    final activitiesAsync = ref.watch(recentActivityProvider).whenData(
+          (activities) => onlyCreatorId == null
+              ? activities
+              : activities
+                  .where((activity) => activity['creator_id'] == onlyCreatorId)
+                  .toList(),
+        );
     final t = AppLocalizations.of(context);
     final resolvedTitle = title ?? t.homeFamilyActivityTitleDefault;
 
