@@ -38,15 +38,64 @@ function timingSafeEqual(a: string, b: string) {
   return diff === 0;
 }
 
-function isAuthorized(req: Request) {
+// Limpia lo que un cliente (o una persona copiando) puede agregar alrededor del
+// token: esquema ("Bearer", "Token", "Api-Key"), comillas o la línea entera
+// `GROWTH_MCP_TOKEN=...` de .env.claude.
+function normalizeToken(raw: string) {
+  let v = raw.trim().replace(/^["']|["']$/g, "").trim();
+  v = v.replace(/^(bearer|token|api-?key)\s+/i, "").trim();
+  v = v.replace(/^GROWTH_MCP_TOKEN\s*=\s*/, "").trim();
+  return v.replace(/^["']|["']$/g, "");
+}
+
+// Devuelve de dónde vino un token válido, o null.
+function authorizedSource(req: Request): string | null {
   const expected = Deno.env.get("GROWTH_MCP_TOKEN");
-  if (!expected) return false;
-  const header = req.headers.get("Authorization") ?? "";
-  const fromHeader = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
-  const fromApiKey = req.headers.get("x-api-key")?.trim() ?? "";
-  const fromQuery = new URL(req.url).searchParams.get("token") ?? "";
-  const given = fromHeader || fromApiKey || fromQuery;
-  return given.length > 0 && timingSafeEqual(given, expected);
+  if (!expected) return null;
+  const candidates: Array<[string, string | null]> = [
+    ["authorization", req.headers.get("authorization")],
+    ["x-api-key", req.headers.get("x-api-key")],
+    ["api-key", req.headers.get("api-key")],
+    ["x-mcp-token", req.headers.get("x-mcp-token")],
+    ["query", new URL(req.url).searchParams.get("token") ?? new URL(req.url).searchParams.get("api_key")],
+  ];
+  for (const [source, raw] of candidates) {
+    if (!raw) continue;
+    let value = normalizeToken(raw);
+    // Basic auth: se acepta el token como usuario o como contraseña.
+    if (/^basic\s+/i.test(raw.trim())) {
+      try {
+        const decoded = atob(raw.trim().replace(/^basic\s+/i, ""));
+        value = decoded.split(":").find((part) => part && timingSafeEqual(part, expected)) ?? "";
+      } catch {
+        value = "";
+      }
+    }
+    if (value && timingSafeEqual(value, expected)) return source;
+  }
+  return null;
+}
+
+// Registro de diagnóstico: nombres de headers, nunca sus valores.
+async function logAccess(
+  db: SupabaseClient,
+  req: Request,
+  status: number,
+  authSource: string | null,
+  rpcMethod: string | null,
+) {
+  try {
+    await db.from("growth_mcp_access_log").insert({
+      http_method: req.method,
+      rpc_method: rpcMethod,
+      status,
+      auth_source: authSource,
+      header_names: [...req.headers.keys()].filter((h) => !h.startsWith("x-forwarded") && !h.startsWith("cf-")),
+      user_agent: req.headers.get("user-agent")?.slice(0, 200) ?? null,
+    });
+  } catch (e) {
+    console.error("growth-mcp access log failed:", e);
+  }
 }
 
 // ---------- datos ----------
@@ -362,23 +411,43 @@ async function handle(db: SupabaseClient, msg: RpcRequest) {
   }
 }
 
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "authorization, x-api-key, api-key, x-mcp-token, content-type, accept, mcp-session-id, mcp-protocol-version",
+};
+
 Deno.serve(async (req: Request) => {
+  const db = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "", {
+    auth: { persistSession: false },
+  });
+
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") {
     // Sin stream SSE del lado del servidor: el cliente usa solo POST.
-    return new Response(null, { status: 405, headers: { Allow: "POST" } });
+    await logAccess(db, req, 405, authorizedSource(req), null);
+    return new Response(null, { status: 405, headers: { Allow: "POST", ...CORS } });
   }
-  if (!isAuthorized(req)) return json({ error: "Unauthorized" }, 401);
 
   let body: RpcRequest | RpcRequest[];
   try {
     body = await req.json();
   } catch {
+    await logAccess(db, req, 400, authorizedSource(req), null);
     return json({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } }, 400);
   }
+  const rpcMethod = Array.isArray(body) ? body.map((m) => m.method).join(",") : body?.method ?? null;
 
-  const db = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "", {
-    auth: { persistSession: false },
-  });
+  const source = authorizedSource(req);
+  if (!source) {
+    await logAccess(db, req, 401, null, rpcMethod);
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json", "WWW-Authenticate": 'Bearer realm="homesync-growth"', ...CORS },
+    });
+  }
+  await logAccess(db, req, 200, source, rpcMethod);
 
   if (Array.isArray(body)) {
     const replies = (await Promise.all(body.map((m) => handle(db, m)))).filter(Boolean);
