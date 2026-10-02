@@ -21,6 +21,41 @@ Viven en **producción** (Firebase Auth → Supabase), no en los escenarios QA d
 > Nota: por autenticarse vía Firebase, estas cuentas **no aparecen** en
 > `auth.users` de Supabase — no las busques ahí.
 
+## Cuenta demo (familia)
+
+Hogar **Familia Romero** (`22222222-2222-4222-8222-222222222222`, `family`,
+`group_premium`, aprobación `children_only`, mesada activa), sembrado en
+producción con `tmp/seed/gen_family.py`:
+
+| Integrante | `member_type` | Supabase id |
+| --- | --- | --- |
+| Caro (Madre, owner) | parent | `bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1` |
+| Diego (Padre) | parent | `bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2` |
+| Juli (Adolescente, 15) | teen | `bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb3` |
+| Benja (Hijo, 9) | child | `bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb4` |
+
+El generador **resiembra todo** con fechas relativas al día en que se corre
+(borra lo del hogar y lo vuelve a crear; los `users` se upsertean sin tocar
+`firebase_uid`). Correrlo el mismo día de la captura:
+
+```bash
+python tmp/seed/gen_family.py && bash tmp/seed/q.sh tmp/seed/family.sql
+```
+
+**Cuentas de Firebase (una sola vez, la crea el owner, no un agente):**
+
+1. Firebase Console → `homesync-prod-r7-123` → Authentication → Add user, con el
+   email de la tabla `users` (`caro.familia.demo@homesync.local`,
+   `benja.familia.demo@homesync.local`, y Juli/Diego si hacen falta) y una
+   contraseña nueva.
+2. Guardar email y contraseña en `supabase/.env.claude` como
+   `DEMO_FAMILY_PARENT_*` (Caro) y `DEMO_FAMILY_CHILD_*` (Benja).
+3. Nada más: en el primer login `ensure_user_profile` encuentra el usuario por
+   email y le graba el `firebase_uid`. Por eso el email de Firebase tiene que
+   ser exactamente el de la tabla.
+
+Capturas y videos a producir: `docs/marketing/content-plan.md`.
+
 ## Flujo de captura
 
 1. Emulador recomendado: `Medium_Phone_API_36.1` (1080×2400, 9:16 — cumple specs
