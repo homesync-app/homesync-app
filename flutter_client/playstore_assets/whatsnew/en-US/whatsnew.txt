@@ -1,11 +1,5 @@
-New Couple tab: your week together. See how chores were split and, if something landed on one side, a suggestion to even it out. No winners.
+Receipt scanning is more accurate: the camera finds and crops the receipt for you, and the app checks that the total matches the items.
 
-Money between you two in one place: who owes what, how much each of you put in this month, and settling up in one tap.
+We'll let you know if the expense was already added, and the app remembers what you call each store.
 
-Notes for your partner are now free.
-
-A new, shorter onboarding, and invites now include the link to get the app.
-
-The shared fund and weekly challenges have been retired.
-
-Also: better contrast and fixes.
+Also: recognizes power, gas and internet bills, plus fixes.
