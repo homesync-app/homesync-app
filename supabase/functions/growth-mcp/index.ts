@@ -235,6 +235,27 @@ async function dailySignups(db: SupabaseClient, days: number) {
   return { window_days: days, timezone: "UTC", days: [...series.entries()].map(([date, v]) => ({ date, ...v })) };
 }
 
+// Kit de redes: manifest público que arma tmp/marketing/publish_kit.py.
+const CONTENT_KIT_URL =
+  `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/marketing/content_kit.json`;
+
+async function contentKit(args: Record<string, unknown>) {
+  // `?v=` saltea la caché del CDN de Storage: el manifest se resube al regenerar el kit.
+  const res = await fetch(`${CONTENT_KIT_URL}?v=${Date.now()}`);
+  if (!res.ok) throw new Error(`content_kit.json: HTTP ${res.status}`);
+  const kit = await res.json();
+  const wanted = (field: string) => (args[field] ? String(args[field]) : null);
+  const mode = wanted("mode"), type = wanted("type"), network = wanted("network");
+  const day = args.calendar_day != null ? Number(args.calendar_day) : null;
+  const items = (kit.items as Row[]).filter((it) =>
+    (!mode || it.mode === mode) &&
+    (!type || it.type === type) &&
+    (!network || (it.networks as string[]).includes(network)) &&
+    (day == null || it.calendar_day === day)
+  );
+  return { generated_at: kit.generated_at, rules: kit.rules, bio_links: kit.bio_links, count: items.length, items };
+}
+
 const daysArg = { type: "integer", minimum: 1, maximum: 365, default: 30, description: "Ventana en días hacia atrás desde hoy." };
 const TOOLS = [
   {
@@ -256,6 +277,20 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
+    name: "get_content_kit",
+    description: "Contenido listo para publicar en Instagram y TikTok: carruseles, reels, posts e historias de HomeSync, cada uno con URLs públicas de las imágenes o el video, texto en español rioplatense, hashtags, red sugerida, día del calendario de lanzamiento y el link de Google Play con UTM. Publicá solo piezas de este kit y respetá `rules`.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        mode: { type: "string", enum: ["pareja", "familia", "solo", "general"], description: "Filtrar por modo de hogar." },
+        type: { type: "string", enum: ["carousel", "reel", "post", "story"], description: "Filtrar por formato." },
+        network: { type: "string", enum: ["instagram", "tiktok"], description: "Filtrar por red." },
+        calendar_day: { type: "integer", minimum: 1, description: "Día del calendario de lanzamiento (1 = primer día)." },
+      },
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
     name: "get_daily_signups",
     description: "Serie diaria (UTC) de altas, hogares nuevos y activaciones, para ver el efecto de un posteo o campaña en el tiempo.",
     inputSchema: { type: "object", properties: { days: daysArg } },
@@ -272,6 +307,8 @@ async function callTool(db: SupabaseClient, name: string, args: Record<string, u
       return await acquisitionFunnel(db, days, String(args.group_by ?? "source"));
     case "get_daily_signups":
       return await dailySignups(db, days);
+    case "get_content_kit":
+      return await contentKit(args);
     default:
       return undefined;
   }
@@ -298,7 +335,7 @@ async function handle(db: SupabaseClient, msg: RpcRequest) {
         protocolVersion: PROTOCOL_VERSIONS.includes(asked) ? asked : PROTOCOL_VERSIONS[0],
         capabilities: { tools: { listChanged: false } },
         serverInfo: SERVER_INFO,
-        instructions: "Métricas agregadas de crecimiento de HomeSync (app de hogar: tareas, gastos y compras compartidas, modos pareja/familia/amigos/solo). Usalas para medir qué campañas y posteos traen hogares que se quedan.",
+        instructions: "HomeSync (app de hogar: tareas, gastos y compras compartidas; modos pareja/familia/amigos/solo). get_content_kit da el contenido listo para publicar; las otras herramientas, métricas agregadas para medir qué posteos y campañas traen hogares que se quedan.",
       });
     }
     case "ping":
