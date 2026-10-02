@@ -56,6 +56,7 @@ function authorizedSource(req: Request): string | null {
     ["authorization", req.headers.get("authorization")],
     ["x-api-key", req.headers.get("x-api-key")],
     ["api-key", req.headers.get("api-key")],
+    ["apikey", req.headers.get("apikey")],
     ["x-mcp-token", req.headers.get("x-mcp-token")],
     ["query", new URL(req.url).searchParams.get("token") ?? new URL(req.url).searchParams.get("api_key")],
   ];
