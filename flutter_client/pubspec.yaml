@@ -141,9 +141,12 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/images/app_icon_full.png"
   min_sdk_android: 21
-  adaptive_icon_background: "#FFF7F0"
+  # Mascota (gato con la casita). Masters del paquete output/branding/homesync-icon-kit-v1:
+  # el frente ya trae su margen dentro de la zona segura (66/108 dp), por eso inset 0.
+  adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
-  adaptive_icon_foreground_inset: 6
+  adaptive_icon_foreground_inset: 0
+  adaptive_icon_monochrome: "assets/images/app_icon_monochrome.png"
   remove_alpha_ios: true
 
 flutter_native_splash:

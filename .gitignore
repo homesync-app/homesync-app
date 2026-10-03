@@ -118,3 +118,6 @@ flutter_client/android/.kotlin/
 
 # Goldie: capturas generadas (se regeneran con goldie/capture.sh + goldie frame)
 goldie/out/
+
+# Paquetes de marca/branding generados (pesados; viven fuera del repo)
+output/
