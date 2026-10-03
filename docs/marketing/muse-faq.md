@@ -50,15 +50,20 @@
 
 ## Marca visual
 
+- **Mascota y logo:** un gato naranja atigrado, con pañuelo verde salvia, que abraza
+  una casita crema con techo salvia y puerta coral. Es la cara de la marca.
+  - Sin fondo (para tus piezas): `https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/marketing/brand/mascota_transparente.png`
+  - Foto de perfil (fondo petróleo): `https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/marketing/brand/marca_perfil_1080.png`
+  - Círculo con transparencia: `https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/marketing/brand/marca_circulo_512.png`
+  - No deformarla, no cambiarle los colores ni ponerla sobre fondo naranja (se pierde):
+    va sobre petróleo, crema o blanco.
 - **Colores:** naranja `#EE652B` (principal), naranja oscuro `#D85A23`, naranja claro
   `#FFF0EA`, crema `#FFFCF9` (fondo), texto marrón oscuro `#3A2A22`, verde salvia
-  `#84A59D` (acento).
+  `#84A59D`, **petróleo `#044F5F`** (fondo de la mascota y acento secundario).
 - **Tipografía:** Outfit (Black para títulos, Medium para texto).
-- **Logo:** la casita naranja con orejas de gato. Foto de perfil:
-  `https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/marketing/kit/profile/foto_perfil.jpg`.
 - **Estilo de las piezas:** fondo crema con degradé durazno, títulos grandes en
   marrón con una palabra en naranja, capturas de la app dentro de un teléfono,
-  cierre naranja con "Gratis en Google Play".
+  cierre naranja con la mascota y "Gratis en Google Play".
 
 ## Cuentas
 
