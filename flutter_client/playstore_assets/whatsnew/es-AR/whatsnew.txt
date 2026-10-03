@@ -1,5 +1,5 @@
-Escanear tickets ahora es más preciso: la cámara detecta y recorta el ticket sola, y la app revisa que el total cierre con los productos.
+HomeSync estrena ícono: nuestra mascota abrazando la casa.
 
-Te avisamos si el gasto ya estaba cargado, y la app recuerda cómo le decís a cada comercio.
+En familia, la mesada del adolescente ya no se suma a los ingresos del hogar, y cada chico ve en "Mis logros" solo lo que hizo.
 
-Además: reconoce facturas de luz, gas e internet, y arreglos.
+Además: arreglos y mejoras.

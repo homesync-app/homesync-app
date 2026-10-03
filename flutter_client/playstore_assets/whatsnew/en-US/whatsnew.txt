@@ -1,5 +1,5 @@
-Receipt scanning is more accurate: the camera finds and crops the receipt for you, and the app checks that the total matches the items.
+HomeSync has a new icon: our mascot hugging the house.
 
-We'll let you know if the expense was already added, and the app remembers what you call each store.
+For families, a teen's allowance no longer counts as household income, and each kid's "My achievements" shows only what they did.
 
-Also: recognizes power, gas and internet bills, plus fixes.
+Plus fixes and improvements.
