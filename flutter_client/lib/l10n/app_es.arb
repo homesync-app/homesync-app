@@ -478,7 +478,7 @@
   "balanceCardBalanced": "Balance en calma",
   "balanceCardNeedsSettlement": "Hace falta equilibrar",
   "balanceCardInYourFavor": "Quedó a tu favor",
-  "balanceCardSettleButton": "Equilibrar",
+  "balanceCardSettleButton": "Ya pagué",
   "balanceCardXpLabel": "XP",
   "balanceCardCoinsLabel": "coins",
   "balanceCardIntegratedTitle": "Economía integrada",
@@ -869,12 +869,12 @@
   "@homeCoupleTasksTitle": {
     "description": "Section title above the day-tasks list on the couple home."
   },
-  "homeCoupleActivityTitle": "Movimientos del hogar",
+  "homeCoupleActivityTitle": "Movimientos de hoy",
   "@homeCoupleActivityTitle": {
-    "description": "Section title above the recent-activity feed on the couple home."
+    "description": "Section title above the couple home activity feed. It only lists today's activity (the query starts at midnight)."
   },
-  "homeCoupleActivityEmptyTitle": "Todavía no hay movimientos",
-  "homeCoupleActivityEmptyBody": "Cuando haya una tarea o un gasto nuevo, aparece acá.",
+  "homeCoupleActivityEmptyTitle": "Hoy todavía no hubo movimientos",
+  "homeCoupleActivityEmptyBody": "Lo que carguen hoy aparece acá. El historial completo está en Finanzas.",
   "@homeCoupleActivityEmptyBody": {
     "description": "Empty-state body for the activity feed. 'aca' = 'aquí' in Argentine voseo."
   },
@@ -889,15 +889,6 @@
   "homeCoupleSettlementDialogDirectionPay": "Vos → {partnerName}",
   "@homeCoupleSettlementDialogDirectionPay": {
     "description": "Compact payer-to-receiver label when the current user pays the partner.",
-    "placeholders": {
-      "partnerName": {
-        "type": "String"
-      }
-    }
-  },
-  "homeCoupleSettlementDialogDirectionReceive": "{partnerName} → vos",
-  "@homeCoupleSettlementDialogDirectionReceive": {
-    "description": "Compact payer-to-receiver label when the partner pays the current user.",
     "placeholders": {
       "partnerName": {
         "type": "String"
@@ -960,15 +951,6 @@
   "homeCoupleSettlementSuccessPay": "Balance equilibrado con {partnerName}.",
   "@homeCoupleSettlementSuccessPay": {
     "description": "Success snackbar shown after the user settles up by paying.",
-    "placeholders": {
-      "partnerName": {
-        "type": "String"
-      }
-    }
-  },
-  "homeCoupleSettlementSuccessReceive": "Registramos el equilibrio con {partnerName}.",
-  "@homeCoupleSettlementSuccessReceive": {
-    "description": "Success snackbar after the user records that the partner paid them.",
     "placeholders": {
       "partnerName": {
         "type": "String"
@@ -3111,7 +3093,7 @@
   "faqFamilyRanking": "¿Cómo funciona el ranking familiar?",
   "faqFamilyRankingAnswer": "Cada semana la familia compite sano: el ranking muestra quién sumó más XP completando tareas. Al cierre hay un ganador con corona y bonus, y el resumen semanal les cuenta cómo le fue a cada uno.",
   "faqWhatSpecialEvents": "¿Qué hay en la pestaña Pareja?",
-  "faqWhatSpecialEventsAnswer": "Es el repaso de la semana de los dos: cómo se repartieron las tareas (sin ganadores), cómo está la plata entre ustedes y las propuestas pendientes. Si algo cayó siempre del mismo lado, te sugiere proponer turnarse. También podés mandarle una nota a tu pareja.",
+  "faqWhatSpecialEventsAnswer": "Encontrá planes para hacer juntos, guardá los que les gusten y toquen “Lo hicimos” para sumar recuerdos a su álbum. No requieren aprobación de la pareja. También podés dejarle una notita y ver el reparto de tareas y las cuentas.",
   "faqContributionBalance": "¿Qué es el equilibrio de aporte?",
   "faqContributionBalanceAnswer": "Es la foto neutral del mes: combina tareas hechas y gastos compartidos para mostrar cuánto viene aportando cada uno a la convivencia. Sin ganadores ni perdedores — sirve para charlar con datos, no para competir.",
   "faqRewardsStore": "¿Cómo funciona la tienda de premios?",
@@ -5562,7 +5544,7 @@
       }
     }
   },
-  "coupleWeekMoneyTitle": "La plata",
+  "coupleWeekMoneyTitle": "Las cuentas",
   "coupleWeekMoneySeeAll": "Ver movimientos",
   "coupleWeekMoneyEven": "Están a mano.",
   "coupleWeekMoneyYouOwe": "Le debés {amount} a {name}.",
@@ -5587,20 +5569,6 @@
       }
     }
   },
-  "coupleWeekMoneyPaid": "Este mes pusiste {mine} y {name} puso {theirs} en gastos compartidos.",
-  "@coupleWeekMoneyPaid": {
-    "placeholders": {
-      "mine": {
-        "type": "String"
-      },
-      "name": {
-        "type": "String"
-      },
-      "theirs": {
-        "type": "String"
-      }
-    }
-  },
   "coupleWeekMoneyNoExpenses": "Todavía no cargaron gastos compartidos este mes.",
   "coupleWeekMoneySharedTotal": "Este mes gastaron {amount} entre los dos.",
   "@coupleWeekMoneySharedTotal": {
@@ -5610,27 +5578,21 @@
       }
     }
   },
-  "coupleWeekMoneySharedPaid": "Pagaste {mine} · {name} pagó {theirs}",
-  "@coupleWeekMoneySharedPaid": {
+  "coupleSettleCreditorHint": "Cuando {name} te pague, lo marca y se salda solo.",
+  "@coupleSettleCreditorHint": {
+    "description": "Pareja: aclaración para quien tiene plata a favor. Solo quien debe registra el pago; el saldo queda en cero sin que el otro confirme.",
     "placeholders": {
-      "mine": {
-        "type": "String"
-      },
       "name": {
-        "type": "String"
-      },
-      "theirs": {
         "type": "String"
       }
     }
   },
-  "coupleWeekMoneySettle": "Saldar",
-  "coupleWeekMoneyRecordPayment": "Registrar pago",
+  "coupleWeekMoneySettle": "Ya pagué",
   "coupleWeekMoneyError": "No pudimos cargar la plata de este mes.",
   "coupleWeekAsksTitle": "Entre ustedes",
-  "coupleWeekAsksSubtitle": "Planes, pedidos y charlas pendientes. Siempre se puede decir “ahora no”.",
+  "coupleWeekAsksSubtitle": "Ideas, planes y charlas para compartir.",
   "coupleWeekAsksEmpty": "Nada pendiente entre ustedes.",
-  "coupleWeekAsksEmptyHint": "Para pedir una mano o proponer un plan, tocá “{action}”.",
+  "coupleWeekAsksEmptyHint": "Arranquen con una de estas ideas o tocá “{action}”.",
   "@coupleWeekAsksEmptyHint": {
     "placeholders": {
       "action": {
@@ -5666,7 +5628,7 @@
       }
     }
   },
-  "coupleWeekNoteTitle": "Una nota para {name}",
+  "coupleWeekNoteTitle": "Un mimo para {name}",
   "@coupleWeekNoteTitle": {
     "placeholders": {
       "name": {
@@ -5674,7 +5636,66 @@
       }
     }
   },
-  "coupleWeekNoteBody": "Le llega como un sobre al inicio de su app.",
+  "coupleWeekNoteBody": "Dejale una notita para su día.",
+  "coupleWeekDuoTitle": "En casa, en equipo",
+  "@coupleWeekDuoTitle": {
+    "description": "Pareja: título del bloque principal, con las mascotas de los dos y cómo se repartieron las tareas."
+  },
+  "coupleWeekMoneySharedLabel": "Gastaron entre los dos este mes",
+  "@coupleWeekMoneySharedLabel": {
+    "description": "Pareja, economía integrada: etiqueta chica arriba del monto grande del mes."
+  },
+  "coupleWeekMoneyYouOweLabel": "Le debés a {name}",
+  "@coupleWeekMoneyYouOweLabel": {
+    "description": "Pareja: etiqueta chica arriba del monto grande que la persona le debe a su pareja.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekMoneyTheyOweLabel": "{name} te debe",
+  "@coupleWeekMoneyTheyOweLabel": {
+    "description": "Pareja: etiqueta chica arriba del monto grande que la pareja le debe a la persona.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekMoneyPaidCaption": "{mode, select, shared{Lo que pagó cada uno este mes} other{Lo que puso cada uno en gastos compartidos}}",
+  "@coupleWeekMoneyPaidCaption": {
+    "description": "Pareja: título de los dos chips con lo que pagó cada uno este mes. mode = shared (economía integrada) u otro (dividida).",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekIdeaDinnerChip": "Una cena afuera",
+  "@coupleWeekIdeaDinnerChip": {
+    "description": "Pareja, sin propuestas: idea corta para arrancar (chip)."
+  },
+  "coupleWeekIdeaDinnerTitle": "¿Salimos a cenar este finde?",
+  "@coupleWeekIdeaDinnerTitle": {
+    "description": "Pareja: título con el que se abre el editor al tocar la idea de la cena. Siempre editable."
+  },
+  "coupleWeekIdeaMoviesChip": "Noche de pelis",
+  "@coupleWeekIdeaMoviesChip": {
+    "description": "Pareja, sin propuestas: idea corta para arrancar (chip)."
+  },
+  "coupleWeekIdeaMoviesTitle": "¿Hacemos una noche de pelis sin celulares?",
+  "@coupleWeekIdeaMoviesTitle": {
+    "description": "Pareja: título con el que se abre el editor al tocar la idea de las pelis. Siempre editable."
+  },
+  "coupleWeekIdeaChoresChip": "Repartir la limpieza",
+  "@coupleWeekIdeaChoresChip": {
+    "description": "Pareja, sin propuestas: idea corta para arrancar (chip)."
+  },
+  "coupleWeekIdeaChoresTitle": "¿Nos repartimos la limpieza de la semana?",
+  "@coupleWeekIdeaChoresTitle": {
+    "description": "Pareja: título con el que se abre el editor al tocar la idea de la limpieza. Siempre editable."
+  },
   "coupleProposalPushTitle": "{name} te propuso algo",
   "@coupleProposalPushTitle": {
     "placeholders": {
@@ -5822,10 +5843,6 @@
         "type": "int"
       }
     }
-  },
-  "balanceCardRecordPaymentButton": "Registrar pago",
-  "@balanceCardRecordPaymentButton": {
-    "description": "Action on the couple Home balance card when the partner owes the current user: records that the partner already paid them back."
   },
   "homeActivityLoadError": "No pudimos cargar la actividad.",
   "@homeActivityLoadError": {
@@ -6263,5 +6280,157 @@
   "homeFamilyActivityErrorBody": "No pudimos cargar la actividad del hogar.",
   "@homeFamilyActivityErrorBody": {
     "description": "Error en la sección de actividad reciente del inicio familiar, junto a un botón Reintentar."
+  },
+  "couplePlansTitle": "Un ratito para ustedes",
+  "@couplePlansTitle": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansSubtitle": "Pequeños planes, lindos recuerdos.",
+  "@couplePlansSubtitle": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansComplete": "Lo hicimos",
+  "@couplePlansComplete": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansSave": "Guardar",
+  "@couplePlansSave": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansSaved": "Guardado",
+  "@couplePlansSaved": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansNext": "Ver otro plan",
+  "@couplePlansNext": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansAlbum": "Nuestro álbum",
+  "@couplePlansAlbum": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansAlbumHint": "Cada plan deja un recuerdo. A su ritmo.",
+  "@couplePlansAlbumHint": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansSavedTitle": "Planes guardados",
+  "@couplePlansSavedTitle": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansSavedEmpty": "Guarden algún plan que les guste y vuelvan cuando tengan ganas.",
+  "@couplePlansSavedEmpty": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansUnlocked": "¡Un recuerdo más!",
+  "@couplePlansUnlocked": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansUndo": "Deshacer",
+  "@couplePlansUndo": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansCompletedLabel": "Recuerdo conseguido",
+  "@couplePlansCompletedLabel": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansDiscoverLabel": "Por descubrir",
+  "@couplePlansDiscoverLabel": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansError": "No pudimos cargar sus planes. Probá de nuevo.",
+  "@couplePlansError": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlansCount": "{count} de {total}",
+  "@couplePlansCount": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "couplePlanMoviesTitle": "Cine en casa",
+  "@couplePlanMoviesTitle": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanMoviesBody": "Elijan una peli y preparen algo rico para compartir. El mejor asiento es al lado del otro.",
+  "@couplePlanMoviesBody": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanMoviesDetails": "En casa · Unas 2 horas",
+  "@couplePlanMoviesDetails": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanMoviesStamp": "Noche de pelis",
+  "@couplePlanMoviesStamp": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanCookingTitle": "Cocineros por un rato",
+  "@couplePlanCookingTitle": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanCookingBody": "Prueben una receta entre los dos, con lo que haya en casa. No hace falta que salga perfecta.",
+  "@couplePlanCookingBody": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanCookingDetails": "En casa · Unos 45 minutos",
+  "@couplePlanCookingDetails": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanCookingStamp": "Hecho de a dos",
+  "@couplePlanCookingStamp": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanPicnicTitle": "Un picnic chiquito",
+  "@couplePlanPicnicTitle": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanPicnicBody": "Una manta y algo rico alcanzan. Puede ser en una plaza, en el balcón o en el living.",
+  "@couplePlanPicnicBody": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanPicnicDetails": "Donde quieran · Una hora",
+  "@couplePlanPicnicDetails": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanPicnicStamp": "Manta y compañía",
+  "@couplePlanPicnicStamp": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanCoffeeTitle": "Dos tazas y una pausa",
+  "@couplePlanCoffeeTitle": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanCoffeeBody": "Mate, café o té: preparen lo que les guste y háganse un ratito para estar juntos, sin apuro.",
+  "@couplePlanCoffeeBody": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanCoffeeDetails": "En casa · Unos 20 minutos",
+  "@couplePlanCoffeeDetails": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanCoffeeStamp": "Nuestra pausa",
+  "@couplePlanCoffeeStamp": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanWalkTitle": "Una vuelta distinta",
+  "@couplePlanWalkTitle": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanWalkBody": "Salgan a recorrer un camino distinto y encuentren un rincón nuevo. Vayan hasta donde tengan ganas.",
+  "@couplePlanWalkBody": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanWalkDetails": "Afuera · Unos 30 minutos",
+  "@couplePlanWalkDetails": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "couplePlanWalkStamp": "A pasear",
+  "@couplePlanWalkStamp": {
+    "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
   }
 }

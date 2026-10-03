@@ -1079,7 +1079,7 @@ abstract class AppLocalizations {
   /// No description provided for @balanceCardSettleButton.
   ///
   /// In es, this message translates to:
-  /// **'Equilibrar'**
+  /// **'Ya pagué'**
   String get balanceCardSettleButton;
 
   /// No description provided for @balanceCardXpLabel.
@@ -1928,22 +1928,22 @@ abstract class AppLocalizations {
   /// **'Hoy en casa'**
   String get homeCoupleTasksTitle;
 
-  /// Section title above the recent-activity feed on the couple home.
+  /// Section title above the couple home activity feed. It only lists today's activity (the query starts at midnight).
   ///
   /// In es, this message translates to:
-  /// **'Movimientos del hogar'**
+  /// **'Movimientos de hoy'**
   String get homeCoupleActivityTitle;
 
   /// No description provided for @homeCoupleActivityEmptyTitle.
   ///
   /// In es, this message translates to:
-  /// **'Todavía no hay movimientos'**
+  /// **'Hoy todavía no hubo movimientos'**
   String get homeCoupleActivityEmptyTitle;
 
   /// Empty-state body for the activity feed. 'aca' = 'aquí' in Argentine voseo.
   ///
   /// In es, this message translates to:
-  /// **'Cuando haya una tarea o un gasto nuevo, aparece acá.'**
+  /// **'Lo que carguen hoy aparece acá. El historial completo está en Finanzas.'**
   String get homeCoupleActivityEmptyBody;
 
   /// Snackbar shown when the user tries to settle but their user id can't be resolved.
@@ -1963,12 +1963,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Vos → {partnerName}'**
   String homeCoupleSettlementDialogDirectionPay(String partnerName);
-
-  /// Compact payer-to-receiver label when the partner pays the current user.
-  ///
-  /// In es, this message translates to:
-  /// **'{partnerName} → vos'**
-  String homeCoupleSettlementDialogDirectionReceive(String partnerName);
 
   /// Short helper copy in the settle-up dialog explaining the result of the payment.
   ///
@@ -2024,12 +2018,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Balance equilibrado con {partnerName}.'**
   String homeCoupleSettlementSuccessPay(String partnerName);
-
-  /// Success snackbar after the user records that the partner paid them.
-  ///
-  /// In es, this message translates to:
-  /// **'Registramos el equilibrio con {partnerName}.'**
-  String homeCoupleSettlementSuccessReceive(String partnerName);
 
   /// Error snackbar shown when the settle-up RPC fails. {message} is the raw exception text.
   ///
@@ -7152,7 +7140,7 @@ abstract class AppLocalizations {
   /// No description provided for @faqWhatSpecialEventsAnswer.
   ///
   /// In es, this message translates to:
-  /// **'Es el repaso de la semana de los dos: cómo se repartieron las tareas (sin ganadores), cómo está la plata entre ustedes y las propuestas pendientes. Si algo cayó siempre del mismo lado, te sugiere proponer turnarse. También podés mandarle una nota a tu pareja.'**
+  /// **'Encontrá planes para hacer juntos, guardá los que les gusten y toquen “Lo hicimos” para sumar recuerdos a su álbum. No requieren aprobación de la pareja. También podés dejarle una notita y ver el reparto de tareas y las cuentas.'**
   String get faqWhatSpecialEventsAnswer;
 
   /// No description provided for @faqContributionBalance.
@@ -12577,7 +12565,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleWeekMoneyTitle.
   ///
   /// In es, this message translates to:
-  /// **'La plata'**
+  /// **'Las cuentas'**
   String get coupleWeekMoneyTitle;
 
   /// No description provided for @coupleWeekMoneySeeAll.
@@ -12604,12 +12592,6 @@ abstract class AppLocalizations {
   /// **'{name} te debe {amount}.'**
   String coupleWeekMoneyTheyOwe(String name, String amount);
 
-  /// No description provided for @coupleWeekMoneyPaid.
-  ///
-  /// In es, this message translates to:
-  /// **'Este mes pusiste {mine} y {name} puso {theirs} en gastos compartidos.'**
-  String coupleWeekMoneyPaid(String mine, String name, String theirs);
-
   /// No description provided for @coupleWeekMoneyNoExpenses.
   ///
   /// In es, this message translates to:
@@ -12622,23 +12604,17 @@ abstract class AppLocalizations {
   /// **'Este mes gastaron {amount} entre los dos.'**
   String coupleWeekMoneySharedTotal(String amount);
 
-  /// No description provided for @coupleWeekMoneySharedPaid.
+  /// Pareja: aclaración para quien tiene plata a favor. Solo quien debe registra el pago; el saldo queda en cero sin que el otro confirme.
   ///
   /// In es, this message translates to:
-  /// **'Pagaste {mine} · {name} pagó {theirs}'**
-  String coupleWeekMoneySharedPaid(String mine, String name, String theirs);
+  /// **'Cuando {name} te pague, lo marca y se salda solo.'**
+  String coupleSettleCreditorHint(String name);
 
   /// No description provided for @coupleWeekMoneySettle.
   ///
   /// In es, this message translates to:
-  /// **'Saldar'**
+  /// **'Ya pagué'**
   String get coupleWeekMoneySettle;
-
-  /// No description provided for @coupleWeekMoneyRecordPayment.
-  ///
-  /// In es, this message translates to:
-  /// **'Registrar pago'**
-  String get coupleWeekMoneyRecordPayment;
 
   /// No description provided for @coupleWeekMoneyError.
   ///
@@ -12655,7 +12631,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleWeekAsksSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Planes, pedidos y charlas pendientes. Siempre se puede decir “ahora no”.'**
+  /// **'Ideas, planes y charlas para compartir.'**
   String get coupleWeekAsksSubtitle;
 
   /// No description provided for @coupleWeekAsksEmpty.
@@ -12667,7 +12643,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleWeekAsksEmptyHint.
   ///
   /// In es, this message translates to:
-  /// **'Para pedir una mano o proponer un plan, tocá “{action}”.'**
+  /// **'Arranquen con una de estas ideas o tocá “{action}”.'**
   String coupleWeekAsksEmptyHint(String action);
 
   /// No description provided for @coupleWeekAskToAnswer.
@@ -12697,14 +12673,80 @@ abstract class AppLocalizations {
   /// No description provided for @coupleWeekNoteTitle.
   ///
   /// In es, this message translates to:
-  /// **'Una nota para {name}'**
+  /// **'Un mimo para {name}'**
   String coupleWeekNoteTitle(String name);
 
   /// No description provided for @coupleWeekNoteBody.
   ///
   /// In es, this message translates to:
-  /// **'Le llega como un sobre al inicio de su app.'**
+  /// **'Dejale una notita para su día.'**
   String get coupleWeekNoteBody;
+
+  /// Pareja: título del bloque principal, con las mascotas de los dos y cómo se repartieron las tareas.
+  ///
+  /// In es, this message translates to:
+  /// **'En casa, en equipo'**
+  String get coupleWeekDuoTitle;
+
+  /// Pareja, economía integrada: etiqueta chica arriba del monto grande del mes.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastaron entre los dos este mes'**
+  String get coupleWeekMoneySharedLabel;
+
+  /// Pareja: etiqueta chica arriba del monto grande que la persona le debe a su pareja.
+  ///
+  /// In es, this message translates to:
+  /// **'Le debés a {name}'**
+  String coupleWeekMoneyYouOweLabel(String name);
+
+  /// Pareja: etiqueta chica arriba del monto grande que la pareja le debe a la persona.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} te debe'**
+  String coupleWeekMoneyTheyOweLabel(String name);
+
+  /// Pareja: título de los dos chips con lo que pagó cada uno este mes. mode = shared (economía integrada) u otro (dividida).
+  ///
+  /// In es, this message translates to:
+  /// **'{mode, select, shared{Lo que pagó cada uno este mes} other{Lo que puso cada uno en gastos compartidos}}'**
+  String coupleWeekMoneyPaidCaption(String mode);
+
+  /// Pareja, sin propuestas: idea corta para arrancar (chip).
+  ///
+  /// In es, this message translates to:
+  /// **'Una cena afuera'**
+  String get coupleWeekIdeaDinnerChip;
+
+  /// Pareja: título con el que se abre el editor al tocar la idea de la cena. Siempre editable.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Salimos a cenar este finde?'**
+  String get coupleWeekIdeaDinnerTitle;
+
+  /// Pareja, sin propuestas: idea corta para arrancar (chip).
+  ///
+  /// In es, this message translates to:
+  /// **'Noche de pelis'**
+  String get coupleWeekIdeaMoviesChip;
+
+  /// Pareja: título con el que se abre el editor al tocar la idea de las pelis. Siempre editable.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Hacemos una noche de pelis sin celulares?'**
+  String get coupleWeekIdeaMoviesTitle;
+
+  /// Pareja, sin propuestas: idea corta para arrancar (chip).
+  ///
+  /// In es, this message translates to:
+  /// **'Repartir la limpieza'**
+  String get coupleWeekIdeaChoresChip;
+
+  /// Pareja: título con el que se abre el editor al tocar la idea de la limpieza. Siempre editable.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Nos repartimos la limpieza de la semana?'**
+  String get coupleWeekIdeaChoresTitle;
 
   /// No description provided for @coupleProposalPushTitle.
   ///
@@ -13023,12 +13065,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'{count, plural, =1{Va 1 tarea esta semana: es temprano para leer el reparto.} other{Van {count} tareas esta semana: es temprano para leer el reparto.}}'**
   String coupleWeekReadingEarly(int count);
-
-  /// Action on the couple Home balance card when the partner owes the current user: records that the partner already paid them back.
-  ///
-  /// In es, this message translates to:
-  /// **'Registrar pago'**
-  String get balanceCardRecordPaymentButton;
 
   /// Inline error on the couple Home when the recent activity feed fails to load. Shown next to a Retry button.
   ///
@@ -13497,6 +13533,222 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No pudimos cargar la actividad del hogar.'**
   String get homeFamilyActivityErrorBody;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Un ratito para ustedes'**
+  String get couplePlansTitle;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Pequeños planes, lindos recuerdos.'**
+  String get couplePlansSubtitle;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Lo hicimos'**
+  String get couplePlansComplete;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar'**
+  String get couplePlansSave;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardado'**
+  String get couplePlansSaved;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver otro plan'**
+  String get couplePlansNext;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuestro álbum'**
+  String get couplePlansAlbum;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Cada plan deja un recuerdo. A su ritmo.'**
+  String get couplePlansAlbumHint;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Planes guardados'**
+  String get couplePlansSavedTitle;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Guarden algún plan que les guste y vuelvan cuando tengan ganas.'**
+  String get couplePlansSavedEmpty;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Un recuerdo más!'**
+  String get couplePlansUnlocked;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Deshacer'**
+  String get couplePlansUndo;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Recuerdo conseguido'**
+  String get couplePlansCompletedLabel;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Por descubrir'**
+  String get couplePlansDiscoverLabel;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar sus planes. Probá de nuevo.'**
+  String get couplePlansError;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} de {total}'**
+  String couplePlansCount(int count, int total);
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Cine en casa'**
+  String get couplePlanMoviesTitle;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Elijan una peli y preparen algo rico para compartir. El mejor asiento es al lado del otro.'**
+  String get couplePlanMoviesBody;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'En casa · Unas 2 horas'**
+  String get couplePlanMoviesDetails;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Noche de pelis'**
+  String get couplePlanMoviesStamp;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Cocineros por un rato'**
+  String get couplePlanCookingTitle;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Prueben una receta entre los dos, con lo que haya en casa. No hace falta que salga perfecta.'**
+  String get couplePlanCookingBody;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'En casa · Unos 45 minutos'**
+  String get couplePlanCookingDetails;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Hecho de a dos'**
+  String get couplePlanCookingStamp;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Un picnic chiquito'**
+  String get couplePlanPicnicTitle;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Una manta y algo rico alcanzan. Puede ser en una plaza, en el balcón o en el living.'**
+  String get couplePlanPicnicBody;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Donde quieran · Una hora'**
+  String get couplePlanPicnicDetails;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Manta y compañía'**
+  String get couplePlanPicnicStamp;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Dos tazas y una pausa'**
+  String get couplePlanCoffeeTitle;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Mate, café o té: preparen lo que les guste y háganse un ratito para estar juntos, sin apuro.'**
+  String get couplePlanCoffeeBody;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'En casa · Unos 20 minutos'**
+  String get couplePlanCoffeeDetails;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuestra pausa'**
+  String get couplePlanCoffeeStamp;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Una vuelta distinta'**
+  String get couplePlanWalkTitle;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Salgan a recorrer un camino distinto y encuentren un rincón nuevo. Vayan hasta donde tengan ganas.'**
+  String get couplePlanWalkBody;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'Afuera · Unos 30 minutos'**
+  String get couplePlanWalkDetails;
+
+  /// Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas.
+  ///
+  /// In es, this message translates to:
+  /// **'A pasear'**
+  String get couplePlanWalkStamp;
 }
 
 class _AppLocalizationsDelegate

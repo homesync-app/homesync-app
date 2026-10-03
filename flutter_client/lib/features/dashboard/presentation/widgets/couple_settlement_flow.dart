@@ -11,12 +11,11 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:uuid/uuid.dart';
 
-/// Confirmación para dejar el balance entre los dos en cero.
+/// Confirmación para que quien debe registre que le pagó a su pareja.
 ///
-/// Sirve para las dos direcciones: [isOwedByMe] true registra que le pagué a
-/// mi pareja; false, que mi pareja me pagó a mí. Antes solo existía la primera,
-/// así que quien tenía la plata a favor no podía registrar que ya se la
-/// devolvieron.
+/// Solo la usa quien debe: en pareja no hace falta que el otro confirme, si
+/// le pagó le pagó, y el saldo queda en cero al instante. Quien tiene la plata
+/// a favor no registra nada (decisión de producto, 2026-09-28).
 ///
 /// Se genera una sola clave de idempotencia por diálogo: si se reintenta tras
 /// un error o un timeout, el servidor resuelve a la misma liquidación en vez
@@ -27,7 +26,6 @@ Future<void> showCoupleSettlementDialog({
   required String partnerId,
   required String partnerName,
   required double amount,
-  required bool isOwedByMe,
   VoidCallback? onSettled,
 }) async {
   final t = AppLocalizations.of(context);
@@ -41,8 +39,6 @@ Future<void> showCoupleSettlementDialog({
     return;
   }
 
-  final payerId = isOwedByMe ? currentUserId : partnerId;
-  final receiverId = isOwedByMe ? partnerId : currentUserId;
   final formattedAmount = ref.read(currencyProvider).format(amount);
   final requestId = const Uuid().v4();
 
@@ -51,17 +47,15 @@ Future<void> showCoupleSettlementDialog({
     builder: (dialogContext) => SettlementConfirmDialog(
       titleText: t.homeCoupleSettlementDialogTitle,
       amountText: formattedAmount,
-      directionText: isOwedByMe
-          ? t.homeCoupleSettlementDialogDirectionPay(partnerName)
-          : t.homeCoupleSettlementDialogDirectionReceive(partnerName),
+      directionText: t.homeCoupleSettlementDialogDirectionPay(partnerName),
       bodyText: t.homeCoupleSettlementDialogBalanceZero,
       confirmLabel: t.homeCoupleSettlementDialogConfirm,
       cancelLabel: t.homeCoupleSettlementDialogCancel,
       doneBadgeText: t.homeCoupleSettlementDoneBadge,
       errorTextBuilder: t.homeCoupleSettlementError,
       onConfirm: () => ref.read(expenseControllerProvider.notifier).settleDebt(
-            fromUserId: payerId,
-            toUserId: receiverId,
+            fromUserId: currentUserId,
+            toUserId: partnerId,
             amount: amount,
             requestId: requestId,
           ),
@@ -70,9 +64,7 @@ Future<void> showCoupleSettlementDialog({
         if (!context.mounted) return;
         AppSnackBar.show(
           context,
-          message: isOwedByMe
-              ? t.homeCoupleSettlementSuccessPay(partnerName)
-              : t.homeCoupleSettlementSuccessReceive(partnerName),
+          message: t.homeCoupleSettlementSuccessPay(partnerName),
           type: AppSnackBarType.success,
         );
         _askForReviewAfterSettle(ref);

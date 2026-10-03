@@ -640,7 +640,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get balanceCardInYourFavor => 'In your favor';
 
   @override
-  String get balanceCardSettleButton => 'Settle';
+  String get balanceCardSettleButton => 'I paid';
 
   @override
   String get balanceCardXpLabel => 'XP';
@@ -1197,14 +1197,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeCoupleTasksTitle => 'Today at home';
 
   @override
-  String get homeCoupleActivityTitle => 'Home activity';
+  String get homeCoupleActivityTitle => 'Today\'s activity';
 
   @override
-  String get homeCoupleActivityEmptyTitle => 'No activity yet';
+  String get homeCoupleActivityEmptyTitle => 'Nothing logged today yet';
 
   @override
   String get homeCoupleActivityEmptyBody =>
-      'When there\'s a new task or expense, it\'ll show up here.';
+      'Anything you log today shows up here. The full history is in Finance.';
 
   @override
   String get homeCoupleSettlementErrorNoUser =>
@@ -1216,11 +1216,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String homeCoupleSettlementDialogDirectionPay(String partnerName) {
     return 'You → $partnerName';
-  }
-
-  @override
-  String homeCoupleSettlementDialogDirectionReceive(String partnerName) {
-    return '$partnerName → you';
   }
 
   @override
@@ -1258,11 +1253,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String homeCoupleSettlementSuccessPay(String partnerName) {
     return 'Balance settled with $partnerName.';
-  }
-
-  @override
-  String homeCoupleSettlementSuccessReceive(String partnerName) {
-    return 'Settlement recorded with $partnerName.';
   }
 
   @override
@@ -4556,7 +4546,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faqWhatSpecialEventsAnswer =>
-      'It\'s your weekly check-in: how chores were split (no winners), where money stands between you, and pending suggestions. If something always lands on one side, it suggests taking turns. You can also send your partner a note.';
+      'Find ideas to enjoy together, save your favorites, and tap “We did it” to collect memories in your shared album. No partner approval needed. You can also leave a note and check your chores and finances.';
 
   @override
   String get faqContributionBalance => 'What is the contribution balance?';
@@ -7895,7 +7885,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get coupleWeekMoneyTitle => 'Money';
+  String get coupleWeekMoneyTitle => 'Our finances';
 
   @override
   String get coupleWeekMoneySeeAll => 'See activity';
@@ -7914,11 +7904,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String coupleWeekMoneyPaid(String mine, String name, String theirs) {
-    return 'This month you put in $mine and $name put in $theirs for shared expenses.';
-  }
-
-  @override
   String get coupleWeekMoneyNoExpenses =>
       'No shared expenses logged this month yet.';
 
@@ -7928,15 +7913,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String coupleWeekMoneySharedPaid(String mine, String name, String theirs) {
-    return 'You paid $mine · $name paid $theirs';
+  String coupleSettleCreditorHint(String name) {
+    return 'When $name pays you, they mark it and it settles on its own.';
   }
 
   @override
-  String get coupleWeekMoneySettle => 'Settle up';
-
-  @override
-  String get coupleWeekMoneyRecordPayment => 'Record payment';
+  String get coupleWeekMoneySettle => 'I paid';
 
   @override
   String get coupleWeekMoneyError => 'We couldn\'t load this month\'s money.';
@@ -7946,14 +7928,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coupleWeekAsksSubtitle =>
-      'Plans, asks and talks. “Not now” is always a fine answer.';
+      'Ideas, plans and conversations to share.';
 
   @override
   String get coupleWeekAsksEmpty => 'Nothing pending between you.';
 
   @override
   String coupleWeekAsksEmptyHint(String action) {
-    return 'To ask for a hand or suggest a plan, tap “$action”.';
+    return 'Start with one of these ideas or tap “$action”.';
   }
 
   @override
@@ -7976,12 +7958,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String coupleWeekNoteTitle(String name) {
-    return 'A note for $name';
+    return 'A little love for $name';
   }
 
   @override
-  String get coupleWeekNoteBody =>
-      'It shows up as an envelope on their home screen.';
+  String get coupleWeekNoteBody => 'Leave a note to brighten their day.';
+
+  @override
+  String get coupleWeekDuoTitle => 'At home, together';
+
+  @override
+  String get coupleWeekMoneySharedLabel => 'Spent together this month';
+
+  @override
+  String coupleWeekMoneyYouOweLabel(String name) {
+    return 'You owe $name';
+  }
+
+  @override
+  String coupleWeekMoneyTheyOweLabel(String name) {
+    return '$name owes you';
+  }
+
+  @override
+  String coupleWeekMoneyPaidCaption(String mode) {
+    String _temp0 = intl.Intl.selectLogic(
+      mode,
+      {
+        'shared': 'What each of you paid this month',
+        'other': 'What each of you put into shared expenses',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coupleWeekIdeaDinnerChip => 'Dinner out';
+
+  @override
+  String get coupleWeekIdeaDinnerTitle => 'Dinner out this weekend?';
+
+  @override
+  String get coupleWeekIdeaMoviesChip => 'Movie night';
+
+  @override
+  String get coupleWeekIdeaMoviesTitle => 'Movie night with phones away?';
+
+  @override
+  String get coupleWeekIdeaChoresChip => 'Split the cleaning';
+
+  @override
+  String get coupleWeekIdeaChoresTitle =>
+      'Shall we split this week\'s cleaning?';
 
   @override
   String coupleProposalPushTitle(String name) {
@@ -8213,9 +8241,6 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get balanceCardRecordPaymentButton => 'Record payment';
 
   @override
   String get homeActivityLoadError => 'We couldn\'t load the activity.';
@@ -8529,4 +8554,121 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homeFamilyActivityErrorBody =>
       'We couldn\'t load the household activity.';
+
+  @override
+  String get couplePlansTitle => 'A little time for two';
+
+  @override
+  String get couplePlansSubtitle => 'Little plans, lovely memories.';
+
+  @override
+  String get couplePlansComplete => 'We did it';
+
+  @override
+  String get couplePlansSave => 'Save';
+
+  @override
+  String get couplePlansSaved => 'Saved';
+
+  @override
+  String get couplePlansNext => 'Another idea';
+
+  @override
+  String get couplePlansAlbum => 'Our album';
+
+  @override
+  String get couplePlansAlbumHint =>
+      'A memory with every plan. At your own pace.';
+
+  @override
+  String get couplePlansSavedTitle => 'Saved plans';
+
+  @override
+  String get couplePlansSavedEmpty =>
+      'Save an idea you like and come back when you feel like it.';
+
+  @override
+  String get couplePlansUnlocked => 'One more memory!';
+
+  @override
+  String get couplePlansUndo => 'Undo';
+
+  @override
+  String get couplePlansCompletedLabel => 'Memory collected';
+
+  @override
+  String get couplePlansDiscoverLabel => 'Still to discover';
+
+  @override
+  String get couplePlansError => 'We couldn’t load your plans. Try again.';
+
+  @override
+  String couplePlansCount(int count, int total) {
+    return '$count of $total';
+  }
+
+  @override
+  String get couplePlanMoviesTitle => 'Movie night at home';
+
+  @override
+  String get couplePlanMoviesBody =>
+      'Pick a movie and make a snack to share. The best seat is next to each other.';
+
+  @override
+  String get couplePlanMoviesDetails => 'At home · About 2 hours';
+
+  @override
+  String get couplePlanMoviesStamp => 'Movie night';
+
+  @override
+  String get couplePlanCookingTitle => 'A little cooking duo';
+
+  @override
+  String get couplePlanCookingBody =>
+      'Try a recipe together with what you have at home. It doesn’t have to turn out perfect.';
+
+  @override
+  String get couplePlanCookingDetails => 'At home · About 45 minutes';
+
+  @override
+  String get couplePlanCookingStamp => 'Made together';
+
+  @override
+  String get couplePlanPicnicTitle => 'A little picnic';
+
+  @override
+  String get couplePlanPicnicBody =>
+      'A blanket and a snack are all you need. Try a park, your balcony, or the living room.';
+
+  @override
+  String get couplePlanPicnicDetails => 'Anywhere · About an hour';
+
+  @override
+  String get couplePlanPicnicStamp => 'A cozy picnic';
+
+  @override
+  String get couplePlanCoffeeTitle => 'Two cups and a pause';
+
+  @override
+  String get couplePlanCoffeeBody =>
+      'Coffee, tea, or your favorite drink: make a little time to be together, with no rush.';
+
+  @override
+  String get couplePlanCoffeeDetails => 'At home · About 20 minutes';
+
+  @override
+  String get couplePlanCoffeeStamp => 'Our little break';
+
+  @override
+  String get couplePlanWalkTitle => 'A different little route';
+
+  @override
+  String get couplePlanWalkBody =>
+      'Take a different route and find a new favorite spot. Go as far as you feel like going.';
+
+  @override
+  String get couplePlanWalkDetails => 'Outdoors · About 30 minutes';
+
+  @override
+  String get couplePlanWalkStamp => 'New paths';
 }

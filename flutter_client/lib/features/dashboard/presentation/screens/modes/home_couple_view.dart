@@ -399,12 +399,13 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       userBalance: displayedExpenseBalance,
       partnerName: partner?.displayName,
       settlementJustCompleted: _settlementJustCompleted,
-      onSettle: partner != null && displayedExpenseBalance.abs() > 10.0
+      // Solo quien debe registra el pago; a quien tiene plata a favor no le
+      // toca hacer nada (se salda cuando el otro paga).
+      onSettle: partner != null && displayedExpenseBalance < -10.0
           ? () => _showSettlementDialog(
                 partnerId: partner.userId,
                 partnerName: partner.displayName,
                 amount: displayedExpenseBalance.abs(),
-                isOwedByMe: displayedExpenseBalance < 0,
               )
           : null,
     ).animateEntrance(delay: 100);
@@ -794,7 +795,6 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     required String partnerId,
     required String partnerName,
     required double amount,
-    required bool isOwedByMe,
   }) {
     showCoupleSettlementDialog(
       context: context,
@@ -802,7 +802,6 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       partnerId: partnerId,
       partnerName: partnerName,
       amount: amount,
-      isOwedByMe: isOwedByMe,
       onSettled: () {
         if (mounted) {
           setState(() {

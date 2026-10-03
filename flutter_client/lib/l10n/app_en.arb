@@ -478,7 +478,7 @@
   "balanceCardBalanced": "Balance settled",
   "balanceCardNeedsSettlement": "Needs settling",
   "balanceCardInYourFavor": "In your favor",
-  "balanceCardSettleButton": "Settle",
+  "balanceCardSettleButton": "I paid",
   "balanceCardXpLabel": "XP",
   "balanceCardCoinsLabel": "coins",
   "balanceCardIntegratedTitle": "Integrated economy",
@@ -869,12 +869,12 @@
   "@homeCoupleTasksTitle": {
     "description": "Section title above the day-tasks list on the couple home."
   },
-  "homeCoupleActivityTitle": "Home activity",
+  "homeCoupleActivityTitle": "Today's activity",
   "@homeCoupleActivityTitle": {
     "description": "Section title above the recent-activity feed on the couple home."
   },
-  "homeCoupleActivityEmptyTitle": "No activity yet",
-  "homeCoupleActivityEmptyBody": "When there's a new task or expense, it'll show up here.",
+  "homeCoupleActivityEmptyTitle": "Nothing logged today yet",
+  "homeCoupleActivityEmptyBody": "Anything you log today shows up here. The full history is in Finance.",
   "@homeCoupleActivityEmptyBody": {
     "description": "Empty-state body for the activity feed. 'aca' = 'aquí' in Argentine voseo."
   },
@@ -889,15 +889,6 @@
   "homeCoupleSettlementDialogDirectionPay": "You → {partnerName}",
   "@homeCoupleSettlementDialogDirectionPay": {
     "description": "Compact payer-to-receiver label when the current user pays the partner.",
-    "placeholders": {
-      "partnerName": {
-        "type": "String"
-      }
-    }
-  },
-  "homeCoupleSettlementDialogDirectionReceive": "{partnerName} → you",
-  "@homeCoupleSettlementDialogDirectionReceive": {
-    "description": "Compact payer-to-receiver label when the partner pays the current user.",
     "placeholders": {
       "partnerName": {
         "type": "String"
@@ -960,15 +951,6 @@
   "homeCoupleSettlementSuccessPay": "Balance settled with {partnerName}.",
   "@homeCoupleSettlementSuccessPay": {
     "description": "Success snackbar shown after the user settles up by paying.",
-    "placeholders": {
-      "partnerName": {
-        "type": "String"
-      }
-    }
-  },
-  "homeCoupleSettlementSuccessReceive": "Settlement recorded with {partnerName}.",
-  "@homeCoupleSettlementSuccessReceive": {
-    "description": "Success snackbar after the user records that the partner paid them.",
     "placeholders": {
       "partnerName": {
         "type": "String"
@@ -3004,7 +2986,7 @@
   "faqFamilyRanking": "How does the family ranking work?",
   "faqFamilyRankingAnswer": "Every week the family competes in a healthy way: the ranking shows who earned the most XP completing tasks. At week's close there's a winner with a crown and bonus, and the weekly summary shows how everyone did.",
   "faqWhatSpecialEvents": "What's in the Couple tab?",
-  "faqWhatSpecialEventsAnswer": "It's your weekly check-in: how chores were split (no winners), where money stands between you, and pending suggestions. If something always lands on one side, it suggests taking turns. You can also send your partner a note.",
+  "faqWhatSpecialEventsAnswer": "Find ideas to enjoy together, save your favorites, and tap “We did it” to collect memories in your shared album. No partner approval needed. You can also leave a note and check your chores and finances.",
   "faqContributionBalance": "What is the contribution balance?",
   "faqContributionBalanceAnswer": "It's the month's neutral snapshot: it combines completed tasks and shared expenses to show how much each person is contributing to the household. No winners or losers — it's for talking with data, not competing.",
   "faqRewardsStore": "How does the rewards store work?",
@@ -4845,7 +4827,7 @@
       }
     }
   },
-  "coupleWeekMoneyTitle": "Money",
+  "coupleWeekMoneyTitle": "Our finances",
   "coupleWeekMoneySeeAll": "See activity",
   "coupleWeekMoneyEven": "You're all square.",
   "coupleWeekMoneyYouOwe": "You owe {name} {amount}.",
@@ -4870,20 +4852,6 @@
       }
     }
   },
-  "coupleWeekMoneyPaid": "This month you put in {mine} and {name} put in {theirs} for shared expenses.",
-  "@coupleWeekMoneyPaid": {
-    "placeholders": {
-      "mine": {
-        "type": "String"
-      },
-      "name": {
-        "type": "String"
-      },
-      "theirs": {
-        "type": "String"
-      }
-    }
-  },
   "coupleWeekMoneyNoExpenses": "No shared expenses logged this month yet.",
   "coupleWeekMoneySharedTotal": "You've spent {amount} together this month.",
   "@coupleWeekMoneySharedTotal": {
@@ -4893,27 +4861,13 @@
       }
     }
   },
-  "coupleWeekMoneySharedPaid": "You paid {mine} · {name} paid {theirs}",
-  "@coupleWeekMoneySharedPaid": {
-    "placeholders": {
-      "mine": {
-        "type": "String"
-      },
-      "name": {
-        "type": "String"
-      },
-      "theirs": {
-        "type": "String"
-      }
-    }
-  },
-  "coupleWeekMoneySettle": "Settle up",
-  "coupleWeekMoneyRecordPayment": "Record payment",
+  "coupleSettleCreditorHint": "When {name} pays you, they mark it and it settles on its own.",
+  "coupleWeekMoneySettle": "I paid",
   "coupleWeekMoneyError": "We couldn't load this month's money.",
   "coupleWeekAsksTitle": "Between you",
-  "coupleWeekAsksSubtitle": "Plans, asks and talks. “Not now” is always a fine answer.",
+  "coupleWeekAsksSubtitle": "Ideas, plans and conversations to share.",
   "coupleWeekAsksEmpty": "Nothing pending between you.",
-  "coupleWeekAsksEmptyHint": "To ask for a hand or suggest a plan, tap “{action}”.",
+  "coupleWeekAsksEmptyHint": "Start with one of these ideas or tap “{action}”.",
   "@coupleWeekAsksEmptyHint": {
     "placeholders": {
       "action": {
@@ -4949,7 +4903,7 @@
       }
     }
   },
-  "coupleWeekNoteTitle": "A note for {name}",
+  "coupleWeekNoteTitle": "A little love for {name}",
   "@coupleWeekNoteTitle": {
     "placeholders": {
       "name": {
@@ -4957,7 +4911,39 @@
       }
     }
   },
-  "coupleWeekNoteBody": "It shows up as an envelope on their home screen.",
+  "coupleWeekNoteBody": "Leave a note to brighten their day.",
+  "coupleWeekDuoTitle": "At home, together",
+  "coupleWeekMoneySharedLabel": "Spent together this month",
+  "coupleWeekMoneyYouOweLabel": "You owe {name}",
+  "@coupleWeekMoneyYouOweLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekMoneyTheyOweLabel": "{name} owes you",
+  "@coupleWeekMoneyTheyOweLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekMoneyPaidCaption": "{mode, select, shared{What each of you paid this month} other{What each of you put into shared expenses}}",
+  "@coupleWeekMoneyPaidCaption": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleWeekIdeaDinnerChip": "Dinner out",
+  "coupleWeekIdeaDinnerTitle": "Dinner out this weekend?",
+  "coupleWeekIdeaMoviesChip": "Movie night",
+  "coupleWeekIdeaMoviesTitle": "Movie night with phones away?",
+  "coupleWeekIdeaChoresChip": "Split the cleaning",
+  "coupleWeekIdeaChoresTitle": "Shall we split this week's cleaning?",
   "coupleProposalPushTitle": "{name} suggested something",
   "@coupleProposalPushTitle": {
     "placeholders": {
@@ -5105,10 +5091,6 @@
         "type": "int"
       }
     }
-  },
-  "balanceCardRecordPaymentButton": "Record payment",
-  "@balanceCardRecordPaymentButton": {
-    "description": "Action on the couple Home balance card when the partner owes the current user: records that the partner already paid them back."
   },
   "homeActivityLoadError": "We couldn't load the activity.",
   "@homeActivityLoadError": {
@@ -5278,5 +5260,51 @@
   "estimatedIncomeSheetPaydayEyebrow": "PAYDAY",
   "estimatedIncomeSheetRemove": "Remove estimated income",
   "estimatedIncomeSheetDayLabel": "Day {day}",
-  "homeFamilyActivityErrorBody": "We couldn't load the household activity."
+  "homeFamilyActivityErrorBody": "We couldn't load the household activity.",
+  "couplePlansTitle": "A little time for two",
+  "couplePlansSubtitle": "Little plans, lovely memories.",
+  "couplePlansComplete": "We did it",
+  "couplePlansSave": "Save",
+  "couplePlansSaved": "Saved",
+  "couplePlansNext": "Another idea",
+  "couplePlansAlbum": "Our album",
+  "couplePlansAlbumHint": "A memory with every plan. At your own pace.",
+  "couplePlansSavedTitle": "Saved plans",
+  "couplePlansSavedEmpty": "Save an idea you like and come back when you feel like it.",
+  "couplePlansUnlocked": "One more memory!",
+  "couplePlansUndo": "Undo",
+  "couplePlansCompletedLabel": "Memory collected",
+  "couplePlansDiscoverLabel": "Still to discover",
+  "couplePlansError": "We couldn’t load your plans. Try again.",
+  "couplePlansCount": "{count} of {total}",
+  "@couplePlansCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "couplePlanMoviesTitle": "Movie night at home",
+  "couplePlanMoviesBody": "Pick a movie and make a snack to share. The best seat is next to each other.",
+  "couplePlanMoviesDetails": "At home · About 2 hours",
+  "couplePlanMoviesStamp": "Movie night",
+  "couplePlanCookingTitle": "A little cooking duo",
+  "couplePlanCookingBody": "Try a recipe together with what you have at home. It doesn’t have to turn out perfect.",
+  "couplePlanCookingDetails": "At home · About 45 minutes",
+  "couplePlanCookingStamp": "Made together",
+  "couplePlanPicnicTitle": "A little picnic",
+  "couplePlanPicnicBody": "A blanket and a snack are all you need. Try a park, your balcony, or the living room.",
+  "couplePlanPicnicDetails": "Anywhere · About an hour",
+  "couplePlanPicnicStamp": "A cozy picnic",
+  "couplePlanCoffeeTitle": "Two cups and a pause",
+  "couplePlanCoffeeBody": "Coffee, tea, or your favorite drink: make a little time to be together, with no rush.",
+  "couplePlanCoffeeDetails": "At home · About 20 minutes",
+  "couplePlanCoffeeStamp": "Our little break",
+  "couplePlanWalkTitle": "A different little route",
+  "couplePlanWalkBody": "Take a different route and find a new favorite spot. Go as far as you feel like going.",
+  "couplePlanWalkDetails": "Outdoors · About 30 minutes",
+  "couplePlanWalkStamp": "New paths"
 }

@@ -294,13 +294,26 @@ Unique: (template_id, due_date)
 | completed_by | UUID | NOT NULL |
 | completed_at | TIMESTAMPTZ | default now() |
 
-Registro de desafíos semanales de pareja completados (uno por hogar por
-semana). `week_index` = floor(días desde creación del hogar / 7), SIN módulo
-— el mismo cálculo que rota el desafío en el cliente
-(`CoupleChallenge.currentWeekIndex`). RLS: gate restrictiva por JWT +
-SELECT/INSERT para miembros del hogar. El cliente inserta con upsert
-`ignoreDuplicates` (carrera entre los dos teléfonos) y la card del desafío
-lee este registro para mostrarse completada y bloquear re-completar.
+Historial del sistema anterior de desafíos semanales, preservado para
+compatibilidad. La nueva sección Pareja usa `couple_plan_progress`.
+
+#### `couple_plan_progress`
+| Columna | Tipo | Restricciones |
+|---------|------|---------------|
+| id | UUID | PK, default gen_random_uuid() |
+| household_id | UUID | FK → households(id) ON DELETE CASCADE |
+| plan_id | TEXT | movies / cooking / picnic / coffee / walk |
+| saved | BOOLEAN | NOT NULL, default false |
+| completed_at | TIMESTAMPTZ | Nullable; determina el sello obtenido |
+| completed_by | UUID | Nullable, FK → users(id) ON DELETE SET NULL |
+
+Único por `(household_id, plan_id)`. Guardado y completado son independientes.
+RLS permite lectura solamente a miembros del hogar con JWT válido; Realtime
+sincroniza ambos teléfonos. Las escrituras pasan por `couple_plan_action_v1`
+(save / unsave / complete / undo), con validación de pertenencia y modo pareja.
+El wrapper público es SECURITY INVOKER y delega en una función privada.
+Completar repetidamente conserva el primer sello y no acredita monedas ni XP.
+Migración: `20261003163324_couple_plan_album.sql`.
 
 ---
 

@@ -89,7 +89,13 @@ Documento de referencia con el grafo completo de dependencias entre providers de
 |---|---|---|---|
 | `rewardRepositoryProvider` | `@riverpod RewardRepository` | reads `supabaseClientProvider`, `rewardRpcServiceProvider` | Repositorio de recompensas |
 | `rewardsProvider` | `@riverpod Rewards` | watches `householdIdProvider`, `currentHouseholdProvider`; reads `householdMembersProvider` | Recompensas con suscripciones Realtime |
-| `coupleChallengeCompletedProvider` | `FutureProvider.autoDispose.family<bool, (householdId, weekIndex)>` | watches `supabaseClientProvider` | true si el hogar ya completó el desafío semanal de esa semana (`couple_challenge_completions`); se invalida tras registrar una completación |
+
+### Feature: Couple plans
+
+| Provider | Tipo | Dependencias | Descripción |
+|---|---|---|---|
+| `couplePlansRepositoryProvider` | `@riverpod CouplePlansRepository` | watches `supabaseClientProvider` | Lee el progreso compartido y ejecuta `couple_plan_action_v1` |
+| `couplePlanProgressProvider(householdId)` | `@riverpod Stream<List<CouplePlanProgress>>` | watches `couplePlansRepositoryProvider` | Guardados y sellos del hogar vía Realtime; se invalida tras acciones y al refrescar Pareja |
 
 ---
 

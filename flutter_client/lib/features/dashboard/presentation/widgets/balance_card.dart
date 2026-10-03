@@ -216,49 +216,69 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                             ),
                           )
                       else
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              isBalanced
-                                  ? currency.inputPrefix()
-                                  : (isNegative
-                                      ? '- ${currency.inputPrefix()}'
-                                      : '+ ${currency.inputPrefix()}'),
-                              style: TextStyle(
-                                color: isBalanced
-                                    ? theme.textPrimary
-                                    : statusColor,
-                                fontSize: isBalanced ? 16 : 18,
-                                fontWeight: FontWeight.w800,
+                        // scaleDown: un saldo largo ($ 130.607) se achica en
+                        // vez de pasar por debajo del botón de la derecha.
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                isBalanced
+                                    ? currency.inputPrefix()
+                                    : (isNegative
+                                        ? '- ${currency.inputPrefix()}'
+                                        : '+ ${currency.inputPrefix()}'),
+                                style: TextStyle(
+                                  color: isBalanced
+                                      ? theme.textPrimary
+                                      : statusColor,
+                                  fontSize: isBalanced ? 16 : 18,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
-                            ),
-                            AnimatedAmount(
-                              value: balance.abs(),
-                              locale: currency.locale,
-                              style: TextStyle(
-                                color: isBalanced
-                                    ? theme.textPrimary.withValues(alpha: 0.94)
-                                    : statusColor,
-                                fontSize: widget.compact
-                                    ? (isBalanced ? 29 : 32)
-                                    : (isBalanced ? 31 : 35),
-                                fontWeight: isBalanced
-                                    ? FontWeight.w800
-                                    : FontWeight.w900,
-                                letterSpacing: 0,
+                              AnimatedAmount(
+                                value: balance.abs(),
+                                locale: currency.locale,
+                                style: TextStyle(
+                                  color: isBalanced
+                                      ? theme.textPrimary
+                                          .withValues(alpha: 0.94)
+                                      : statusColor,
+                                  fontSize: widget.compact
+                                      ? (isBalanced ? 29 : 32)
+                                      : (isBalanced ? 31 : 35),
+                                  fontWeight: isBalanced
+                                      ? FontWeight.w800
+                                      : FontWeight.w900,
+                                  letterSpacing: 0,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                      // A quien le deben no le toca registrar nada: se salda
+                      // cuando el otro marca que pagó.
+                      if (isPositive &&
+                          !integrated &&
+                          !widget.settlementJustCompleted &&
+                          widget.partnerName != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          t.coupleSettleCreditorHint(widget.partnerName!),
+                          style: AppTypography.caption.copyWith(
+                            color: theme.textSecondary,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
                 if (integrated)
                   _IntegratedEconomyBadge(compact: widget.compact)
-                // Las dos direcciones: quien debe salda, y quien tiene plata a
-                // favor puede registrar que ya se la devolvieron.
-                else if (!isBalanced && widget.onSettle != null)
+                // Solo quien debe salda; en pareja el otro no confirma nada.
+                else if (isNegative && widget.onSettle != null)
                   AnimatedPress(
                     onTap: widget.onSettle!,
                     child: Container(
@@ -285,17 +305,13 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            isNegative
-                                ? Icons.payment_rounded
-                                : Icons.check_circle_outline_rounded,
+                            Icons.payment_rounded,
                             color: statusColor,
                             size: 15,
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           Text(
-                            isNegative
-                                ? t.balanceCardSettleButton
-                                : t.balanceCardRecordPaymentButton,
+                            t.balanceCardSettleButton,
                             style: AppTypography.caption.copyWith(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -305,9 +321,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                         ],
                       ),
                     ),
-                    // Solo late cuando me toca pagar a mí: a quien tiene plata
-                    // a favor no hay que apurarlo.
-                  ).animatePulse(active: isNegative)
+                  ).animatePulse()
                 else if (isBalanced)
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 320),
