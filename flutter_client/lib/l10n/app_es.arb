@@ -6483,5 +6483,26 @@
   "coupleTasksWeekError": "No pudimos cargar el resumen de esta semana.",
   "@coupleTasksWeekError": {
     "description": "Error al cargar el resumen semanal colaborativo de tareas."
+  },
+  "notifSettlementReminderTitle": "Cuentas por equilibrar",
+  "@notifSettlementReminderTitle": {
+    "description": "Título del recordatorio semanal de deuda pendiente."
+  },
+  "notifSettlementReminderBody": "Tenés {amount} por saldar en tu hogar. Equilibralo desde Inicio.",
+  "@notifSettlementReminderBody": {
+    "description": "Cuerpo del recordatorio semanal de deuda pendiente.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPartnerInviteReminderTitle": "Falta sumar a tu hogar",
+  "@notifPartnerInviteReminderTitle": {
+    "description": "Título del recordatorio cuando el hogar compartido sigue con un solo integrante."
+  },
+  "notifPartnerInviteReminderBody": "Compartí el código desde Inicio para empezar a repartir tareas y gastos.",
+  "@notifPartnerInviteReminderBody": {
+    "description": "Cuerpo del recordatorio cuando el hogar compartido sigue con un solo integrante."
   }
 }

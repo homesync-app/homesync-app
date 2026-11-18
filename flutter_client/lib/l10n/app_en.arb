@@ -5326,5 +5326,9 @@
   "coupleTasksWeekError": "We couldn’t load this week’s summary.",
   "@coupleTasksWeekError": {
     "description": "Error al cargar el resumen semanal colaborativo de tareas."
-  }
+  },
+  "notifSettlementReminderTitle": "Balance to settle",
+  "notifSettlementReminderBody": "You have {amount} to settle in your household. Settle up from Home.",
+  "notifPartnerInviteReminderTitle": "Your household is waiting",
+  "notifPartnerInviteReminderBody": "Share your code from Home to start splitting chores and expenses."
 }

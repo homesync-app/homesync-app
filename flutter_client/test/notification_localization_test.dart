@@ -125,4 +125,34 @@ void main() {
     );
     expect(content.title, 'Titulo server');
   });
+
+  test('settlement_reminder formatea el monto pendiente en ES y EN', () {
+    final esContent = localizedNotificationContent(
+      es,
+      _n('settlement_reminder', params: {'amount': 12500}),
+    );
+    expect(esContent.title, 'Cuentas por equilibrar');
+    expect(esContent.body, contains('12.500'));
+
+    final enContent = localizedNotificationContent(
+      en,
+      _n('settlement_reminder', params: {'amount': 12500}),
+    );
+    expect(enContent.title, 'Balance to settle');
+    expect(enContent.body, contains('12,500'));
+  });
+
+  test('partner_invite_reminder se localiza en ES y EN', () {
+    final esContent = localizedNotificationContent(
+      es,
+      _n('partner_invite_reminder', params: {'mode': 'couple'}),
+    );
+    expect(esContent.title, 'Falta sumar a tu hogar');
+
+    final enContent = localizedNotificationContent(
+      en,
+      _n('partner_invite_reminder', params: {'mode': 'couple'}),
+    );
+    expect(enContent.title, 'Your household is waiting');
+  });
 }

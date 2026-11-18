@@ -8763,4 +8763,19 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get coupleTasksWeekError =>
       'No pudimos cargar el resumen de esta semana.';
+
+  @override
+  String get notifSettlementReminderTitle => 'Cuentas por equilibrar';
+
+  @override
+  String notifSettlementReminderBody(String amount) {
+    return 'Tenés $amount por saldar en tu hogar. Equilibralo desde Inicio.';
+  }
+
+  @override
+  String get notifPartnerInviteReminderTitle => 'Falta sumar a tu hogar';
+
+  @override
+  String get notifPartnerInviteReminderBody =>
+      'Compartí el código desde Inicio para empezar a repartir tareas y gastos.';
 }

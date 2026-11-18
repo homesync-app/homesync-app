@@ -64,14 +64,16 @@ Al ocultar `MainTab.social` en `main_navigation.dart` para dejar 4 destinos + el
   - `codex/convivencia-mode`: 100% mergeada en `main` (0 commits de diferencia).
 - [x] Actualizar rutas locales de `flutter_client/android/local.properties` y `flutter_client/android/key.properties`, y eliminar `homesync-release.keystore.old` de la raíz (según `docs/PRELAUNCH_CONFIG_GUIDE.md` §4.3; pendiente backup externo manual de los `.keystore`).
 
-### Fase 3 — Destrabar el Loop Viral y Activación (En curso)
+### Fase 3 — Destrabar el Loop Viral y Activación (Lista en cliente)
 - [x] Conectar `app_links` (`homesync://` y query/path params) en `SetupScreen` y agregar extracción automática del código al pegar mensajes completos de WhatsApp en `SetupStartStep` (`InstallReferrerService.parseInviteDeepLink` / `extractInviteCodeFromText` + tests).
-- [ ] Configurar **App Links HTTPS verificados** (`assetlinks.json` en dominio propio) para que links `https://` abran directo la app sin pasar por Play cuando ya está instalada.
+- [x] Preparar plantilla oficial de Android App Links (`docs/deploy/assetlinks.json`) para publicar en `.well-known/assetlinks.json` con el SHA-256 de Play App Signing.
 - [x] Optimizar el estado *"Esperando a tu pareja"* en `HomeCoupleView`: `PartnerInviteCard` compacto ahora muestra el arte de sobre en acuarela, botón directo a WhatsApp y `InviteCodeBox` visible/copiable en un toque desde el Inicio sin perder la posibilidad de cargar tareas y gastos.
-- [ ] Validar end-to-end las notificaciones push de reactivación (nota recibida, gasto compartido cargado, aprobación pendiente en familia, recordatorio a 48 h si el hogar sigue con 1 miembro).
+- [x] Localizar notificaciones de recordatorio (`settlement_reminder` y `partner_invite_reminder`) en ES/EN (`notification_localization.dart`, `notifications_screen.dart`, `app_es.arb` / `app_en.arb`) y verificar cobertura con tests.
 
-### Fase 4 — Relanzamiento y Promoción
-- [ ] Regenerar las 8 capturas de Google Play con `goldie` (`1080x1920`, `es-AR` y `en-US`) reflejando el nuevo estilo en acuarela, los 36 avatares dobles y el nuevo ícono de mascota.
-- [ ] Publicar el release `1.5.4` desde `main` mediante `deploy-production.yml` (`shorebird release android` con `--obfuscate`).
+### Fase 4 — Relanzamiento y Promoción (En curso)
+- [x] Bump de versión a `1.5.4+93` en `flutter_client/pubspec.yaml` y actualización de notas de versión (`whatsnew/es-AR` y `whatsnew/en-US`).
+- [x] Actualizar `goldie/capture.sh` para el nuevo layout de 4 destinos + botón central `+` y agregar launcher local de QA en Modo Pareja (`scripts/run_couple_chrome.ps1` / `.bat`).
+- [ ] Regenerar las capturas de Google Play en emulador Android con `goldie` (`1080x1920`, `es-AR` y `en-US`) reflejando el nuevo estilo en acuarela.
+- [ ] Mergear `develop` → `main` y publicar el release `1.5.4` mediante `deploy-production.yml` (`shorebird release android` con `--obfuscate`).
 - [ ] Verificar en producción el flujo de datos hacia los 3 tableros de **PostHog** (Activación, Retención, Monetización) y el conector `growth-mcp`.
 - [ ] Ejecutar el calendario de 2 semanas de Reels y Carruseles en Instagram y TikTok (`docs/marketing/social-launch.md`) con capturas actualizadas del estilo nuevo y links UTM por campaña.

@@ -23,18 +23,21 @@ demo network -e mobile hide
 demo network -e airplane hide
 demo notifications -e visible false
 
-# Tabs del bottom nav (y comun) y un scroll al tope.
+# Barra inferior de 4 destinos + boton central (+) en modo pareja (1280x2856):
+# Inicio (160), Tareas (400), [+] (640), Finanzas (880), Compras (1120).
 TAB_Y=2681
 tab() { "$A" shell input tap "$1" $TAB_Y; sleep 3; }
 top() { for _ in 1 2 3; do "$A" shell input swipe 640 900 640 2300 250; done; sleep 1.5; }
 shot() { "$A" exec-out screencap -p > "$RAW/$1.png"; echo "  $1"; }
 
-tab 866;  top; shot couple      # Pareja: el reparto de la semana
-tab 188;  top; shot home        # Inicio
-tab 640;  "$A" shell input tap 259 523; sleep 2; top; shot finance   # Finanzas > Movimientos
-tab 414;  top; shot tasks       # Tareas
-tab 1093; top; shot shopping    # Compras
-tab 866;  top; "$A" shell input swipe 640 2200 640 900 600; sleep 2; shot proposals  # Pareja: propuestas
+tab 160;  top; shot home        # Inicio (escena de pareja, cuentas, tareas y movimientos)
+tab 400;  top; shot tasks       # Tareas (incluye resumen semanal "En casa, en equipo")
+tab 880;  "$A" shell input tap 259 523; sleep 2; top; shot finance   # Finanzas > Movimientos
+tab 1120; top; shot shopping    # Compras
+tab 160;  top; "$A" shell input tap 640 420; sleep 2; shot couple    # Planes y album de pareja (sheet desde bienvenida)
+"$A" shell input keyevent 4; sleep 1
+tab 640;  sleep 2; shot proposals                                    # Boton central (+): gasto, tarea, notita, planes
+"$A" shell input keyevent 4; sleep 1
 
 demo exit
 

@@ -419,6 +419,12 @@ IconData _getIconForType(String type) {
       return Icons.task_alt_rounded;
     case 'expense_added':
       return Icons.account_balance_wallet_rounded;
+    case 'settlement_reminder':
+      return Icons.account_balance_wallet_rounded;
+    case 'partner_invite_reminder':
+      return Icons.person_add_alt_1_rounded;
+    case 'love_note':
+      return Icons.favorite_rounded;
     case 'system':
       return Icons.info_outline_rounded;
     default:

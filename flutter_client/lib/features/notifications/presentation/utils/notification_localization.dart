@@ -139,6 +139,18 @@ import '../../domain/entities/app_notification.dart';
         title: t.notifPlannedDueTitle(title),
         body: t.notifPlannedDueBody(formattedAmount),
       );
+    case 'settlement_reminder':
+      final formattedAmount = amount('amount');
+      if (formattedAmount.isEmpty) return fallback;
+      return (
+        title: t.notifSettlementReminderTitle,
+        body: t.notifSettlementReminderBody(formattedAmount),
+      );
+    case 'partner_invite_reminder':
+      return (
+        title: t.notifPartnerInviteReminderTitle,
+        body: t.notifPartnerInviteReminderBody,
+      );
     default:
       return fallback;
   }

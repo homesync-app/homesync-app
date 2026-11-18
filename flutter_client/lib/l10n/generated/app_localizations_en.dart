@@ -8711,4 +8711,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coupleTasksWeekError => 'We couldn’t load this week’s summary.';
+
+  @override
+  String get notifSettlementReminderTitle => 'Balance to settle';
+
+  @override
+  String notifSettlementReminderBody(String amount) {
+    return 'You have $amount to settle in your household. Settle up from Home.';
+  }
+
+  @override
+  String get notifPartnerInviteReminderTitle => 'Your household is waiting';
+
+  @override
+  String get notifPartnerInviteReminderBody =>
+      'Share your code from Home to start splitting chores and expenses.';
 }

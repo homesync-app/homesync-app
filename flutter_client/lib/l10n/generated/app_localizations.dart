@@ -13803,6 +13803,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No pudimos cargar el resumen de esta semana.'**
   String get coupleTasksWeekError;
+
+  /// Título del recordatorio semanal de deuda pendiente.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuentas por equilibrar'**
+  String get notifSettlementReminderTitle;
+
+  /// Cuerpo del recordatorio semanal de deuda pendiente.
+  ///
+  /// In es, this message translates to:
+  /// **'Tenés {amount} por saldar en tu hogar. Equilibralo desde Inicio.'**
+  String notifSettlementReminderBody(String amount);
+
+  /// Título del recordatorio cuando el hogar compartido sigue con un solo integrante.
+  ///
+  /// In es, this message translates to:
+  /// **'Falta sumar a tu hogar'**
+  String get notifPartnerInviteReminderTitle;
+
+  /// Cuerpo del recordatorio cuando el hogar compartido sigue con un solo integrante.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartí el código desde Inicio para empezar a repartir tareas y gastos.'**
+  String get notifPartnerInviteReminderBody;
 }
 
 class _AppLocalizationsDelegate
