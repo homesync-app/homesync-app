@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
 import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -69,15 +71,27 @@ class ExpenseCsvExporter {
     }
 
     final monthTag = DateFormat('yyyy-MM').format(now);
-    final directory = await getTemporaryDirectory();
-    final file = File('${directory.path}/homesync_finanzas_$monthTag.csv');
+    final fileName = 'homesync_finanzas_$monthTag.csv';
     // BOM UTF-8: sin esto Excel (Windows) muestra las tildes rotas.
-    await file.writeAsString('\uFEFF$buffer');
+    final csvContent = '\uFEFF$buffer';
+    late final XFile shareFile;
+    if (kIsWeb) {
+      shareFile = XFile.fromData(
+        Uint8List.fromList(utf8.encode(csvContent)),
+        name: fileName,
+        mimeType: 'text/csv',
+      );
+    } else {
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/$fileName');
+      await file.writeAsString(csvContent);
+      shareFile = XFile(file.path, mimeType: 'text/csv');
+    }
 
     final rawMonth = DateFormat.yMMMM(localeTag).format(now);
     await SharePlus.instance.share(
       ShareParams(
-        files: [XFile(file.path, mimeType: 'text/csv')],
+        files: [shareFile],
         subject: t.exportCsvShareSubject(rawMonth),
       ),
     );

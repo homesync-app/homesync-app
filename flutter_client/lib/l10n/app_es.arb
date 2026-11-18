@@ -238,7 +238,7 @@
   "@settingsMinorPremiumSnack": {
     "description": "Snackbar shown to minors when they tap a premium-locked theme palette. Argentine voseo."
   },
-  "settingsReplayTourTitle": "Ver guia de nuevo",
+  "settingsReplayTourTitle": "Ver guía de nuevo",
   "settingsReplayTourSubtitle": "Repasá la introducción del hogar",
   "settingsFeedbackTitle": "Enviar feedback",
   "settingsFeedbackSubtitle": "Reporta un bug o sugiere una mejora",

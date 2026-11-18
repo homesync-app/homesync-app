@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -32,12 +31,7 @@ class _SplashVideoCache {
     // Deja pintar el primer frame antes del init pesado del decoder.
     await Future<void>.delayed(const Duration(milliseconds: 300));
 
-    var assetPath = _videoAsset;
-    if (kIsWeb && assetPath.startsWith('assets/')) {
-      assetPath = assetPath.replaceFirst('assets/', '');
-    }
-
-    final controller = VideoPlayerController.asset(assetPath);
+    final controller = VideoPlayerController.asset(_videoAsset);
     try {
       await controller.initialize();
       await controller.setLooping(true);
@@ -106,7 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
         _videoReady = true;
       });
     } catch (error, stackTrace) {
-      log.e(
+      log.w(
         'Error initializing splash video',
         error: error,
         stackTrace: stackTrace,

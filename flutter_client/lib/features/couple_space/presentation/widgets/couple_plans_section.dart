@@ -22,11 +22,13 @@ import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 class CouplePlansSection extends ConsumerStatefulWidget {
   final String householdId;
   final Widget note;
+  final bool showTitle;
 
   const CouplePlansSection({
     super.key,
     required this.householdId,
     required this.note,
+    this.showTitle = true,
   });
 
   @override
@@ -171,6 +173,7 @@ class _CouplePlansSectionState extends ConsumerState<CouplePlansSection> {
         selected: _selected,
         progress: rows,
         note: widget.note,
+        showTitle: widget.showTitle,
         busy: _busy,
         onAction: _act,
         onNext: () => setState(
@@ -189,6 +192,7 @@ class CouplePlansView extends StatelessWidget {
   final CouplePlan selected;
   final List<CouplePlanProgress> progress;
   final Widget note;
+  final bool showTitle;
   final bool busy;
   final ValueChanged<CouplePlanAction> onAction;
   final VoidCallback onNext;
@@ -200,6 +204,7 @@ class CouplePlansView extends StatelessWidget {
     required this.selected,
     required this.progress,
     required this.note,
+    this.showTitle = true,
     required this.busy,
     required this.onAction,
     required this.onNext,
@@ -221,10 +226,16 @@ class CouplePlansView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppSectionHeader(
-          title: t.couplePlansTitle,
-          subtitle: t.couplePlansSubtitle,
-        ),
+        if (showTitle)
+          AppSectionHeader(
+            title: t.couplePlansTitle,
+            subtitle: t.couplePlansSubtitle,
+          )
+        else
+          Text(
+            t.couplePlansSubtitle,
+            style: AppTypography.body.copyWith(color: theme.textSecondary),
+          ),
         const SizedBox(height: AppSpacing.md),
         CoupleSurface(
           radius: AppRadii.xxl,

@@ -355,7 +355,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esta función es premium 🌟 Pedile a un adulto del hogar que active el plan.';
 
   @override
-  String get settingsReplayTourTitle => 'Ver guia de nuevo';
+  String get settingsReplayTourTitle => 'Ver guía de nuevo';
 
   @override
   String get settingsReplayTourSubtitle => 'Repasá la introducción del hogar';

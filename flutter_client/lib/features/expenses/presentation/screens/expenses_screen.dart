@@ -13,6 +13,7 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/utils/app_scroll_physics.dart';
 import 'package:homesync_client/core/utils/date_extensions.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/couple_settlement_flow.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
@@ -31,6 +32,7 @@ import 'package:homesync_client/shared/widgets/app_swipe_to_delete.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
 import 'package:homesync_client/shared/widgets/expressive/expressive.dart';
 import 'package:homesync_client/shared/widgets/household_art.dart';
+import 'package:homesync_client/shared/widgets/premium_avatar_art.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:intl/intl.dart';
 
@@ -44,7 +46,6 @@ import '../widgets/month_recap_sheet.dart';
 import '../widgets/planned_expense_payment_sheet.dart';
 import '../widgets/pool_section.dart';
 import '../widgets/recurring_expense_form_sheet.dart';
-import '../widgets/subscription_suggestion_banner.dart';
 import 'recurrentes_tab.dart';
 import 'savings_tab.dart';
 
@@ -255,10 +256,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             // 2. FONDOS DE GASTO (solo convivencia)
             const SliverToBoxAdapter(child: PoolSection()),
 
-            // 3. SUGERENCIA DE SUSCRIPCIÓN (gasto que se repite sin plantilla)
-            const SliverToBoxAdapter(child: SubscriptionSuggestionBanner()),
-
-            // 4. FEED & FUTURE EXPENSES
+            // 3. FEED & FUTURE EXPENSES
             feedAsync.when(
               loading: () => _buildFeedLoadingSliver(),
               error: (_, __) => SliverToBoxAdapter(
@@ -790,15 +788,28 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     // Inicio). Sin esto, el balance neto parece no cerrar con la caja.
     final isSharedEconomy =
         ref.watch(currentHouseholdProvider).value?.financeMode == 'shared';
+    final isCouple =
+        ref.watch(householdCapabilitiesProvider).type == HouseholdType.couple;
     final currentUserId = ref.watch(currentUserIdProvider);
+    final partnerMember = ref
+        .watch(householdMembersProvider)
+        .value
+        ?.where((m) => m.userId != currentUserId)
+        .firstOrNull;
     final myDebtBalance = ref
         .watch(expenseBalancesProvider)
         .value
         ?.where((b) => b.userId == currentUserId)
         .firstOrNull
         ?.balance;
-    final showDebtChip =
-        !isSharedEconomy && myDebtBalance != null && myDebtBalance.abs() > 10;
+    final showCoupleDebtFooter = !isSharedEconomy &&
+        isCouple &&
+        partnerMember != null &&
+        myDebtBalance != null;
+    final showDebtChip = !showCoupleDebtFooter &&
+        !isSharedEconomy &&
+        myDebtBalance != null &&
+        myDebtBalance.abs() > 10;
 
     // Surface base instead of the hero gradient: at this size the full-bleed
     // cream gradient washed the whole screen into one tone. The white card
@@ -854,6 +865,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         Expanded(
                           child: Text(
                             mainLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: AppTypography.eyebrow.copyWith(
                               color: theme.textSecondary,
                             ),
@@ -862,23 +875,43 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         const SizedBox(width: 8),
                         // Análisis (tendencia + presupuestos): viven en un
                         // sheet para no cargar el scroll de Movimientos.
-                        IconButton(
-                          onPressed: () => FinanceInsightsSheet.show(context),
-                          tooltip: AppLocalizations.of(context)
-                              .financeInsightsTooltip,
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 34,
-                            minHeight: 30,
-                          ),
-                          icon: Icon(
-                            Icons.donut_small_rounded,
-                            size: 19,
-                            color: theme.primary.withValues(alpha: 0.85),
+                        AnimatedPress(
+                          onTap: () => FinanceInsightsSheet.show(context),
+                          scale: 0.96,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.surfaceVariant.withValues(alpha: 0.65),
+                              borderRadius: BorderRadius.circular(AppRadii.pill),
+                              border: Border.all(
+                                color: theme.border.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.donut_small_rounded,
+                                  size: 13,
+                                  color: theme.primary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  t.financeInsightsTitle,
+                                  style: AppTypography.caption.copyWith(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: theme.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 2),
+                        const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -1000,7 +1033,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   ],
                 ),
               ),
-              if (hasIncome || showDebtChip)
+              if (hasIncome || showDebtChip || showCoupleDebtFooter)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.lg,
@@ -1014,39 +1047,63 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       ),
                     ),
                   ),
-                  child: Row(
-                    children: _withFooterDividers(theme, [
-                      // Deuda viva entre miembros: dato del mes, no accion —
-                      // saldar solo lo inicia quien debe (flujo del Home).
-                      if (showDebtChip)
-                        _buildProjectionStat(
-                          myDebtBalance > 0
-                              ? t.expensesProjectionOwedToYou
-                              : t.expensesProjectionYouOwe,
-                          myDebtBalance.abs(),
-                          myDebtBalance > 0 ? AppColors.sage : theme.primary,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (showCoupleDebtFooter)
+                        _buildCoupleDebtFooterRow(
+                          partnerId: partnerMember.userId,
+                          partnerFullName: partnerMember.displayName,
+                          partnerAvatarUrl: partnerMember.avatarUrl,
+                          balance: myDebtBalance,
                         ),
-                      if (hasIncome)
-                        _buildProjectionStat(
-                          t.expensesProjectionPendingShare,
-                          projectedPending,
-                          theme.textSecondary,
-                          onTap: () =>
-                              _showPendingBreakdownSheet(projectedPending),
-                        ),
-                      if (hasIncome)
-                        _buildProjectionStat(
-                          t.expensesProjectionEstimated,
-                          projectedBalance,
-                          theme.textPrimary,
-                          isBold: true,
-                          onTap: () => _showProjectionBreakdownSheet(
-                            balance,
-                            projectedPending,
-                            projectedBalance,
+                      if (showCoupleDebtFooter && hasIncome)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.sm,
+                          ),
+                          child: Divider(
+                            height: 1,
+                            color: theme.border.withValues(alpha: 0.55),
                           ),
                         ),
-                    ]),
+                      if (hasIncome || showDebtChip)
+                        Row(
+                          children: _withFooterDividers(theme, [
+                            if (showDebtChip)
+                              _buildProjectionStat(
+                                myDebtBalance > 0
+                                    ? t.expensesProjectionOwedToYou
+                                    : t.expensesProjectionYouOwe,
+                                myDebtBalance.abs(),
+                                myDebtBalance > 0
+                                    ? AppColors.sage
+                                    : theme.primary,
+                              ),
+                            if (hasIncome)
+                              _buildProjectionStat(
+                                t.expensesProjectionPendingShare,
+                                projectedPending,
+                                theme.textSecondary,
+                                onTap: () =>
+                                    _showPendingBreakdownSheet(projectedPending),
+                              ),
+                            if (hasIncome)
+                              _buildProjectionStat(
+                                t.expensesProjectionEstimated,
+                                projectedBalance,
+                                theme.textPrimary,
+                                isBold: true,
+                                onTap: () => _showProjectionBreakdownSheet(
+                                  balance,
+                                  projectedPending,
+                                  projectedBalance,
+                                ),
+                              ),
+                          ]),
+                        ),
+                    ],
                   ),
                 ),
             ],
@@ -1054,6 +1111,84 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         ],
       ),
     ).animateEntrance(delay: 100);
+  }
+
+  Widget _buildCoupleDebtFooterRow({
+    required String partnerId,
+    required String partnerFullName,
+    required String? partnerAvatarUrl,
+    required double balance,
+  }) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    final currency = ref.watch(currencyProvider);
+    final firstName = partnerFullName.trim().split(RegExp(r'\s+')).first;
+    final partnerName =
+        firstName.isEmpty ? t.homeCouplePartnerFallback : firstName;
+    final even = balance.abs() <= 10;
+    final owesPartner = balance < -10;
+    final statusText = even
+        ? t.coupleWeekMoneyEven
+        : owesPartner
+            ? t.coupleWeekMoneyYouOwe(
+                currency.format(balance.abs()),
+                partnerName,
+              )
+            : t.coupleWeekMoneyTheyOwe(
+                currency.format(balance.abs()),
+                partnerName,
+              );
+
+    return Row(
+      children: [
+        MemberPortrait(
+          name: partnerFullName,
+          avatarUrl: partnerAvatarUrl,
+          size: 32,
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text(
+            statusText,
+            style: AppTypography.bodyStrong.copyWith(
+              fontSize: 13.5,
+              color: owesPartner
+                  ? theme.primary
+                  : (even ? theme.textSecondary : AppColors.sage),
+            ),
+          ),
+        ),
+        if (owesPartner) ...[
+          const SizedBox(width: AppSpacing.xs),
+          TextButton.icon(
+            onPressed: () => showCoupleSettlementDialog(
+              context: context,
+              ref: ref,
+              partnerId: partnerId,
+              partnerName: partnerName,
+              amount: balance.abs(),
+            ),
+            style: TextButton.styleFrom(
+              backgroundColor: theme.primary.withValues(alpha: 0.10),
+              minimumSize: const Size(48, 40),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: 6,
+              ),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            icon: const Icon(Icons.payments_rounded, size: 17),
+            label: Text(
+              t.coupleWeekMoneySettle,
+              style: AppTypography.caption.copyWith(
+                fontWeight: FontWeight.w800,
+                color: theme.primary,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
   }
 
   void _showProjectionBreakdownSheet(
@@ -1064,6 +1199,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final pendingFeed = _effectiveMonthlyPendingForBreakdowns();
     final userId = ref.read(currentUserIdProvider);
     final theme = context.theme;
+    final isCouple =
+        ref.read(householdCapabilitiesProvider).type == HouseholdType.couple;
     final isSharedEconomy =
         ref.read(currentHouseholdProvider).value?.financeMode == 'shared';
 
@@ -1175,21 +1312,31 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                         child: Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(AppSpacing.xs),
-                              decoration: BoxDecoration(
-                                color:
-                                    AppColors.primary.withValues(alpha: 0.05),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                item.categoryIcon,
-                                style: AppTypography.body.copyWith(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
+                            if (isCouple)
+                              HouseholdArt(
+                                kind: item.transactionType == 'income'
+                                    ? HouseholdArtKind.wallet
+                                    : HouseholdArt.forExpenseCategory(
+                                        item.category,
+                                      ),
+                                size: 38,
+                              )
+                            else
+                              Container(
+                                padding: const EdgeInsets.all(AppSpacing.xs),
+                                decoration: BoxDecoration(
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  item.categoryIcon,
+                                  style: AppTypography.body.copyWith(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
                               ),
-                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
@@ -1478,6 +1625,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     splitType: item.splitType,
                   ),
                   color: AppColors.primary,
+                  category: item.category,
+                  isIncome: item.transactionType == 'income',
                 ),
               )
               .toList(),
@@ -1536,6 +1685,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         splitType: e.splitType,
                       ),
                       color: accentColor,
+                      category: e.category,
+                      isIncome: e.isIncome,
                     ),
                   )
                   .toList(),
@@ -1679,20 +1830,32 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     required DateTime date,
     required IconData icon,
     required Color color,
+    String? category,
+    bool isIncome = false,
   }) {
     final theme = context.theme;
+    final isCouple =
+        ref.watch(householdCapabilitiesProvider).type == HouseholdType.couple;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(AppRadii.sm),
+          if (isCouple)
+            HouseholdArt(
+              kind: isIncome
+                  ? HouseholdArtKind.wallet
+                  : HouseholdArt.forExpenseCategory(category),
+              size: 38,
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
+              ),
+              child: Icon(icon, size: 18, color: color),
             ),
-            child: Icon(icon, size: 18, color: color),
-          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -1767,6 +1930,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   Widget _buildPlannedExpenseCard(FeedItemModel item) {
     final theme = context.theme;
+    final isCouple =
+        ref.watch(householdCapabilitiesProvider).type == HouseholdType.couple;
     final categoryColor = CategoryMapping.getSmartExpenseDisplayColor(
       item.category,
       title: item.title,
@@ -1792,19 +1957,25 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: categoryColor.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(AppRadii.md),
+          if (isCouple)
+            HouseholdArt(
+              kind: HouseholdArt.forExpenseCategory(item.category),
+              size: 44,
+            )
+          else
+            Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                color: categoryColor.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(AppRadii.md),
+              ),
+              child: Icon(
+                categoryIcon,
+                size: 23,
+                color: categoryColor,
+              ),
             ),
-            child: Icon(
-              categoryIcon,
-              size: 23,
-              color: categoryColor,
-            ),
-          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -2109,14 +2280,20 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Text(
-                          DateFormat(
-                            'd MMM',
-                            Localizations.localeOf(context).toString(),
-                          ).format(expense.paidAt),
-                          style: AppTypography.caption.copyWith(
-                            fontSize: 11,
-                            color: theme.textSecondary,
+                        Flexible(
+                          child: Text(
+                            isShared && expense.payerDisplayName.isNotEmpty
+                                ? '${DateFormat('d MMM', Localizations.localeOf(context).toString()).format(expense.paidAt)} · ${expense.payerDisplayName}'
+                                : DateFormat(
+                                    'd MMM',
+                                    Localizations.localeOf(context).toString(),
+                                  ).format(expense.paidAt),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.caption.copyWith(
+                              fontSize: 11,
+                              color: theme.textSecondary,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -2129,7 +2306,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           ),
                           if (expense.description!
                                   .toLowerCase()
-                                  .contains('art?culos') ||
+                                  .contains('art\u00edculos') ||
+                              expense.description!
+                                  .toLowerCase()
+                                  .contains('articulos') ||
                               expense.description!
                                   .toLowerCase()
                                   .contains('hogar'))

@@ -7,20 +7,22 @@ if (Test-Path "C:\Users\Blas\flutter\bin") {
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $flutterAppDir = Join-Path $repoRoot "flutter_client"
 $envFile = Join-Path $flutterAppDir ".env.local"
-$scenarioId = "couple"
-$viewerUserId = "22220000-0000-0000-0000-000000000001"
+$scenarioId = "demo"
+$viewerUserId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1"
 
 if (-not (Test-Path $envFile)) {
     throw "Missing env file: $envFile"
 }
 
-Write-Host "Starting HomeSync QA on Chrome (Modo Pareja)..." -ForegroundColor Green
+Write-Host "Starting HomeSync on Chrome (Modo Pareja - Sofi & Mati) on http://localhost:8080 ..." -ForegroundColor Green
 
 Push-Location $flutterAppDir
 try {
     flutter run `
         -d chrome `
         --no-pub `
+        --web-hostname=127.0.0.1 `
+        --web-port=8080 `
         --dart-define-from-file=.env.local `
         --dart-define=APP_ENV=staging `
         --dart-define=AUTH_MODE=supabase_native `

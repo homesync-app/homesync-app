@@ -462,11 +462,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   String? _languageLabel(Locale? locale) {
-    if (locale == null) return null; // sigue el sistema → sin valor en la fila
-    return switch (locale.languageCode) {
+    final code = (locale ?? Localizations.localeOf(context)).languageCode;
+    return switch (code) {
       'es' => 'Español',
       'en' => 'English',
-      _ => locale.languageCode.toUpperCase(),
+      _ => code.toUpperCase(),
     };
   }
 

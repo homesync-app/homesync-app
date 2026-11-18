@@ -11,11 +11,13 @@ import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/features/expenses/domain/models/category_budget_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/budget_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_data.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
+import 'package:homesync_client/shared/widgets/household_art.dart';
 
 /// Gestión de presupuestos: lista con topes actuales y alta de categorías
 /// nuevas. Editar/crear abre el sub-sheet [_BudgetEditSheet].
@@ -44,6 +46,8 @@ class BudgetManageSheet extends ConsumerWidget {
     final budgetsAsync = ref.watch(categoryBudgetsProvider);
     final isSharedEconomy =
         ref.watch(currentHouseholdProvider).value?.financeMode == 'shared';
+    final isCouple =
+        ref.watch(householdCapabilitiesProvider).type == HouseholdType.couple;
     final currency = ref.watch(currencyProvider);
 
     return Container(
@@ -130,6 +134,7 @@ class BudgetManageSheet extends ConsumerWidget {
                       budget: budget,
                       currencyLabel:
                           currency.format(budget.monthlyLimit.round()),
+                      isCouple: isCouple,
                       onTap: () =>
                           _BudgetEditSheet.show(context, budget: budget),
                     ),
@@ -169,11 +174,13 @@ class BudgetManageSheet extends ConsumerWidget {
 class _BudgetRow extends StatelessWidget {
   final CategoryBudgetModel budget;
   final String currencyLabel;
+  final bool isCouple;
   final VoidCallback onTap;
 
   const _BudgetRow({
     required this.budget,
     required this.currencyLabel,
+    required this.isCouple,
     required this.onTap,
   });
 
@@ -201,13 +208,19 @@ class _BudgetRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Text(
-                category['icon'] as String,
-                style: AppTypography.body.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w400,
+              if (isCouple)
+                HouseholdArt(
+                  kind: HouseholdArt.forExpenseCategory(budget.category),
+                  size: 28,
+                )
+              else
+                Text(
+                  category['icon'] as String,
+                  style: AppTypography.body.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
-              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(

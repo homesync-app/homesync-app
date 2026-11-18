@@ -556,8 +556,10 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
             if (visibleActivities.isEmpty) {
               return const SizedBox.shrink();
             }
+            final previewActivities =
+                visibleActivities.take(4).toList(growable: false);
             return Column(
-              children: visibleActivities.map(
+              children: previewActivities.map(
                 (activity) {
                   final creatorId = activity['creator_id'] as String?;
                   final isMe = creatorId == currentUserId;

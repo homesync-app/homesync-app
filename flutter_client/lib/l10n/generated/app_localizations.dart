@@ -551,7 +551,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsReplayTourTitle.
   ///
   /// In es, this message translates to:
-  /// **'Ver guia de nuevo'**
+  /// **'Ver guía de nuevo'**
   String get settingsReplayTourTitle;
 
   /// No description provided for @settingsReplayTourSubtitle.

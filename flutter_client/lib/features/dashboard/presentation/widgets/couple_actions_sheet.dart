@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -36,6 +35,7 @@ Future<void> showCouplePlansSheet(
         child: SingleChildScrollView(
           child: CouplePlansSection(
             householdId: householdId,
+            showTitle: false,
             note: CoupleNoteRow(
               partnerLabel: partnerFirst.isEmpty
                   ? t.homeCouplePartnerFallback
@@ -67,15 +67,6 @@ Future<void> showCoupleActionsSheet(BuildContext context) async {
       builder: (context, ref, _) {
         final t = AppLocalizations.of(context);
         final members = ref.watch(householdMembersProvider).value ?? [];
-        final currentUserId = ref.watch(currentUserIdProvider);
-        final householdId = ref.watch(householdIdProvider).value;
-        final me = members.where((m) => m.userId == currentUserId).firstOrNull;
-        final partner =
-            members.where((m) => m.userId != currentUserId).firstOrNull;
-        final senderFirst =
-            me?.displayName.trim().split(RegExp(r'\s+')).first ?? '';
-        final senderName =
-            senderFirst.isEmpty ? t.commonUserFallback : senderFirst;
         final actions = <(String, CoupleArtKind, VoidCallback)>[
           (
             t.coupleHomeAddExpense,
@@ -87,28 +78,6 @@ Future<void> showCoupleActionsSheet(BuildContext context) async {
             CoupleArtKind.home,
             () => AddTaskOptionsSheet.show(hostContext, members),
           ),
-          if (partner != null && householdId != null && householdId.isNotEmpty) ...[
-            (
-              t.coupleHomeLeaveNote,
-              CoupleArtKind.letter,
-              () => showLoveNoteSheet(
-                    hostContext,
-                    partner: partner,
-                    householdId: householdId,
-                    senderName: senderName,
-                  ),
-            ),
-            (
-              t.couplePlansTitle,
-              CoupleArtKind.movies,
-              () => showCouplePlansSheet(
-                    hostContext,
-                    householdId: householdId,
-                    partner: partner,
-                    senderName: senderName,
-                  ),
-            ),
-          ],
         ];
         return AppSheetShell(
           title: t.homeFabActions,

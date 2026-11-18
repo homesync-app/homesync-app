@@ -41,9 +41,27 @@ class QaSessionService {
   }) async {
     final adminNotifier = _ref.read(adminProvider.notifier);
 
-    await _auth.signOut();
-    await _auth.signInWithEmail(email: email, password: password);
-    await AppIdentityService.instance.refresh();
+    try {
+      await _auth.signOut();
+      await _auth.signInWithEmail(email: email, password: password);
+      await AppIdentityService.instance.refresh();
+
+      if (scenarioId == 'demo' || scenarioId == 'real') {
+        log.i(
+          'QA real demo session started email=$email scenario=$scenarioId',
+        );
+        return;
+      }
+    } catch (e, stack) {
+      log.w(
+        'QA base email sign-in failed email=$email scenario=$scenarioId',
+        error: e,
+        stackTrace: stack,
+      );
+      if (scenarioId == 'demo' || scenarioId == 'real') {
+        return;
+      }
+    }
 
     adminNotifier.activateAutoQaSession(
       scenarioId: scenarioId,

@@ -10,9 +10,12 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
+import 'package:homesync_client/shared/widgets/household_art.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 class RecurrentesTab extends ConsumerWidget {
@@ -34,6 +37,8 @@ class RecurrentesTab extends ConsumerWidget {
     final isPremium = ref.watch(premiumProvider).value ?? false;
     if (!isPremium) return _buildPremiumLockedRecurrentes(context);
 
+    final isCouple =
+        ref.watch(householdCapabilitiesProvider).type == HouseholdType.couple;
     final t = AppLocalizations.of(context);
     final templatesAsync = ref.watch(expenseTemplateControllerProvider);
 
@@ -122,6 +127,7 @@ class RecurrentesTab extends ConsumerWidget {
                             incomes[index],
                             index,
                             AppColors.success,
+                            isCouple: isCouple,
                           ),
                           childCount: incomes.length,
                         ),
@@ -143,6 +149,7 @@ class RecurrentesTab extends ConsumerWidget {
                             expenses[index],
                             index,
                             null,
+                            isCouple: isCouple,
                           ),
                           childCount: expenses.length,
                         ),
@@ -211,8 +218,9 @@ class RecurrentesTab extends ConsumerWidget {
     BuildContext context,
     ExpenseTemplateModel template,
     int index,
-    Color? overrideColor,
-  ) {
+    Color? overrideColor, {
+    required bool isCouple,
+  }) {
     final color = overrideColor ??
         CategoryMapping.getSmartExpenseDisplayColor(
           template.category,
@@ -255,14 +263,22 @@ class RecurrentesTab extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(AppRadii.md),
+              if (isCouple)
+                HouseholdArt(
+                  kind: template.isIncome
+                      ? HouseholdArtKind.wallet
+                      : HouseholdArt.forExpenseCategory(template.category),
+                  size: 44,
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
+                  ),
+                  child: Icon(icon, size: 24, color: color),
                 ),
-                child: Icon(icon, size: 24, color: color),
-              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(

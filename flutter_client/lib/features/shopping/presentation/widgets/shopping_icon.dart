@@ -2,8 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:homesync_client/shared/widgets/household_art.dart';
-
 import '../../data/shopping_icons_remote.dart';
 import '../../domain/models/shopping_visuals.dart';
 
@@ -19,6 +17,17 @@ class ShoppingIcon extends ConsumerWidget {
     this.opacity = 1,
     this.color,
   });
+
+  // Claves del catálogo sin PNG propio en Storage que comparten ícono visual
+  // equivalente dentro del mismo set ilustrado en manifest.json.
+  static const Map<String, String> _productKeyFallbacks = {
+    'cheese': 'freshCheese',
+    'roastBeef': 'flankSteak',
+    'cornFlakes': 'oats',
+    'bakingMix': 'flour',
+    'cinnamon': 'seasonings',
+    'plunger': 'sponge',
+  };
 
   final String? productKey;
   final String? categoryId;
@@ -36,7 +45,14 @@ class ShoppingIcon extends ConsumerWidget {
 
     Widget child;
     final key = productKey;
-    if (key != null && key.isNotEmpty && manifest.containsKey(key)) {
+    final fallbackKey = key == null ? null : _productKeyFallbacks[key];
+    final resolvedKey =
+        (key != null && key.isNotEmpty && manifest.containsKey(key))
+            ? key
+            : (fallbackKey != null && manifest.containsKey(fallbackKey)
+                ? fallbackKey
+                : null);
+    if (resolvedKey != null) {
       // Usamos `Image` (no `CachedNetworkImage`) con `CachedNetworkImageProvider`
       // a propósito: si el ícono ya está en el ImageCache (memoria) — porque lo
       // precargamos en el arranque/onboarding — se dibuja SINCRÓNICAMENTE en el
@@ -44,7 +60,9 @@ class ShoppingIcon extends ConsumerWidget {
       // alguna razón aún no está, el frameBuilder muestra el emoji (la base) sólo
       // mientras carga, en vez del flash de un ícono viejo.
       child = Image(
-        image: CachedNetworkImageProvider(shoppingIconUrl(key, manifest[key]!)),
+        image: CachedNetworkImageProvider(
+          shoppingIconUrl(resolvedKey, manifest[resolvedKey]!),
+        ),
         width: size,
         height: size,
         fit: BoxFit.contain,
@@ -64,7 +82,7 @@ class ShoppingIcon extends ConsumerWidget {
   }
 
   /// Fallback cuando no hay ícono remoto (o falla / offline en 1ª carga):
-  /// asset bundled (si está permitido) -> ícono de categoría -> emoji.
+  /// ícono de categoría -> emoji.
   Widget _buildFallback(BuildContext context) {
     // The bundled per-product PNGs (ShoppingVisuals.product) were the OLD
     // flat-plate style, since replaced by the emoji-look remote icons in
@@ -73,15 +91,6 @@ class ShoppingIcon extends ConsumerWidget {
     // placeholder caused the visible "old icon -> new icon" swap. The emoji is
     // the base (and the remote icons imitate it), so the transient/offline
     // visual is the emoji and the swap to the real icon is barely noticeable.
-    if (allowCategoryFallback &&
-        const {'general', 'cleaning', 'pets'}.contains(categoryId)) {
-      return HouseholdArt(
-        kind: categoryId == 'general'
-            ? HouseholdArtKind.shopping
-            : HouseholdArt.forCategory(categoryId),
-        size: size,
-      );
-    }
     final categoryIcon =
         allowCategoryFallback ? _categoryIcon(categoryId) : null;
     final visual = (categoryIcon == null && allowCategoryFallback)

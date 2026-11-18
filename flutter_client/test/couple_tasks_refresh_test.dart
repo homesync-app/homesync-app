@@ -394,8 +394,8 @@ void main() {
     expect(destination, 1);
     expect(find.text(t.coupleHomeAddExpense), findsOneWidget);
     expect(find.text(t.tasksFabNew), findsOneWidget);
-    expect(find.text(t.coupleHomeLeaveNote), findsOneWidget);
-    expect(find.text(t.couplePlansTitle), findsOneWidget);
+    expect(find.text(t.coupleHomeLeaveNote), findsNothing);
+    expect(find.text(t.couplePlansTitle), findsNothing);
     expect(find.text(t.coupleHomeAddShopping), findsNothing);
     Navigator.of(host).pop();
     await tester.pump(const Duration(seconds: 1));

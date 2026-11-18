@@ -45,6 +45,29 @@ class CoupleHomeWelcome extends StatelessWidget {
               : t.coupleHomeWelcomeWith(partner!.displayName.split(' ').first),
           style: AppTypography.body.copyWith(color: theme.textSecondary),
         ),
+        if (partner != null && onTap != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  t.couplePlansTitle,
+                  style: AppTypography.caption.copyWith(
+                    color: theme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.arrow_forward_rounded,
+                size: 14,
+                color: theme.primary,
+              ),
+            ],
+          ),
+        ],
       ],
     );
     final duo = PremiumAvatarArt.duoFor(me?.avatarUrl, partner?.avatarUrl);

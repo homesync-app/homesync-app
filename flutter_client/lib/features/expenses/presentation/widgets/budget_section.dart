@@ -10,9 +10,12 @@ import 'package:homesync_client/features/expenses/domain/models/category_budget_
 import 'package:homesync_client/features/expenses/presentation/providers/budget_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/budget_manage_sheet.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_data.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/expressive/expressive.dart';
+import 'package:homesync_client/shared/widgets/household_art.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 
@@ -159,6 +162,8 @@ class _BudgetCard extends ConsumerWidget {
     final t = AppLocalizations.of(context);
     final theme = context.theme;
     final currency = ref.watch(currencyProvider);
+    final isCouple =
+        ref.watch(householdCapabilitiesProvider).type == HouseholdType.couple;
 
     final categories = buildExpenseCategories();
     final category = categories.firstWhere(
@@ -200,13 +205,21 @@ class _BudgetCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Text(
-                  category['icon'] as String,
-                  style: AppTypography.body.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
+                if (isCouple)
+                  HouseholdArt(
+                    kind: HouseholdArt.forExpenseCategory(
+                      status.budget.category,
+                    ),
+                    size: 22,
+                  )
+                else
+                  Text(
+                    category['icon'] as String,
+                    style: AppTypography.body.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
-                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
