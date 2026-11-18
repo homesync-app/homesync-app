@@ -245,6 +245,78 @@ void main() {
       expect(calls, 0);
     });
   });
+
+  group('InstallReferrerService.parseInviteDeepLink', () {
+    test('lee el codigo desde homesync:// y https', () {
+      expect(
+        InstallReferrerService.parseInviteDeepLink(
+          Uri.parse('homesync://join?code=ab12cd'),
+        ),
+        'AB12CD',
+      );
+      expect(
+        InstallReferrerService.parseInviteDeepLink(
+          Uri.parse('homesync://invite/ab12cd'),
+        ),
+        'AB12CD',
+      );
+      expect(
+        InstallReferrerService.parseInviteDeepLink(
+          Uri.parse('https://homesync.app/join/XY98ZT'),
+        ),
+        'XY98ZT',
+      );
+      expect(
+        InstallReferrerService.parseInviteDeepLink(
+          Uri.parse(
+            'https://play.google.com/store/apps/details?id=com.blas.homesync'
+            '&referrer=utm_source%3Dinvite%26utm_medium%3Dshare%26utm_content%3DQW12ER',
+          ),
+        ),
+        'QW12ER',
+      );
+    });
+
+    test('devuelve null para URIs sin codigo valido', () {
+      expect(InstallReferrerService.parseInviteDeepLink(null), isNull);
+      expect(
+        InstallReferrerService.parseInviteDeepLink(
+          Uri.parse('https://homesync.app/home/other'),
+        ),
+        isNull,
+      );
+    });
+  });
+
+  group('InstallReferrerService.extractInviteCodeFromText', () {
+    test('extrae el codigo al pegar el mensaje completo de WhatsApp', () {
+      const whatsappMsg =
+          'Sumate a nuestro hogar en HomeSync para organizar tareas y gastos.\n'
+          'https://play.google.com/store/apps/details?id=com.blas.homesync'
+          '&referrer=utm_source%3Dinvite%26utm_medium%3Dshare%26utm_content%3DAB12CD\n'
+          'Código: AB12CD';
+      expect(
+        InstallReferrerService.extractInviteCodeFromText(whatsappMsg),
+        'AB12CD',
+      );
+      expect(
+        InstallReferrerService.extractInviteCodeFromText('  ab 12 cd  '),
+        'AB12CD',
+      );
+      expect(
+        InstallReferrerService.extractInviteCodeFromText('Código: ZX90CV'),
+        'ZX90CV',
+      );
+    });
+
+    test('ignora texto libre sin codigo valido', () {
+      expect(
+        InstallReferrerService.extractInviteCodeFromText('Hola como estas'),
+        isNull,
+      );
+      expect(InstallReferrerService.extractInviteCodeFromText('  '), isNull);
+    });
+  });
 }
 
 class _FakeAnalytics extends AnalyticsService {

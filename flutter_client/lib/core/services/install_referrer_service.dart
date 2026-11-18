@@ -170,6 +170,82 @@ class InstallReferrerService {
     return code;
   }
 
+  /// Extrae un codigo de invitacion de 6 caracteres desde un deep link
+  /// (`homesync://join?code=AB12CD`, `homesync://invite/AB12CD` o HTTPS).
+  static String? parseInviteDeepLink(Uri? uri) {
+    if (uri == null) return null;
+    for (final key in const ['code', 'invite', 'invite_code', 'utm_content']) {
+      final candidate = uri.queryParameters[key]?.trim().toUpperCase();
+      if (candidate != null && _inviteCodePattern.hasMatch(candidate)) {
+        return candidate;
+      }
+    }
+    final referrer = uri.queryParameters['referrer'];
+    final fromReferrer = parseInviteCode(referrer);
+    if (fromReferrer != null) return fromReferrer;
+
+    final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+    if (segments.isNotEmpty) {
+      final last = segments.last.trim().toUpperCase();
+      final isInvitePath = uri.scheme == 'homesync' ||
+          segments.first.toLowerCase() == 'join' ||
+          segments.first.toLowerCase() == 'invite';
+      if (isInvitePath && _inviteCodePattern.hasMatch(last)) {
+        return last;
+      }
+    }
+    return null;
+  }
+
+  /// Extrae el codigo si la persona pega el mensaje entero de WhatsApp, un
+  /// link de Play Store o el codigo con espacios.
+  static String? extractInviteCodeFromText(String? raw) {
+    final trimmed = raw?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+
+    final cleanAlnum =
+        trimmed.replaceAll(RegExp('[^A-Za-z0-9]'), '').toUpperCase();
+    if (_inviteCodePattern.hasMatch(cleanAlnum)) return cleanAlnum;
+
+    final fromReferrer = parseInviteCode(trimmed);
+    if (fromReferrer != null) return fromReferrer;
+
+    final uriMatch = RegExp(r'(?:https?|homesync)://[^\s]+', caseSensitive: false)
+        .firstMatch(trimmed);
+    if (uriMatch != null) {
+      final parsedUri = Uri.tryParse(uriMatch.group(0)!);
+      final fromUri = parseInviteDeepLink(parsedUri);
+      if (fromUri != null) return fromUri;
+    }
+
+    final decoded = trimmed.contains('%')
+        ? (() {
+            try {
+              return Uri.decodeComponent(trimmed);
+            } catch (_) {
+              return trimmed;
+            }
+          })()
+        : trimmed;
+    final paramMatch = RegExp(
+      r'(?:utm_content|code|invite)=([A-Za-z0-9]{6})\b',
+      caseSensitive: false,
+    ).firstMatch(decoded);
+    if (paramMatch != null) {
+      return paramMatch.group(1)!.toUpperCase();
+    }
+
+    final labelMatch = RegExp(
+      r'(?:c.digo|code)\s*[:=-]?\s*([A-Za-z0-9]{6})\b',
+      caseSensitive: false,
+    ).firstMatch(trimmed);
+    if (labelMatch != null) {
+      return labelMatch.group(1)!.toUpperCase();
+    }
+
+    return null;
+  }
+
   static Map<String, String>? _splitReferrer(String raw) {
     try {
       // Play suele entregarlo ya decodificado, pero hay tiendas y versiones

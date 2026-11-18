@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/couple_space/presentation/widgets/couple_art.dart';
 import 'package:homesync_client/features/household/presentation/providers/setup_wizard_controller.dart';
 import 'package:homesync_client/features/household/presentation/widgets/partner_invite_card.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -63,19 +64,7 @@ class SetupInviteStep extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: wizard.modeDesign.accent.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.person_add_alt_1_rounded,
-                    color: wizard.modeDesign.accent,
-                    size: 26,
-                  ),
-                ),
+                const CoupleArt(kind: CoupleArtKind.letter, size: 64),
                 const SizedBox(height: AppSpacing.md),
                 Semantics(
                   header: true,

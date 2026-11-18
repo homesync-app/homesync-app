@@ -48,13 +48,13 @@ Al ocultar `MainTab.social` en `main_navigation.dart` para dejar 4 destinos + el
 
 ## 4. Hoja de Ruta en 4 Fases (Checklist Ejecutable)
 
-### Fase 1 — Cierre y Unificación Visual (En curso)
+### Fase 1 — Cierre y Unificación Visual (Completada)
 - [x] Documentar el Plan Fénix (`docs/PHOENIX_REVIVAL_PLAN.md`) y actualizar la spec de navegación (`docs/design/couple-home-navigation.md`).
 - [x] Agregar acceso a **Notitas** y **Planes y Álbum** en `showCoupleActionsSheet` y al tocar `CoupleHomeWelcome`.
 - [x] Extender ilustraciones `HouseholdArt` a las filas de gastos y liquidaciones de `ExpensesScreen` en modo pareja.
 - [x] Actualizar los tests de navegación/acciones (`couple_tasks_refresh_test.dart`, `tasks_flow_test.dart`, `couple_home_design_test.dart`).
 - [x] Ejecutar suite completa de tests en entorno con Flutter SDK (`flutter test --no-pub --exclude-tags=golden` + `dart analyze` con 0 errores).
-- [ ] Revisar capturas visuales actualizadas de `couple_home_design_test.dart` y `couple_tasks_refresh_test.dart` (`CAPTURE_HOME=true`) y alinear los primeros pasos del onboarding (`setup_screen.dart`) para usar retratos circulares `MemberPortrait` e ilustraciones acuarela desde el paso 1.
+- [x] Revisar capturas visuales actualizadas de `couple_home_design_test.dart` y `couple_tasks_refresh_test.dart` (`CAPTURE_HOME=true`) y alinear onboarding (`SetupTaskSelectionStep`, `SetupInviteStep`, `PartnerInviteCard`) con ilustraciones en acuarela (`HouseholdArt` / `CoupleArt`).
 
 ### Fase 2 — Consolidación de Ramas y Estabilidad Técnica (Completada)
 - [x] Commitear y mergear `codex/couple-home-refresh` hacia `develop` y pushear a `origin/develop` (reinicia el reloj de actividad de GitHub Actions / keep-alive).
@@ -64,9 +64,10 @@ Al ocultar `MainTab.social` en `main_navigation.dart` para dejar 4 destinos + el
   - `codex/convivencia-mode`: 100% mergeada en `main` (0 commits de diferencia).
 - [x] Actualizar rutas locales de `flutter_client/android/local.properties` y `flutter_client/android/key.properties`, y eliminar `homesync-release.keystore.old` de la raíz (según `docs/PRELAUNCH_CONFIG_GUIDE.md` §4.3; pendiente backup externo manual de los `.keystore`).
 
-### Fase 3 — Destrabar el Loop Viral y Activación
-- [ ] Configurar **App Links verificados** (`assetlinks.json` en dominio propio) para que el link de invitación por WhatsApp abra directo el hogar sin tipear códigos (complementando `play_install_referrer`).
-- [ ] Optimizar el estado *"Esperando a tu pareja"* en `HomeCoupleView`: invitación por WhatsApp en 1 toque como protagonista, permitiendo cargar la primera tarea o gasto para que el segundo miembro encuentre el hogar vivo.
+### Fase 3 — Destrabar el Loop Viral y Activación (En curso)
+- [x] Conectar `app_links` (`homesync://` y query/path params) en `SetupScreen` y agregar extracción automática del código al pegar mensajes completos de WhatsApp en `SetupStartStep` (`InstallReferrerService.parseInviteDeepLink` / `extractInviteCodeFromText` + tests).
+- [ ] Configurar **App Links HTTPS verificados** (`assetlinks.json` en dominio propio) para que links `https://` abran directo la app sin pasar por Play cuando ya está instalada.
+- [x] Optimizar el estado *"Esperando a tu pareja"* en `HomeCoupleView`: `PartnerInviteCard` compacto ahora muestra el arte de sobre en acuarela, botón directo a WhatsApp y `InviteCodeBox` visible/copiable en un toque desde el Inicio sin perder la posibilidad de cargar tareas y gastos.
 - [ ] Validar end-to-end las notificaciones push de reactivación (nota recibida, gasto compartido cargado, aprobación pendiente en familia, recordatorio a 48 h si el hogar sigue con 1 miembro).
 
 ### Fase 4 — Relanzamiento y Promoción

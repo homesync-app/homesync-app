@@ -8,6 +8,7 @@ import 'package:homesync_client/features/household/presentation/providers/setup_
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
+import 'package:homesync_client/shared/widgets/household_art.dart';
 import 'package:homesync_client/shared/widgets/semantic_tap.dart';
 
 import '../setup_widgets.dart';
@@ -108,13 +109,23 @@ class SetupTaskSelectionStep extends ConsumerWidget {
                 children: [
                   Padding(
                     padding:
-                        const EdgeInsets.only(top: 24, bottom: 16, left: 4),
-                    child: Text(
-                      '${category.icon}  ${categoryName.toUpperCase()}',
-                      style: AppTypography.eyebrow.copyWith(
-                        fontSize: 12,
-                        color: theme.textSecondary.withValues(alpha: 0.82),
-                      ),
+                        const EdgeInsets.only(top: 24, bottom: 14, left: 4),
+                    child: Row(
+                      children: [
+                        HouseholdArt(
+                          kind: HouseholdArt.forCategory(category.id),
+                          size: 30,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            categoryName,
+                            style: AppTypography.cardTitle.copyWith(
+                              color: theme.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   Wrap(

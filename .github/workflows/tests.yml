@@ -28,6 +28,12 @@ jobs:
       # Fijado: tiene que coincidir con la versión local y con la que usa
       # `shorebird release` en deploy-production.yml (los patches OTA se
       # compilan con la misma versión que la release).
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:

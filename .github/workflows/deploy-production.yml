@@ -87,6 +87,12 @@ jobs:
 
       # Fijado: misma versión que tests.yml, que el entorno local y que el
       # `--flutter-version` de shorebird release de abajo.
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:

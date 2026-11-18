@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/services/install_referrer_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -296,7 +297,6 @@ class _JoinPanel extends StatelessWidget {
                 textCapitalization: TextCapitalization.characters,
                 textInputAction: TextInputAction.done,
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp('[A-Za-z0-9]')),
                   _UpperCaseFormatter(),
                 ],
                 style: AppTypography.sectionTitle.copyWith(
@@ -354,6 +354,23 @@ class _UpperCaseFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    return newValue.copyWith(text: newValue.text.toUpperCase());
+    if (newValue.text.length > 6) {
+      final extracted =
+          InstallReferrerService.extractInviteCodeFromText(newValue.text);
+      if (extracted != null) {
+        return TextEditingValue(
+          text: extracted,
+          selection: TextSelection.collapsed(offset: extracted.length),
+        );
+      }
+    }
+    final filtered =
+        newValue.text.replaceAll(RegExp('[^A-Za-z0-9]'), '').toUpperCase();
+    final truncated =
+        filtered.length <= 6 ? filtered : filtered.substring(0, 6);
+    return TextEditingValue(
+      text: truncated,
+      selection: TextSelection.collapsed(offset: truncated.length),
+    );
   }
 }

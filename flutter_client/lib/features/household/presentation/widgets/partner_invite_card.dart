@@ -9,6 +9,7 @@ import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
+import 'package:homesync_client/features/couple_space/presentation/widgets/couple_art.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 import 'package:homesync_client/features/household/presentation/utils/invite_share.dart';
@@ -192,7 +193,7 @@ class _PartnerInviteCardState extends ConsumerState<PartnerInviteCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _IconWell(icon: Icons.person_add_alt_1_rounded, size: 52),
+          const CoupleArt(kind: CoupleArtKind.letter, size: 56),
           const SizedBox(height: AppSpacing.md),
           Text(
             t.partnerInviteTitle,
@@ -246,68 +247,62 @@ class _PartnerInviteCardState extends ConsumerState<PartnerInviteCard> {
 
     return AppCard(
       padding: AppInsets.compactCard,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _IconWell(icon: Icons.person_add_alt_1_rounded, size: 44),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  t.partnerInviteHomeTitle,
-                  style: AppTypography.cardTitle.copyWith(
-                    color: theme.textPrimary,
-                  ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const CoupleArt(kind: CoupleArtKind.letter, size: 48),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.partnerInviteHomeTitle,
+                      style: AppTypography.cardTitle.copyWith(
+                        color: theme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _failed ? t.invitationLoadError : t.partnerInviteHomeBody,
+                      style: AppTypography.caption.copyWith(
+                        color: theme.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  _failed ? t.invitationLoadError : t.partnerInviteHomeBody,
-                  style: AppTypography.caption.copyWith(
-                    color: theme.textSecondary,
-                  ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              if (_failed)
+                TextButton(
+                  onPressed: _loadCode,
+                  child: Text(t.commonRetry),
+                )
+              else
+                AppButton(
+                  label: t.partnerInviteHomeAction,
+                  size: AppButtonSize.small,
+                  isLoading: _sharing || _loading,
+                  isDisabled: _code == null,
+                  onTap: _shareWhatsApp,
                 ),
-              ],
-            ),
+            ],
           ),
-          const SizedBox(width: AppSpacing.sm),
-          if (_failed)
-            TextButton(
-              onPressed: _loadCode,
-              child: Text(t.commonRetry),
-            )
-          else
-            AppButton(
-              label: t.partnerInviteHomeAction,
-              size: AppButtonSize.small,
-              isLoading: _sharing || _loading,
-              isDisabled: _code == null,
-              onTap: _shareWhatsApp,
+          if (!_failed) ...[
+            const SizedBox(height: AppSpacing.sm),
+            InviteCodeBox(
+              label: t.partnerInviteCodeLabel,
+              code: _code,
+              failed: false,
+              onCopy: _copyCode,
+              onRetry: _loadCode,
             ),
+          ],
         ],
       ),
-    );
-  }
-}
-
-class _IconWell extends StatelessWidget {
-  final IconData icon;
-  final double size;
-
-  const _IconWell({required this.icon, required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: theme.primary.withValues(alpha: 0.10),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, color: theme.primary, size: size * 0.46),
     );
   }
 }

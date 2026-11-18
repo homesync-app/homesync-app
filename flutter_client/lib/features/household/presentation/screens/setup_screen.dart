@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:app_links/app_links.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/install_referrer_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -61,6 +63,7 @@ class SetupScreen extends ConsumerStatefulWidget {
 class _SetupScreenState extends ConsumerState<SetupScreen> {
   final _codeController = TextEditingController();
   final _nameController = TextEditingController();
+  StreamSubscription<Uri>? _deepLinkSub;
 
   // Email resuelto al iniciar: fallback de nombre cuando la sesión de Supabase
   // todavía no está lista (Firebase avisa signedIn antes de sincronizar).
@@ -133,11 +136,43 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     _loadTemplates();
   }
 
-  /// Quien instaló desde el link de invitación trae el código en el referrer
-  /// de Play: se abre "Tengo un código" ya completo para que solo toque
-  /// "Unirme".
+  /// Quien instaló desde el link de invitación trae el código en el deep link
+  /// o en el referrer de Play: se abre "Tengo un código" ya completo para que
+  /// solo toque "Unirme".
   Future<void> _prefillInviteCodeFromInstall() async {
     if (widget.isAdminPreview) return;
+    try {
+      final appLinks = AppLinks();
+      _deepLinkSub ??= appLinks.uriLinkStream.listen(
+        (uri) {
+          final code = InstallReferrerService.parseInviteDeepLink(uri);
+          if (code != null) {
+            _applyPrefilledInviteCode(code, source: 'deep_link');
+          }
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          log.w(
+            'SetupScreen deep link stream failed',
+            error: error,
+            stackTrace: stackTrace,
+          );
+        },
+      );
+      final initialUri = await appLinks.getInitialLink();
+      final deepLinkCode =
+          InstallReferrerService.parseInviteDeepLink(initialUri);
+      if (deepLinkCode != null) {
+        _applyPrefilledInviteCode(deepLinkCode, source: 'deep_link');
+        return;
+      }
+    } catch (error, stackTrace) {
+      log.w(
+        'SetupScreen deep link lookup failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
     final String? code;
     try {
       code = await ref.read(installReferrerServiceProvider).takeInviteCode();
@@ -150,6 +185,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       return;
     }
     if (code == null || !mounted) return;
+    _applyPrefilledInviteCode(code, source: 'install_referrer');
+  }
+
+  void _applyPrefilledInviteCode(String code, {required String source}) {
+    if (!mounted) return;
     // No pisar lo que la persona ya empezó: si avanzó a crear su hogar o
     // escribió otro código, se respeta.
     if (_wizardState.step != SetupStep.start ||
@@ -161,12 +201,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     unawaited(
       ref
           .read(analyticsServiceProvider)
-          .trackInviteCodePrefilled(source: 'install_referrer'),
+          .trackInviteCodePrefilled(source: source),
     );
   }
 
   @override
   void dispose() {
+    unawaited(_deepLinkSub?.cancel());
     _codeController.dispose();
     _nameController.dispose();
     super.dispose();
