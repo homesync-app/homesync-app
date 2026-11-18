@@ -66,12 +66,16 @@ class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
   final List<CustomBottomNavItem> items;
   final ValueChanged<int> onTap;
+  final VoidCallback? onAction;
+  final String? actionLabel;
 
   const CustomBottomNav({
     super.key,
     required this.currentIndex,
     required this.items,
     required this.onTap,
+    this.onAction,
+    this.actionLabel,
   });
 
   @override
@@ -109,14 +113,39 @@ class CustomBottomNav extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  for (final item in items)
+                  for (var index = 0; index < items.length; index++) ...[
+                    if (onAction != null && index == items.length ~/ 2)
+                      Expanded(
+                        child: Center(
+                          heightFactor: 1,
+                          child: AnimatedPress(
+                            onTap: onAction,
+                            semanticLabel: actionLabel,
+                            excludeChildSemantics: true,
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: theme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.add_rounded,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     Expanded(
                       child: _CustomBottomNavTile(
-                        item: item,
-                        isSelected: currentIndex == item.index,
-                        onTap: () => onTap(item.index),
+                        item: items[index],
+                        isSelected: currentIndex == items[index].index,
+                        onTap: () => onTap(items[index].index),
                       ),
                     ),
+                  ],
                 ],
               ),
             ),

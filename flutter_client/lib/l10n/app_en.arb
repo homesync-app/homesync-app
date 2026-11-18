@@ -869,7 +869,7 @@
   "@homeCoupleTasksTitle": {
     "description": "Section title above the day-tasks list on the couple home."
   },
-  "homeCoupleActivityTitle": "Today's activity",
+  "homeCoupleActivityTitle": "Household activity",
   "@homeCoupleActivityTitle": {
     "description": "Section title above the recent-activity feed on the couple home."
   },
@@ -5306,5 +5306,25 @@
   "couplePlanWalkTitle": "A different little route",
   "couplePlanWalkBody": "Take a different route and find a new favorite spot. Go as far as you feel like going.",
   "couplePlanWalkDetails": "Outdoors · About 30 minutes",
-  "couplePlanWalkStamp": "New paths"
+  "couplePlanWalkStamp": "New paths",
+  "coupleHomeAddShopping": "Add a list item",
+  "coupleHomeLeaveNote": "Leave a little note",
+  "coupleHomeWelcomeTitle": "Home, sweet home",
+  "coupleHomeWelcomeSolo": "A place to share.",
+  "coupleHomeWelcomeWith": "With {name}, together.",
+  "coupleHomeAddExpense": "Add expense",
+  "coupleHomeCompleteTask": "Complete {title}",
+  "coupleTasksCompletedCount": "{count, plural, =0{No tasks completed} one{1 task completed} other{{count} tasks completed}}",
+  "@coupleTasksCompletedCount": {
+    "description": "Cantidad de tareas completadas por una persona esta semana, en el resumen de Tareas.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleTasksWeekError": "We couldn’t load this week’s summary.",
+  "@coupleTasksWeekError": {
+    "description": "Error al cargar el resumen semanal colaborativo de tareas."
+  }
 }

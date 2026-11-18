@@ -1,0 +1,15 @@
+# Inicio y tareas en modo pareja
+
+La navegación del modo pareja contiene Inicio, Tareas, un botón central de acciones, Finanzas y Compras. El botón abre las acciones rápidas de pareja: cargar un gasto, crear una tarea y, cuando ambos integrantes están en el hogar, dejar una notita (`showLoveNoteSheet`) y abrir los planes y álbum de pareja (`showCouplePlansSheet`). No es un destino de navegación. Compras conserva su carga dentro de su sección. La tab Pareja deja de mostrarse en la barra inferior para mantener cuatro destinos; sus datos, servicios, planes, álbum y notitas se conservan accesibles desde las acciones centrales y desde Inicio.
+
+Inicio organiza saludo, cuentas, tareas de hoy y movimientos del hogar. Tocar la tarjeta de bienvenida (`CoupleHomeWelcome`) cuando la pareja está completa abre el sheet de planes y álbum (`showCouplePlansSheet`), preservando el acceso a `CouplePlansSection` y `CoupleNoteRow` sin reintroducir una quinta pestaña. Se quitaron los accesos duplicados y el FAB de acciones. Las escenas compartidas del catálogo premium aparecen solamente si ambos miembros tienen un personaje compatible; en los demás casos se usa una ilustración única del hogar.
+
+El resumen semanal de tareas completadas por cada miembro se muestra en Tareas, junto al contenido que describe. Las filas de tareas muestran una ilustración de categoría, responsable y un control vacío para completar. Los detalles, edición y programación mantienen los flujos existentes. Lista y calendario comparten la presentación de las tareas.
+
+Los movimientos del hogar y las tarjetas de gastos/liquidaciones en Finanzas (`ExpensesScreen`) usan filas ilustradas que comparten la paleta y el acabado suave del sprite de pareja. `HouseholdArt` centraliza el mapeo de categorías (incluyendo categorías de gastos vía `HouseholdArt.forExpenseCategory`) y reutiliza ilustraciones existentes cuando corresponde. Compras adopta esta familia para sus categorías generales; los íconos de productos del catálogo se conservan.
+
+## Assets y evidencia
+
+`flutter_client/assets/images/household_icons.webp` es un atlas transparente de nueve ilustraciones: limpieza, ropa, plantas, herramientas, mascotas, calendario, día, horario y reciclaje. Se generó con la herramienta integrada `image_gen.imagegen`, tomando la familia de ilustraciones de pareja como referencia. El PNG original queda en `output/couple-home/household-icons-source.png`; la referencia visual previa a implementación en `output/couple-home/design-refinement-v2.png`. Ambos archivos de trabajo están ignorados por Git. La app usa el WebP, no la imagen de referencia.
+
+Las capturas de `flutter_client/build/couple_home/` provienen de widgets Flutter reales con fixtures, mediante `--dart-define=CAPTURE_HOME=true`. Incluyen fondos claro/oscuro, 320 dp a 1.3x, hogar esperando al segundo miembro, listas vacías, avatares de distintos tipos, movimientos, filtros, tareas expandidas y calendario. Las pruebas verifican además que completar dos veces mientras la operación está pendiente envía una sola solicitud y que el botón central abre los formularios sin cambiar de destino.

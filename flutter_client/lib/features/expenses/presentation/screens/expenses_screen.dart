@@ -19,6 +19,7 @@ import 'package:homesync_client/features/expenses/domain/models/feed_item_model.
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
@@ -29,6 +30,7 @@ import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/app_swipe_to_delete.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
 import 'package:homesync_client/shared/widgets/expressive/expressive.dart';
+import 'package:homesync_client/shared/widgets/household_art.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:intl/intl.dart';
 
@@ -98,7 +100,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ),
         ],
       ),
-      floatingActionButton: _buildFab(),
+      floatingActionButton:
+          ref.watch(householdCapabilitiesProvider).type == HouseholdType.couple
+              ? null
+              : _buildFab(),
     );
   }
 
@@ -1994,6 +1999,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
     final isIncome = expense.isIncome;
     final isShared = expense.isShared || expense.splitType == 'gift';
+    final isCouple =
+        ref.watch(householdCapabilitiesProvider).type == HouseholdType.couple;
     final theme = context.theme;
     final color = CategoryMapping.getSmartExpenseDisplayColor(
       expense.category,
@@ -2063,18 +2070,24 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ),
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(11),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(14),
+              if (isCouple)
+                HouseholdArt(
+                  kind: HouseholdArt.forExpenseCategory(expense.category),
+                  size: 44,
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.all(11),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    categoryIcon,
+                    size: 22,
+                    color: color,
+                  ),
                 ),
-                child: Icon(
-                  categoryIcon,
-                  size: 22,
-                  color: color,
-                ),
-              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -2171,6 +2184,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   Widget _buildSettlementCard(ExpenseModel expense) {
     final theme = context.theme;
+    final isCouple =
+        ref.watch(householdCapabilitiesProvider).type == HouseholdType.couple;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -2186,18 +2201,21 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: theme.surface,
-              shape: BoxShape.circle,
+          if (isCouple)
+            const HouseholdArt(kind: HouseholdArtKind.wallet, size: 40)
+          else
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: theme.surface,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.sync_alt_rounded,
+                size: 22,
+                color: AppColors.accentBlue,
+              ),
             ),
-            child: const Icon(
-              Icons.sync_alt_rounded,
-              size: 22,
-              color: AppColors.accentBlue,
-            ),
-          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

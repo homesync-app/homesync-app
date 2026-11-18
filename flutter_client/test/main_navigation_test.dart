@@ -4,6 +4,27 @@ import 'package:homesync_client/features/household/domain/models/household_capab
 
 void main() {
   group('main navigation', () {
+    test('couple uses four destinations without a separate couple tab', () {
+      const caps = HouseholdCapabilities(type: HouseholdType.couple);
+      expect(
+        visibleMainTabs(caps),
+        [MainTab.home, MainTab.tasks, MainTab.expenses, MainTab.shopping],
+      );
+      expect(indexForMainTab(caps, MainTab.social), -1);
+      expect(indexForMainTab(caps, MainTab.stats), -1);
+      expect(indexForMainTab(caps, MainTab.shopping), 3);
+    });
+    test('couple without tasks keeps valid destination indices', () {
+      const caps = HouseholdCapabilities(
+        type: HouseholdType.couple,
+        tasksEnabled: false,
+      );
+      expect(
+        visibleMainTabs(caps),
+        [MainTab.home, MainTab.expenses, MainTab.shopping],
+      );
+      expect(indexForMainTab(caps, MainTab.shopping), 2);
+    });
     test('keeps current ordering when tasks are enabled', () {
       const caps = HouseholdCapabilities(
         type: HouseholdType.family,

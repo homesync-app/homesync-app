@@ -200,6 +200,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     String householdId,
     HouseholdCapabilities caps,
   ) {
+    if (caps.type == HouseholdType.couple) return null;
     // Friends view has less vertical content; the FAB overlaps the nav bar
     // label text without this offset due to shorter bottom padding.
     final fabOffsetY = caps.type == HouseholdType.friends ? 28.0 : 0.0;

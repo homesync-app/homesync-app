@@ -9,12 +9,14 @@ class AppSegmentedTabs extends StatelessWidget {
   final TabController controller;
   final List<String> labels;
   final EdgeInsetsGeometry padding;
+  final bool flat;
 
   const AppSegmentedTabs({
     super.key,
     required this.controller,
     required this.labels,
     this.padding = const EdgeInsets.all(6),
+    this.flat = false,
   });
 
   @override
@@ -32,7 +34,7 @@ class AppSegmentedTabs extends StatelessWidget {
             border: Border.all(
               color: theme.border.withValues(alpha: 0.45),
             ),
-            boxShadow: theme.cardShadow,
+            boxShadow: flat ? null : theme.cardShadow,
           ),
           child: Row(
             children: List.generate(labels.length, (index) {

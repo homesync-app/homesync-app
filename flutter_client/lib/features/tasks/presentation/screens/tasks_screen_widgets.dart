@@ -71,7 +71,7 @@ class _TodayDoneCelebration extends StatelessWidget {
 
 // Section Header
 
-class _SectionHeader extends StatelessWidget {
+class _SectionHeader extends ConsumerWidget {
   final IconData icon;
   final String title;
   final int count;
@@ -85,10 +85,46 @@ class _SectionHeader extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final themeColor = color ?? AppColors.primary;
     final theme = context.theme;
 
+    if (ref.watch(householdCapabilitiesProvider).type == HouseholdType.couple) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppInsets.screenHorizontal,
+          AppSpacing.lg,
+          AppInsets.screenHorizontal,
+          AppSpacing.xs,
+        ),
+        child: Row(
+          children: [
+            HouseholdArt(
+              kind: icon == Icons.priority_high_rounded ||
+                      icon == Icons.edit_calendar_rounded
+                  ? HouseholdArtKind.clock
+                  : icon == Icons.wb_twilight_rounded
+                      ? HouseholdArtKind.sun
+                      : HouseholdArtKind.calendar,
+              size: 36,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                title,
+                style: AppTypography.sectionTitle
+                    .copyWith(color: theme.textPrimary),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              '$count',
+              style: AppTypography.caption.copyWith(color: theme.textSecondary),
+            ),
+          ],
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 26, 24, 10),
       child: Row(
@@ -238,6 +274,27 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     final categoryLabel = categoryData != null
         ? localizedTaskCategoryName(AppLocalizations.of(context), categoryData)
         : null;
+    if (caps.type == HouseholdType.couple) {
+      return CoupleTaskTile(
+        task: task,
+        assigned: assignedMember,
+        currentUserId: currentUserId,
+        categoryLabel: categoryLabel ??
+            localizedCategoryName(
+              AppLocalizations.of(context),
+              task.category ?? 'hogar',
+            ),
+        busy: _isSubmitting,
+        expanded: _isExpanded,
+        onToggle: () {
+          AppHaptics.tap();
+          setState(() => _isExpanded = !_isExpanded);
+        },
+        onComplete: _completeTask,
+        onEdit: widget.onEdit,
+        onSchedule: widget.onSchedule,
+      );
+    }
     // El server garantiza al menos 1 coin por completación para niños
     // (complete_task_v1); el badge refleja lo que este usuario va a ganar.
     final displayCoins = (currentMember?.isChild ?? false)
@@ -846,6 +903,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   }
 
   Future<void> _completeTask() async {
+    if (_isSubmitting) return;
     AppHaptics.tap();
     // Snapshot ANTES del update optimista: al completar, el rebuild recalcula
     // isFinalTodayTask con la tarea ya "cerrada" (todayTasksLeft pasa a 0) y

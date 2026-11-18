@@ -1197,7 +1197,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeCoupleTasksTitle => 'Today at home';
 
   @override
-  String get homeCoupleActivityTitle => 'Today\'s activity';
+  String get homeCoupleActivityTitle => 'Household activity';
 
   @override
   String get homeCoupleActivityEmptyTitle => 'Nothing logged today yet';
@@ -8671,4 +8671,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get couplePlanWalkStamp => 'New paths';
+
+  @override
+  String get coupleHomeAddShopping => 'Add a list item';
+
+  @override
+  String get coupleHomeLeaveNote => 'Leave a little note';
+
+  @override
+  String get coupleHomeWelcomeTitle => 'Home, sweet home';
+
+  @override
+  String get coupleHomeWelcomeSolo => 'A place to share.';
+
+  @override
+  String coupleHomeWelcomeWith(String name) {
+    return 'With $name, together.';
+  }
+
+  @override
+  String get coupleHomeAddExpense => 'Add expense';
+
+  @override
+  String coupleHomeCompleteTask(String title) {
+    return 'Complete $title';
+  }
+
+  @override
+  String coupleTasksCompletedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks completed',
+      one: '1 task completed',
+      zero: 'No tasks completed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coupleTasksWeekError => 'We couldn’t load this week’s summary.';
 }

@@ -6,6 +6,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/premium_avatar_motion_cache.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/utils/premium_avatar_assets.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 import 'app_smooth_network_image.dart';
@@ -468,10 +469,11 @@ class _AvatarContent extends StatelessWidget {
     final int avatarCacheSize =
         (radius * 2 * MediaQuery.devicePixelRatioOf(context)).round();
 
-    final String cleanUrl =
-        normalizedAvatarUrl?.startsWith('premium://') == true
+    final portrait = PremiumAvatarArt.portraitFor(normalizedAvatarUrl);
+    final String cleanUrl = portrait ??
+        (normalizedAvatarUrl?.startsWith('premium://') == true
             ? UserAvatar.resolvePremiumAvatarUrl(normalizedAvatarUrl!)
-            : (normalizedAvatarUrl ?? '');
+            : (normalizedAvatarUrl ?? ''));
     final bool isAsset = hasAvatar && cleanUrl.startsWith('assets/');
 
     final bool isEmoji =
@@ -595,7 +597,7 @@ class _InitialAvatarFallback extends StatelessWidget {
       child: Text(
         initial,
         style: TextStyle(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.onSurface,
           fontSize: radius * 0.9,
           fontWeight: FontWeight.w700,
         ),

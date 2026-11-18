@@ -1,0 +1,230 @@
+{
+  "tool": "image_gen.imagegen (built-in)",
+  "style": "Warm hand-painted watercolor matching the original premium catalog.",
+  "originals": "output/couple-home/avatar-art/sources (ignored, generated PNGs preserved)",
+  "exports": "WebP with alpha; 512 px wide duo scenes, 256 px wide portraits; lossless encoding after size export.",
+  "assets": {
+    "duo_key_bird__key_bird": {
+      "file": "flutter_client/assets/images/avatar_art/duo_key_bird__key_bird.webp",
+      "generation": "exec-5a3ae8fc-acde-4266-845b-8bc80092e52c.png"
+    },
+    "duo_key_bird__keys_girl": {
+      "file": "flutter_client/assets/images/avatar_art/duo_key_bird__keys_girl.webp",
+      "generation": "exec-6ea04f42-f6e7-43d4-afd2-c63b94010f09.png"
+    },
+    "duo_key_bird__market_dog": {
+      "file": "flutter_client/assets/images/avatar_art/duo_key_bird__market_dog.webp",
+      "generation": "exec-b6f4cafb-3b0e-4d13-8181-8bf5a57741e1.png"
+    },
+    "duo_key_bird__mate_boy": {
+      "file": "flutter_client/assets/images/avatar_art/duo_key_bird__mate_boy.webp",
+      "generation": "exec-fa965442-44b1-4c65-a5d3-6de48a7ea81e.png"
+    },
+    "duo_key_bird__orange_cat": {
+      "file": "flutter_client/assets/images/avatar_art/duo_key_bird__orange_cat.webp",
+      "generation": "exec-b1991b68-d9ef-45b7-bcea-b6be37f3e545.png"
+    },
+    "duo_key_bird__paper_plane_kid": {
+      "file": "flutter_client/assets/images/avatar_art/duo_key_bird__paper_plane_kid.webp",
+      "generation": "exec-d9a7d25f-d46e-46a3-94d5-6e71ab40e25f.png"
+    },
+    "duo_key_bird__star_girl": {
+      "file": "flutter_client/assets/images/avatar_art/duo_key_bird__star_girl.webp",
+      "generation": "exec-876a7b00-9e9d-4173-bd03-3620899b43c0.png"
+    },
+    "duo_key_bird__tool_adult_man": {
+      "file": "flutter_client/assets/images/avatar_art/duo_key_bird__tool_adult_man.webp",
+      "generation": "exec-3f19ddda-9390-4234-b590-8d4f7a704997.png"
+    },
+    "duo_keys_girl__keys_girl": {
+      "file": "flutter_client/assets/images/avatar_art/duo_keys_girl__keys_girl.webp",
+      "generation": "exec-9353de72-bcaf-4e46-8600-86cdf1e6ee08.png"
+    },
+    "duo_keys_girl__market_dog": {
+      "file": "flutter_client/assets/images/avatar_art/duo_keys_girl__market_dog.webp",
+      "generation": "exec-aebf03e7-23ae-4f27-ab03-a83cc268ffa0.png"
+    },
+    "duo_keys_girl__mate_boy": {
+      "file": "flutter_client/assets/images/avatar_art/duo_keys_girl__mate_boy.webp",
+      "generation": "exec-ea6ce44b-3597-4f9f-989e-c234e2830936.png"
+    },
+    "duo_keys_girl__orange_cat": {
+      "file": "flutter_client/assets/images/avatar_art/duo_keys_girl__orange_cat.webp",
+      "generation": "exec-8ba82a5c-9006-4b4d-857b-f22217b0768b.png"
+    },
+    "duo_keys_girl__paper_plane_kid": {
+      "file": "flutter_client/assets/images/avatar_art/duo_keys_girl__paper_plane_kid.webp",
+      "generation": "exec-5e85a435-c80f-485c-b86a-cad877e69730.png"
+    },
+    "duo_keys_girl__star_girl": {
+      "file": "flutter_client/assets/images/avatar_art/duo_keys_girl__star_girl.webp",
+      "generation": "exec-835b0052-12b5-49ce-b63e-0a9f715b1fb0.png"
+    },
+    "duo_keys_girl__tool_adult_man": {
+      "file": "flutter_client/assets/images/avatar_art/duo_keys_girl__tool_adult_man.webp",
+      "generation": "exec-54588c45-2cef-4367-8330-29bc832f553a.png"
+    },
+    "duo_market_dog__market_dog": {
+      "file": "flutter_client/assets/images/avatar_art/duo_market_dog__market_dog.webp",
+      "generation": "exec-17752b12-9e21-471a-8786-ae93bcd372c0.png"
+    },
+    "duo_market_dog__mate_boy": {
+      "file": "flutter_client/assets/images/avatar_art/duo_market_dog__mate_boy.webp",
+      "generation": "exec-3006f724-9773-404f-8ef3-4a366c0ec7fb.png"
+    },
+    "duo_market_dog__orange_cat": {
+      "file": "flutter_client/assets/images/avatar_art/duo_market_dog__orange_cat.webp",
+      "generation": "exec-d7092a10-a05e-4905-b2ca-5b18d3bc0b29.png"
+    },
+    "duo_market_dog__paper_plane_kid": {
+      "file": "flutter_client/assets/images/avatar_art/duo_market_dog__paper_plane_kid.webp",
+      "generation": "exec-65c5afad-f3a5-4714-bb03-ffa5dd666aba.png"
+    },
+    "duo_market_dog__star_girl": {
+      "file": "flutter_client/assets/images/avatar_art/duo_market_dog__star_girl.webp",
+      "generation": "exec-4f2ee224-c8d0-47a1-8a88-6f077c4a66b4.png"
+    },
+    "duo_market_dog__tool_adult_man": {
+      "file": "flutter_client/assets/images/avatar_art/duo_market_dog__tool_adult_man.webp",
+      "generation": "exec-d51ad7a2-8360-4f32-864b-ebd87a2d4b94.png"
+    },
+    "duo_mate_boy__mate_boy": {
+      "file": "flutter_client/assets/images/avatar_art/duo_mate_boy__mate_boy.webp",
+      "generation": "exec-9749b9d8-fec4-4478-90ff-1ea482040d04.png"
+    },
+    "duo_mate_boy__orange_cat": {
+      "file": "flutter_client/assets/images/avatar_art/duo_mate_boy__orange_cat.webp",
+      "generation": "exec-01113d23-922a-4e65-bbea-42ce298908b4.png"
+    },
+    "duo_mate_boy__paper_plane_kid": {
+      "file": "flutter_client/assets/images/avatar_art/duo_mate_boy__paper_plane_kid.webp",
+      "generation": "exec-4c0d0b01-60c4-4822-9864-703f558e91db.png"
+    },
+    "duo_mate_boy__star_girl": {
+      "file": "flutter_client/assets/images/avatar_art/duo_mate_boy__star_girl.webp",
+      "generation": "exec-37665fad-4b57-4153-93fd-0a0807d4b566.png"
+    },
+    "duo_mate_boy__tool_adult_man": {
+      "file": "flutter_client/assets/images/avatar_art/duo_mate_boy__tool_adult_man.webp",
+      "generation": "exec-de6ff95d-5649-41fc-b911-c808fcabedcd.png"
+    },
+    "duo_orange_cat__orange_cat": {
+      "file": "flutter_client/assets/images/avatar_art/duo_orange_cat__orange_cat.webp",
+      "generation": "exec-a03d8c46-eda4-4aed-ae5f-1edea257f9ce.png"
+    },
+    "duo_orange_cat__paper_plane_kid": {
+      "file": "flutter_client/assets/images/avatar_art/duo_orange_cat__paper_plane_kid.webp",
+      "generation": "exec-e3b80710-c531-4b16-b9a1-4bb3aad913e3.png"
+    },
+    "duo_orange_cat__star_girl": {
+      "file": "flutter_client/assets/images/avatar_art/duo_orange_cat__star_girl.webp",
+      "generation": "exec-c2d0b910-ab3c-4044-821e-5b5379ba868d.png"
+    },
+    "duo_orange_cat__tool_adult_man": {
+      "file": "flutter_client/assets/images/avatar_art/duo_orange_cat__tool_adult_man.webp",
+      "generation": "exec-4e74ab05-5552-4409-8f73-6de3076a8f7f.png"
+    },
+    "duo_paper_plane_kid__paper_plane_kid": {
+      "file": "flutter_client/assets/images/avatar_art/duo_paper_plane_kid__paper_plane_kid.webp",
+      "generation": "exec-bb77059e-14b6-47d4-ba0e-2de606ab1848.png"
+    },
+    "duo_paper_plane_kid__star_girl": {
+      "file": "flutter_client/assets/images/avatar_art/duo_paper_plane_kid__star_girl.webp",
+      "generation": "exec-fb163844-e673-4efd-a9b2-4679869294ce.png"
+    },
+    "duo_paper_plane_kid__tool_adult_man": {
+      "file": "flutter_client/assets/images/avatar_art/duo_paper_plane_kid__tool_adult_man.webp",
+      "generation": "exec-6a1b6cba-c1a6-421b-92df-f4f684cf947e.png"
+    },
+    "duo_star_girl__star_girl": {
+      "file": "flutter_client/assets/images/avatar_art/duo_star_girl__star_girl.webp",
+      "generation": "exec-d9714895-0230-4017-bc48-113bb55a90da.png"
+    },
+    "duo_star_girl__tool_adult_man": {
+      "file": "flutter_client/assets/images/avatar_art/duo_star_girl__tool_adult_man.webp",
+      "generation": "exec-23f3e61d-9229-4136-82d9-7894f37fdffe.png"
+    },
+    "duo_tool_adult_man__tool_adult_man": {
+      "file": "flutter_client/assets/images/avatar_art/duo_tool_adult_man__tool_adult_man.webp",
+      "generation": "exec-25ef2783-2297-4529-9680-fb2a8357d37e.png"
+    },
+    "portrait_key_bird": {
+      "file": "flutter_client/assets/images/avatar_art/portrait_key_bird.webp",
+      "generation": "exec-a3ac6a71-f1bc-4a13-9c19-e4c2a616612c.png"
+    },
+    "portrait_keys_girl": {
+      "file": "flutter_client/assets/images/avatar_art/portrait_keys_girl.webp",
+      "generation": "exec-814a3619-c64f-43e6-bd6f-c317f544bdb4.png"
+    },
+    "portrait_market_dog": {
+      "file": "flutter_client/assets/images/avatar_art/portrait_market_dog.webp",
+      "generation": "exec-741ee8e1-6573-48f1-b16c-56cc0e278ffd.png"
+    },
+    "portrait_mate_boy": {
+      "file": "flutter_client/assets/images/avatar_art/portrait_mate_boy.webp",
+      "generation": "exec-1cf80ad7-baf0-4535-a32c-5fdb02438c6b.png"
+    },
+    "portrait_orange_cat": {
+      "file": "flutter_client/assets/images/avatar_art/portrait_orange_cat.webp",
+      "generation": "exec-e738ba21-82c4-4dad-b57b-145ef650af1e.png"
+    },
+    "portrait_paper_plane_kid": {
+      "file": "flutter_client/assets/images/avatar_art/portrait_paper_plane_kid.webp",
+      "generation": "exec-2e375e0c-c36d-4cd2-99a7-606cfe4e8790.png"
+    },
+    "portrait_star_girl": {
+      "file": "flutter_client/assets/images/avatar_art/portrait_star_girl.webp",
+      "generation": "exec-f8a099a3-784d-4efe-9f28-87aff5f6c972.png"
+    },
+    "portrait_tool_adult_man": {
+      "file": "flutter_client/assets/images/avatar_art/portrait_tool_adult_man.webp",
+      "generation": "exec-d08be97c-81fd-48dd-99ba-c849f10d9e84.png"
+    }
+  },
+  "prompt_programs": [
+    {
+      "timestamp": "2026-10-04T12:33:00.041Z",
+      "source": "const root=\"C:/Users/Blas_/Documents/Aplicacion de Pareja/flutter_client/assets/images/premium_3d_avatars/\";\nconst ids=[\"mate_boy\",\"keys_girl\",\"market_dog\",\"orange_cat\",\"paper_plane_kid\",\"star_girl\",\"key_bird\",\"tool_adult_man\"];\nconst names=[\"curly brown haired young adult man with stubble and beige hoodie carrying mate\",\"brown long wavy haired adult woman with gold hoop earrings and cream cardigan carrying keys\",\"golden floppy eared puppy with sage bandana and orange heart patch\",\"orange tabby kitten with sage bandana and peach heart patch\",\"curly brown haired boy with peach hoodie and sage backpack\",\"long curly dark haired girl with sage bow headband and peach sweater\",\"round fluffy yellow bird with sage bandana\",\"brown wavy haired adult man with stubble and sage apron over cream sweater\"];\nstore(\"avatarDesign\",{root,ids,names,jobs:[]});\ntext(await tools.exec_command({cmd:\"Get-Content flutter_client/lib/features/dashboard/presentation/widgets/couple_home_widgets.dart -TotalCount 165; Get-Content flutter_client/lib/features/dashboard/presentation/screens/modes/home_couple_view.dart | Select-Object -Skip 510 -First 145; Get-Content flutter_client/test/couple_home_design_test.dart -TotalCount 370; rg -n 'assets/images|coupleHomeWelcomeTitle|coupleHomeCompleteTask' flutter_client/pubspec.yaml flutter_client/lib/l10n/app_es.arb flutter_client/lib/l10n/app_en.arb\",\"max_output_tokens\":8500}));\n"
+    },
+    {
+      "timestamp": "2026-10-04T12:33:22.064Z",
+      "source": "// @exec: {\"yield_time_ms\": 120000, \"max_output_tokens\": 1000}\nconst d=load(\"avatarDesign\");\nconst jobs=[\n{key:\"portrait_orange_cat\",prompt:\"Create one production avatar portrait icon for HomeSync matching the provided orange tabby kitten reference identity and warm hand-painted watercolor storybook texture. Redesign from scratch specifically for a tiny 44 px circular task avatar: front facing face and very small hint of sage scarf, large clear kind green eyes, ears fully inside frame, symmetrical balanced silhouette, no grocery bag, no body, no text. A soft warm cream circular medallion behind the head, all artwork contained inside that perfect circle with 8% outer transparent margin. Thin subtle peach rim, no heavy shadow. High craft illustration, simplified detail readable small, cute and modern. Square canvas, actual transparent background outside circle. Reference is identity/style guidance, DO NOT just crop it.\",refs:[d.root+\"premium_orange_cat.webp\"]},\n{key:\"duo_market_dog__orange_cat\",prompt:\"Create ONE original shared illustration for HomeSync's compact welcome hero, using the provided golden puppy and orange tabby kitten as exact character identity and warm watercolor storybook style references. Newly draw both as one coherent intimate cozy composition: seated nestled close, heads gently tilted toward one another, their paws together around a single tiny terracotta plant pot with a sage leafy sprout between them. Same sage bandanas with peach heart patches, preserve each face/species/colors. No grocery bags. Two complete distinct characters, roughly same head scale, grouped into one balanced low wide silhouette. The characters interact with shared prop, not two existing stickers next to each other. Premium cute, soft natural brushwork, warm cream and sage, friendly home companionship. No lettering, no card, no circle, no sticker white outline, no scene background, no floating decorations. Transparent background, centered artwork fully visible with 5% safe margin, landscape 3:2 composition.\",refs:[d.root+\"premium_market_dog.webp\",d.root+\"premium_orange_cat.webp\"]}\n];\nd.jobs.push(...jobs);store(\"avatarDesign\",d);\nconst work=Promise.allSettled(jobs.map(async j=>{const r=await tools.image_gen__imagegen({prompt:j.prompt,referenced_image_paths:j.refs,transparent_background:true});store(j.key,r);text({key:j.key,result:r});}));\nawait yield_control(); await work;\n"
+    },
+    {
+      "timestamp": "2026-10-04T12:36:53.293Z",
+      "source": "// @exec: {\"yield_time_ms\": 120000, \"max_output_tokens\": 1000}\nconst d=load(\"avatarDesign\");\nconst portraitRef=\"C:/Users/Blas_/.codex/generated_images/01a10287-18b7-7180-9459-de1ef8ab8d9d/exec-e738ba21-82c4-4dad-b57b-145ef650af1e.png\";\nconst jobs=d.ids.map((id,i)=>({key:`portrait_${id}`,refs:[d.root+`premium_${id}.webp`,portraitRef],prompt:`Create ONE newly drawn circular task avatar portrait of the ${d.names[i]}. Reference 1 defines ONLY the character identity. Reference 2 defines the EXACT circular icon family style, framing, soft cream background, peach thin rim and warm watercolor quality; do not include the cat from reference 2. Adapt character to this designed headshot family from scratch: face fills circle, slight shoulders, all hair/ears inside circle, face centered with large friendly clear eyes, simplify for 44 px display. Preserve recognizable hair, facial features, clothing color and accessories worn on head. Remove carried items, hands, bags, keys, cups, tools, notebooks. No full body. One circular medallion, 5% transparent safe margin all around, square canvas. True transparent background outside the circle, NO glow or shadow or white square, no text. Polished cute hand-painted storybook art matching references, not a crop.`})).filter(j=>j.key!==\"portrait_orange_cat\");\njobs.push({key:\"duo_market_dog__orange_cat\",refs:[\"C:/Users/Blas_/.codex/generated_images/01a10287-18b7-7180-9459-de1ef8ab8d9d/exec-2a44198a-720c-4bcd-8a12-1e951e60ad58.png\"],prompt:\"Edit this exact illustration ONLY to remove ALL blurred golden/orange glow, halo, ambient haze and shadow around the two characters and plant. Preserve the two characters, their poses, faces, watercolor texture, colors, shared plant and composition exactly. The entire area outside the crisp natural outer silhouette of puppy+kitten+plant must be 100% transparent alpha=0. No background color, no glow, no blur, no white outline. Keep 5% safe transparent margins, landscape canvas. This is a production transparent UI asset used on light AND dark backgrounds.\"});\nd.jobs.push(...jobs);store(\"avatarDesign\",d);\nconst work=Promise.allSettled(jobs.map(async j=>{const r=await tools.image_gen__imagegen({prompt:j.prompt,referenced_image_paths:j.refs,transparent_background:true});store(j.key,r);notify({ready:j.key,hint:r.output_hint});}));\nawait yield_control();await work;\n"
+    },
+    {
+      "timestamp": "2026-10-04T12:38:38.037Z",
+      "source": "// @exec: {\"yield_time_ms\": 120000, \"max_output_tokens\": 1000}\nconst d=load(\"avatarDesign\");const ids=[...d.ids].sort();\nconst pairs=[];for(let i=0;i<ids.length;i++)for(let j=i;j<ids.length;j++)if(!(ids[i]===\"market_dog\"&&ids[j]===\"orange_cat\"))pairs.push([ids[i],ids[j]]);\nstore(\"duoPairs\",pairs);\nconst jobs=pairs.slice(0,7).map(([a,b])=>{\nconst desc=id=>d.names[d.ids.indexOf(id)];\nconst animals=[\"market_dog\",\"orange_cat\",\"key_bird\"];const bothAnimal=animals.includes(a)&&animals.includes(b);const mixed=animals.includes(a)!==animals.includes(b);\nconst pose=bothAnimal?\"Nestled seated together, heads inclined inward, both paws or wings gently holding one shared small terracotta pot with a leafy sage sprout.\":mixed?\"The human crouches close beside the animal and both joyfully tend one small terracotta pot with a leafy sage sprout. Both faces prominent and equally readable.\":\"A close waist-up shared portrait, shoulders touching and heads gently inclined inward, both together holding one little terracotta pot with a leafy sage sprout.\";\nreturn {key:`duo_${a}__${b}`,refs:[...new Set([d.root+`premium_${a}.webp`,d.root+`premium_${b}.webp`])],prompt:`Create ONE original shared HomeSync welcome illustration starring EXACTLY TWO characters: ${desc(a)} AND ${desc(b)}. ${a===b?\"Both users chose the SAME avatar: depict TWO separate recognizable instances of that exact character, different complementary poses; neither may be omitted.\":\"\"} References define each identity and warm watercolor storybook style. Redraw them into ONE cohesive cozy home-companionship composition: ${pose} Cute friendly happiness, NOT romantic gestures. Remove carried bags, cups, keys, notebooks, tools from references, keep clothing and recognizable features. Faces same scale. Shared plant in lower center, no props obscuring faces. Simplified elegant details readable at 132 x 100 px. Fully visible compact low wide silhouette centered with 6% safe margins. No card, frame, white sticker border, text, floating decorations. TRUE TRANSPARENT BACKGROUND outside crisp natural silhouettes, ALPHA ZERO outside subjects, absolutely NO glow, NO blurry halo, NO lighting haze, NO ground shadow. Landscape 3:2 canvas. Warm peach, cream and sage, high quality soft hand-painted watercolor.`};});\nstore(\"duoBatch1\",jobs);\nconst work=Promise.allSettled(jobs.map(async j=>{const r=await tools.image_gen__imagegen({prompt:j.prompt,referenced_image_paths:j.refs,transparent_background:true});store(j.key,r);notify({ready:j.key,hint:r.output_hint});}));\nawait yield_control();await work;\n"
+    },
+    {
+      "timestamp": "2026-10-04T12:40:59.152Z",
+      "source": "// @exec: {\"yield_time_ms\": 120000, \"max_output_tokens\": 1000}\nconst d=load(\"avatarDesign\"),pairs=load(\"duoPairs\");\nconst jobs=pairs.slice(7,14).map(([a,b],i)=>{\nconst desc=id=>d.names[d.ids.indexOf(id)];\nreturn {key:`duo_${a}__${b}`,refs:[...new Set([d.root+`premium_${a}.webp`,d.root+`premium_${b}.webp`])],prompt:`Draw ONE cohesive cute HomeSync shared-avatar illustration featuring exactly TWO characters: ${desc(a)} AND ${desc(b)}. ${a===b?\"Both people selected the same avatar: draw TWO clearly separate instances of that character, complementary poses.\":\"\"} Use supplied references for exact character identities and warm hand-painted watercolor style. New composition from scratch, not a collage or two existing stickers. Cozy close grouping, faces similar scale, shoulders touching for two humans; human kneels beside animal for mixed species; two animals nestle close. Both gently tending one little terracotta pot with a sage green leafy sprout between them, looking happily toward viewer, heads inclined inward. Preserve hair, clothes, bandanas, species and facial identity. Remove original carried bags, keys, tools, cups, notebooks. Friendly platonic home companionship. Low wide compact silhouette, faces prominent, readable at 132px width. Single plant shared prop, no scenery or other objects. Entire subjects visible with 6% safe margin. Landscape 3:2 canvas. TRUE transparent alpha outside subjects. Absolutely NO background, NO glow, NO halo, NO atmospheric haze, NO ground shadow, NO white border, NO text. Cute clean refined watercolor with peach, cream and sage.`};});\nstore(\"duoBatch2\",jobs);\nconst work=Promise.allSettled(jobs.map(async j=>{const r=await tools.image_gen__imagegen({prompt:j.prompt,referenced_image_paths:j.refs,transparent_background:true});store(j.key,r);notify({ready:j.key,hint:r.output_hint});}));\nawait yield_control();await work;\n"
+    },
+    {
+      "timestamp": "2026-10-04T12:41:26.395Z",
+      "source": "// @exec: {\"yield_time_ms\": 120000, \"max_output_tokens\": 1000}\nconst d=load(\"avatarDesign\"),pairs=load(\"duoPairs\");\nconst jobs=pairs.slice(7,14).map(([a,b])=>{\nconst desc=id=>d.names[d.ids.indexOf(id)];\nreturn {key:`duo_${a}__${b}`,refs:[...new Set([d.root+`premium_${a}.webp`,d.root+`premium_${b}.webp`])],prompt:`Draw ONE cohesive cute HomeSync shared-avatar illustration featuring exactly TWO characters: ${desc(a)} AND ${desc(b)}. ${a===b?\"Both people selected the same avatar: draw TWO clearly separate instances of that character, complementary poses.\":\"\"} Use supplied references for exact character identities and warm hand-painted watercolor style. New composition from scratch, not a collage or two existing stickers. Cozy close grouping, faces similar scale, shoulders touching for two humans; human kneels beside animal for mixed species; two animals nestle close. Both gently tending one little terracotta pot with a sage green leafy sprout between them, looking happily toward viewer, heads inclined inward. Preserve hair, clothes, bandanas, species and facial identity. Remove original carried bags, keys, tools, cups, notebooks. Friendly platonic home companionship. Low wide compact silhouette, faces prominent, readable at 132px width. Single plant shared prop, no scenery or other objects. Entire subjects visible with 6% safe margin. Landscape 3:2 canvas. TRUE transparent alpha outside subjects. Absolutely NO background, NO glow, NO halo, NO atmospheric haze, NO ground shadow, NO white border, NO text. Cute clean refined watercolor with peach, cream and sage.`};});\nstore(\"duoBatch2\",jobs);\nconst work=Promise.allSettled(jobs.map(async j=>{const r=await tools.image_gen__imagegen({prompt:j.prompt,referenced_image_paths:j.refs,transparent_background:true});store(j.key,r);notify({ready:j.key,hint:r.output_hint});}));\nawait yield_control();await work;\n"
+    },
+    {
+      "timestamp": "2026-10-04T12:41:43.185Z",
+      "source": "const d=load(\"avatarDesign\"),pairs=load(\"duoPairs\");\nfor(let n=3;n<=5;n++){const jobs=pairs.slice((n-1)*7,n*7).map(([a,b],i)=>{const desc=id=>d.names[d.ids.indexOf(id)];return {key:`duo_${a}__${b}`,refs:[...new Set([d.root+`premium_${a}.webp`,d.root+`premium_${b}.webp`])],prompt:`Create one production illustration for HomeSync: exactly TWO characters ${desc(a)} AND ${desc(b)} in a shared cozy home composition. ${a===b?\"There must be TWO distinct instances of the SAME reference avatar, both visible, because both users selected it.\":\"\"} Provided references are identity/style guides only. Newly draw an integrated pose, not side-by-side sticker placement. Nestled close with heads slightly tilted inward, shared little terracotta pot containing a leafy sage green plant in the lower middle, both characters touching or holding it, happy gentle expressions toward viewer. Human+animal: human crouched to animal eye level, both faces equally clear. Human+human: waist-up shoulders touching. Animal+animal: seated snuggled together. Friendly platonic companionship. Keep reference faces, hair, skin/fur, clothing and scarf identities; remove all original held objects, grocery bags, tools, keys, cup and books. Warm hand-painted watercolor storybook, cute refined modern, peach cream sage, no thick outline. Single compact landscape 3:2 composition readable at 132px wide, full silhouettes within 6% safe margins, no text, border, extra props or scenery. True alpha TRANSPARENT BACKGROUND. Outside silhouettes absolutely clear alpha=0, NO glow, NO atmospheric haze, NO fuzzy halo, NO shadows, NO vignette, NO white sticker contour.`};});store(\"duoBatch\"+n,jobs);}\ntext(\"Prepared the remaining 21 compositions.\");\n"
+    },
+    {
+      "timestamp": "2026-10-04T12:41:52.400Z",
+      "source": "// @exec: {\"yield_time_ms\": 120000, \"max_output_tokens\": 1000}\nconst jobs=load(\"duoBatch3\");\nconst work=Promise.allSettled(jobs.map(async j=>{const r=await tools.image_gen__imagegen({prompt:j.prompt,referenced_image_paths:j.refs,transparent_background:true});store(j.key,r);notify({ready:j.key,hint:r.output_hint});}));\nawait yield_control();await work;\n"
+    },
+    {
+      "timestamp": "2026-10-04T12:41:58.752Z",
+      "source": "// @exec: {\"yield_time_ms\": 120000, \"max_output_tokens\": 1000}\nconst jobs=load(\"duoBatch4\");\nconst work=Promise.allSettled(jobs.map(async j=>{const r=await tools.image_gen__imagegen({prompt:j.prompt,referenced_image_paths:j.refs,transparent_background:true});store(j.key,r);notify({ready:j.key,hint:r.output_hint});}));\nawait yield_control();await work;\n"
+    },
+    {
+      "timestamp": "2026-10-04T12:42:05.808Z",
+      "source": "// @exec: {\"yield_time_ms\": 120000, \"max_output_tokens\": 1000}\nconst jobs=load(\"duoBatch5\");\nconst work=Promise.allSettled(jobs.map(async j=>{const r=await tools.image_gen__imagegen({prompt:j.prompt,referenced_image_paths:j.refs,transparent_background:true});store(j.key,r);notify({ready:j.key,hint:r.output_hint});}));\nawait yield_control();await work;\n"
+    },
+    {
+      "timestamp": "2026-10-04T17:57:54.153Z",
+      "source": "text(await tools.apply_patch(\"*** Begin Patch\\n*** Add File: C:/Users/Blas_/Documents/Aplicacion de Pareja/tmp/document_avatar_art.py\\n+import json\\n+from pathlib import Path\\n+\\n+folder = Path('docs/design')\\n+folder.mkdir(exist_ok=True)\\n+files = json.loads(Path('output/couple-home/avatar-art/generated-files.json').read_text(encoding='utf-8'))\\n+log = Path(r'C:/Users/Blas_/.codex/sessions/2026/10/03/rollout-2026-10-03T13-09-30-01a10287-18b7-7180-9459-de1ef8ab8d9d.jsonl')\\n+programs = []\\n+for line in log.open(encoding='utf-8'):\\n+    if len(line) > 100000 or '2026-10-04' not in line: continue\\n+    item = json.loads(line)\\n+    payload = item.get('payload', {})\\n+    code = payload.get('input', '')\\n+    if payload.get('type') != 'custom_tool_call' or not isinstance(code, str): continue\\n+    if ('tools.image_gen__imagegen({' in code and ('portrait_' in code or 'duo' in code or 'const jobs=load' in code)) or 'store(\\\"avatarDesign\\\",' in code or 'store(\\\"duoBatch\\\"+n,jobs)' in code:\\n+        programs.append({'timestamp': item['timestamp'], 'source': code})\\n+document = {\\n+    'tool': 'image_gen.imagegen (built-in)',\\n+    'style': 'Warm hand-painted watercolor matching the original premium catalog.',\\n+    'originals': 'output/couple-home/avatar-art/sources (ignored, generated PNGs preserved)',\\n+    'exports': 'WebP with alpha; 512 px wide duo scenes, 256 px wide portraits; lossless encoding after size export.',\\n+    'assets': {key: {'file': f'flutter_client/assets/images/avatar_art/{key}.webp', 'generation': Path(path).name} for key, path in sorted(files.items()) if key.startswith(('portrait_', 'duo_'))},\\n+    'prompt_programs': programs,\\n+}\\n+(folder / 'couple-avatar-prompts.json').write_text(json.dumps(document, ensure_ascii=False, indent=2), encoding='utf-8')\\n+print(f'Documented {len(document[\\\"assets\\\"])} assets and {len(programs)} generation prompt programs')\\n+\\n+for name in [\\n+    'flutter_client/lib/shared/widgets/user_avatar.dart',\\n+    'flutter_client/lib/features/dashboard/presentation/screens/modes/home_couple_view.dart',\\n+    'flutter_client/test/couple_home_design_test.dart',\\n+]:\\n+    path = Path(name)\\n+    source = path.read_text(encoding='utf-8')\\n+    lines = source.splitlines(keepends=True)\\n+    positions = [i for i, line in enumerate(lines) if line.startswith('import ')]\\n+    first, last = min(positions), max(positions)\\n+    imports = [lines[i] for i in positions]\\n+    dart_imports = sorted(line for line in imports if line.startswith(\\\"import 'dart:\\\"))\\n+    package_imports = sorted(line for line in imports if line.startswith(\\\"import 'package:\\\"))\\n+    local_imports = sorted(line for line in imports if line not in dart_imports + package_imports)\\n+    groups = [group for group in [dart_imports, package_imports, local_imports] if group]\\n+    block = '\\\\n'.join(''.join(group).rstrip('\\\\n') for group in groups) + '\\\\n'\\n+    # A blank line separates SDK and package directives.\\n+    block = '\\\\n\\\\n'.join(''.join(group).rstrip('\\\\n') for group in groups) + '\\\\n'\\n+    source = ''.join(lines[:first]) + block + ''.join(lines[last + 1:])\\n+    path.write_text(source, encoding='utf-8')\\n*** End Patch\"));\ntext(await tools.exec_command({cmd:\"python -X utf8 tmp/document_avatar_art.py; Get-ChildItem flutter_client/assets/images/avatar_art | Measure-Object -Property Length -Sum\",\"max_output_tokens\":400}));\ntext(await tools.apply_patch(\"*** Begin Patch\\n*** Add File: C:/Users/Blas_/Documents/Aplicacion de Pareja/docs/design/couple-avatar-art.md\\n+# Avatares de Inicio en modo pareja\\n+\\n+El catálogo contiene ocho retratos circulares y 36 escenas compartidas. Cada escena se dibujó como una composición propia, con poses complementarias y una planta que ambos cuidan. Se conserva la identidad y el estilo de acuarela de los personajes originales.\\n+\\n+`PremiumAvatarArt` resuelve el asset a partir de los dos avatares seleccionados. Ordena los IDs para que ambas personas vean la misma ilustración. Incluye los ocho pares del mismo personaje. Solo se usan escenas del catálogo cuando ambos avatares tienen una identidad premium reconocida; fotos, emoji, iniciales y avatares personalizados conservan sus retratos personales.\\n+\\n+Los retratos nuevos se usan mediante `CustomUserAvatar(forceCircular: true)`, incluidos los círculos de tareas, selectores y notas. Los personajes de cuerpo completo siguen usando el catálogo original.\\n+\\n+Assets: `flutter_client/assets/images/avatar_art/`. Las escenas se exportan a 512 px de ancho y los retratos a 256 px, con transparencia y codificación WebP sin pérdida. Los PNG originales de alta resolución se conservaron en `output/couple-home/avatar-art/sources/` (ignorado por Git).\\n+\\n+La generación se hizo con la herramienta integrada `image_gen.imagegen`. Las instrucciones, referencias e identificadores de los originales quedan en [couple-avatar-prompts.json](couple-avatar-prompts.json).\\n+\\n+Al incorporar otro premium, hay que agregar su retrato y una escena con cada personaje existente, además del par consigo mismo. `premium_avatar_art_test.dart` compara el catálogo y renderiza todas las imágenes en fondos claros y oscuros. `couple_home_design_test.dart` verifica el Inicio y la selección independiente del orden.\\n+\\n+Capturas de Flutter: `flutter_client/build/couple_home/`, generadas con `--dart-define=CAPTURE_HOME=true`. Incluyen catálogo, Inicio claro/oscuro, 320 dp con texto a 1.3x, hogar esperando pareja, tareas vacías, deuda en ambas direcciones, finanzas compartidas, nota pendiente, emoji, iniciales, foto y foto sin conexión. Los datos son fixtures de pruebas; no corresponden a una cuenta real.\\n*** End Patch\"));\n"
+    }
+  ]
+}

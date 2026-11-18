@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -13,6 +14,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/couple_task_tile.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:intl/intl.dart';
@@ -250,26 +252,28 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    t.calendarWeekOf,
-                    style: AppTypography.eyebrow.copyWith(
-                      fontSize: 12,
-                      color: theme.textMuted,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.calendarWeekOf,
+                      style: AppTypography.eyebrow.copyWith(
+                        fontSize: 12,
+                        color: theme.textMuted,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    monthYear,
-                    style: AppTypography.sectionTitle.copyWith(
-                      fontSize: 22,
-                      letterSpacing: -0.8,
-                      color: theme.textPrimary,
+                    const SizedBox(height: 4),
+                    Text(
+                      monthYear,
+                      style: AppTypography.sectionTitle.copyWith(
+                        fontSize: 22,
+                        letterSpacing: -0.8,
+                        color: theme.textPrimary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               Row(
                 children: [
@@ -382,11 +386,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Text(
-                  t.calendarNoTasksScheduled,
-                  style: AppTypography.body.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.textMuted,
+                Expanded(
+                  child: Text(
+                    t.calendarNoTasksScheduled,
+                    style: AppTypography.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.textMuted,
+                    ),
                   ),
                 ),
               ],
@@ -456,6 +462,31 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
     final categoryIcon =
         CategoryMapping.getCategoryMaterialIcon(normalizedCategory);
 
+    if (!showGamification) {
+      final members = ref.watch(householdMembersProvider).value;
+      final assigned = members
+          ?.where((member) => member.userId == task.assignedTo)
+          .firstOrNull;
+      return CoupleTaskTile(
+        task: task,
+        assigned: assigned,
+        currentUserId: ref.watch(currentUserIdProvider),
+        categoryLabel: categoryData == null
+            ? localizedCategoryName(AppLocalizations.of(context), category)
+            : localizedTaskCategoryName(
+                AppLocalizations.of(context),
+                categoryData,
+              ),
+        busy: false,
+        expanded: _isExpanded,
+        horizontalPadding: 0,
+        showCompletion: false,
+        onToggle: () => setState(() => _isExpanded = !_isExpanded),
+        onComplete: () {},
+        onEdit: widget.onEdit,
+        onSchedule: widget.onSchedule,
+      );
+    }
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeOutCubic,
@@ -556,7 +587,9 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  task.recurrenceType!.toUpperCase(),
+                                  task.recurrenceLabel(
+                                    AppLocalizations.of(context),
+                                  ),
                                   style: AppTypography.caption.copyWith(
                                     fontSize: 8,
                                     fontWeight: FontWeight.w700,

@@ -1931,7 +1931,7 @@ abstract class AppLocalizations {
   /// Section title above the couple home activity feed. It only lists today's activity (the query starts at midnight).
   ///
   /// In es, this message translates to:
-  /// **'Movimientos de hoy'**
+  /// **'Movimientos del hogar'**
   String get homeCoupleActivityTitle;
 
   /// No description provided for @homeCoupleActivityEmptyTitle.
@@ -13749,6 +13749,60 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'A pasear'**
   String get couplePlanWalkStamp;
+
+  /// Acción directa de Inicio para agregar un ítem a la lista de compras.
+  ///
+  /// In es, this message translates to:
+  /// **'Anotar compra'**
+  String get coupleHomeAddShopping;
+
+  /// Acción directa de Inicio para escribir una nota a la pareja.
+  ///
+  /// In es, this message translates to:
+  /// **'Dejar una notita'**
+  String get coupleHomeLeaveNote;
+
+  /// Título cálido y breve del Inicio en modo pareja.
+  ///
+  /// In es, this message translates to:
+  /// **'Hogar, dulce hogar'**
+  String get coupleHomeWelcomeTitle;
+
+  /// Bienvenida antes de que se una la pareja.
+  ///
+  /// In es, this message translates to:
+  /// **'Un lugar para compartir.'**
+  String get coupleHomeWelcomeSolo;
+
+  /// Subtítulo del Inicio con el nombre de la pareja.
+  ///
+  /// In es, this message translates to:
+  /// **'Con {name}, de a dos.'**
+  String coupleHomeWelcomeWith(String name);
+
+  /// Acceso rápido para registrar un gasto desde Inicio.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargar gasto'**
+  String get coupleHomeAddExpense;
+
+  /// Acción accesible de una tarea del Inicio.
+  ///
+  /// In es, this message translates to:
+  /// **'Completar {title}'**
+  String coupleHomeCompleteTask(String title);
+
+  /// Cantidad de tareas completadas por una persona esta semana, en el resumen de Tareas.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{Sin tareas completadas} one{1 tarea completada} other{{count} tareas completadas}}'**
+  String coupleTasksCompletedCount(int count);
+
+  /// Error al cargar el resumen semanal colaborativo de tareas.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar el resumen de esta semana.'**
+  String get coupleTasksWeekError;
 }
 
 class _AppLocalizationsDelegate

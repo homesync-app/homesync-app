@@ -869,7 +869,7 @@
   "@homeCoupleTasksTitle": {
     "description": "Section title above the day-tasks list on the couple home."
   },
-  "homeCoupleActivityTitle": "Movimientos de hoy",
+  "homeCoupleActivityTitle": "Movimientos del hogar",
   "@homeCoupleActivityTitle": {
     "description": "Section title above the couple home activity feed. It only lists today's activity (the query starts at midnight)."
   },
@@ -6432,5 +6432,56 @@
   "couplePlanWalkStamp": "A pasear",
   "@couplePlanWalkStamp": {
     "description": "Pareja: planes compartidos y álbum de recuerdos, sin aprobaciones ni rachas."
+  },
+  "coupleHomeAddShopping": "Anotar compra",
+  "@coupleHomeAddShopping": {
+    "description": "Acción directa de Inicio para agregar un ítem a la lista de compras."
+  },
+  "coupleHomeLeaveNote": "Dejar una notita",
+  "@coupleHomeLeaveNote": {
+    "description": "Acción directa de Inicio para escribir una nota a la pareja."
+  },
+  "coupleHomeWelcomeTitle": "Hogar, dulce hogar",
+  "@coupleHomeWelcomeTitle": {
+    "description": "Título cálido y breve del Inicio en modo pareja."
+  },
+  "coupleHomeWelcomeSolo": "Un lugar para compartir.",
+  "@coupleHomeWelcomeSolo": {
+    "description": "Bienvenida antes de que se una la pareja."
+  },
+  "coupleHomeWelcomeWith": "Con {name}, de a dos.",
+  "@coupleHomeWelcomeWith": {
+    "description": "Subtítulo del Inicio con el nombre de la pareja.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleHomeAddExpense": "Cargar gasto",
+  "@coupleHomeAddExpense": {
+    "description": "Acceso rápido para registrar un gasto desde Inicio."
+  },
+  "coupleHomeCompleteTask": "Completar {title}",
+  "@coupleHomeCompleteTask": {
+    "description": "Acción accesible de una tarea del Inicio.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleTasksCompletedCount": "{count, plural, =0{Sin tareas completadas} one{1 tarea completada} other{{count} tareas completadas}}",
+  "@coupleTasksCompletedCount": {
+    "description": "Cantidad de tareas completadas por una persona esta semana, en el resumen de Tareas.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleTasksWeekError": "No pudimos cargar el resumen de esta semana.",
+  "@coupleTasksWeekError": {
+    "description": "Error al cargar el resumen semanal colaborativo de tareas."
   }
 }

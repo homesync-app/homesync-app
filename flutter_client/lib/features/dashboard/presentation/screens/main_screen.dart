@@ -23,6 +23,7 @@ import 'package:homesync_client/features/dashboard/presentation/screens/couple_s
 import 'package:homesync_client/features/dashboard/presentation/screens/home_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/household_social_hub_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/solo_space_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/couple_actions_sheet.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_detail_cache.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/screens/expenses_screen.dart';
@@ -303,32 +304,16 @@ class _MainScreenState extends ConsumerState<MainScreen>
         ..add(ref.listenManual(expenseControllerProvider, (_, __) {}))
         ..add(ref.listenManual(monthlyProjectionProvider, (_, __) {}));
 
-      // Pareja: precargar el resumen colaborativo y las propuestas. Ambos son
-      // autoDispose, por eso sostenemos listeners mientras vive MainScreen.
+      // The weekly contribution now belongs to Tasks.
       final caps = ref.read(householdCapabilitiesProvider);
-      if (caps.usesCoupleConnectionExperience) {
-        final householdId = ref.read(householdIdProvider).value;
-        if (householdId != null && householdId.isNotEmpty) {
-          _idlePrefetchSubs
-            ..add(
-              ref.listenManual(
-                coupleConnectionSummaryProvider(householdId),
-                (_, __) {},
-              ),
-            )
-            ..add(
-              ref.listenManual(
-                coupleProposalsProvider(householdId),
-                (_, __) {},
-              ),
-            )
-            ..add(
-              ref.listenManual(
-                householdContributionProvider(householdId),
-                (_, __) {},
-              ),
-            );
-        }
+      final householdId = ref.read(householdIdProvider).value;
+      if (caps.type == HouseholdType.couple && householdId != null) {
+        _idlePrefetchSubs.add(
+          ref.listenManual(
+            householdContributionProvider(householdId),
+            (_, __) {},
+          ),
+        );
       }
       log.d('MainScreen: prefetch ocioso de pestañas secundarias iniciado');
     });
@@ -714,6 +699,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
       currentIndex: currentIndex,
       items: navItems,
       onTap: (index) => _setBottomNavIndex(index, source: 'bottom_nav'),
+      actionLabel: t.homeFabActions,
+      onAction: caps.type == HouseholdType.couple
+          ? () => showCoupleActionsSheet(context)
+          : null,
     );
   }
 

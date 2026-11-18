@@ -33,6 +33,7 @@ import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/core/theme/theme_palettes.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
 import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
+import 'package:homesync_client/features/auth/presentation/widgets/auth_session_route.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/main_screen.dart';
 // Prefetching Providers
@@ -903,7 +904,11 @@ class _MyAppState extends ConsumerState<MyApp> {
         ),
       ),
       routes: {
-        '/__login__': (_) => LoginScreen(prefs: widget.prefs),
+        '/__login__': (_) => AuthSessionRoute(
+              authenticatedBuilder: (_) => MainScreen(prefs: widget.prefs),
+              signedOutBuilder: (_) => LoginScreen(prefs: widget.prefs),
+              loadingBuilder: (_) => const SplashScreen(),
+            ),
       },
       home: !_startupReady
           ? const SplashScreen()

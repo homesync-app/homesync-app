@@ -16,6 +16,8 @@ class TourTargetKeysNotifier extends Notifier<Map<TourTarget, GlobalKey>> {
   }
 
   void unregister(TourTarget target, GlobalKey key) {
+    // Home unregisters after the frame; its ProviderScope may already be gone.
+    if (!ref.mounted) return;
     if (state[target] != key) return;
     final next = {...state}..remove(target);
     state = next;

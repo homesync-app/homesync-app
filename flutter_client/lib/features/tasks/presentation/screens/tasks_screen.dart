@@ -13,6 +13,7 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/utils/app_haptics.dart';
 import 'package:homesync_client/core/utils/app_scroll_physics.dart';
+import 'package:homesync_client/features/couple_space/presentation/providers/couple_space_providers.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -22,6 +23,8 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/screens/calendar_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/couple_task_tile.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/couple_task_week_summary.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_completion_feedback.dart';
@@ -31,6 +34,7 @@ import 'package:homesync_client/shared/widgets/app_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
+import 'package:homesync_client/shared/widgets/household_art.dart';
 import 'package:homesync_client/shared/widgets/schedule_dialog.dart'
     show ScheduleDialog, TaskRepeatMode;
 import 'package:motor/motor.dart';
@@ -293,6 +297,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         AppLocalizations.of(context).tasksTabCalendar,
       ],
       padding: const EdgeInsets.all(6),
+      flat:
+          ref.watch(householdCapabilitiesProvider).type == HouseholdType.couple,
     );
   }
 
@@ -335,7 +341,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
 
     return Scaffold(
       backgroundColor: theme.background,
-      floatingActionButton: !canCreateTasks
+      floatingActionButton: !canCreateTasks ||
+              ref.watch(householdCapabilitiesProvider).type ==
+                  HouseholdType.couple
           ? null
           : AppFloatingActionButton(
               label: AppLocalizations.of(context).tasksFabNew,
@@ -398,6 +406,12 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                           onRefresh: () async {
                             ref.invalidate(tasksProvider);
                             ref.invalidate(categoriesProvider);
+                            final id = ref.read(householdIdProvider).value;
+                            if (id != null &&
+                                ref.read(householdCapabilitiesProvider).type ==
+                                    HouseholdType.couple) {
+                              ref.invalidate(householdContributionProvider(id));
+                            }
                           },
                           color: AppColors.accentGold,
                           // La lista se disuelve contra los bordes en vez de
@@ -409,6 +423,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                               primary: true,
                               physics: const BouncingScrollPhysics(),
                               slivers: [
+                                if (ref
+                                        .watch(householdCapabilitiesProvider)
+                                        .type ==
+                                    HouseholdType.couple)
+                                  const SliverToBoxAdapter(
+                                    child: CoupleTaskWeekSummary(),
+                                  ),
                                 SliverToBoxAdapter(
                                   child: Padding(
                                     padding: const EdgeInsets.fromLTRB(
@@ -453,7 +474,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                   },
                                                   blendMode: BlendMode.dstIn,
                                                   child: SizedBox(
-                                                    height: 40,
+                                                    height: ref
+                                                                .watch(
+                                                                  householdCapabilitiesProvider,
+                                                                )
+                                                                .type ==
+                                                            HouseholdType.couple
+                                                        ? 48
+                                                        : 40,
                                                     child: ListView.builder(
                                                       controller: _chipScroll,
                                                       scrollDirection:
@@ -964,15 +992,24 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    // El ícono de "Todas" no puede depender del label
-                    // localizado (solo matcheaba el string 'todas' en es).
-                    id == null
-                        ? Icons.format_list_bulleted_rounded
-                        : CategoryMapping.getCategoryMaterialIcon(id),
-                    color: iconColor,
-                    size: 18,
-                  ),
+                  if (ref.watch(householdCapabilitiesProvider).type ==
+                      HouseholdType.couple)
+                    HouseholdArt(
+                      kind: id == null
+                          ? HouseholdArtKind.home
+                          : HouseholdArt.forCategory(id),
+                      size: 28,
+                    )
+                  else
+                    Icon(
+                      // El ícono de "Todas" no puede depender del label
+                      // localizado (solo matcheaba el string 'todas' en es).
+                      id == null
+                          ? Icons.format_list_bulleted_rounded
+                          : CategoryMapping.getCategoryMaterialIcon(id),
+                      color: iconColor,
+                      size: 18,
+                    ),
                   const SizedBox(width: 8),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 116),

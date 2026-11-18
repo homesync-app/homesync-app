@@ -2,6 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:homesync_client/shared/widgets/household_art.dart';
+
 import '../../data/shopping_icons_remote.dart';
 import '../../domain/models/shopping_visuals.dart';
 
@@ -71,6 +73,15 @@ class ShoppingIcon extends ConsumerWidget {
     // placeholder caused the visible "old icon -> new icon" swap. The emoji is
     // the base (and the remote icons imitate it), so the transient/offline
     // visual is the emoji and the swap to the real icon is barely noticeable.
+    if (allowCategoryFallback &&
+        const {'general', 'cleaning', 'pets'}.contains(categoryId)) {
+      return HouseholdArt(
+        kind: categoryId == 'general'
+            ? HouseholdArtKind.shopping
+            : HouseholdArt.forCategory(categoryId),
+        size: size,
+      );
+    }
     final categoryIcon =
         allowCategoryFallback ? _categoryIcon(categoryId) : null;
     final visual = (categoryIcon == null && allowCategoryFallback)

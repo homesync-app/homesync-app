@@ -287,3 +287,10 @@ lib/features/tasks/domain/usecases/create_task_usecase.dart|'El título de la ta
 lib/features/tasks/domain/usecases/create_task_usecase.dart|'La categoría no puede estar vacía'
 lib/shared/widgets/admin_panel.dart|'Admin (Tú)'
 lib/shared/widgets/admin_panel.dart|'Una vez en un escenario, puedes cambiar de "ojos" para ver qué ve cada miembro.'
+# Category aliases from stored/user-provided data, never displayed as UI copy.
+lib/shared/widgets/household_art.dart|'administración del hogar'
+lib/shared/widgets/household_art.dart|'administración'
+lib/shared/widgets/household_art.dart|'baño'
+lib/shared/widgets/household_art.dart|'jardinería'
+lib/shared/widgets/household_art.dart|'jardín'
+lib/shared/widgets/household_art.dart|'lavandería'
